@@ -245,3 +245,32 @@ func TestRequiredManifestCollectionsAndEmptyMediaSizes(t *testing.T) {
 		}
 	}
 }
+
+// S3 readers may return EOF together with the final requested byte.
+type eofAtBoundaryReader struct{ *bytes.Reader }
+
+func (r eofAtBoundaryReader) ReadAt(p []byte, off int64) (int, error) {
+	n, err := r.Reader.ReadAt(p, off)
+	if err == nil && off+int64(n) == r.Size() {
+		err = io.EOF
+	}
+	return n, err
+}
+func TestArchiveAcceptsCompleteBoundaryReadWithEOF(t *testing.T) {
+	var out bytes.Buffer
+	data := []byte(`{"assets":[]}`)
+	if err := Write(context.Background(), &out, data, Selection{}, testTime(), nil, contentSource{}, limits()); err != nil {
+		t.Fatal(err)
+	}
+	source := eofAtBoundaryReader{bytes.NewReader(out.Bytes())}
+	result, err := Read(context.Background(), source, int64(out.Len()), limits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(result.InventoryJSON, data) {
+		t.Fatal("inventory changed")
+	}
+	if _, err := Read(context.Background(), eofAtBoundaryReader{bytes.NewReader(out.Bytes()[:out.Len()-1])}, int64(out.Len()), limits()); err == nil {
+		t.Fatal("accepted truncated archive")
+	}
+}

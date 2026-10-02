@@ -62,6 +62,9 @@ commits may land separately but must not advertise unavailable restore behavior.
 - Do not export authentication/provider credentials, memberships, invitations,
   access tokens, signed URLs, blob storage keys or raw audit/undo snapshots.
   This is an inventory backup, not a server or household-security backup.
+- Random-access archive validation accepts a complete read accompanied by EOF,
+  as permitted by `io.ReaderAt` and returned by S3 storage. Short reads remain
+  invalid; storage errors other than EOF must not be suppressed.
 - Validate declared and actual byte lengths and SHA-256 checksums for JSON and all
   media. Missing/corrupt requested media fails export; it is never silently omitted.
   On restore, omitted media is reported as an explicit source selection, and no

@@ -14,7 +14,7 @@ func preflight(ctx context.Context, r io.ReaderAt, size int64, l Limits) (int64,
 		return 0, ErrInvalid
 	}
 	var end [22]byte
-	if _, err := r.ReadAt(end[:], size-22); err != nil {
+	if _, err := readArchiveAt(r, end[:], size-22); err != nil {
 		return 0, ErrInvalid
 	}
 	if u32(end[:4]) != 0x06054b50 || u16(end[4:6]) != 0 || u16(end[6:8]) != 0 || u16(end[20:]) != 0 {
@@ -29,7 +29,7 @@ func preflight(ctx context.Context, r io.ReaderAt, size int64, l Limits) (int64,
 			return 0, ErrInvalid
 		}
 		var locator [20]byte
-		if _, err := r.ReadAt(locator[:], size-42); err != nil || u32(locator[:4]) != 0x07064b50 || u32(locator[4:8]) != 0 || u32(locator[16:]) != 1 {
+		if _, err := readArchiveAt(r, locator[:], size-42); err != nil || u32(locator[:4]) != 0x07064b50 || u32(locator[4:8]) != 0 || u32(locator[16:]) != 1 {
 			return 0, ErrInvalid
 		}
 		position := binary.LittleEndian.Uint64(locator[8:16])
@@ -37,7 +37,7 @@ func preflight(ctx context.Context, r io.ReaderAt, size int64, l Limits) (int64,
 			return 0, ErrInvalid
 		}
 		var ext [56]byte
-		if _, err := r.ReadAt(ext[:], int64(position)); err != nil || u32(ext[:4]) != 0x06064b50 || binary.LittleEndian.Uint64(ext[4:12]) != 44 || u32(ext[16:20]) != 0 || u32(ext[20:24]) != 0 || position+56 != uint64(size-42) {
+		if _, err := readArchiveAt(r, ext[:], int64(position)); err != nil || u32(ext[:4]) != 0x06064b50 || binary.LittleEndian.Uint64(ext[4:12]) != 44 || u32(ext[16:20]) != 0 || u32(ext[20:24]) != 0 || position+56 != uint64(size-42) {
 			return 0, ErrInvalid
 		}
 		count = binary.LittleEndian.Uint64(ext[32:40])
@@ -69,7 +69,7 @@ func preflight(ctx context.Context, r io.ReaderAt, size int64, l Limits) (int64,
 			return 0, ErrInvalid
 		}
 		var header [46]byte
-		if _, err := r.ReadAt(header[:], int64(cursor)); err != nil || u32(header[:4]) != 0x02014b50 {
+		if _, err := readArchiveAt(r, header[:], int64(cursor)); err != nil || u32(header[:4]) != 0x02014b50 {
 			return 0, ErrInvalid
 		}
 		record := uint64(46) + uint64(u16(header[28:30])) + uint64(u16(header[30:32])) + uint64(u16(header[32:34]))
@@ -94,7 +94,7 @@ func verifyCoverage(ctx context.Context, r io.ReaderAt, z *zip.Reader, directory
 			return ErrInvalid
 		}
 		var header [30]byte
-		if _, err := r.ReadAt(header[:], cursor); err != nil || u32(header[:4]) != 0x04034b50 || u16(header[6:8]) != f.Flags || u16(header[8:10]) != f.Method {
+		if _, err := readArchiveAt(r, header[:], cursor); err != nil || u32(header[:4]) != 0x04034b50 || u16(header[6:8]) != f.Flags || u16(header[8:10]) != f.Method {
 			return ErrInvalid
 		}
 		nameLength := int64(u16(header[26:28]))
@@ -103,7 +103,7 @@ func verifyCoverage(ctx context.Context, r io.ReaderAt, z *zip.Reader, directory
 			return ErrInvalid
 		}
 		var name [70]byte
-		if _, err := r.ReadAt(name[:nameLength], cursor+30); err != nil || string(name[:nameLength]) != f.Name {
+		if _, err := readArchiveAt(r, name[:nameLength], cursor+30); err != nil || string(name[:nameLength]) != f.Name {
 			return ErrInvalid
 		}
 		data, err := f.DataOffset()
@@ -120,7 +120,7 @@ func verifyCoverage(ctx context.Context, r io.ReaderAt, z *zip.Reader, directory
 				return ErrInvalid
 			}
 			var descriptor [24]byte
-			if _, err = r.ReadAt(descriptor[:width], cursor); err != nil || u32(descriptor[:4]) != 0x08074b50 || u32(descriptor[4:8]) != f.CRC32 {
+			if _, err = readArchiveAt(r, descriptor[:width], cursor); err != nil || u32(descriptor[:4]) != 0x08074b50 || u32(descriptor[4:8]) != f.CRC32 {
 				return ErrInvalid
 			}
 			compressed := uint64(u32(descriptor[8:12]))
@@ -142,3 +142,16 @@ func verifyCoverage(ctx context.Context, r io.ReaderAt, z *zip.Reader, directory
 }
 func u16(b []byte) uint16 { return binary.LittleEndian.Uint16(b) }
 func u32(b []byte) uint32 { return binary.LittleEndian.Uint32(b) }
+
+// ReaderAt permits EOF with a complete final read. Normalize that
+// result while rejecting truncated structures and non-EOF storage errors.
+func readArchiveAt(r io.ReaderAt, p []byte, offset int64) (int, error) {
+	n, err := r.ReadAt(p, offset)
+	if n == len(p) && err == io.EOF {
+		return n, nil
+	}
+	if n < len(p) && err == nil {
+		return n, io.ErrUnexpectedEOF
+	}
+	return n, err
+}

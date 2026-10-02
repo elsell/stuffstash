@@ -30,24 +30,17 @@ empty household. Mobile review precedes approval, loaded-job pagination survives
 creation races, and closing cancels local transfers/selection without cancelling
 server jobs. Twenty-seven relevant mobile tests, type checking and code-critic
 review passed; the existing browser export fixture passed before primitive reuse.
-Connected archive UI acceptance remains unverified. Remaining delivery work:
-native transfer/runtime verification, connected
-cross-instance acceptance, release and production deployment. Do not treat this
-draft as shipped. Scratch buffers now unlink their private file before use so
-process exit reclaims storage; the revised behavior test awaits CI. Native audit
-`37023979794` stopped before compilation because label preparation omitted the
-new archive catalog. The script now discovers production catalog modules; its
-three-locale test passes locally. A connected OIDC archive journey now verifies
-ZIP download, validation-before-approval and the actual restored inventory URL
-after reload. CI `37024865442` reached archive download but timed out before
-restore review; safe HTTP/job-state capture now distinguishes upload rejection,
-validation failure and UI refresh on the next run. CI `37026446432` confirms the upload is accepted and validation marks the job
-failed. The next evidence includes list-row failure codes and the tiny fixture ZIP.
-Native archive review/keyboard and loopback upload cases are implemented. Native
-run `37024877448` found a Swift Promise overload compile error; it now uses the
-installed SDK signature. Android explicitly declares its pinned React Native
-compile dependency and has a dispatch-only build gate. Native execution remains
-unverified.
+Connected archive UI acceptance remains unverified. CI `37027464880` retained
+an intact exported ZIP and reported `invalid_archive` during restore validation.
+The ZIP preflight rejected complete final reads accompanied by EOF, which the
+production S3 reader permits. The new regression failed before correction; all
+archive adapter tests passed on Paul after correction, and code-critic review
+found no blocker. Connected replay is required before claiming restore works.
+Native run `37027352935` verifies the corrected Swift SDK call and real loopback
+upload plus review workflow; Android build `37027458024` is queued behind it.
+Neither is yet runtime acceptance evidence. Remaining delivery work: native
+transfer/runtime verification, connected cross-instance acceptance, release and
+production deployment. Do not treat this draft as shipped.
 
 ## Current objective — October 1, 2026
 
