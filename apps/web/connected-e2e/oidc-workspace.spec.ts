@@ -1,3 +1,4 @@
+import { addArchivePhoto } from './archive-media';
 import { verifyArchiveJourney } from './archive-journey';
 import { readFile } from 'node:fs/promises';
 import { expect, test, type Page, type APIRequestContext } from '@playwright/test';
@@ -110,7 +111,8 @@ test('real OIDC workspace, item creation and exports preserve principal isolatio
 
   expect(await exportedAuditFormats(request, inventoryURL, ownerToken)).toEqual(expect.arrayContaining(['json', 'csv']));
 
-  await verifyArchiveJourney(page, scope[1], scope[2], itemTitle, testInfo);
+  const photo = await addArchivePhoto(request, assetURL, ownerToken, await page.screenshot());
+  await verifyArchiveJourney(page, scope[1], scope[2], itemTitle, testInfo, request, ownerToken, photo);
 
   const otherContext = await browser.newContext({ baseURL: 'http://localhost:5173' });
   try {

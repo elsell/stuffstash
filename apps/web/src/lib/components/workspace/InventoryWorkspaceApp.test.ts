@@ -790,6 +790,38 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it.each(['expired', 'network'] as const)('handles %s failures when refreshing an unknown inventory', async (failure) => {
+    class FailedRefreshRepository extends SeededInventoryRepository {
+      async selectAssetLifecycle(): Promise<WorkspaceData> {
+        throw failure === 'expired' ? new AuthenticationRequiredError('private refresh diagnostic') : new Error('private network diagnostic');
+      }
+    }
+    let expired = false;
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-restored', new FailedRefreshRepository(structuredClone(seed)), { onSessionExpired: () => { expired = true; } });
+    await waitFor(() => {
+      if (failure === 'expired') expect(expired).toBe(true);
+      else expect(document.body.textContent).toContain('Workspace unavailable');
+      expect(document.body.textContent).not.toContain('private');
+    });
+  });
+
+  it('opens a newly restored inventory absent from the initial workspace snapshot', async () => {
+    class RestoredInventoryRepository extends SeededInventoryRepository {
+      async loadWorkspace() {
+        const initial = await super.loadWorkspace();
+        return { ...initial, context: { ...initial.context, inventories: initial.context.inventories.filter(item => item.id !== 'inventory-restored') } };
+      }
+    }
+    const restoredSeed = structuredClone(seed);
+    restoredSeed.inventories.push({ ...restoredSeed.inventories[0], id: 'inventory-restored', name: 'Restored inventory' });
+    restoredSeed.assets.push({ ...restoredSeed.assets[0], id: 'asset-restored', inventoryId: 'inventory-restored', title: 'Restored flashlight' });
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-restored', new RestoredInventoryRepository(restoredSeed));
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Restored flashlight');
+      expect(document.body.textContent).not.toContain('Workspace unavailable');
+    });
+  });
+
   it('does not canonicalize arbitrary catch-all paths as the inventory home', async () => {
     await mountWorkspace('/not-a-workspace-route');
 

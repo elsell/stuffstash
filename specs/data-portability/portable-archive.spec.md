@@ -369,9 +369,18 @@ the storage without a named file to recover. A filesystem that cannot unlink an
 open scratch file fails creation rather than retaining private archive data. This
 policy applies to scratch buffers, not published blobs or atomic blob staging.
 
+Opening a completed restore uses normal inventory navigation. If the destination
+is absent from the web workspace snapshot, refresh the authorized inventory list
+once before declaring the route unavailable. A refresh must not make an
+unauthorized or nonexistent destination selectable or require a page reload.
+Refresh failures stop navigation with existing session-expiry handling or safe
+workspace recovery feedback; they must not escape as unhandled rejections.
+
 The connected OIDC browser journey exercises real durable export, portable browser
 ZIP download, upload/validation, explicit name approval and reopening restored
-content after reload. It disables only the OS save-picker capability to select the
+content after reload. Its source includes an authenticated photo upload; the
+restored attachment must have fresh asset/attachment IDs and identical original
+bytes when downloaded from production storage. It disables only the OS save-picker capability to select the
 supported download fallback; archive HTTP traffic is never intercepted. This is
 same-instance browser acceptance, complementary to independent-store cross-instance
 round-trip tests and native file-picker/share acceptance.

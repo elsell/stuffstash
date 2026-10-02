@@ -30,12 +30,15 @@ empty household. Mobile review precedes approval, loaded-job pagination survives
 creation races, and closing cancels local transfers/selection without cancelling
 server jobs. Twenty-seven relevant mobile tests, type checking and code-critic
 review passed; the existing browser export fixture passed before primitive reuse.
-Connected archive UI acceptance remains unverified. CI `37027464880` retained
-an intact exported ZIP and reported `invalid_archive` during restore validation.
-The ZIP preflight rejected complete final reads accompanied by EOF, which the
-production S3 reader permits. The new regression failed before correction; all
-archive adapter tests passed on Paul after correction, and code-critic review
-found no blocker. Connected replay is required before claiming restore works.
+Connected archive UI acceptance remains unverified. CI `37028438126` confirms
+S3 validation, preview, approval and restore completion now succeed. Opening the
+new inventory exposed a stale web workspace snapshot; navigation now refreshes
+the authorized list once before rejecting an unknown destination. The new test
+failed before the fix; all 92 workspace/archive panel tests pass afterward, including session-expiry
+and network-failure recovery. Code-critic review passed. The
+connected journey also now includes a real photo and checks fresh asset/attachment
+IDs and byte-identical restored originals. Connected replay remains required.
+All other checks in `37028438126`, including Required checks, passed.
 Native run `37027352935` verifies the corrected Swift SDK call and real loopback
 upload plus review workflow; Android build `37027458024` is queued behind it.
 Neither is yet runtime acceptance evidence. Remaining delivery work: native

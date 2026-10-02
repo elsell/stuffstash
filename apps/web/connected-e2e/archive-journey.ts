@@ -1,8 +1,9 @@
-import { expect, type Page, type TestInfo } from '@playwright/test';
+import { verifyRestoredPhoto, type ArchivePhoto } from './archive-media';
+import { expect, type Page, type TestInfo, type APIRequestContext } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 
 /** Real API/job/ZIP flow using the portable browser download fallback. */
-async function runArchiveJourney(page: Page, tenantId: string, inventoryId: string, title: string, info: TestInfo) {
+async function runArchiveJourney(page: Page, tenantId: string, inventoryId: string, title: string, info: TestInfo, request: APIRequestContext, token: string, photo: ArchivePhoto) {
   // Playwright cannot operate the OS file-save picker. Exercise the supported
   // bounded download fallback, without intercepting any archive HTTP operation.
   await page.addInitScript(() => { Object.defineProperty(window, 'showSaveFilePicker', { value: undefined, configurable: true }); });
@@ -45,11 +46,12 @@ async function runArchiveJourney(page: Page, tenantId: string, inventoryId: stri
     await page.reload();
     await expect(page).toHaveURL(destinationURL);
     await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
+    await verifyRestoredPhoto(request, new URL(destinationURL).pathname, token, title, photo);
     await page.screenshot({ path: info.outputPath('connected-archive-restored.png'), fullPage: true });
   } finally { await archive.delete(); }
 }
 
-export async function verifyArchiveJourney(page: Page, tenantId: string, inventoryId: string, title: string, info: TestInfo) {
+export async function verifyArchiveJourney(page: Page, tenantId: string, inventoryId: string, title: string, info: TestInfo, request: APIRequestContext, token: string, photo: ArchivePhoto) {
   const states: { status: number; state?: string; failure?: string; error?: string }[] = [];
   const pending: Promise<void>[] = [];
   const observe = (response: import('@playwright/test').Response) => {
@@ -63,7 +65,7 @@ export async function verifyArchiveJourney(page: Page, tenantId: string, invento
     })());
   };
   page.on('response', observe);
-  try { await runArchiveJourney(page, tenantId, inventoryId, title, info); }
+  try { await runArchiveJourney(page, tenantId, inventoryId, title, info, request, token, photo); }
   catch (error) { await page.screenshot({ path: info.outputPath('connected-archive-failure.png'), fullPage: true }); throw error; }
   finally {
     page.off('response', observe); await Promise.all(pending);

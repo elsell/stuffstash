@@ -1065,7 +1065,22 @@
       }
 
       if (route.inventoryId && route.inventoryId !== data.context.selectedInventoryId) {
-        const inventory = findRouteInventory(data, route);
+        let inventory = findRouteInventory(data, route);
+        if (!inventory && data.context.selectedTenantId) {
+          // Restore and other sessions can add inventories after this snapshot.
+          // Refresh through the authorized repository before rejecting the route.
+          try {
+            data = await repository.selectAssetLifecycle(
+              data.context.selectedTenantId,
+              data.context.selectedInventoryId,
+              data.context.assetLifecycleState
+            );
+          } catch (caught) {
+            if (!handleSessionExpired(caught)) showUnavailableRoute(t('web.InventoryWorkspaceApp.actionFailed'));
+            return;
+          }
+          inventory = findRouteInventory(data, route);
+        }
         if (inventory) {
           await selectInventory(inventory.tenantId, inventory.id);
         } else {
