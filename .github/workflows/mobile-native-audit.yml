@@ -36,6 +36,7 @@ on:
           - settings-overview
           - settings-commands
           - inventory-export
+          - inventory-archive
           - image-telemetry
           - localization
           - release-corrections
@@ -616,6 +617,13 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeGalleryReportsImageLoadAndFailure'
+              )
+              ;;
+            inventory-archive)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testArchiveRestoreRequiresReviewAndKeepsCompletionReachable'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testInventoryExportUsesSystemShareAndRemovesTemporaryFiles'
               )
               ;;
             inventory-export)

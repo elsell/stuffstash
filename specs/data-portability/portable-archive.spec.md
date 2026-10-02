@@ -372,3 +372,8 @@ content after reload. It disables only the OS save-picker capability to select t
 supported download fallback; archive HTTP traffic is never intercepted. This is
 same-instance browser acceptance, complementary to independent-store cross-instance
 round-trip tests and native file-picker/share acceptance.
+
+Native archive-task fixture acceptance uses the production screen with a controlled
+repository and picker to inspect review hierarchy, keyboard clearance, explicit
+approval and opening the restored destination on iPhone and iPad. Keep this layout
+evidence distinct from native transfer and real-server acceptance.

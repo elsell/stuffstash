@@ -88,7 +88,7 @@ export function InventoryArchiveScreen({ workspace, scope, onClose, onOpen }: {
       {review ? <SettingsSection footer={t('archive.omitted', { count: review.preview.omittedAttachments })}>
         <View style={styles.navigationRow}>
           <Text style={styles.rowLabel}>{t('archive.name')}</Text>
-          <DraftTextField accessibilityLabel={t('archive.name')} value={name} onChangeText={setName} editable={!busy} />
+          <DraftTextField style={[styles.rowLabel, { minHeight: 48 }]} accessibilityLabel={t('archive.name')} value={name} onChangeText={setName} editable={!busy} />
           <Text style={styles.rowContext}>{t('archive.counts', { assets: review.preview.assets, tags: review.preview.tags, photos: review.preview.photos, files: review.preview.otherFiles })}</Text>
           <Text style={styles.rowContext}>{t('archive.definitions', { types: review.preview.customAssetTypes, fields: review.preview.customFields })}</Text>
           <Text style={styles.rowContext}>{t('archive.remappings', { count: review.preview.keyRemappings.length })}</Text>
