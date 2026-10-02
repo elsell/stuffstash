@@ -112,10 +112,29 @@ above the voice accessory and persistent tabs. Sharing captures likewise show th
 the voice accessory, with the device's tabs visible. These are controlled native fixtures, not authenticated production
 journeys. [Current evidence](../../docs/reports/spec-gap-evidence-2026-10-01/core-workflows/README.md).
 
-No new task-blocking defect was established by the focused review. The proposed
-Sharing row-menu change is awaiting user confirmation; do not implement it merely
-to fill a batch. Physical export recipient saving, connected native sign-in,
-assistive checks and production performance evidence remain outstanding.
+No new task-blocking defect was established by the focused review. On October 2,
+the user approved replacing repeated Sharing cancellation buttons with a trailing
+native invitation menu and an isolated authenticated test server on Paul. This
+batch preserves cancellation confirmation and permissions; phone/iPad menu and
+footer verification precede release. Physical export recipient saving, connected
+native sign-in, assistive checks and production performance remain outstanding.
+
+The user authorized releasing PR #238 with [issue #239](https://github.com/elsell/stuffstash/issues/239)
+tracked for follow-up. Native run36951622669 at `ef5ba7a0` failed on both
+devices because opening invitation actions restored the email keyboard. Initial
+run36946987743 passed iPad recovery and both footer checks; its iPhone cancellation
+retry was obscured by the keyboard. Remounting after failure and explicitly
+blurring the SwiftUI field did not resolve it. Do not repeat unchanged runs or
+claim native acceptance. This known issue does not gate the user-authorized
+release; regular CI remains required. [Failure evidence](../../docs/reports/spec-gap-evidence-2026-10-01/core-workflows/README.md).
+
+The isolated test server on Paul is available at `https://nsa-lnx-rzn.local:28780`
+(API) and port28781 (web), using pinned v0.27.3 images and separate volumes.
+`~/stuffstash-audit-server/README.md` on Paul records the private credential and
+CA locations. PKCE/refresh, tenant/inventory/item create/read, invitation creation
+and cancellation, JSON/CSV export and unrelated-principal denial passed. Hosted
+native runners still need a secure network path; server/API checks do not close
+connected native acceptance. No production resources were changed.
 
 The already-running RTL run36936112035 completed successfully on both devices;
 no further run was started. Its test result does not imply new visual acceptance.

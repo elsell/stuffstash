@@ -15,13 +15,16 @@ import { CreateInventoryInvitationCommand, CancelInventoryInvitationCommand, Lis
 const scope: InventorySharingScope = { tenantId: 'tenant', inventoryId: 'inventory', inventoryName: 'Garage', permissions: ['share'] };
 const item: InventoryInvitationSummary = { id: 'one', email: 'old@example.test', relationship: 'viewer', status: 'pending', isExpired: false, expiresAt: '2027-01-01' };
 function cancellationButton(h: MobileRenderHarness, email: string) {
-  const recipient = h.allByType('Text').find(node => node.children.length === 1 && node.children[0] === email);
-  return recipient?.parent?.queryAll(node => node.props.accessibilityLabel === 'Cancel invitation')[0];
+  return h.byLabel(`Invitation actions for ${email}`);
 }
 async function openCancellation(h: MobileRenderHarness, email: string) {
   const command = cancellationButton(h, email);
-  expect(command, 'cancellation must be directly available beside its recipient').toBeDefined();
+  expect(command, 'each pending invitation must have a named row menu').toBeDefined();
   await h.press(command);
+  const action = h.all().find(node => node.props.accessibilityRole === 'menuitem' &&
+    node.queryAll(child => child.type === 'Text' && child.children.includes('Cancel invitation')).length > 0);
+  expect(action, 'cancellation belongs inside the row menu').toBeDefined();
+  await h.press(action);
 }
 const settle = async (h: MobileRenderHarness) => { await h.run(() => new Promise(r => setTimeout(r, 10))); };
 it('reuses safe invitation pages and keeps a created secret out of cache', async () => {
