@@ -392,3 +392,30 @@ run must be recorded separately before claiming that provider deployment verifie
 
 Protocol references: [Chat Completions function calling](https://developers.openai.com/api/docs/guides/function-calling)
 and [structured output limitations](https://developers.openai.com/api/docs/guides/structured-outputs).
+
+### Bounded real local-model acceptance
+
+Keep real-model evidence separate from controlled protocol tests. An isolated
+hosted Linux run covers three acceptance gaps: the production profile diagnostic,
+a synthetic read/tool-result/answer exchange through the production adapter, and
+bounded elapsed-time evidence with reproducible runtime/model identity. No tenant
+data or production credentials enter this run. A failed model response remains a
+failed compatibility result; do not relax the adapter or silently retry to pass.
+
+The reference runtime is Ollama 0.9.5 image
+`sha256:64fcc2a7c48ae920f5317264031d86414e30417269631822858c6d23f61100b0`.
+The reference model is Qwen3 0.6B, manifest
+`sha256:7df6b6e09427a769808717c0a93cadc4ae99ed4eb8bf5ca557c90846becea435`.
+Verify the downloaded model identity before inference. A local derived model
+sets temperature zero, context 2048 and prediction limit 512. Bound the container
+to two CPUs and 3 GiB memory, requests to 90 seconds, and the job to 15 minutes.
+Retain only runtime/model identity, named stage outcomes and elapsed milliseconds;
+do not retain provider bodies, credentials or arbitrary runner logs as evidence.
+Always remove the isolated container and its model volume. This narrow smoke run
+does not establish production quality, hosted-provider acceptance or microphone
+behavior. It does not gate unrelated release batches. Keep the expensive real-model workflow
+manual so documentation updates cannot silently rerun inference.
+
+The first real inference run did not pass for this reference model. Preserve the
+[scoped failure evidence](../../docs/reports/spec-gap-evidence-2026-10-01/local-provider/README.md);
+no production deployment verification or successful round trip is claimed.

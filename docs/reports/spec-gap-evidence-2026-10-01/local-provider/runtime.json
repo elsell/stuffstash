@@ -1,0 +1,12 @@
+{
+  "runtimeVersion": "0.9.5",
+  "runtimeImage": "ollama/ollama:0.9.5@sha256:64fcc2a7c48ae920f5317264031d86414e30417269631822858c6d23f61100b0",
+  "model": "qwen3:0.6b",
+  "manifestSHA256": "7df6b6e09427a769808717c0a93cadc4ae99ed4eb8bf5ca557c90846becea435",
+  "parameters": {
+    "temperature": 0,
+    "num_ctx": 2048,
+    "num_predict": 512
+  },
+  "syntheticOnly": true
+}
