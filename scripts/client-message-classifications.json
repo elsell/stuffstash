@@ -72,5 +72,35 @@
     "evidence": [
       "apps/mobile/src/ui/screens/VoiceConversationExchange.tsx: asset query error branch"
     ]
+  },
+  {
+    "file": "apps/mobile/src/application/onboarding/HouseholdSetup.ts",
+    "classification": "technical-diagnostic",
+    "reason": "OnboardingScreen delegates typed partial-success failures and other errors to onboardingError; the presentation catalog supplies both recovery context and guidance. Application messages are not rendered directly.",
+    "evidence": [
+      "apps/mobile/src/ui/screens/OnboardingScreen.tsx: run catch",
+      "apps/mobile/src/ui/screens/OnboardingPresentation.ts: onboardingError"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/ui/screens/OnboardingPresentation.ts",
+    "classification": "diagnostic-matching",
+    "reason": "English literals match application errors to catalog keys; they are not returned as display text.",
+    "evidence": [
+      "apps/mobile/src/ui/screens/OnboardingPresentation.ts: onboardingError"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/application/assets/AssetCheckoutCommand.ts",
+    "strings": [
+      "Unsupported asset checkout action."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "The remaining English literal rejects invalid command identifiers. Supported checkout, return, details and undo availability errors use catalog messages.",
+    "evidence": [
+      "apps/mobile/src/application/assets/AssetCheckoutCommand.ts: execute switch",
+      "apps/mobile/src/ui/screens/useHomeReturnActions.ts: failure notices",
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx: checkout failure notice"
+    ]
   }
 ]

@@ -266,3 +266,12 @@ from presentation updates without changing production behavior on inconclusive e
 Browse's inventory-name fallback must use the existing inventory catalog label
 when no selected inventory record is available. A real inventory name remains
 verbatim; this fallback does not change navigation or selection behavior.
+
+Household setup recovery must present the partial-success explanation and recovery
+guidance as a complete catalog message. Do not render the application exception
+message directly. Preserve the created household, inventory draft, and inventory-only
+retry so localization cannot cause duplicate household creation.
+
+Unavailable checkout, return, return-details and undo commands produce cataloged
+guidance because Home and Details display these command errors. Keep unsupported
+command identifiers as developer diagnostics and preserve action dispatch and IDs.

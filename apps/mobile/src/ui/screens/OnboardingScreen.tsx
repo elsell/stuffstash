@@ -67,7 +67,7 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
       if (current !== generation.current || failure instanceof OnboardingSupersededError) return;
       if (failure instanceof OnboardingPartialSetupError) {
         onStateChange(failure.state);
-        setError(`${failure.message} ${onboardingError(failure.failure)}`);
+        setError(onboardingError(failure));
         return;
       }
       if (failure instanceof MobileAuthenticationRequiredError && initialState.profile) {

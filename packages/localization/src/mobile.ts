@@ -2032,7 +2032,7 @@ export const mobileMessages = {
   "onboarding.householdRequired": "Enter a household name.",
   "onboarding.inventoryRequired": "Enter an inventory name.",
   "onboarding.creationUnknown": "The creation result is not yet available. Try again to check its status.",
-  "onboarding.partialSetup": "Your household is ready. Finish creating its first inventory.",
+  "onboarding.partialSetup": "Your household is ready. Finish creating its first inventory. {guidance}",
   "provider.readinessMissing": "Voice provider profiles are not ready: {capabilities}.",
   "mobile.ManageCustomAssetTypes.assetTypeNameIsRequired": "Asset type name is required.",
   "mobile.ManageCustomAssetTypes.descriptionMustBe1000CharactersOrFewer": "Description must be 1,000 characters or fewer.",

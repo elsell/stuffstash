@@ -77,6 +77,7 @@ describe('onboarding screen', () => {
     api.failInventoryBeforeWrite = true;
     await harness.press(harness.byLabel('Create household'));
     expect(harness.byText('Create your first inventory')).toBeDefined();
+    expect(harness.allText().join(' ')).toContain('Your household is ready. Finish creating its first inventory.');
     expect(harness.byLabel('Household name')).toBeUndefined();
     expect(harness.byLabel('Inventory name')?.props.defaultValue).toBe('Workshop');
     api.failInventoryBeforeWrite = false;
