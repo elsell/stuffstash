@@ -118,6 +118,9 @@ cancelling Move returns filtered Browse users to Home and loses their query.
 Bounded LAN browser timings now cover four actual image uploads, six detail
 reloads and four four-thumbnail Browse navigations, with raw samples and explicit
 cache/corpus/automation limits. This does not close native or physical acceptance.
+PR #241 merged this evidence at `33bcb67c`. Subsequent connected desktop keyboard
+checks verified Filters focus containment/return and keyboard editing persisted
+after reload; the linked report retains the focus sequence and its limits.
 
 Normal-text run36941858463 at main `47b43d39` passed Details and Sharing footer
 checks on iPhone17 and iPad mini. Inspected Details captures show final content
@@ -148,6 +151,10 @@ CA locations. PKCE/refresh, tenant/inventory/item create/read, invitation creati
 and cancellation, JSON/CSV export and unrelated-principal denial passed. Hosted
 native runners still need a secure network path; server/API checks do not close
 connected native acceptance. No production resources were changed.
+The current native-audit workflow also clears API/tenant configuration and installs
+isolated fixture routes. Connected acceptance therefore requires a separate real
+onboarding/sign-in path, explicit test-server certificate trust and a runner network
+path; configuring a tunnel alone or rerunning fixtures cannot satisfy it.
 
 The already-running RTL run36936112035 completed successfully on both devices;
 no further run was started. Its test result does not imply new visual acceptance.
