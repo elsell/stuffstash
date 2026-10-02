@@ -127,7 +127,7 @@ it('rejects local-only direct upload targets when local development targets are 
         uri: 'file:///created.jpg',
         sizeBytes: 4
       })
-    ).rejects.toThrow('Unsupported direct attachment upload target.');
+    ).rejects.toThrow('Could not start the upload. Check your server settings and try again.');
 
     expect(client.createdAttachmentInput).toBeUndefined();
     expect(client.completedDirectUploadInput).toBeUndefined();
@@ -146,7 +146,7 @@ it('rejects unexpected direct upload target schemes instead of silently falling 
         uri: 'file:///created.jpg',
         sizeBytes: 4
       })
-    ).rejects.toThrow('Unsupported direct attachment upload target.');
+    ).rejects.toThrow('Could not start the upload. Check your server settings and try again.');
 
     expect(client.createdAttachmentInput).toBeUndefined();
     expect(client.completedDirectUploadInput).toBeUndefined();
@@ -165,7 +165,7 @@ it('rejects public cleartext direct upload targets', async () => {
         uri: 'file:///created.jpg',
         sizeBytes: 4
       })
-    ).rejects.toThrow('Unsupported direct attachment upload target.');
+    ).rejects.toThrow('Could not start the upload. Check your server settings and try again.');
 
     expect(client.createdAttachmentInput).toBeUndefined();
     expect(client.completedDirectUploadInput).toBeUndefined();

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 export type DirectUploadTargetPolicy = {
   readonly allowLocalDevelopmentTargets?: boolean;
 };
@@ -32,7 +33,7 @@ export function directUploadMethod(value: string): 'POST' | 'PUT' | 'PATCH' {
   if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
     return method;
   }
-  throw new Error('Unsupported direct attachment upload method.');
+  throw new Error(t('recovery.uploadConfiguration'));
 }
 
 function isSecureDirectUploadURL(value: string): boolean {
