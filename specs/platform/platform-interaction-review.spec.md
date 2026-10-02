@@ -141,17 +141,17 @@ cancellation, as well as failure/retry and removal of the cancelled row's comman
 
 ## Invitation cancellation interaction
 
-A pending, unexpired invitation exposes its single command directly as a native
-Cancel invitation text button below the recipient and status. An overflow menu
-adds no choice here and makes failed-link recovery harder to discover. This is a
-project task/pattern decision, not a universal prohibition on single-item menus.
+A pending, unexpired invitation exposes a trailing native ellipsis menu beside
+its recipient and status. The menu contains the destructive Cancel invitation
+command; repeated large destructive buttons must not dominate the invitation list.
+This October 2 user-approved pattern supersedes the previous direct-button choice.
+Name the recipient in the menu's accessibility label. Use NativeActionMenu; keep
+its trigger separate from the flexible text column so long addresses can wrap.
 Keep destructive confirmation naming the recipient, permission/scope ownership,
 independent pending locks, failure recovery and terminal-state removal unchanged.
-End keyboard editing before presenting confirmation. Use the existing native
-command adapter without adding a shared control API. Verify confirmation (including
-Keep Invitation), actual cancellation, concurrent invitation locks and recovery in
-mounted tests, then native phone/iPad reachability with the keyboard dismissed.
-Do not claim the native menu/keyboard root cause is resolved from source tests.
+End keyboard editing before presenting confirmation. Verify menu selection,
+Keep Invitation, cancellation, concurrent locks and recovery in existing behavior
+tests, then native phone/iPad reachability and full-screen row composition.
 
 ## Native fixture observation boundaries
 

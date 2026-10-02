@@ -641,6 +641,7 @@ export const mobileMessages = {
   "mobile.InventorySharingScreen.noInvitationsYet": "No invitations yet.",
   "mobile.InventorySharingScreen.cancelling": "Cancelling…",
   "mobile.InventorySharingScreen.couldNotCancelInvitation": "Could not cancel invitation",
+  "mobile.InventorySharingScreen.invitationActions": "Invitation actions for {email}",
   "mobile.InventorySharingScreen.cancelInvitation": "Cancel invitation",
   "mobile.InventorySharingScreen.loadingOlderInvitations": "Loading older invitations…",
   "mobile.InventorySharingScreen.loadOlderInvitations": "Load older invitations",

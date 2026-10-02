@@ -25,6 +25,7 @@ on:
           - browse-filter-journey
           - browse-header-filter
           - filter-sharing-workflows
+          - sharing-actions
           - followup-release
           - filters
           - voice-accessory-navigation
@@ -302,6 +303,13 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs'
+              )
+              ;;
+            sharing-actions)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSharingRecoveryKeepsHeaderAndCommandsReachable'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSharingFooterClearsPersistentTabsAndVoiceAccessory'
               )
               ;;
             tab-content-clearance)

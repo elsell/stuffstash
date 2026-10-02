@@ -112,10 +112,12 @@ above the voice accessory and persistent tabs. Sharing captures likewise show th
 the voice accessory, with the device's tabs visible. These are controlled native fixtures, not authenticated production
 journeys. [Current evidence](../../docs/reports/spec-gap-evidence-2026-10-01/core-workflows/README.md).
 
-No new task-blocking defect was established by the focused review. The proposed
-Sharing row-menu change is awaiting user confirmation; do not implement it merely
-to fill a batch. Physical export recipient saving, connected native sign-in,
-assistive checks and production performance evidence remain outstanding.
+No new task-blocking defect was established by the focused review. On October 2,
+the user approved replacing repeated Sharing cancellation buttons with a trailing
+native invitation menu and an isolated authenticated test server on Paul. This
+batch preserves cancellation confirmation and permissions; phone/iPad menu and
+footer verification precede release. Physical export recipient saving, connected
+native sign-in, assistive checks and production performance remain outstanding.
 
 The already-running RTL run36936112035 completed successfully on both devices;
 no further run was started. Its test result does not imply new visual acceptance.

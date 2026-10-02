@@ -1,6 +1,7 @@
 import { t } from '../../presentation/localization';
 import { InvitationEmailInput } from './InvitationEmailInput';
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
+import { NativeActionMenu } from '../components/NativeActionMenu';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { usePullRefresh } from '../serverState/usePullRefresh';
@@ -300,12 +301,17 @@ export function InventorySharingScreen({
                   <Text style={styles.successTitle}>{t('mobile.InventorySharingScreen.couldNotCancelInvitation')}</Text>
                   <Text style={[settingsStyles.errorMessage, styles.inlineFeedback]}>{cancellationErrors[invitation.id]}</Text>
                 </View> : null}
-                {invitation.status === 'pending' && !invitation.isExpired ? (
-                  <NativeCommandButton label={t('mobile.InventorySharingScreen.cancelInvitation')} role="destructive"
-                    disabled={cancellingKeys.has(cancellationKey(invitation.id))}
-                    onPress={() => requestCancellation(invitation)} />
-                ) : null}
               </View>
+              {invitation.status === 'pending' && !invitation.isExpired ? (
+                <NativeActionMenu
+                  accessibilityLabel={t('mobile.InventorySharingScreen.invitationActions', { email: invitation.email })}
+                  disabled={cancellingKeys.has(cancellationKey(invitation.id))}
+                  groups={[{ id: 'invitation', items: [{ id: 'cancel',
+                    label: t('mobile.InventorySharingScreen.cancelInvitation'),
+                    systemImage: 'xmark.circle', isDestructive: true,
+                    onPress: () => requestCancellation(invitation)
+                  }] }]} />
+              ) : null}
             </View>
           </View>
         ))}
