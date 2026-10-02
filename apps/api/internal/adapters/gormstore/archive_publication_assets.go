@@ -2,6 +2,7 @@ package gormstore
 
 import (
 	"encoding/json"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
 
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/gorm"
@@ -49,6 +50,14 @@ func restoreArchiveAssets(tx *gorm.DB, d ports.InventoryExportDocument, principa
 			if err := tx.Create(&row).Error; err != nil {
 				return err
 			}
+			thumbnail, err := media.PlanThumbnailJob(m)
+			if err != nil {
+				return err
+			}
+			if err = enqueueThumbnailJob(tx, m, thumbnail); err != nil {
+				return err
+			}
+
 		}
 		if c := a.CurrentCheckout; c != nil {
 			if c.TenantID.String() != d.TenantID || c.InventoryID.String() != d.InventoryID || c.AssetID.String() != a.ID || c.CheckedOutByPrincipal != principal {

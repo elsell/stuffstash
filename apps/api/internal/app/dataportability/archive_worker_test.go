@@ -62,7 +62,9 @@ func TestArchiveWorkerExportsOriginalAndFencesPublication(t *testing.T) {
 			record.Action = audit.ActionAttachmentCreated
 			record.TargetType = audit.TargetAttachment
 			record.TargetID = "photo"
-			must(store.SaveAttachment(ctx, attachment, record, nil))
+			thumbnail, thumbnailErr := media.PlanThumbnailJob(attachment)
+			must(thumbnailErr)
+			must(store.SaveAttachment(ctx, attachment, record, thumbnail))
 			storage := &archiveCompletionStorage{StreamingBlobStorage: blobstore.NewFileSystemStore(t.TempDir())}
 			must(storage.PutBlobStream(ctx, ports.BlobStreamWrite{Key: attachment.StorageKey, ContentType: "image/jpeg", SizeBytes: int64(len(content)), MaxBytes: 1024, Content: bytes.NewReader(content)}))
 			auth := memory.NewAuthorizer()

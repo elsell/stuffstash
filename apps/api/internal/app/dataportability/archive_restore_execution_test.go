@@ -102,6 +102,13 @@ func verifyArchiveRestoreOnFreshInstance(t *testing.T, archive []byte, original 
 			if len(attachments) != 1 || attachments[0].ID == "photo" {
 				t.Fatal("attachment not remapped")
 			}
+			now := (archiveTestClock{}).Now()
+			thumbnails, err := store.ClaimThumbnailJobs(ctx, "restored-thumbnails", 10, now, now.Add(time.Minute))
+			must(err)
+			if len(thumbnails) != 1 || thumbnails[0].Job.AttachmentID != attachments[0].ID {
+				t.Fatal("restored image missing thumbnail work")
+			}
+
 			stream, _, err := storage.OpenBlobStream(ctx, attachments[0].StorageKey)
 			must(err)
 			defer stream.Close()
