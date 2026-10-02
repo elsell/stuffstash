@@ -37,6 +37,7 @@ on:
           - settings-commands
           - inventory-export
           - inventory-archive
+          - connected-native
           - android-build
           - image-telemetry
           - localization
@@ -98,8 +99,12 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
 
 jobs:
+  connected:
+    if: inputs.test_case == 'connected-native'
+    uses: ./.github/workflows/mobile-connected-native.yml
+
   ios:
-    if: inputs.test_case != 'android-build'
+    if: inputs.test_case != 'android-build' && inputs.test_case != 'connected-native'
     name: iOS ${{ matrix.suite }} (${{ matrix.device }})${{ inputs.test_case && inputs.test_case != 'all' && format(' [{0}]', inputs.test_case) || '' }}
     runs-on: macos-26
     timeout-minutes: 120
