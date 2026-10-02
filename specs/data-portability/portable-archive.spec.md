@@ -308,3 +308,5 @@ creation and ZIP upload. Unconfigured origins receive no CORS grant.
 
 Archive HTTP DTO schema names are domain-qualified to avoid collisions with other
 bounded contexts in the shared OpenAPI registry.
+
+Job lists return newest IDs first, with the next cursor selecting older records.

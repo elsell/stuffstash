@@ -73,9 +73,9 @@ func (s Store) ListArchiveJobs(ctx context.Context, scope ports.ArchiveJobScope,
 	}
 	q := archiveJobQuery(s.db.WithContext(ctx), scope)
 	if after != "" {
-		q = q.Where(clause.Gt{Column: "id", Value: after})
+		q = q.Where(clause.Lt{Column: "id", Value: after})
 	}
-	return readArchiveJobs(q.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).Limit(limit))
+	return readArchiveJobs(q.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: true}).Limit(limit))
 }
 func (s Store) UpdateArchiveJob(ctx context.Context, r archivejob.Record, expected int64) (bool, error) {
 	if r.TenantID == "" || r.ID == "" || expected <= 0 || r.Revision != expected+1 {

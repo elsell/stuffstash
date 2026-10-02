@@ -26,6 +26,9 @@ import (
 )
 
 func TestArchiveJobHTTPBoundary(t *testing.T) {
+	runArchiveJobHTTPBoundary(t, nil, false)
+}
+func runArchiveJobHTTPBoundary(t *testing.T, coverage *executedScenarioCoverage, adversarial bool) {
 	ctx := context.Background()
 	must := func(err error) {
 		t.Helper()
@@ -50,6 +53,21 @@ func TestArchiveJobHTTPBoundary(t *testing.T) {
 	service, err := dataportability.NewArchiveService(dataportability.ArchiveDependencies{Jobs: store, Artifacts: store, Commands: store, Audit: readAudit, Plans: inventoryarchive.PlanCodec{}, MaxMetadataBytes: 1 << 16, MaxRecords: 100, Authorizer: authorizer, Inventories: store, Tenants: store, IDs: idgen.NewULIDGenerator(), Clock: ports.SystemClock{}, Storage: blobstore.NewFileSystemStore(t.TempDir()), Scratch: blobstore.ScratchSpace{Directory: t.TempDir()}, MaxArchiveBytes: 1 << 20, Retention: time.Hour, CleanupTimeout: time.Second})
 	must(err)
 	server := NewServerWithOptions(":0", newTestAppWithAuthorizer(nil, authorizer), Options{Archives: &service, MaxJSONBodyBytes: 512})
+	if coverage != nil {
+		next := server.Handler
+		server.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			response := httptest.NewRecorder()
+			next.ServeHTTP(response, r)
+			if r.Pattern != "" && ((adversarial && response.Code >= 400) || (!adversarial && response.Code < 400)) {
+				coverage.operation[r.Pattern] = struct{}{}
+			}
+			for name, values := range response.Header() {
+				w.Header()[name] = values
+			}
+			w.WriteHeader(response.Code)
+			_, _ = w.Write(response.Body.Bytes())
+		})
+	}
 	path := "/tenants/home/archive-jobs"
 	body := map[string]any{"inventoryId": "inventory", "photos": true, "otherFiles": true}
 	headers := map[string]string{"Idempotency-Key": "request"}
@@ -81,6 +99,12 @@ func TestArchiveJobHTTPBoundary(t *testing.T) {
 		r := performRequest(server, http.MethodGet, test.path, test.token, nil)
 		if r.Code != test.code {
 			t.Fatalf("private job %d want%d: %s", r.Code, test.code, r.Body.String())
+		}
+	}
+	for _, attempt := range []struct{ method, path string }{{http.MethodGet, path + "?inventoryId=inventory"}, {http.MethodDelete, item + "?inventoryId=inventory"}, {http.MethodGet, item + "/preview?inventoryId=inventory"}} {
+		denied := performRequest(server, attempt.method, attempt.path, "", nil)
+		if denied.Code != 401 {
+			t.Fatalf("unauthenticated archive operation: %d", denied.Code)
 		}
 	}
 	listed := performRequest(server, http.MethodGet, path+"?inventoryId=inventory", "Bearer dev:viewer", nil)
@@ -208,10 +232,45 @@ func TestArchiveJobHTTPBoundary(t *testing.T) {
 	}
 	queued := performRequestWithHeaders(server, http.MethodPost, path, "Bearer dev:owner", map[string]string{"Idempotency-Key": "cancel-me"}, body)
 	must(json.Unmarshal(queued.Body.Bytes(), &job))
+	newest := performRequest(server, http.MethodGet, path+"?inventoryId=inventory&limit=1", "Bearer dev:owner", nil)
+	var page struct {
+		Data []struct {
+			ID string `json:"id"`
+		}
+		Meta struct {
+			Pagination struct {
+				NextCursor string `json:"nextCursor"`
+			}
+		}
+	}
+	must(json.Unmarshal(newest.Body.Bytes(), &page))
+	if len(page.Data) != 1 || page.Data[0].ID != job.Data.ID {
+		t.Fatal("archive jobs not newest first")
+	}
+	older := performRequest(server, http.MethodGet, path+"?inventoryId=inventory&limit=1&after="+page.Meta.Pagination.NextCursor, "Bearer dev:owner", nil)
+	must(json.Unmarshal(older.Body.Bytes(), &page))
+	if len(page.Data) != 1 || page.Data[0].ID == job.Data.ID {
+		t.Fatal("archive cursor repeated latest job")
+	}
 	item = path + "/" + job.Data.ID
 	r = performRequest(server, http.MethodDelete, item+"?inventoryId=inventory", "Bearer dev:owner", nil)
 	if r.Code != 200 || !strings.Contains(r.Body.String(), "cancelled") {
 		t.Fatal("cancel failed")
+	}
+	// A corrupt archive reaches a durable validation failure and can be retried.
+	invalid := upload("Bearer dev:owner", "invalid-archive", "application/zip", []byte("not a ZIP"))
+	if invalid.Code != 201 {
+		t.Fatal(invalid.Body.String())
+	}
+	must(json.Unmarshal(invalid.Body.Bytes(), &restore))
+	failedJob, _, err := store.ArchiveJobByID(ctx, ports.ArchiveJobScope{TenantID: "home"}, restore.Data.ID)
+	must(err)
+	if err = worker.RunJob(ctx, failedJob); err == nil {
+		t.Fatal("invalid archive accepted")
+	}
+	retried := performRequest(server, http.MethodPost, path+"/"+restore.Data.ID+"/retry", "Bearer dev:owner", nil)
+	if retried.Code != 200 || !strings.Contains(retried.Body.String(), "queued") {
+		t.Fatalf("retry: %d %s", retried.Code, retried.Body.String())
 	}
 	readAudit.fail = true
 	for _, path := range []string{downloadPath, item + "?inventoryId=inventory", restorePath + "/preview", "/tenants/home/archive-jobs?inventoryId=inventory"} {
