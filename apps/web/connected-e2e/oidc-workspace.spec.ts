@@ -1,3 +1,4 @@
+import { verifyEditAccessibility } from './edit-accessibility';
 import { addArchivePhoto } from './archive-media';
 import { verifyArchiveJourney } from './archive-journey';
 import { readFile } from 'node:fs/promises';
@@ -78,6 +79,7 @@ test('real OIDC workspace, item creation and exports preserve principal isolatio
   await expect(page.getByRole('heading', { name: itemTitle, exact: true })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('connected-edited-asset.png') });
   expect(await inventoryStatus(request, assetURL)).toBe(401);
+  await verifyEditAccessibility(page, assetPath, itemTitle, testInfo);
   await page.goto(`/settings/tenants/${scope[1]}/inventories/${scope[2]}`);
   for (const format of ['json', 'csv'] as const) {
     await page.getByRole('button', { name: 'Export inventory', exact: true }).click();
