@@ -1082,3 +1082,9 @@ inventory scope; scope changes discard it. No transcript/token is persisted in
 browser storage. Tests verify normal text, review/cancel, scope teardown, expired
 sessions, and keyboard/focus behavior; real browser journeys verify the connected
 workflow and layout rather than isolated component styling.
+
+The seeded access repository must allocate distinct invitation identities even
+when multiple invitations are created in the same clock tick. Cancelling or deleting
+one invitation must leave other invitations intact. Test fixtures must not rely
+on sleeps to establish identity. Demo link tokens must also be distinct across
+sequence-width transitions; they remain non-production credentials.

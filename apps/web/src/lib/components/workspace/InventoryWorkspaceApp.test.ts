@@ -1364,7 +1364,6 @@ describe('InventoryWorkspaceApp route application', () => {
       'friend@example.test',
       'viewer'
     );
-    await new Promise((resolve) => window.setTimeout(resolve, 2));
     const deleteTarget = await repository.createInventoryAccessInvitation(
       'tenant-home',
       'inventory-household',

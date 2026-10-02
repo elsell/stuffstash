@@ -65,6 +65,24 @@ afterEach(() => {
 });
 
 describe('SeededInventoryRepository tenant selection', () => {
+  it('keeps same-tick invitations independent when one is cancelled', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-02T12:00:00Z'));
+    const repository = new SeededInventoryRepository(structuredClone(seed));
+    const first = await repository.createInventoryAccessInvitation('tenant-home', 'inventory-household', 'first@example.test', 'viewer');
+    const second = await repository.createInventoryAccessInvitation('tenant-home', 'inventory-household', 'second@example.test', 'viewer');
+    expect(first.invitation.id).not.toBe(second.invitation.id);
+    await repository.cancelInventoryAccessInvitation('tenant-home', 'inventory-household', first.invitation.id);
+    const pending = await repository.listInventoryAccessInvitations('tenant-home', 'inventory-household', 'pending');
+    expect(pending.items.map(value => value.email)).toEqual(['second@example.test']);
+    const tokens = [first, second].map(value => new URL(value.inviteUrl).hash);
+    for (let index = 2; index < 70; index++) {
+      const created = await repository.createInventoryAccessInvitation('tenant-home', 'inventory-household', `person-${index}@example.test`, 'viewer');
+      tokens.push(new URL(created.inviteUrl).hash);
+    }
+    expect(new Set(tokens).size).toBe(tokens.length);
+  });
+
   it('loads the selected tenant inventories and scopes assets to its first inventory', async () => {
     const repository = new SeededInventoryRepository(seed);
 
