@@ -45,6 +45,29 @@ class RuntimeTests(unittest.TestCase):
         finally:
             runtime.stop([live, exited])
 
+    def test_anonymous_discovery_requires_401_on_existing_route(self):
+        class Discovery(BaseHTTPRequestHandler):
+            denial = 401
+            def do_GET(self):
+                self.send_response(self.denial if self.path == '/me/tenants' else 405)
+                self.end_headers()
+            def log_message(self, *args):
+                pass
+        server = HTTPServer(('127.0.0.1', 0), Discovery)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            base = 'http://127.0.0.1:' + str(server.server_port)
+            self.assertEqual(runtime.verify_anonymous_discovery(base), 401)
+            for status in [200, 403, 404, 500]:
+                Discovery.denial = status
+                with self.assertRaisesRegex(RuntimeError, str(status)):
+                    runtime.verify_anonymous_discovery(base)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
+
     def test_readiness_requires_live_process_and_successful_http(self):
         class Ready(BaseHTTPRequestHandler):
             def do_GET(self):

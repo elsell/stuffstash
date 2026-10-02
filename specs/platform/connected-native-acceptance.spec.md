@@ -44,7 +44,9 @@ isolated verification run; production transport policy remains unchanged.
 ## Critical checks and stop conditions
 
 Verify discovery and service readiness before building/running the app. Assert
-missing-token API access is denied before the native journey. Bound startup and
+missing-token API access to the existing `GET /me/tenants` discovery route is
+denied before the native journey; authenticated tenant discovery uses the same
+route. Retain the numeric denial status, never response bodies or tokens. Bound startup and
 workflow waits by the expected operation, and fail with a specific stage when it
 cannot complete. Preserve the original failure result during cleanup.
 

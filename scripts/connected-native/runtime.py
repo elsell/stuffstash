@@ -31,6 +31,18 @@ def wait_http(url, processes, timeout=90):
     raise RuntimeError('Connected service readiness deadline exceeded')
 
 
+def verify_anonymous_discovery(base_url):
+    try:
+        with urllib.request.urlopen(base_url + '/me/tenants', timeout=5) as response:
+            status = response.status
+    except urllib.error.HTTPError as error:
+        status = error.code
+        error.close()
+    if status != 401:
+        raise RuntimeError(f'Anonymous tenant discovery returned HTTP {status}, expected 401')
+    return status
+
+
 def stop(processes):
     for process in reversed(processes):
         if process.poll() is None:
@@ -119,12 +131,7 @@ def main():
         launch('stuff-stash')
         wait_http('http://localhost:8080/healthz', processes)
         result['stage'] = 'unauthenticated-access'
-        try:
-            urllib.request.urlopen('http://localhost:8080/tenants', timeout=5)
-            raise RuntimeError('Unauthenticated API access was accepted')
-        except urllib.error.HTTPError as error:
-            if error.code != 401:
-                raise RuntimeError('Unauthenticated API access did not return 401') from None
+        result['anonymousStatus'] = verify_anonymous_discovery('http://localhost:8080')
         result['stage'] = 'native-journey'
         # Keep service secrets out of the XCTest subprocess environment.
         command = subprocess.Popen(sys.argv[1:], cwd=ROOT, start_new_session=True)

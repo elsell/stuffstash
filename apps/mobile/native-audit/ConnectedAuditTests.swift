@@ -139,7 +139,7 @@ final class ConnectedAuditTests: XCTestCase {
 
     stage = "server-persistence"
     let owner = try token("owner@example.com")
-    let tenants = try list("/tenants", token: owner)
+    let tenants = try list("/me/tenants", token: owner)
     let tenant = try XCTUnwrap(tenants.first?["id"] as? String)
     let inventories = try list("/tenants/\(tenant)/inventories", token: owner)
     let inventory = try XCTUnwrap(inventories.first?["id"] as? String)
@@ -159,7 +159,7 @@ final class ConnectedAuditTests: XCTestCase {
     XCTAssertFalse(app.staticTexts["Native Audit Home"].exists)
     XCTAssertFalse(app.staticTexts["Connected native lamp"].exists)
     let other = try token("viewer@example.com")
-    XCTAssertTrue(try list("/tenants", token: other).isEmpty, "Other principal must have no owner membership")
+    XCTAssertTrue(try list("/me/tenants", token: other).isEmpty, "Other principal must have no owner membership")
     let (denied, _) = try response(path, token: other)
     XCTAssertTrue([403, 404].contains(denied), "Other principal must not read the owner inventory")
     let (anonymous, _) = try response(path)

@@ -61,8 +61,9 @@ fixed-clock regression proves cancellation must preserve the other invitation;
 monotonic invitation IDs remove the test's timing dependency. This repairs the
 batch's evidence gate without changing production invitation generation.
 The fixes preserve recovery state, command dispatch and English wording. Focused
-onboarding/checkout/localization checks pass locally; release and native acceptance
-are not yet established. Other residual candidates remain unreviewed.
+onboarding/checkout/localization checks pass locally. PR #249 merged at
+5961748e after CI37049355677 and Docs37049355682 passed. Release37049926510
+is running; native acceptance remains separate. Other residual candidates remain unreviewed.
 
 ## Next frozen batch — inventory discovery recovery
 
@@ -84,7 +85,12 @@ First hosted run37049766681 at0c70ae4f compiled the pinned services but stopped
 before native compilation during API startup. The harness omitted the invitation
 origin required by real OIDC startup validation; the next revision supplies an
 explicit loopback origin and records exited service names. No connected-native
-acceptance is claimed from this attempt.
+acceptance is claimed from this attempt. Run37050902819 then passed service
+startup but stopped at the anonymous probe: the harness incorrectly used
+`GET /tenants` instead of the existing `GET /me/tenants` discovery route. The
+probe and both authenticated XCTest discovery calls now use that contract; a
+local HTTP regression requires exactly 401 and rejects other statuses. Native
+compilation and journeys remain unverified until the corrected run completes.
 
 ## Current objective — October 1, 2026
 
