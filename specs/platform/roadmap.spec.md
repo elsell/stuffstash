@@ -119,6 +119,21 @@ batch preserves cancellation confirmation and permissions; phone/iPad menu and
 footer verification precede release. Physical export recipient saving, connected
 native sign-in, assistive checks and production performance remain outstanding.
 
+PR #238 is held: native run36951622669 at `ef5ba7a0` failed on both
+devices because opening invitation actions restored the email keyboard. Initial
+run36946987743 passed iPad recovery and both footer checks; its iPhone cancellation
+retry was obscured by the keyboard. Remounting after failure and explicitly
+blurring the SwiftUI field did not resolve it. Do not repeat unchanged runs or
+claim release readiness. [Failure evidence](../../docs/reports/spec-gap-evidence-2026-10-01/core-workflows/README.md).
+
+The isolated test server on Paul is available at `https://nsa-lnx-rzn.local:28780`
+(API) and port28781 (web), using pinned v0.27.3 images and separate volumes.
+`~/stuffstash-audit-server/README.md` on Paul records the private credential and
+CA locations. PKCE/refresh, tenant/inventory/item create/read, invitation creation
+and cancellation, JSON/CSV export and unrelated-principal denial passed. Hosted
+native runners still need a secure network path; server/API checks do not close
+connected native acceptance. No production resources were changed.
+
 The already-running RTL run36936112035 completed successfully on both devices;
 no further run was started. Its test result does not imply new visual acceptance.
 Issue #236 retains the separate iPad tag/expiration launch evidence gap. Stop
