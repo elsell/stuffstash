@@ -335,3 +335,12 @@ archived settings loading labels use complete messages for each closed state.
 Do not interpolate internal kind, action or lifecycle identifiers into translated
 sentences. Preserve English recovery meaning, draft retention, privacy of transport
 errors, and command behavior. User-authored names remain verbatim parameters.
+
+### Browser photo upload recovery
+
+Storage HTTP rejection and transport failure must use cataloged recovery text even
+when the exception is explicitly safe for presentation. Preserve direct-upload
+failure: neither case may silently retry through JSON or complete metadata.
+Critical tests cover both causes, presentation through the safe-error boundary and
+expanded-locale output. Keep technical target-selection and invalid-invitation
+errors distinct from this deliberately user-visible upload error.

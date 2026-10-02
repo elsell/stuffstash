@@ -1,5 +1,6 @@
 /** Complete workflow messages, including variable-derived notices. */
 export const workflowMessages = {
+  "photos.storageUploadFailed": "Could not upload the photo. Try again.",
   "browse.list": "List",
   "browse.map": "Map",
   "customization.fromHousehold": "From {household}",

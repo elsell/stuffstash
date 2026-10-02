@@ -1,3 +1,5 @@
+import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
+import { t } from '$lib/presentation/localization';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StuffStashInventoryRepository } from './stuffStashInventoryRepository';
 import { AuthenticationRequiredError } from '$lib/application/authenticationRequired';
@@ -842,7 +844,11 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
         previewUrl: 'blob:photo-one',
         file
       })
-    ).rejects.toThrow('Direct upload to media storage failed.');
+    ).rejects.toSatisfy((error: unknown) => {
+      expect(error).toBeInstanceOf(Error);
+      expect(safeWorkspaceErrorMessage(error, 'fallback')).toBe(t('photos.storageUploadFailed'));
+      return true;
+    });
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
       'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads',
       'PUT https://uploads.local/object-one'
@@ -863,7 +869,11 @@ describe('StuffStashInventoryRepository workspace and assets', () => {
         previewUrl: 'blob:photo-one',
         file
       })
-    ).rejects.toThrow('Direct upload to media storage failed.');
+    ).rejects.toSatisfy((error: unknown) => {
+      expect(error).toBeInstanceOf(Error);
+      expect(safeWorkspaceErrorMessage(error, 'fallback')).toBe(t('photos.storageUploadFailed'));
+      return true;
+    });
     expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual([
       'POST http://api.local/tenants/tenant-home/inventories/inventory-household/assets/asset-passport/attachments/direct-uploads',
       'PUT https://uploads.local/object-one'
