@@ -1,0 +1,19 @@
+{
+  "sourceRevision": "588e415326463566c63abf4e061e89663627d383",
+  "date": "2026-10-02",
+  "host": "paul",
+  "device": "stuffstash-audit-api36 / emulator-5580",
+  "androidApi": 36,
+  "java": "Temurin 17.0.16+8",
+  "gradle": "9.0.0",
+  "buildVariant": "release, debug-signed audit fixture, x86_64",
+  "emulatorBoot": "passed after setup recovery",
+  "build": "failed resolving com.facebook.react.settings: modified immutable Gradle transform workspaces",
+  "runtimeChecks": {
+    "nativeUploadIntegrity": "not run",
+    "rejectionRecoveryAndCancellation": "not run",
+    "restoreReviewAndApproval": "not run"
+  },
+  "physicalDeviceAcceptance": "not performed",
+  "decision": "Investigation stopped; no unchanged retry or further per-entry cache deletion"
+}
