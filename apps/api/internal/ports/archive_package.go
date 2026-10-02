@@ -2,6 +2,7 @@ package ports
 
 import (
 	"context"
+	"errors"
 	"io"
 	"time"
 )
@@ -27,3 +28,22 @@ type ArchivePackageInput struct {
 	ExportedAt         time.Time
 	Media              []ArchivePackageMedia
 }
+
+// The supplied ReaderAt remains open and immutable while content is consumed.
+type ArchivePackageReader interface {
+	ReadPackage(context.Context, io.ReaderAt, int64, ArchivePackageLimits) (ArchivePackageContents, error)
+}
+type ArchivePackageContents struct {
+	Metadata           []byte
+	Photos, OtherFiles bool
+	ExportedAt         time.Time
+	Media              []ArchivePackageMedia
+	Source             ArchiveContentSource
+}
+type ArchivePlanCodec interface {
+	EncodePlan(context.Context, ArchiveRestorePlan, int) ([]byte, error)
+	DecodePlan(context.Context, []byte, int) (ArchiveRestorePlan, error)
+}
+
+var ErrArchivePackageInvalid = errors.New("invalid inventory archive")
+var ErrArchivePackageLimit = errors.New("inventory archive exceeds configured limit")

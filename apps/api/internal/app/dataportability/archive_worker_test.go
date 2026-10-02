@@ -107,7 +107,7 @@ func TestArchiveWorkerExportsOriginalAndFencesPublication(t *testing.T) {
 				}
 				return nil
 			}
-			worker, err := dataportability.NewArchiveWorker(dataportability.ArchiveWorkerDependencies{Service: service, Snapshots: store, Metadata: inventoryarchive.MetadataCodec{}, Packages: inventoryarchive.PackageCodec{}, Limits: ports.ArchivePackageLimits{CompressedBytes: 1 << 20, ExpandedBytes: 1 << 20, MetadataBytes: 1 << 16, EntryBytes: 1 << 20, Entries: 100}, MaxRecords: 100, LeaseDuration: time.Minute, HeartbeatInterval: time.Second})
+			worker, err := dataportability.NewArchiveWorker(dataportability.ArchiveWorkerDependencies{Service: service, Snapshots: store, Metadata: inventoryarchive.MetadataCodec{}, Packages: inventoryarchive.PackageCodec{}, Readers: inventoryarchive.PackageCodec{}, Plans: inventoryarchive.PlanCodec{}, Fields: store, Types: store, Publisher: gormstore.NewArchiveRestorePublisher(store, clock, 100), Limits: ports.ArchivePackageLimits{CompressedBytes: 1 << 20, ExpandedBytes: 1 << 20, MetadataBytes: 1 << 16, EntryBytes: 1 << 20, Entries: 100}, MaxRecords: 100, LeaseDuration: time.Minute, HeartbeatInterval: time.Second})
 			must(err)
 			err = worker.RunJob(ctx, job)
 			current, found, readErr := store.ArchiveJobByID(ctx, ports.ArchiveJobScope{TenantID: "home", SourceInventoryID: "inventory"}, job.ID)
@@ -170,6 +170,10 @@ func TestArchiveWorkerExportsOriginalAndFencesPublication(t *testing.T) {
 			if !bytes.Equal(restored, content) {
 				t.Fatal("original lost")
 			}
+			packageBytes := make([]byte, size)
+			_, readErr = stream.ReadAt(packageBytes, 0)
+			must(readErr)
+			verifyArchiveRestoreOnFreshInstance(t, packageBytes, content)
 		})
 	}
 }

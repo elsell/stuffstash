@@ -18,6 +18,11 @@ type ArchiveWorkerDependencies struct {
 	Snapshots                        ports.ArchiveSnapshotRepository
 	Metadata                         ports.ArchiveMetadataCodec
 	Packages                         ports.ArchivePackageWriter
+	Readers                          ports.ArchivePackageReader
+	Plans                            ports.ArchivePlanCodec
+	Fields                           ports.CustomFieldDefinitionRepository
+	Types                            ports.CustomAssetTypeRepository
+	Publisher                        ports.ArchiveRestoreUnitOfWork
 	Limits                           ports.ArchivePackageLimits
 	MaxRecords                       int
 	LeaseDuration, HeartbeatInterval time.Duration
@@ -25,18 +30,14 @@ type ArchiveWorkerDependencies struct {
 type ArchiveWorker struct{ deps ArchiveWorkerDependencies }
 
 func NewArchiveWorker(d ArchiveWorkerDependencies) (ArchiveWorker, error) {
-	if d.Service.deps.Jobs == nil || d.Snapshots == nil || d.Metadata == nil || d.Packages == nil || d.MaxRecords <= 0 || d.Limits.CompressedBytes <= 0 || d.Limits.CompressedBytes > d.Service.deps.MaxArchiveBytes || d.Limits.ExpandedBytes <= 0 || d.Limits.MetadataBytes <= 0 || d.Limits.MetadataBytes > int64(int(^uint(0)>>1)) || d.Limits.EntryBytes <= 0 || d.Limits.Entries < 2 || d.LeaseDuration <= 0 || d.HeartbeatInterval <= 0 || d.HeartbeatInterval >= d.LeaseDuration/2 {
+	if d.Service.deps.Jobs == nil || d.Snapshots == nil || d.Metadata == nil || d.Packages == nil || d.Readers == nil || d.Plans == nil || d.Fields == nil || d.Types == nil || d.Publisher == nil || d.MaxRecords <= 0 || d.Limits.CompressedBytes <= 0 || d.Limits.CompressedBytes > d.Service.deps.MaxArchiveBytes || d.Limits.ExpandedBytes <= 0 || d.Limits.MetadataBytes <= 0 || d.Limits.MetadataBytes > int64(int(^uint(0)>>1)) || d.Limits.EntryBytes <= 0 || d.Limits.EntryBytes > ports.MaxSinglePutBytes || d.Limits.MetadataBytes > d.Service.deps.MaxArchiveBytes || d.Limits.Entries < 2 || d.LeaseDuration <= 0 || d.HeartbeatInterval <= 0 || d.HeartbeatInterval >= d.LeaseDuration/2 {
 		return ArchiveWorker{}, apperrors.ErrInvalidInput
 	}
 	return ArchiveWorker{deps: d}, nil
 }
 
-// RunJob claims one export attempt. Restore execution is added separately before
-// runtime registration; unsupported jobs must remain queued, never be claimed.
+// RunJob claims one attempt and owns its lease through final publication.
 func (w ArchiveWorker) RunJob(ctx context.Context, job archivejob.Record) error {
-	if job.Kind != archivejob.Export {
-		return archivejob.ErrTransition
-	}
 	s := w.deps.Service
 	now := s.deps.Clock.Now()
 	until := now.Add(w.deps.LeaseDuration)
@@ -60,12 +61,8 @@ func (w ArchiveWorker) RunJob(ctx context.Context, job archivejob.Record) error 
 	}
 	work, cancel := context.WithCancel(ctx)
 	defer cancel()
-	type result struct {
-		artifact string
-		err      error
-	}
-	done := make(chan result, 1)
-	go func() { artifact, err := w.export(work, claimed); done <- result{artifact, err} }()
+	done := make(chan archiveWorkResult, 1)
+	go func() { done <- w.execute(work, claimed) }()
 	ticker := time.NewTicker(w.deps.HeartbeatInterval)
 	defer ticker.Stop()
 	// This loop exclusively owns the changing job revision. Packaging only uses
@@ -116,17 +113,12 @@ func (w ArchiveWorker) RunJob(ctx context.Context, job archivejob.Record) error 
 			job = next
 		case output := <-done:
 			if output.err != nil {
-				return w.fail(ctx, job, archivejob.FailureStorage, output.err)
+				return w.fail(ctx, job, archiveExecutionFailure(output.err), output.err)
 			}
 			if err = s.authorize(ctx, archiveJobAccess(job)); err != nil {
 				return w.fail(ctx, job, archivejob.FailurePermission, err)
 			}
-			next, completeErr := job.Complete(job.LeaseToken, s.deps.Clock.Now(), output.artifact)
-			if completeErr != nil {
-				return completeErr
-			}
-			_, completeErr = s.transition(ctx, job, next, nil)
-			return completeErr
+			return w.publish(ctx, job, output)
 		}
 	}
 }
@@ -140,4 +132,45 @@ func (w ArchiveWorker) fail(ctx context.Context, job archivejob.Record, failure 
 	}
 	_, err = w.deps.Service.transition(ctx, job, next, nil)
 	return errors.Join(cause, err)
+}
+
+func (w ArchiveWorker) publish(ctx context.Context, job archivejob.Record, output archiveWorkResult) error {
+	s := w.deps.Service
+	if job.Kind == archivejob.Restore && job.Phase == archivejob.Execution {
+		if output.plan == nil {
+			return w.fail(ctx, job, archivejob.FailureInternal, ErrArchiveMetadata)
+		}
+		records, err := BuildArchiveRestoreAudits(*output.plan, job, s.deps.IDs, s.deps.Clock)
+		if err != nil {
+			return w.fail(ctx, job, archivejob.FailureInternal, err)
+		}
+		completed, err := w.deps.Publisher.PublishArchiveRestore(ctx, ports.ArchiveRestorePublication{Job: job, Plan: *output.plan, OwnerGrantEventID: s.deps.IDs.NewID(), AuditRecords: records})
+		// A commit error may be ambiguous. CAS failure after committed publication
+		// cannot turn the completed job into a failed one.
+		if err != nil {
+			return w.fail(ctx, job, archivejob.FailureConflict, err)
+		}
+		s.observe(ctx, ports.EventArchiveJobUpdated, completed)
+		return nil
+	}
+	var next archivejob.Record
+	var err error
+	if job.Kind == archivejob.Restore {
+		next, err = job.PreviewReady(job.LeaseToken, s.deps.Clock.Now(), output.artifact, output.planHash, output.destination)
+	} else {
+		next, err = job.Complete(job.LeaseToken, s.deps.Clock.Now(), output.artifact)
+	}
+	_, err = s.transition(ctx, job, next, err)
+	return err
+}
+
+func archiveExecutionFailure(err error) archivejob.Failure {
+	switch {
+	case errors.Is(err, ErrArchiveMetadata), errors.Is(err, ports.ErrArchivePackageInvalid):
+		return archivejob.FailureInvalidArchive
+	case errors.Is(err, ports.ErrArchivePackageLimit), errors.Is(err, ports.ErrInventoryExportLimit), errors.Is(err, ports.ErrBlobStreamSize):
+		return archivejob.FailureLimit
+	default:
+		return archivejob.FailureStorage
+	}
 }

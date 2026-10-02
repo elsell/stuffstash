@@ -244,3 +244,12 @@ ZIP. Metadata retains omitted attachment descriptions. Before publishing a ready
 download, recheck current permission and the current job lease/revision. Failed
 or ambiguously acknowledged publication leaves private artifacts for reconciled
 retention cleanup; it never deletes an artifact that might already be published.
+
+Restore validation checks the source object's complete SHA-256 before decoding,
+then requires the manifest media set to exactly match the selected metadata
+attachments (including lengths). Preview allocates destination IDs once and saves
+a bounded, private plan with its own checksum. Execution verifies that checksum,
+uses the approved name, and stages each original file under its remapped attachment
+key. Only after all selected bytes are staged does the atomic publication command
+create the inventory and complete the job. A changed source, incomplete media set,
+or altered plan cannot produce a successful restore.

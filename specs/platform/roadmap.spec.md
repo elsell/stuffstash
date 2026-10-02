@@ -17,6 +17,14 @@ delivery priority within the audit goal, not an export-only scope reduction.
 Preserve prior unresolved native/physical evidence; do not let it block independent
 archive implementation. Production GitOps deployment is part of release completion.
 
+Draft PR #244 contains the archive format, durable jobs, metadata validation,
+immutable restore previews, and atomic restore publication. Export and restore
+worker execution is implemented but not yet registered at runtime. Job-service CI
+passed at `f7a0e3cb` (run `37010621870`); newer worker/round-trip checks remain
+pending. Remaining delivery work: retention and recovery cleanup, runtime config
+and registration, adversarial HTTP boundaries, web/mobile controls, connected
+acceptance, release and production deployment. Do not treat this draft as shipped.
+
 ## Current objective — October 1, 2026
 
 Close the documentation, implementation and verification gaps in

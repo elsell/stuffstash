@@ -46,12 +46,19 @@ func BuildArchiveRestoreAudits(plan ports.ArchiveRestorePlan, job archivejob.Rec
 		}
 	}
 	records := []audit.Record{}
-	for _, target := range archiveAuditTargets(d) {
+	targets := append(archiveAuditTargets(d), archiveAuditTarget{audit.TargetArchiveJob, job.ID, audit.ActionArchiveJobUpdated})
+	for _, target := range targets {
 		metadata := map[string]string{"archive_job_id": job.ID}
 		if target.action == audit.ActionAssetCheckedOut {
 			metadata["source_principal_id"] = principals[target.id]
 		}
-		record, ok := audit.NewRecord(audit.ID(ids.NewID()), audit.TenantID(d.TenantID), audit.InventoryID(d.InventoryID), audit.PrincipalID(job.PrincipalID), target.action, audit.SourceImport, target.kind, target.id, clock.Now(), job.ID, metadata)
+		inventoryID := audit.InventoryID(d.InventoryID)
+		if target.kind == audit.TargetArchiveJob {
+			inventoryID = ""
+			metadata["state"] = string(archivejob.Ready)
+			metadata["kind"] = string(archivejob.Restore)
+		}
+		record, ok := audit.NewRecord(audit.ID(ids.NewID()), audit.TenantID(d.TenantID), inventoryID, audit.PrincipalID(job.PrincipalID), target.action, audit.SourceImport, target.kind, target.id, clock.Now(), job.ID, metadata)
 		if !ok {
 			return nil, ErrArchiveMetadata
 		}
@@ -64,10 +71,15 @@ func ValidateArchiveRestoreAudits(d ports.InventoryExportDocument, records []aud
 	for _, target := range archiveAuditTargets(d) {
 		required[target] = true
 	}
+	required[archiveAuditTarget{audit.TargetArchiveJob, jobID, audit.ActionArchiveJobUpdated}] = true
 	seenIDs := map[string]bool{}
 	for _, r := range records {
 		target := archiveAuditTarget{r.TargetType, r.TargetID, r.Action}
-		if !required[target] || r.TenantID.String() != d.TenantID || r.InventoryID.String() != d.InventoryID || r.PrincipalID.String() != principal || r.Source != audit.SourceImport || r.Metadata["archive_job_id"] != jobID || r.OccurredAt.IsZero() || r.ID.String() == "" || seenIDs[r.ID.String()] {
+		expectedInventory := d.InventoryID
+		if r.TargetType == audit.TargetArchiveJob {
+			expectedInventory = ""
+		}
+		if !required[target] || r.TenantID.String() != d.TenantID || r.InventoryID.String() != expectedInventory || r.PrincipalID.String() != principal || r.Source != audit.SourceImport || r.Metadata["archive_job_id"] != jobID || r.OccurredAt.IsZero() || r.ID.String() == "" || seenIDs[r.ID.String()] {
 			return ErrArchiveMetadata
 		}
 		delete(required, target)

@@ -5,13 +5,13 @@ package inventoryarchive
 import (
 	"archive/zip"
 	"context"
-	"errors"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 	"io"
 	"time"
 )
 
-var ErrInvalid = errors.New("invalid inventory archive")
-var ErrLimit = errors.New("inventory archive exceeds configured limit")
+var ErrInvalid = ports.ErrArchivePackageInvalid
+var ErrLimit = ports.ErrArchivePackageLimit
 
 const format = "stuffstash.inventory"
 const version = 1
