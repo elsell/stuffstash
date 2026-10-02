@@ -1,5 +1,10 @@
 /** Complete workflow messages, including variable-derived notices. */
 export const workflowMessages = {
+  "recovery.checkoutUnavailable": "Asset checkout is not available.",
+  "recovery.returnUnavailable": "Asset return is not available.",
+  "recovery.returnDetailsUnavailable": "Asset return details are not available.",
+  "recovery.checkoutUndoUnavailable": "Undo is not available.",
+
   "mobile.providers.onboardingRequired": "Complete mobile onboarding before managing voice provider profiles.",
   "mobile.network.timeout": "Network request timed out. Check that the API is reachable from this phone.",
   "web.options.seededInventoryRepository.cancellationRequested": "Cancellation requested",

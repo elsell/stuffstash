@@ -70,6 +70,7 @@ export class SeededInventoryRepository
   private nextAssetSequence = 1;
   private nextTagSequence = 1;
   private nextImportJobSequence = 1;
+  private nextInvitationSequence = 1;
 
   constructor(seed: WorkspaceSeed) {
     this.seed = seed;
@@ -994,9 +995,10 @@ export class SeededInventoryRepository
     email: string,
     relationship: InventoryAccessRelationship
   ): Promise<CreatedInventoryAccessInvitation> {
-    const acceptanceToken = `local_demo_${Date.now().toString(36)}`.padEnd(43, 'x').slice(0, 43);
+    const sequence = this.nextInvitationSequence++;
+    const acceptanceToken = `local_demo_${sequence.toString(36).padStart(32, '0')}`;
     const invitation: InventoryAccessInvitation = {
-      id: `invitation-${Date.now()}`,
+      id: `invitation-${sequence}`,
       tenantId,
       inventoryId,
       email: email.trim().toLowerCase(),

@@ -50,6 +50,20 @@ Documentation follow-up #245 also carries the v0.28.0 self-host image pins from
 file picking and restored-photo opening have been requested from the user on162.1.
 Keep those results, Android runtime and broader audit acceptance open until verified.
 
+## Frozen follow-up batch — recovery copy and triage
+
+Three scoped gaps follow the archive release: G6 household partial-success guidance
+still bypassed the catalog; G6 checkout/return/details/undo availability errors
+were shown verbatim by Home and Details; D2 residual-copy classifications did not
+capture the reviewed recovery paths and the inventory predates archive delivery.
+CI exposed same-tick invitation ID collisions in the seeded web repository. A
+fixed-clock regression proves cancellation must preserve the other invitation;
+monotonic invitation IDs remove the test's timing dependency. This repairs the
+batch's evidence gate without changing production invitation generation.
+The fixes preserve recovery state, command dispatch and English wording. Focused
+onboarding/checkout/localization checks pass locally; release and native acceptance
+are not yet established. Other residual candidates remain unreviewed.
+
 ## Current objective — October 1, 2026
 
 Close the documentation, implementation and verification gaps in

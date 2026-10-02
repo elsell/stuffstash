@@ -1,9 +1,28 @@
 import { expect, it } from 'vitest';
 
-it('localizes voice navigation and move notices without changing user titles or duplicate identity', async () => {
+it('localizes workflow guidance without changing user titles or duplicate identity', async () => {
   const previous = process.env.EXPO_PUBLIC_STUFF_STASH_UI_LOCALE;
   process.env.EXPO_PUBLIC_STUFF_STASH_UI_LOCALE = 'en-XA';
   try {
+    const { onboardingError } = await import('../../ui/screens/OnboardingPresentation');
+    const { OnboardingPartialSetupError } = await import('../onboarding/HouseholdSetup');
+    const partial = onboardingError(new OnboardingPartialSetupError(
+      { step: 'inventory', profile: { apiBaseUrl: 'https://api.example.test', tenantId: 'household' }, tenantName: 'Maple Street' },
+      new Error('private transport diagnostic')
+    ));
+    expect(partial).toMatch(/^\[/);
+    expect(partial).not.toContain('Your household is ready.');
+    expect(partial).not.toContain('private transport diagnostic');
+    expect(partial).not.toBe(onboardingError(new Error()));
+    expect(partial).toContain(onboardingError(new Error()));
+    const { AssetCheckoutCommand } = await import('../assets/AssetCheckoutCommand');
+    const unavailable = new AssetCheckoutCommand({});
+    for (const attempt of [
+      () => unavailable.execute({ action: 'checkout', assetId: 'asset-one' }),
+      () => unavailable.execute({ action: 'return', assetId: 'asset-one' }),
+      () => unavailable.updateReturnedCheckoutDetails({ assetId: 'asset-one', checkoutId: 'checkout-one' }),
+      () => unavailable.undoOperation({ operationId: 'operation-one' })
+    ]) await expect(attempt()).rejects.toThrow(/^\[/);
     const { createTimeoutFetch } = await import('../../adapters/network/TimeoutFetch');
     const pendingFetch: typeof fetch = async (_input, init) => new Promise((_resolve, reject) => {
       init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });

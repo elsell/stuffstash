@@ -1,11 +1,12 @@
 import { t } from '../../presentation/localization';
 import { StyleSheet } from 'react-native';
 import { MobileAuthenticationRequiredError } from '../../application/auth/MobileAuthSession';
-import { OnboardingRecoveryRequiredError } from '../../application/onboarding/HouseholdSetup';
+import { OnboardingPartialSetupError, OnboardingRecoveryRequiredError } from '../../application/onboarding/HouseholdSetup';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
 
 export const initialInventoryName = t('mobile.OnboardingPresentation.homeInventory');
 export function onboardingError(error: unknown): string {
+  if (error instanceof OnboardingPartialSetupError) return t('onboarding.partialSetup', { guidance: onboardingError(error.failure) });
   if (error instanceof MobileAuthenticationRequiredError) return t('mobile.OnboardingPresentation.signInAgainToContinueSetup');
   if (error instanceof OnboardingRecoveryRequiredError) return t('onboarding.creationUnknown');
   if (error instanceof Error) {
