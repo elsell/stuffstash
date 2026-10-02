@@ -9,6 +9,6 @@ it('stops map traversal between pages even when a transport resolves after cance
 it('rejects a repeated traversal cursor', async () => {
   let reads = 0;
   const traversal = new ApiInventoryAssetTraversal({ getAsset: async () => { throw new Error('unused'); }, listAssets: async () => { reads++; if (reads > 3) throw new Error('too many reads'); return { items: [], pagination: { limit: 100, hasMore: true, nextCursor: 'repeat' } }; } });
-  await expect(traversal.listAllActiveInventoryAssets('tenant', 'inventory')).rejects.toThrow('Invalid read continuation cursor');
+  await expect(traversal.listAllActiveInventoryAssets('tenant', 'inventory')).rejects.toThrow('Could not finish loading. Try again.');
   expect(reads).toBe(2);
 });
