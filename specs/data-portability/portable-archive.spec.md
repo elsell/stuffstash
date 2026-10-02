@@ -428,3 +428,14 @@ that time (the configured worker heartbeat interval, capped by job expiry).
 Deferral is an operational CAS update, not another user-visible audit event.
 Later eligible jobs can proceed while a restore awaits authorization. Permission
 denial or dead-lettered grants use the permission-changed failure category.
+
+### Native archive request compatibility
+
+The mobile archive transport must preserve JSON control-request bodies when the
+React Native Request implementation exposes body readers but no public `body`
+stream. Pass explicit URL, method, headers, signal and JSON body to Expo fetch;
+never rely on its Request body detection. Always reject redirects for authenticated
+archive calls. GET downloads retain streaming responses; native restore uploads
+retain their separate file-transfer path and must not be read into JavaScript.
+Verify create and approval with the actual React Native Request polyfill, including
+authorization, idempotency, selection values and cancellation signal preservation.

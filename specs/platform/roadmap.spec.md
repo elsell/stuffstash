@@ -72,6 +72,18 @@ D2 residual-copy inventory distinguishes the remaining cancellation control-flow
 literal. Preserve selected inventory, request limits, cancellation and tenancy.
 This batch is separate from PR #249 delivery and connected-native acceptance.
 
+## Confirmed mobile archive request failure — immediate fix
+
+Physical build165.1 reaches the deployed archive API: job listing returned200,
+archive creation returned400, and native restore upload returned201. The mobile
+archive control path forwards React Native Request to Expo fetch, which reads a
+missing public `body` property and drops JSON. A regression using React Native's
+actual Request/Headers implementation reproduces the missing body. Freeze this
+batch around create request bodies, restore approval request bodies, and streaming/
+authentication regression coverage. Bridge explicit URL/init into Expo fetch;
+retain native upload and streaming downloads. This takes priority over the
+independent connected sign-in verification draft; do not gate this fix on it.
+
 ## Current objective — October 1, 2026
 
 Close the documentation, implementation and verification gaps in

@@ -1,3 +1,4 @@
+import { createExpoArchiveFetch } from '../adapters/archives/ExpoArchiveFetch';
 import { ArchiveClient } from '@stuff-stash/api-client';
 import { requireNativeModule } from 'expo';
 import type { InventoryArchiveWorkspace } from '../application/archives/InventoryArchive';
@@ -286,7 +287,7 @@ export function createMobileComposition(
     repository: new ApiInventoryArchiveRepository(new ArchiveClient({
       baseUrl: profile.apiBaseUrl,
       tokenProvider: () => validIdTokenForProfile(profile, sessionOptions),
-      fetch: async (input, init) => (await import('expo/fetch')).fetch(input, init)
+      fetch: createExpoArchiveFetch(async (input, init) => (await import('expo/fetch')).fetch(input, init))
     }), new NativeArchiveUpload({
       upload: (...args) => archiveModule().upload(...args),
       cancel: id => archiveModule().cancel(id)
