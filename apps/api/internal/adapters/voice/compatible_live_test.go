@@ -20,7 +20,7 @@ func TestCompatibleLocalModelAcceptance(t *testing.T) {
 	const endpoint = "http://127.0.0.1:11434/v1"
 	config := compatibleTestConfig(t, endpoint)
 	config.Profile.ModelName = agentmodel.ModelName("stuffstash-acceptance")
-	config.Profile.RuntimeOptionsJSON = []byte(`{"httpTimeout":"90s"}`)
+	config.Profile.RuntimeOptionsJSON = agentmodel.JSONObject(`{"httpTimeout":"90s"}`)
 	config.Credential = []byte("synthetic-local-marker")
 	factory := ProviderProfileFactory{CompatibleEndpoints: []string{endpoint}}
 	type stage struct {

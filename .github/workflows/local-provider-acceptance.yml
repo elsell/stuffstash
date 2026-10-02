@@ -20,6 +20,8 @@ jobs:
         with:
           go-version: '1.25.8'
           cache-dependency-path: apps/api/go.sum
+      - name: Compile acceptance before downloading model weights
+        run: go test -c -o "$RUNNER_TEMP/local-provider.test" ./apps/api/internal/adapters/voice
       - name: Start isolated pinned runtime
         run: |
           docker volume create local-model-acceptance
@@ -32,7 +34,7 @@ jobs:
         env:
           STUFF_STASH_LOCAL_MODEL_ACCEPTANCE: '1'
           STUFF_STASH_LOCAL_MODEL_EVIDENCE: ${{ github.workspace }}/local-model-evidence/stages.json
-        run: go test -count=1 -timeout=4m ./apps/api/internal/adapters/voice -run '^TestCompatibleLocalModelAcceptance$'
+        run: '"$RUNNER_TEMP/local-provider.test" -test.timeout=4m -test.run=^TestCompatibleLocalModelAcceptance$'
       - name: Retain allowlisted evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
