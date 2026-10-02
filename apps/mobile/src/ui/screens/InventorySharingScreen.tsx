@@ -158,7 +158,7 @@ export function InventorySharingScreen({
         await linkActions.share({ link: visibleCreated.inviteUrl, inventoryName: scope.inventoryName });
       }
     } catch (error) {
-      if (ownsLinkFeedback()) setLinkFeedback({ title: t('mobile.InventorySharingScreen.couldNotInvitation', { action: String(action) }), message: readableError(error) });
+      if (ownsLinkFeedback()) setLinkFeedback({ title: t(`sharing.linkFailed.${action}`), message: readableError(error) });
     } finally {
       if (activeLinkOperation.current === operation) {
         activeLinkOperation.current = undefined;

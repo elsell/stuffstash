@@ -219,5 +219,11 @@ export const workflowMessages = {
   "search.match.location": "Location",
   "search.match.customField": "Custom field",
   "search.match.generic": "Match",
-  "inventory.updated": "Updated {date}"
+  "inventory.updated": "Updated {date}",
+  "workspace.creationFailed.household": "Could not create household. Check your access and connection, then try again.",
+  "workspace.creationFailed.inventory": "Could not create inventory. Check your access and connection, then try again.",
+  "sharing.linkFailed.copy": "Could not copy invitation",
+  "sharing.linkFailed.share": "Could not share invitation",
+  "customization.loading.active": "Loading active settings…",
+  "customization.loading.archived": "Loading archived settings…"
 } as const;
