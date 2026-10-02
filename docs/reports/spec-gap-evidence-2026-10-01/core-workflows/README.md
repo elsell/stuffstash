@@ -34,8 +34,8 @@ assistive use and production performance remain unverified. The roadmap owns the
 current queue; these passing checks are not a new product release.
 
 
-## October 2 Sharing menu regression — release held
+## October 2 Sharing menu regression — accepted release follow-up
 
-PR #238, native run [36951622669](https://github.com/elsell/stuffstash/actions/runs/36951622669), revision `ef5ba7a0`: both devices failed the keyboard-absence assertion when opening invitation actions. The iPhone capture confirms the keyboard obscures the invitation menu. Behavior tests pass but do not establish native acceptance. Ending the field session after failure did not fix this and was reverted; explicit SwiftUI blur also failed native acceptance. No further unchanged run is authorized by this evidence. Keep the PR unmerged until the focus/presentation interaction is resolved.
+PR #238, native run [36951622669](https://github.com/elsell/stuffstash/actions/runs/36951622669), revision `ef5ba7a0`: both devices failed the keyboard-absence assertion when opening invitation actions. The iPhone capture confirms the keyboard obscures the invitation menu. Behavior tests pass but do not establish native acceptance. Ending the field session after failure did not fix this and was reverted; explicit SwiftUI blur also failed native acceptance. No further unchanged run is authorized by this evidence. The user subsequently authorized release with this unresolved issue tracked in [#239](https://github.com/elsell/stuffstash/issues/239). This decision does not turn the failed native check into a pass.
 
 ![iPhone keyboard obscuring invitation actions](./iphone-sharing-menu-keyboard-failure.png)

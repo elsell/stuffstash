@@ -119,12 +119,14 @@ batch preserves cancellation confirmation and permissions; phone/iPad menu and
 footer verification precede release. Physical export recipient saving, connected
 native sign-in, assistive checks and production performance remain outstanding.
 
-PR #238 is held: native run36951622669 at `ef5ba7a0` failed on both
+The user authorized releasing PR #238 with [issue #239](https://github.com/elsell/stuffstash/issues/239)
+tracked for follow-up. Native run36951622669 at `ef5ba7a0` failed on both
 devices because opening invitation actions restored the email keyboard. Initial
 run36946987743 passed iPad recovery and both footer checks; its iPhone cancellation
 retry was obscured by the keyboard. Remounting after failure and explicitly
 blurring the SwiftUI field did not resolve it. Do not repeat unchanged runs or
-claim release readiness. [Failure evidence](../../docs/reports/spec-gap-evidence-2026-10-01/core-workflows/README.md).
+claim native acceptance. This known issue does not gate the user-authorized
+release; regular CI remains required. [Failure evidence](../../docs/reports/spec-gap-evidence-2026-10-01/core-workflows/README.md).
 
 The isolated test server on Paul is available at `https://nsa-lnx-rzn.local:28780`
 (API) and port28781 (web), using pinned v0.27.3 images and separate volumes.
