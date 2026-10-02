@@ -50,7 +50,7 @@ Documentation follow-up #245 also carries the v0.28.0 self-host image pins from
 file picking and restored-photo opening have been requested from the user on162.1.
 Keep those results, Android runtime and broader audit acceptance open until verified.
 
-## Frozen follow-up batch — recovery copy and triage
+## Delivered recovery copy and triage
 
 Three scoped gaps follow the archive release: G6 household partial-success guidance
 still bypassed the catalog; G6 checkout/return/details/undo availability errors
@@ -63,15 +63,18 @@ batch's evidence gate without changing production invitation generation.
 The fixes preserve recovery state, command dispatch and English wording. Focused
 onboarding/checkout/localization checks pass locally. PR #249 merged at
 5961748e after CI37049355677 and Docs37049355682 passed. Release37049926510
-is running; native acceptance remains separate. Other residual candidates remain unreviewed.
+succeeded: v0.28.1, TestFlight164.1, changelog readback verified by job110989637980.
+Native acceptance remains separate; other residual candidates remain unreviewed.
 
-## Next frozen batch — inventory discovery recovery
+## Inventory discovery recovery delivery
 
 Three gaps: G6 unavailable selection guidance uses the existing typed/cataloged
 error; G6 repeated or over-limit discovery pages use cataloged retry guidance;
 D2 residual-copy inventory distinguishes the remaining cancellation control-flow
 literal. Preserve selected inventory, request limits, cancellation and tenancy.
-This batch is separate from PR #249 delivery and connected-native acceptance.
+PR #251 merged at de87e4ae after CI37052298874 passed; its separate release
+is underway. This is not connected-native acceptance.
+
 ## Next verification batch — connected native
 
 The next bounded batch implements real native sign-in/persistence, cross-principal
@@ -79,8 +82,8 @@ isolation, and allowlisted evidence under
 [connected native acceptance](connected-native-acceptance.spec.md). It runs Dex,
 SpiceDB and the API on the hosted Mac's loopback interface with SQLite/filesystem
 storage, avoiding reusable tunnel credentials and any production-server mutation.
-Source review and local process/evidence tests pass; the first hosted attempt must
-still establish compilation, startup, system-auth behavior and persisted state.
+Source review and four local process/HTTP/evidence tests pass. Hosted acceptance
+must establish compilation, startup, system-auth behavior and persisted state.
 First hosted run37049766681 at0c70ae4f compiled the pinned services but stopped
 before native compilation during API startup. The harness omitted the invitation
 origin required by real OIDC startup validation; the next revision supplies an
@@ -90,7 +93,9 @@ startup but stopped at the anonymous probe: the harness incorrectly used
 `GET /tenants` instead of the existing `GET /me/tenants` discovery route. The
 probe and both authenticated XCTest discovery calls now use that contract; a
 local HTTP regression requires exactly 401 and rejects other statuses. Native
-compilation and journeys remain unverified until the corrected run completes.
+compilation and journeys remain unverified until corrected run37051856986 at
+4e4bc4d9 completes. The branch was subsequently rebased onto de87e4ae; the
+connected harness source is unchanged by that rebase.
 
 ## Current objective — October 1, 2026
 
