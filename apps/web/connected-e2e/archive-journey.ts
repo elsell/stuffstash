@@ -17,6 +17,7 @@ async function runArchiveJourney(page: Page, tenantId: string, inventoryId: stri
   const path = await archive.path();
   expect(path).not.toBeNull();
   const bytes = await readFile(path!);
+  await writeFile(info.outputPath('connected-archive-fixture.zip'), bytes);
   expect(bytes.subarray(0, 4).equals(Buffer.from([0x50, 0x4b, 0x03, 0x04]))).toBe(true);
   await page.screenshot({ path: info.outputPath('connected-archive-export.png'), fullPage: true });
   try {
@@ -56,7 +57,8 @@ export async function verifyArchiveJourney(page: Page, tenantId: string, invento
     pending.push((async () => {
       try {
         const body = await response.json();
-        states.push({ status: response.status(), state: body.data?.state, failure: body.data?.failure, error: body.error?.code });
+        const jobs = Array.isArray(body.data) ? body.data : [body.data];
+        for (const job of jobs) states.push({ status: response.status(), state: job?.state, failure: job?.failure, error: body.error?.code });
       } catch { states.push({ status: response.status() }); }
     })());
   };

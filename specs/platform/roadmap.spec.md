@@ -41,8 +41,13 @@ three-locale test passes locally. A connected OIDC archive journey now verifies
 ZIP download, validation-before-approval and the actual restored inventory URL
 after reload. CI `37024865442` reached archive download but timed out before
 restore review; safe HTTP/job-state capture now distinguishes upload rejection,
-validation failure and UI refresh on the next run. Native archive review/keyboard
-and real loopback upload cases are implemented; native execution remains unverified.
+validation failure and UI refresh on the next run. CI `37026446432` confirms the upload is accepted and validation marks the job
+failed. The next evidence includes list-row failure codes and the tiny fixture ZIP.
+Native archive review/keyboard and loopback upload cases are implemented. Native
+run `37024877448` found a Swift Promise overload compile error; it now uses the
+installed SDK signature. Android explicitly declares its pinned React Native
+compile dependency and has a dispatch-only build gate. Native execution remains
+unverified.
 
 ## Current objective — October 1, 2026
 
