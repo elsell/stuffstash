@@ -115,6 +115,9 @@ Browse search/filtering, persisted edits and moves, and Map lookup at normal tex
 A newly observed return-context issue awaits user confirmation: Details Back after
 cancelling Move returns filtered Browse users to Home and loses their query.
 [Current connected evidence](../../docs/reports/spec-gap-evidence-2026-10-01/connected/README.md).
+Bounded LAN browser timings now cover four actual image uploads, six detail
+reloads and four four-thumbnail Browse navigations, with raw samples and explicit
+cache/corpus/automation limits. This does not close native or physical acceptance.
 
 Normal-text run36941858463 at main `47b43d39` passed Details and Sharing footer
 checks on iPhone17 and iPad mini. Inspected Details captures show final content
