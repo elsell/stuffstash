@@ -96,6 +96,26 @@ commits may land separately but must not advertise unavailable restore behavior.
   the only unscoped worker read. Use injected clocks, identifiers, authorization,
   storage and domain observers. ZIP/JSON implementations remain adapters.
 
+## Durable job invariants
+
+Export and restore use a dedicated archive-job aggregate; the Homebox import
+record cannot express atomic new-inventory publication or immutable archive
+approval. Each job has a tenant, requesting principal, kind, immutable source
+inventory or uploaded artifact/checksum, creation/expiry times and monotonic
+revision. Export options are immutable. Restore starts with validation work,
+then awaits approval; approval binds the destination name and a newly allocated
+destination ID before restore execution. No worker can skip that approval.
+
+Claims carry a unique fencing token and an expiry, with repository compare-and-swap
+on the revision. Only the current unexpired claim may heartbeat or complete.
+Expired claims may be reclaimed with a new token; stale workers cannot publish.
+Cancellation and expiry invalidate any claim immediately. Publication and its job
+transition must use the same atomic unit-of-work; a cancellation/reclaim race must
+fail publication. Retry from failure retains the immutable source and approved
+destination identity. Validation failures return to validation; approved restore
+failures retry execution without silently choosing a different inventory.
+Job updates increment revision rather than relying on timestamp precision.
+
 ## Critical acceptance and release
 
 1. Export on instance A, restore on independently initialized instance B, then
@@ -116,3 +136,5 @@ commits may land separately but must not advertise unavailable restore behavior.
 5. Ship backend, migrations and clients together. Updating production GitOps in
    `paul:~/code/local-k8s/infra` and verifying rollout is part of this delivery,
    alongside TestFlight upload and changelog. Tag publication alone is not deployment.
+
+- Job timestamps use UTC microsecond precision so PostgreSQL indexed timestamps and the serialized aggregate agree. Repository updates must validate a complete domain transition against the persisted predecessor under revision fencing, including immutable request, creation/expiry, and approved destination fields.
