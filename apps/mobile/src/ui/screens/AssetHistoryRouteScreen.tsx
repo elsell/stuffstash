@@ -138,7 +138,7 @@ function HistoryFilter({ value, onChange, styles }: { readonly value: AssetActiv
   return (
     <View style={styles.filterButton}>
       <NativeChoicePicker label={t('mobile.AssetHistoryRouteScreen.show')}
-        accessibilityLabel={t('mobile.AssetHistoryRouteScreen.showHistory', { value: String(value === 'changes' ? 'Changes' : 'All events') })}
+        accessibilityLabel={t('mobile.AssetHistoryRouteScreen.showHistory', { value: t(value === 'changes' ? 'mobile.AssetHistoryRouteScreen.changes' : 'mobile.AssetHistoryRouteScreen.allEvents') })}
         value={value} includeEmptyOption={false}
         options={[{ value: 'changes', label: t('mobile.AssetHistoryRouteScreen.changes') }, { value: 'all', label: t('mobile.AssetHistoryRouteScreen.allEvents') }]}
         onChange={next => { if (next === 'changes' || next === 'all') onChange(next); }} />

@@ -363,3 +363,11 @@ not user text to interpolate. Preserve independent region retries and disabled
 retry controls while a request is running. Verify rendered messages in the
 expanded pseudolocale so untranslated region words cannot hide inside a
 translated sentence.
+
+### Catalog-owned navigation labels and destination fallback
+
+Expiration filter page titles and search prompts use catalog entries, never
+capitalized route identifiers. History's selected filter accessibility label uses
+the same cataloged option label as its picker. The Add destination root fallback
+is cataloged; selected destination paths and user-authored unresolved names remain
+verbatim. Preserve filter draft staging, page transitions and destination choices.
