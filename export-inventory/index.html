@@ -77,11 +77,18 @@ file alone does not create an inventory.</p>
 <p>Jobs are private to the person who started them. Leaving the screen cancels a
 local file transfer, but does not cancel work already accepted by the server.
 Use a job’s <strong>Cancel</strong> action to cancel server work, or <strong>Retry</strong> after a failure.
+Cancellation is no longer available once the restored inventory has been created
+and its access is being finalized. <strong>Open inventory</strong> appears when it is ready to use.
 Download availability expires after 24 hours by default; the job shows its expiry.
 Restored inventory data remains after the job expires.</p>
 <p>An inventory archive is not a server backup. It does not transfer accounts,
 credentials, sharing access, provider configuration, or audit history. Keep separate
 database and blob-storage backups for disaster recovery.</p>
+<p>Archive uploads default to a 1 GiB limit and a 30-minute transfer timeout.
+Administrators can configure <code dir="auto">STUFF_STASH_ARCHIVE_MAX_BYTES</code> and
+<code dir="auto">STUFF_STASH_ARCHIVE_TRANSFER_TIMEOUT</code>; reverse-proxy upload limits and timeouts
+must also allow the configured transfers. The server needs writable temporary
+disk space for archive preparation and validation.</p>
 <div class="sl-heading-wrapper level-h2"><h2 id="download-json-or-csv">Download JSON or CSV</h2><a class="sl-anchor-link" href="#download-json-or-csv"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Download JSON or CSV”</span></a></div>
 <p>In the web or mobile app, open <strong>Settings</strong>, choose your inventory, then choose
 <strong>Export inventory</strong>. Anyone who can view the inventory can export it.</p>
