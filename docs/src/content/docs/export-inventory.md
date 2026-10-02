@@ -33,12 +33,20 @@ file alone does not create an inventory.
 Jobs are private to the person who started them. Leaving the screen cancels a
 local file transfer, but does not cancel work already accepted by the server.
 Use a job's **Cancel** action to cancel server work, or **Retry** after a failure.
+Cancellation is no longer available once the restored inventory has been created
+and its access is being finalized. **Open inventory** appears when it is ready to use.
 Download availability expires after 24 hours by default; the job shows its expiry.
 Restored inventory data remains after the job expires.
 
 An inventory archive is not a server backup. It does not transfer accounts,
 credentials, sharing access, provider configuration, or audit history. Keep separate
 database and blob-storage backups for disaster recovery.
+
+Archive uploads default to a 1 GiB limit and a 30-minute transfer timeout.
+Administrators can configure `STUFF_STASH_ARCHIVE_MAX_BYTES` and
+`STUFF_STASH_ARCHIVE_TRANSFER_TIMEOUT`; reverse-proxy upload limits and timeouts
+must also allow the configured transfers. The server needs writable temporary
+disk space for archive preparation and validation.
 
 ## Download JSON or CSV
 
