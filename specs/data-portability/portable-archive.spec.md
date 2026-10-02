@@ -231,3 +231,16 @@ If job creation returns an uncertain commit outcome, retain the private upload.
 Only a confirmed redundant upload may be deleted immediately; unreferenced
 artifacts are reclaimed by retention cleanup after reconciliation. A lost commit
 acknowledgment must never destroy a queued restore job’s source.
+
+### Worker execution
+
+Workers claim jobs by revision with a fresh lease token, renew leases while
+packaging or staging, and stop work when renewal loses the revision or permission.
+Cancellation and takeover must prevent the stale worker from publishing. Each
+attempt uses a distinct private result key so reclaimed attempts cannot overwrite
+one another. Export execution captures a coherent metadata snapshot, opens only
+attachment keys from that snapshot, and streams selected original bytes into the
+ZIP. Metadata retains omitted attachment descriptions. Before publishing a ready
+download, recheck current permission and the current job lease/revision. Failed
+or ambiguously acknowledged publication leaves private artifacts for reconciled
+retention cleanup; it never deletes an artifact that might already be published.
