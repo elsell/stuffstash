@@ -3,7 +3,7 @@ import { InventoryInvitationLinkUnavailableError } from '../../application/shari
 import { setScreenFocused } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 import React from 'react';
-import { pressAlertButton, keyboardDismissCount } from '../../test-support/react-native';
+import { pressAlertButton, keyboardDismissCount, blurredInputLabels } from '../../test-support/react-native';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -85,13 +85,15 @@ it('hides cached invitations after denial and cancels a departed scope read', as
   } finally { await h.unmount(); }
 });
 
-it('chooses access in place and preserves the submitted draft while creation fails', async () => {
+it('ends native editing before submission and preserves the draft while creation fails', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient();
   let rejectCreate: ((error: Error) => void) | undefined;
+  const blursBefore = blurredInputLabels().length;
+  let blursAtSubmission = -1;
   const submitted: { email: string; relationship: string }[] = [];
   const repository: InventoryInvitationManagementRepository = {
     list: async () => ({ items: [] }),
-    create: async (_scope, input) => { submitted.push(input); return new Promise((_resolve, reject) => { rejectCreate = reject; }); },
+    create: async (_scope, input) => { blursAtSubmission = blurredInputLabels().length; submitted.push(input); return new Promise((_resolve, reject) => { rejectCreate = reject; }); },
     cancel: async () => undefined
   };
   try {
@@ -103,6 +105,7 @@ it('chooses access in place and preserves the submitted draft while creation fai
     await h.changeText(h.byLabel('Invitee email'), 'friend@example.test');
     await h.press(h.byLabel('Create Invitation'));
     expect(submitted).toEqual([{ email: 'friend@example.test', relationship: 'editor' }]);
+    expect(blursAtSubmission).toBe(blursBefore + 1);
     expect(h.byLabel('Invitee email')?.props.editable).toBe(false);
     expect(h.byLabel('Choose invitation access')?.props.disabled).toBe(true);
     await h.changeText(h.byLabel('Invitee email'), 'replacement@example.test');

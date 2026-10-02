@@ -5,3 +5,7 @@ export type InvitationEmailInputProps = Pick<TextInputProps, 'style' | 'placehol
   readonly editable: boolean;
   readonly onChangeText: (email: string) => void;
 };
+
+export interface InvitationEmailInputHandle {
+  blur(): void | Promise<void>;
+}

@@ -1,5 +1,6 @@
 import { t } from '../../presentation/localization';
 import { InvitationEmailInput } from './InvitationEmailInput';
+import type { InvitationEmailInputHandle } from './InvitationEmailInput.types';
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
 import { NativeActionMenu } from '../components/NativeActionMenu';
 import { NativeCommandButton } from '../components/NativeCommandButton';
@@ -57,6 +58,7 @@ export function InventorySharingScreen({
   const compositionScopeId = useMobileServerStateScopeId();
   const scopeKey = `${compositionScopeId}:${scope.tenantId}:${scope.inventoryId}:${scope.permissions.join(',')}`;
   const [email, setEmail] = useState('');
+  const emailField = useRef<InvitationEmailInputHandle>(null);
   const emailScope = useRef(scopeKey);
   const [emailRevision, setEmailRevision] = useState(0);
   const [creationError, setCreationError] = useState<{ title: string; message: string }>();
@@ -126,6 +128,8 @@ export function InventorySharingScreen({
     const ownsFeedback = captureFeedbackOwner();
     const requestedScopeKey = scopeKey;
     try {
+      await emailField.current?.blur();
+      if (!ownsFeedback() || currentScopeKeyRef.current !== requestedScopeKey) return;
       const invitation = await createCommand.execute(scope, { email, relationship });
       if (currentScopeKeyRef.current !== requestedScopeKey) return;
       setCreated(invitation);
@@ -240,6 +244,7 @@ export function InventorySharingScreen({
           </View> : null}
           <Text style={styles.label}>{t('mobile.InventorySharingScreen.email')}</Text>
           <InvitationEmailInput
+            ref={emailField}
             key={Platform.OS === 'ios' ? `${scopeKey}:${emailRevision}` : scopeKey}
             editable={!working}
             onChangeText={value => { if (!workingRef.current) setEmail(value); }}

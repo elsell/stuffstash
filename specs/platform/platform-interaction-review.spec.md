@@ -145,10 +145,16 @@ A pending, unexpired invitation exposes a trailing native ellipsis menu beside
 its recipient and status. The menu contains the destructive Cancel invitation
 command; repeated large destructive buttons must not dominate the invitation list.
 This October 2 user-approved pattern supersedes the previous direct-button choice.
-When invitation submission disables editing, explicitly blur the SwiftUI email
-field through its native focus API. React Native keyboard dismissal alone does
-not clear SwiftUI focus. Preserve the email draft on failure; row menus must
-remain reachable without restoring the keyboard.
+Before submitting an invitation, explicitly await the SwiftUI email field's native
+blur operation. Do not trigger that operation indirectly from a disabled-state
+effect: a fast request result can skip that rendered transition. Keep the immediate
+submission lock, and abandon submission if the screen or scope changed while
+ending editing. React Native keyboard dismissal alone does not clear SwiftUI
+focus. Preserve the field lifetime and full draft on failure; row menus must remain
+reachable without restoring the keyboard. The UIKit-backed replacement was rejected
+in run37038105481 because initial typing lost characters on both devices. Retain
+the existing SwiftUI field and verify this distinct submission-order correction
+with one focused native run; do not weaken the full-email or keyboard assertions.
 Name the recipient in the menu's accessibility label. Use NativeActionMenu; keep
 its trigger separate from the flexible text column so long addresses can wrap.
 Keep destructive confirmation naming the recipient, permission/scope ownership,

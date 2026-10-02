@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createRef } from 'react';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { InvitationEmailInput } from './InvitationEmailInput.ios';
@@ -26,18 +26,19 @@ it('preserves the email draft across echoes and rejected attempts, rejects busy 
   } finally { await h.unmount(); }
 });
 
-it('blurs the native field when submission disables editing without discarding the draft', async () => {
-  const h = new MobileRenderHarness(); let blurs = 0;
-  const view = (editable: boolean) => <InvitationEmailInput email="audit@example.invalid" editable={editable} onChangeText={() => {}} />;
+it('ends native editing explicitly without depending on a disabled render', async () => {
+  const h = new MobileRenderHarness(); const handle = createRef<{ blur(): void | Promise<void> }>();
+  let resolveBlur: (() => void) | undefined; let blurs = 0; let settled = false;
   try {
-    await h.render(view(true));
-    const nativeField = h.byType('SwiftUITextField');
-    expect(nativeField?.props.ref).toBeDefined();
-    nativeField!.props.ref.current = { blur: async () => { blurs += 1; } };
-    await h.render(view(false));
-    expect(blurs).toBe(1);
-    await h.render(view(true));
-    expect(blurs).toBe(1);
+    await h.render(<InvitationEmailInput ref={handle} email="audit@example.invalid" editable onChangeText={() => {}} />);
+    h.byType('SwiftUITextField')!.props.ref.current = { blur: () => {
+      blurs += 1; return new Promise<void>(resolve => { resolveBlur = resolve; });
+    } };
+    expect(handle.current).not.toBeNull();
+    const ending = Promise.resolve(handle.current!.blur()).then(() => { settled = true; });
+    expect(blurs).toBe(1); expect(settled).toBe(false);
+    resolveBlur!(); await ending;
+    expect(settled).toBe(true);
     expect(h.byType('SwiftUITextField')?.props.defaultValue).toBe('audit@example.invalid');
   } finally { await h.unmount(); }
 });

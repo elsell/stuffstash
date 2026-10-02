@@ -3,6 +3,7 @@ type AlertRecord = { readonly title: string; readonly message?: string; readonly
 const alerts: AlertRecord[] = [];
 const focusHandles: unknown[] = [];
 const focusedInputs: string[] = [];
+const blurredInputs: string[] = [];
 let animationStarts = 0;
 let animationStops = 0;
 let deferAnimations = false;
@@ -97,8 +98,11 @@ export const KeyboardAvoidingView = 'KeyboardAvoidingView';
 export const ActivityIndicator = 'ActivityIndicator';
 export const Modal = 'Modal';
 export const RefreshControl = 'RefreshControl';
-export const TextInput = forwardRef<{ focus(): void }, Record<string, unknown>>((props, ref) => {
-  useImperativeHandle(ref, () => ({ focus() { focusedInputs.push(String(props.accessibilityLabel ?? '')); } }));
+export const TextInput = forwardRef<{ focus(): void; blur(): void }, Record<string, unknown>>((props, ref) => {
+  useImperativeHandle(ref, () => ({
+    focus() { focusedInputs.push(String(props.accessibilityLabel ?? '')); },
+    blur() { blurredInputs.push(String(props.accessibilityLabel ?? '')); }
+  }));
   return createElement('TextInput', props);
 });
 export const Alert = { alert(title: string, message?: string, buttons: readonly AlertButton[] = [], options?: AlertRecord['options']) { alerts.push({ title, message, buttons, options }); } };
@@ -189,6 +193,7 @@ export function resetNativeTestState() {
   alerts.length = 0;
   focusHandles.length = 0;
   focusedInputs.length = 0;
+  blurredInputs.length = 0;
   keyboardDismissals = 0;
   keyboardVisible = false;
   darkerSystemColorsEnabled = false;
@@ -201,6 +206,7 @@ export function latestAlert() { return alerts.at(-1); }
 export function alertCount() { return alerts.length; }
 export async function pressAlertButton(label: string) { return latestAlert()?.buttons.find((button) => button.text === label)?.onPress?.(); }
 export function focusedAccessibilityHandles() { return [...focusHandles]; }
+export function blurredInputLabels() { return [...blurredInputs]; }
 export function focusedInputLabels() { return [...focusedInputs]; }
 export function keyboardDismissCount() { return keyboardDismissals; }
 export function setKeyboardVisibleForTest(visible: boolean) {

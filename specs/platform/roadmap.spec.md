@@ -295,3 +295,14 @@ Update this file when batch scope, status, acceptance or material blockers chang
 Keep it concise; do not append execution transcripts or duplicate domain specs.
 Close a gap only with implementation and the required evidence, or with an explicit
 user-approved scope decision. Removing an unmet requirement is not remediation.
+
+## Sharing follow-up — explicit submission focus boundary
+
+PR #247's UIKit-backed field was rejected: native37038105481 lost characters
+before submission on both devices. The new candidate retains the released SwiftUI
+field and explicitly awaits its blur before submitting, instead of relying on a
+rendered busy-state effect. It locks immediately and rechecks screen/scope ownership
+before issuing the command. Thirty-two focused tests and type checking passed;
+code review found no source blockers. One unchanged phone/iPad Sharing recovery
+run remains the acceptance gate. The scope is #239, its V1 native recovery evidence,
+and the focus contract; do not reopen already delivered archive work.
