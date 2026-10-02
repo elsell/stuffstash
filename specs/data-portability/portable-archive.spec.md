@@ -356,3 +356,12 @@ cookie persistence, TLS overrides or base-URL substitution. Responses are capped
 local transfer. Download uses Expo's response stream into a private temporary file,
 then existing system sharing semantics. Native verification must exercise both
 platform adapters; web tests do not establish native file transfer behavior.
+
+### Scratch file crash safety
+
+On the supported Unix server runtime, archive scratch files are created with mode
+0600 and unlinked before they are returned to application code. The open descriptor
+remains seekable for ZIP processing; closing it or terminating the process releases
+the storage without a named file to recover. A filesystem that cannot unlink an
+open scratch file fails creation rather than retaining private archive data. This
+policy applies to scratch buffers, not published blobs or atomic blob staging.

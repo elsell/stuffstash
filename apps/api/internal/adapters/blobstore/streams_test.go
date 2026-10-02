@@ -53,7 +53,7 @@ func TestFileStreamPublishesOnlyCompleteContent(t *testing.T) {
 		t.Fatal("failed write replaced published object")
 	}
 }
-func TestArchiveScratchIsPrivateAndRemovedOnClose(t *testing.T) {
+func TestArchiveScratchIsPrivateAndUnlinkedWhileOpen(t *testing.T) {
 	root := t.TempDir()
 	scratch, err := (ScratchSpace{Directory: root}).NewArchiveScratch(context.Background())
 	if err != nil {
@@ -63,12 +63,19 @@ func TestArchiveScratchIsPrivateAndRemovedOnClose(t *testing.T) {
 		t.Fatal(err)
 	}
 	entries, err := os.ReadDir(root)
-	if err != nil || len(entries) != 1 {
-		t.Fatal("missing scratch")
+	if err != nil || len(entries) != 0 {
+		t.Fatal("scratch has a directory entry that could survive a crash")
 	}
-	stat, err := entries[0].Info()
+	stat, err := scratch.(*scratchFile).Stat()
 	if err != nil || stat.Mode().Perm() != 0600 {
 		t.Fatal("scratch is not private")
+	}
+	if _, err = scratch.Seek(0, io.SeekStart); err != nil {
+		t.Fatal(err)
+	}
+	content, err := io.ReadAll(scratch)
+	if err != nil || string(content) != "temporary" {
+		t.Fatal("unlinked scratch is not readable")
 	}
 	if err = scratch.Close(); err != nil {
 		t.Fatal(err)

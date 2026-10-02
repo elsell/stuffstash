@@ -81,6 +81,11 @@ func (s ScratchSpace) NewArchiveScratch(ctx context.Context) (ports.ArchiveScrat
 	if err != nil {
 		return nil, err
 	}
+	// Unix keeps the descriptor valid until close and reclaims it on process exit.
+	// Never leave a named private archive behind for a crash-recovery sweep.
+	if err = os.Remove(file.Name()); err != nil {
+		return nil, errors.Join(err, file.Close())
+	}
 	return &scratchFile{File: file}, nil
 }
 
@@ -94,7 +99,5 @@ func (f *scratchFile) Close() error {
 		return errScratchClosed
 	}
 	f.closed = true
-	closeErr := f.File.Close()
-	removeErr := os.Remove(f.Name())
-	return errors.Join(closeErr, removeErr)
+	return f.File.Close()
 }

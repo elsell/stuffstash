@@ -31,9 +31,12 @@ creation races, and closing cancels local transfers/selection without cancelling
 server jobs. Twenty-seven relevant mobile tests, type checking and code-critic
 review passed; the existing browser export fixture passed before primitive reuse.
 Connected archive UI acceptance remains unverified. Remaining delivery work:
-stale scratch-file recovery, native transfer/runtime verification, connected
+native transfer/runtime verification, connected
 cross-instance acceptance, release and production deployment. Do not treat this
-draft as shipped.
+draft as shipped. Scratch buffers now unlink their private file before use so
+process exit reclaims storage; the revised behavior test awaits CI. Native audit
+`37023979794` targets `833489ca` for compilation and existing export regression;
+it does not yet establish the new archive transfer workflows.
 
 ## Current objective — October 1, 2026
 
