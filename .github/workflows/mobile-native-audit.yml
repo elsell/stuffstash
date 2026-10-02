@@ -117,6 +117,7 @@ jobs:
       EXPO_PUBLIC_STUFF_STASH_TENANT_ID: ''
       EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN: ''
       EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED: 'false'
+      EXPO_PUBLIC_STUFF_STASH_ARCHIVE_AUDIT_URL: 'http://127.0.0.1:18889'
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -149,6 +150,15 @@ jobs:
       - name: Install isolated fixture routes
         if: matrix.suite == 'fixtures'
         run: python3 scripts/prepare-mobile-audit-fixtures.py
+      - name: Start loopback archive transfer peer
+        if: matrix.suite == 'fixtures' && (inputs.test_case == 'inventory-archive' || inputs.test_case == 'all')
+        run: |
+          python3 scripts/native-archive-transfer-server.py --port 18889 > "$RUNNER_TEMP/archive-transfer-peer.log" 2>&1 &
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:18889/health > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
       - name: Run native interaction audit
         env:
           AUDIT_DEVICE: ${{ matrix.device }}
@@ -622,6 +632,7 @@ jobs:
             inventory-archive)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testArchiveNativeUploadPreservesBytesAndRejectsUnsafeResponses'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testArchiveRestoreRequiresReviewAndKeepsCompletionReachable'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testInventoryExportUsesSystemShareAndRemovesTemporaryFiles'
               )

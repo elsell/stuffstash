@@ -1,3 +1,4 @@
+export { ArchiveTransferFixture } from './ArchiveTransferFixture';
 export { InventoryArchiveFixture } from './InventoryArchiveFixture';
 import { ImagePerformanceFixture } from './ImagePerformanceFixture';
 export { InventoryExportFixture } from './InventoryExportFixture';

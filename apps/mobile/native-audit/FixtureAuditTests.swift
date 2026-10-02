@@ -3653,6 +3653,14 @@ final class FixtureAuditTests: XCTestCase {
     capture("appearance-in-place-dark")
   }
 
+  func testArchiveNativeUploadPreservesBytesAndRejectsUnsafeResponses() {
+    guard openFixtureURL("audit-archive-transfer") else { return }
+    let verify = app.buttons["Verify native upload"].firstMatch
+    XCTAssertTrue(verify.waitForExistence(timeout: 10)); verify.tap()
+    XCTAssertTrue(app.staticTexts["Native upload verified"].waitForExistence(timeout: 30), app.debugDescription)
+    capture("archive-native-upload-verified")
+  }
+
   func testArchiveRestoreRequiresReviewAndKeepsCompletionReachable() {
     guard openFixtureURL("audit-inventory-archive") else { return }
     let choose = app.buttons["Choose archive"].firstMatch

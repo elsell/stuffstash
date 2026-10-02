@@ -56,6 +56,7 @@ exports = {
     "audit-menu-ownership": "NativeMenuOwnershipFixture",
     "audit-command-height": "CommandHeightFixture",
     "audit-settings-commands": "SettingsCommandFixture",
+    "audit-archive-transfer": "ArchiveTransferFixture",
     "audit-inventory-archive": "InventoryArchiveFixture",
     "audit-inventory-export": "InventoryExportFixture",
     "audit-notice": "NoticePlacementFixture",

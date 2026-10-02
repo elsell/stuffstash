@@ -377,3 +377,9 @@ Native archive-task fixture acceptance uses the production screen with a control
 repository and picker to inspect review hierarchy, keyboard clearance, explicit
 approval and opening the restored destination on iPhone and iPad. Keep this layout
 evidence distinct from native transfer and real-server acceptance.
+
+A loopback-only native audit peer validates the fixture bearer/request-key headers
+and SHA-256/length of a one-MiB file sent through the production native upload
+adapter. The same native journey rejects redirects and oversized responses and
+cancels an upload immediately after dispatch. This proves native transport against
+a controlled peer, not production authentication or system document-picker behavior.
