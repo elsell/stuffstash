@@ -298,3 +298,14 @@ Update this file when batch scope, status, acceptance or material blockers chang
 Keep it concise; do not append execution transcripts or duplicate domain specs.
 Close a gap only with implementation and the required evidence, or with an explicit
 user-approved scope decision. Removing an unmet requirement is not remediation.
+
+## Next confirmed UI follow-up — Sharing focus
+
+The next bounded batch addresses #239's email keyboard returning over invitation
+menus, V1's missing native cancellation/retry acceptance, and D2's current focus
+integration/evidence contract. Use the existing UIKit-backed input with an
+uncontrolled iOS draft; keep Android and the native invitation menu unchanged.
+Thirty-one focused tests and mobile type checking passed; code review found no
+source blockers. One unchanged `sharing-actions` native run on phone/iPad decides
+acceptance. Preserve prior failed SwiftUI blur/remount evidence and do not retry
+an unchanged implementation. This follow-up does not reopen archive release gates.
