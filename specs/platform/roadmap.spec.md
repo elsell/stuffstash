@@ -17,22 +17,23 @@ delivery priority within the audit goal, not an export-only scope reduction.
 Preserve prior unresolved native/physical evidence; do not let it block independent
 archive implementation. Production GitOps deployment is part of release completion.
 
-Draft PR #244 contains the archive format, durable jobs, metadata validation,
-immutable restore previews, atomic publication, artifact retention and runtime
-scheduling. Workers/runtime passed CI at `19b2d5b2` (`37014417945`). HTTP round-trip
-and security tests passed in `37017505855`; that run failed its separate operation
-coverage registry, now wired to the same journey in `0f8b8a66` (CI pending).
-The generated API client and web export/restore settings flow are implemented:
-73 client tests, six focused web tests and TypeScript/Svelte checks pass locally.
-The browser export fixture now passes with archive job listing; connected archive
-acceptance remains unverified. Native upload/file adapters and task cancellation/
-idempotency are implemented, with four SDK and seven mobile critical tests, mobile
-type checking and code-critic review passing. Native compilation, CocoaPods lock
-registration and runtime file-transfer evidence remain pending. CI `37019361609`
-stopped at a localization check and missing browser fixture; both are corrected.
-Remaining delivery work: stale scratch-file recovery, mobile controls, native
-transfer verification, connected cross-instance acceptance,
-release and production deployment. Do not treat this draft as shipped.
+Draft PR #244 implements the archive format, durable jobs, metadata validation,
+immutable previews, atomic publication, artifact retention, runtime scheduling,
+authenticated HTTP operations and generated client. API/security tests and the
+operation coverage registry passed in CI `37022447393`; that run stopped later at
+web primitive enforcement. Web uses the existing form primitives after that finding.
+The macOS job generated the new local transfer module's Podfile.lock registration;
+that exact patch is now applied. Native compilation and runtime remain unverified.
+
+Web and mobile export/restore controls are implemented, including restore into an
+empty household. Mobile review precedes approval, loaded-job pagination survives
+creation races, and closing cancels local transfers/selection without cancelling
+server jobs. Twenty-seven relevant mobile tests, type checking and code-critic
+review passed; the existing browser export fixture passed before primitive reuse.
+Connected archive UI acceptance remains unverified. Remaining delivery work:
+stale scratch-file recovery, native transfer/runtime verification, connected
+cross-instance acceptance, release and production deployment. Do not treat this
+draft as shipped.
 
 ## Current objective — October 1, 2026
 

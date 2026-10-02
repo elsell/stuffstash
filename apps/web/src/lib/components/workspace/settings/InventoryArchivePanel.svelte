@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { Input } from '$lib/components/ui/input/index.js';
+  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
+  import { Label } from '$lib/components/ui/label/index.js';
   import { onMount } from 'svelte';
   import { t, localization } from '$lib/presentation/localization';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -10,7 +13,7 @@
   let photos = $state(true), otherFiles = $state(true), pending = $state(false), loading = $state(true);
   let jobs = $state<ArchiveJob[]>([]), cursor = $state<string | undefined>(), error = $state(''), message = $state('');
   let file = $state<File | undefined>(), review = $state<{ id: string; preview: ArchivePreview } | undefined>(), name = $state('');
-  let fileInput = $state<HTMLInputElement>();
+  let fileInput = $state<HTMLInputElement | null>(null);
   let requestKey = '', selectionKey = '', disposed = false, generation = 0, loadedMore = false;
   const lifetime = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -90,13 +93,13 @@
   {#if scope.inventoryId}
     <fieldset disabled={pending}>
       <legend>{t('archive.metadata')}</legend>
-      <label><input type="checkbox" bind:checked={photos} /> {t('archive.photos')}</label>
-      <label><input type="checkbox" bind:checked={otherFiles} /> {t('archive.files')}</label>
+      <Label class="flex flex-wrap items-center gap-2"><Checkbox bind:checked={photos} /> {t('archive.photos')}</Label>
+      <Label class="flex flex-wrap items-center gap-2"><Checkbox bind:checked={otherFiles} /> {t('archive.files')}</Label>
     </fieldset>
     {#if !photos || !otherFiles}<p>{t('archive.partial')}</p>{/if}
     <div><Button.Root disabled={pending} onclick={create}>{t(pending ? 'archive.busy' : 'archive.create')}</Button.Root></div>
   {:else}
-    <label>{t('archive.chooseFile')}<input bind:this={fileInput} type="file" accept=".zip,application/zip" onchange={choose} disabled={pending} /></label>
+    <Label class="flex flex-wrap items-center gap-2">{t('archive.chooseFile')}<Input bind:ref={fileInput} type="file" accept=".zip,application/zip" onchange={choose} disabled={pending} /></Label>
     <div><Button.Root disabled={pending || !file} onclick={upload}>{t(pending ? 'archive.busy' : 'archive.upload')}</Button.Root></div>
   {/if}
   {#if error}<p role="alert">{error}</p><div><Button.Root variant="outline" disabled={pending} onclick={() => run(() => refresh())}>{t('archive.retry')}</Button.Root></div>{/if}
@@ -108,7 +111,7 @@
       <p>{t('archive.definitions', { types: review.preview.customAssetTypes, fields: review.preview.customFields })}</p>
       {#if review.preview.omittedAttachments}<p>{t('archive.omitted', { count: review.preview.omittedAttachments })}</p>{/if}
       {#if review.preview.keyRemappings.length}<p>{t('archive.remappings', { count: review.preview.keyRemappings.length })}</p>{/if}
-      <label>{t('archive.name')}<input name="inventoryName" bind:value={name} maxlength="200" disabled={pending} /></label>
+      <Label class="flex flex-wrap items-center gap-2">{t('archive.name')}<Input name="inventoryName" bind:value={name} maxlength={200} disabled={pending} /></Label>
       <div class="archive-actions"><Button.Root disabled={pending || !name.trim()} onclick={approve}>{t('archive.restore')}</Button.Root><Button.Root variant="outline" disabled={pending} onclick={() => { review = undefined; }}>{t('archive.closeReview')}</Button.Root></div>
     </section>
   {/if}
@@ -136,8 +139,6 @@
   .archive-task h2, .archive-task h3, .archive-task p { margin: 0; }
   fieldset { border: 0; padding: 0; display: grid; gap: .75rem; }
   legend { margin-bottom: .75rem; }
-  label { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
-  input[name="inventoryName"], input[type="file"] { width: 100%; padding: .65rem; border: 1px solid var(--border); border-radius: .4rem; background: var(--background); color: inherit; }
   .archive-jobs { list-style: none; padding: 0; margin: 0; }
   .archive-jobs li { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 1rem 0; border-top: 1px solid var(--border); }
   .archive-actions { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
