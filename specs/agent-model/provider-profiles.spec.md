@@ -413,4 +413,9 @@ Retain only runtime/model identity, named stage outcomes and elapsed millisecond
 do not retain provider bodies, credentials or arbitrary runner logs as evidence.
 Always remove the isolated container and its model volume. This narrow smoke run
 does not establish production quality, hosted-provider acceptance or microphone
-behavior. It does not gate unrelated release batches.
+behavior. It does not gate unrelated release batches. Keep the expensive real-model workflow
+manual so documentation updates cannot silently rerun inference.
+
+The first real inference run did not pass for this reference model. Preserve the
+[scoped failure evidence](../../docs/reports/spec-gap-evidence-2026-10-01/local-provider/README.md);
+no production deployment verification or successful round trip is claimed.

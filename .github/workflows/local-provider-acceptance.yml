@@ -1,11 +1,6 @@
 name: Local provider acceptance
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - '.github/workflows/local-provider-acceptance.yml'
-      - 'scripts/local-provider/**'
-      - 'apps/api/internal/adapters/voice/compatible*.go'
 permissions:
   contents: read
 jobs:
