@@ -281,3 +281,11 @@ inventory must use the same typed unavailable error as reading a removed selecti
 without changing the previously selected inventory. Repeated continuation cursors
 and the bounded page limit must fail with cataloged recovery, preserving their
 existing request bounds. Cancellation remains control flow, not recovery copy.
+
+### Svelte collection expressions
+
+The rendered-copy gate must inspect display properties inside Svelte each-block
+collection expressions, including conditional arrays and template-valued headings.
+Do not interpret collection IDs or arbitrary source values as display copy. Browse
+List/Map labels and tenant/inventory grouping headings for asset types and custom
+fields must use complete catalog messages, preserving user names as parameters.

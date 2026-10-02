@@ -1,5 +1,8 @@
 /** Complete workflow messages, including variable-derived notices. */
 export const workflowMessages = {
+  "browse.list": "List",
+  "browse.map": "Map",
+  "customization.fromHousehold": "From {household}",
   "recovery.checkoutUnavailable": "Asset checkout is not available.",
   "recovery.returnUnavailable": "Asset return is not available.",
   "recovery.returnDetailsUnavailable": "Asset return details are not available.",
