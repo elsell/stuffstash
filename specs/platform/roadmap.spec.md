@@ -36,12 +36,19 @@ Evidence:
   provider/recipient behavior remain unverified; simulator evidence does not close
   these obligations.
 
-Release `37033608570` is in progress. Its success gates the prepared GitOps update
-on Paul, including migration/API/web image pins and ingress limits matching the
-1 GiB archive upload and 30-minute transfer defaults. Release/TestFlight completion
-and the production rollout are not yet verified. Production remains v0.27.5 until
-that update succeeds. Preserve the separate native/physical evidence gaps without
-reopening the passing archive checks.
+Release `37033608570` succeeded for **v0.28.0**, including TestFlight build
+**162.1**, Apple processing and changelog readback. Paul GitOps commit
+`215f7622d23636cd2eb8e479811c9ecb9f0463d5` deployed the published API/web digests.
+Flux confirmed that revision, both deployments rolled out, the migration init
+container exited successfully, API health returned healthy and web returned HTTP200.
+The API ingress now allows the configured 1 GiB archive uploads and 30-minute
+transfers. Deployment checks establish runtime readiness, not a new authenticated
+production restore; the connected acceptance above ran in isolated CI.
+
+Documentation follow-up #245 also carries the v0.28.0 self-host image pins from
+#246, superseding the older pin-only #240/#243. Physical iPhone archive saving,
+file picking and restored-photo opening have been requested from the user on162.1.
+Keep those results, Android runtime and broader audit acceptance open until verified.
 
 ## Current objective — October 1, 2026
 
