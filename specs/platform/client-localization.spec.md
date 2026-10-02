@@ -55,6 +55,15 @@ locale, parameter safety, independent translators and pseudolocales. Representat
 browser and native workflows verify expanded labels, search, approval and return.
 Do not create a separate test for every extracted label.
 
+### Browser photo upload recovery
+
+Storage HTTP rejection and transport failure must use cataloged recovery text even
+when the exception is explicitly safe for presentation. Preserve direct-upload
+failure: neither case may silently retry through JSON or complete metadata.
+Critical tests cover both causes, presentation through the safe-error boundary and
+expanded-locale output. Keep technical target-selection and invalid-invitation
+errors distinct from this deliberately user-visible upload error.
+
 ## References
 
 - [ECMA-402 internationalization API](https://402.ecma-international.org/)

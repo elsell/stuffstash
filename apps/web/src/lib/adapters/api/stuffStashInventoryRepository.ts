@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import { StuffStashAPIError, StuffStashClient } from '@stuff-stash/api-client';
 import type { RuntimeConfig } from '$lib/runtimeConfig';
 import type { Asset as ApiAsset, AssetPhotoVariant, TokenProvider } from '@stuff-stash/api-client';
@@ -1376,7 +1377,7 @@ class DirectUploadFailedError extends Error {
   safeForUser = true as const;
 
   constructor() {
-    super('Direct upload to media storage failed.');
+    super(t('photos.storageUploadFailed'));
   }
 }
 
