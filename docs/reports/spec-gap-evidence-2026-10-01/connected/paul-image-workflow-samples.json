@@ -1,0 +1,88 @@
+{
+  "date": "2026-10-02",
+  "serverRelease": "v0.27.3",
+  "browser": "149.0.7827.55",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "corpus": {
+    "file": "stuff-stash-glyph.png",
+    "bytes": 104976,
+    "width": 457,
+    "height": 457,
+    "sha256": "ccf66d8d99818fce04d58580ea2c9ccc72996613eb1cf61c5d08cabbe3a86cb7"
+  },
+  "samples": [
+    {
+      "kind": "add-upload-detail-image-ready",
+      "ordinal": 1,
+      "durationMs": 785.6013660000026
+    },
+    {
+      "kind": "add-upload-detail-image-ready",
+      "ordinal": 2,
+      "durationMs": 722.9186619999964
+    },
+    {
+      "kind": "add-upload-detail-image-ready",
+      "ordinal": 3,
+      "durationMs": 579.8764399999927
+    },
+    {
+      "kind": "add-upload-detail-image-ready",
+      "ordinal": 4,
+      "durationMs": 574.8886169999896
+    },
+    {
+      "kind": "detail-reload-image-ready",
+      "ordinal": 1,
+      "durationMs": 233.8773599999986
+    },
+    {
+      "kind": "detail-reload-image-ready",
+      "ordinal": 2,
+      "durationMs": 212.1470619999891
+    },
+    {
+      "kind": "detail-reload-image-ready",
+      "ordinal": 3,
+      "durationMs": 233.1489900000015
+    },
+    {
+      "kind": "detail-reload-image-ready",
+      "ordinal": 4,
+      "durationMs": 231.49483500000497
+    },
+    {
+      "kind": "detail-reload-image-ready",
+      "ordinal": 5,
+      "durationMs": 233.5181420000008
+    },
+    {
+      "kind": "detail-reload-image-ready",
+      "ordinal": 6,
+      "durationMs": 243.33906399999978
+    },
+    {
+      "kind": "browse-four-thumbnails-ready",
+      "ordinal": 1,
+      "durationMs": 343.9313410000177
+    },
+    {
+      "kind": "browse-four-thumbnails-ready",
+      "ordinal": 2,
+      "durationMs": 218.86122699998668
+    },
+    {
+      "kind": "browse-four-thumbnails-ready",
+      "ordinal": 3,
+      "durationMs": 265.07537999999477
+    },
+    {
+      "kind": "browse-four-thumbnails-ready",
+      "ordinal": 4,
+      "durationMs": 234.46656799997436
+    }
+  ]
+}
