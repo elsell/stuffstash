@@ -72,8 +72,9 @@ Three gaps: G6 unavailable selection guidance uses the existing typed/cataloged
 error; G6 repeated or over-limit discovery pages use cataloged retry guidance;
 D2 residual-copy inventory distinguishes the remaining cancellation control-flow
 literal. Preserve selected inventory, request limits, cancellation and tenancy.
-PR #251 merged at de87e4ae after CI37052298874 passed; its separate release
-is underway. This is not connected-native acceptance.
+PR #251 merged at de87e4ae after CI37052298874 passed. Release37053212190
+succeeded as v0.28.2 with TestFlight publication and verified changelog. This is
+not connected-native acceptance.
 
 ## Next verification batch — connected native
 
