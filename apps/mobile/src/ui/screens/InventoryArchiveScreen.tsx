@@ -1,3 +1,4 @@
+import { formatArchiveReview } from '@stuff-stash/localization';
 import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { AppState, Text, View } from 'react-native';
@@ -78,6 +79,7 @@ export function InventoryArchiveScreen({ workspace, scope, onClose, onOpen }: {
     } else if (scope.inventoryId) saveJob(visit, await visit.create({ photos, otherFiles }));
     else { saveJob(visit, await visit.upload()); if (!visit.signal.aborted) setFileName(undefined); }
   });
+  const reviewCopy = review ? formatArchiveReview(t, review.preview) : undefined;
   return <NativeFilterSheet key={review ? 'review' : 'jobs'} footerTestID="archive-task-actions" title={scope.inventoryId ? t('archive.export') : t('archive.restore')} actions={{
     primaryLabel: review ? t('archive.restore') : scope.inventoryId ? t('archive.create') : t('archive.upload'),
     secondaryLabel: t(review ? 'archive.closeReview' : 'archive.close'), disabled: busy || (review ? !name.trim() : !scope.inventoryId && !fileName),
@@ -85,13 +87,13 @@ export function InventoryArchiveScreen({ workspace, scope, onClose, onOpen }: {
   }}>
     <View style={{ padding: 20 }}>
       <Text style={styles.detailSubtitle}>{t(review ? 'archive.newInventory' : scope.inventoryId ? 'archive.description' : 'archive.restoreDescription')}</Text>
-      {review ? <SettingsSection footer={t('archive.omitted', { count: review.preview.omittedAttachments })}>
+      {review ? <SettingsSection footer={reviewCopy?.omitted}>
         <View style={styles.navigationRow}>
           <Text style={styles.rowLabel}>{t('archive.name')}</Text>
           <DraftTextField style={[styles.rowLabel, { minHeight: 48 }]} accessibilityLabel={t('archive.name')} value={name} onChangeText={setName} editable={!busy} />
-          <Text style={styles.rowContext}>{t('archive.counts', { assets: review.preview.assets, tags: review.preview.tags, photos: review.preview.photos, files: review.preview.otherFiles })}</Text>
-          <Text style={styles.rowContext}>{t('archive.definitions', { types: review.preview.customAssetTypes, fields: review.preview.customFields })}</Text>
-          <Text style={styles.rowContext}>{t('archive.remappings', { count: review.preview.keyRemappings.length })}</Text>
+          <Text style={styles.rowContext}>{reviewCopy?.content}</Text>
+          <Text style={styles.rowContext}>{reviewCopy?.schema}</Text>
+          <Text style={styles.rowContext}>{reviewCopy?.remappings}</Text>
         </View>
       </SettingsSection> : scope.inventoryId ? <SettingsSection footer={t(photos && otherFiles ? 'archive.metadata' : 'archive.partial')}>
         <SettingsSwitchRow label={t('archive.photos')} value={photos} disabled={busy} onValueChange={setPhotos} />
