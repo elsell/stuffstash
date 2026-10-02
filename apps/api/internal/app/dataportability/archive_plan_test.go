@@ -18,7 +18,7 @@ func TestRestorePlanRemapsWholeGraphAndRespectsSelection(t *testing.T) {
 	source := validArchiveDocument()
 	now := source.ExportedAt
 	source.Assets[1].CurrentCheckout = &asset.Checkout{ID: "checkout", State: asset.CheckoutStateOpen, CheckedOutAt: now, CheckedOutByPrincipal: "old-owner", CheckoutDetails: "In use", CreatedAt: now, UpdatedAt: now}
-	source.Assets[1].Attachments = []media.Attachment{{ID: "photo", ContentType: media.ContentTypeJPEG, FileName: "photo.jpg", SHA256: media.SHA256(strings.Repeat("a", 64)), SizeBytes: 10, CreatedAt: now, LifecycleState: media.LifecycleStateActive}, {ID: "file", ContentType: media.ContentTypePDF, FileName: "receipt.pdf", SHA256: media.SHA256(strings.Repeat("b", 64)), SizeBytes: 20, CreatedAt: now, LifecycleState: media.LifecycleStateActive}}
+	source.Assets[1].Attachments = []media.Attachment{{ID: "photo", StorageKey: media.StorageKey("../../outside"), ContentType: media.ContentTypeJPEG, FileName: "photo.jpg", SHA256: media.SHA256(strings.Repeat("a", 64)), SizeBytes: 10, CreatedAt: now, LifecycleState: media.LifecycleStateActive}, {ID: "file", ContentType: media.ContentTypePDF, FileName: "receipt.pdf", SHA256: media.SHA256(strings.Repeat("b", 64)), SizeBytes: 20, CreatedAt: now, LifecycleState: media.LifecycleStateActive}}
 	dest := ports.ArchiveRestoreDestination{TenantID: "new-tenant", InventoryID: "new-inventory", Name: "Restored home", PrincipalID: "new-owner"}
 	plan, err := BuildArchiveRestorePlan(context.Background(), source, dest, ports.ArchiveKeyReservations{Fields: map[string]bool{"strength": true}, Types: map[string]bool{"medicine": true}}, ports.ArchiveMediaSelection{Photos: true}, &archiveSequence{}, 100)
 	if err != nil {

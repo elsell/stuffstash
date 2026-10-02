@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -281,6 +282,39 @@ func runArchiveJobHTTPBoundary(t *testing.T, coverage *executedScenarioCoverage,
 	r = performRequest(server, http.MethodDelete, item+"?inventoryId=inventory", "Bearer dev:owner", nil)
 	if r.Code != 200 || !strings.Contains(r.Body.String(), "cancelled") {
 		t.Fatal("cancel failed")
+	}
+	// User-controlled ZIP paths never become filesystem destinations or an
+	// approvable restore, even for a principal allowed to upload archives.
+	for index, name := range []string{"../escape", "/absolute", `..\escape`, `C:\escape`} {
+		t.Run("malicious ZIP "+name, func(t *testing.T) {
+			payload := appendArchivePath(t, archive, name)
+			response := upload("Bearer dev:owner", fmt.Sprintf("path-attack-%d", index), "application/zip", payload)
+			if response.Code != http.StatusCreated {
+				t.Fatal(response.Body.String())
+			}
+			must(json.Unmarshal(response.Body.Bytes(), &restore))
+			candidate, found, err := store.ArchiveJobByID(ctx, ports.ArchiveJobScope{TenantID: "home"}, restore.Data.ID)
+			must(err)
+			if !found {
+				t.Fatal("missing quarantined job")
+			}
+			if err = worker.RunJob(ctx, candidate); err == nil {
+				t.Fatal("malicious archive validated")
+			}
+			status := performRequest(server, http.MethodGet, path+"/"+restore.Data.ID, "Bearer dev:owner", nil)
+			if status.Code != http.StatusOK || !strings.Contains(status.Body.String(), `"state":"failed"`) {
+				t.Fatalf("unsafe status: %s", status.Body.String())
+			}
+			approval := performRequest(server, http.MethodPost, path+"/"+restore.Data.ID+"/approve", "Bearer dev:owner", map[string]any{"name": "Unsafe"})
+			if approval.Code != http.StatusConflict {
+				t.Fatalf("unsafe approval: %d", approval.Code)
+			}
+			candidate, _, err = store.ArchiveJobByID(ctx, ports.ArchiveJobScope{TenantID: "home"}, restore.Data.ID)
+			must(err)
+			if candidate.DestinationInventoryID != "" {
+				t.Fatal("unsafe destination reserved")
+			}
+		})
 	}
 	// A corrupt archive reaches a durable validation failure and can be retried.
 	invalid := upload("Bearer dev:owner", "invalid-archive", "application/zip", []byte("not a ZIP"))

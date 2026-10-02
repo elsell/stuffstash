@@ -439,3 +439,22 @@ archive calls. GET downloads retain streaming responses; native restore uploads
 retain their separate file-transfer path and must not be read into JavaScript.
 Verify create and approval with the actual React Native Request polyfill, including
 authorization, idempotency, selection values and cancellation signal preservation.
+
+### ZIP path security acceptance
+
+ZIP names are identifiers, never filesystem destinations. Accept only exact
+`manifest.json`, `inventory.json`, and `media/` followed by 64 lowercase hexadecimal
+characters, without decoding or normalizing input names. Reject POSIX/Windows
+absolute paths, drive-relative and UNC names, slash/backslash traversal, dot
+segments, encoded separators, NULs, alternate streams and normalization aliases.
+Reject directories, symlinks, devices and pipes even when their names are allowed.
+Local-header and central-directory names must agree. Metadata attachment names
+never determine destination storage paths; restore generates fresh scoped keys.
+
+Adversarial regression coverage must exercise the complete package reader and
+the authenticated upload/worker/approval boundary. Malicious ZIP uploads may be
+accepted into quarantine for asynchronous validation, but must fail validation
+and never reach approval or destination publication. Existing valid round trips
+and authorization/isolation checks must remain passing. This documents the
+existing no-extraction design; passing tests are scoped evidence, not a claim
+that all possible malicious archives have been proven safe.
