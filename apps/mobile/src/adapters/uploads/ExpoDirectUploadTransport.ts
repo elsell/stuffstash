@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import {
   CreateInventoryAssetPhotoInput,
   InventoryAssetPhotoDirectUpload
@@ -20,34 +21,25 @@ export type DirectUploadTransportInput = {
   readonly contentType: CreateInventoryAssetPhotoInput['contentType'];
 };
 
+type NativeFileUploader = (input: DirectUploadTransportInput, method: 'POST' | 'PUT' | 'PATCH') => Promise<{ readonly status: number }>;
+
 export class ExpoDirectUploadTransport implements DirectUploadTransport {
-  constructor(private readonly directUploadPolicy: DirectUploadTargetPolicy = {}) {}
+  constructor(
+    private readonly directUploadPolicy: DirectUploadTargetPolicy = {},
+    private readonly uploadFile: NativeFileUploader = uploadNativeFile
+  ) {}
 
   async upload(input: DirectUploadTransportInput): Promise<boolean> {
     if (this.directUploadPolicy.allowLocalDevelopmentTargets === true && isLocalDirectUploadURL(input.upload.url)) {
       return false;
     }
     if (!isDirectUploadHTTPTransportAllowed(input.upload.url, this.directUploadPolicy)) {
-      throw new Error('Direct attachment upload target must use HTTPS or a private local development host.');
+      throw new Error(t('recovery.uploadConfiguration'));
     }
-    const FileSystem = await import('expo-file-system/legacy');
     const uploadMethod = directUploadMethod(input.upload.method);
-    const result = await FileSystem.uploadAsync(input.upload.url, input.fileUri, {
-      httpMethod: uploadMethod,
-      headers: input.upload.headers,
-      ...(Object.keys(input.upload.formFields).length > 0
-        ? {
-            uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-            fieldName: 'file',
-            mimeType: input.contentType,
-            parameters: input.upload.formFields
-          }
-        : {
-            uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT
-          })
-    });
+    const result = await this.uploadFile(input, uploadMethod);
     if (result.status < 200 || result.status >= 300) {
-      throw new Error('Direct attachment upload failed.');
+      throw new Error(t('recovery.uploadFailed'));
     }
     return true;
   }
@@ -58,9 +50,26 @@ export async function attachmentContentBase64(input: CreateInventoryAssetPhotoIn
     return input.contentBase64;
   }
   if (!input.uri) {
-    throw new Error('Attachment content is not available for JSON upload fallback.');
+    throw new Error(t('recovery.uploadContentUnavailable'));
   }
   const FileSystem = await import('expo-file-system/legacy');
   return FileSystem.readAsStringAsync(input.uri, { encoding: FileSystem.EncodingType.Base64 });
 }
 
+async function uploadNativeFile(input: DirectUploadTransportInput, uploadMethod: 'POST' | 'PUT' | 'PATCH'): Promise<{ readonly status: number }> {
+  const FileSystem = await import('expo-file-system/legacy');
+  return FileSystem.uploadAsync(input.upload.url, input.fileUri, {
+    httpMethod: uploadMethod,
+    headers: input.upload.headers,
+    ...(Object.keys(input.upload.formFields).length > 0
+      ? {
+          uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+          fieldName: 'file',
+          mimeType: input.contentType,
+          parameters: input.upload.formFields
+        }
+      : {
+          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT
+        })
+  });
+}

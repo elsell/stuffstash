@@ -19,6 +19,60 @@
       ]
     },
     {
+      "file": "apps/mobile/src/application/notifications/NotificationPreferencesSession.ts",
+      "classification": "technical-diagnostic",
+      "reason": "Unloaded and concurrent-save errors are ordinary Errors. NotificationSettingsScreen and its reminder editors replace them with cataloged load/save recovery instead of rendering their messages.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx: save, presentFailure, message",
+        "apps/mobile/src/ui/components/ExpirationReminderEditor.tsx: commit catch"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx",
+      "strings": [
+        "Reload authorized reminder settings before saving.",
+        "Another settings request is in progress.",
+        "Settings navigation changed."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "These save lifecycle guards reject ordinary Errors. Shared failure handling or the calling reminder task renders cataloged guidance; stale/unmounted completion is suppressed.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx: save, presentFailure, changePush",
+        "apps/mobile/src/ui/components/ExpirationReminderEditor.tsx: commit catch"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/application/notificationPreferencesSession.ts",
+      "classification": "technical-diagnostic",
+      "reason": "Unloaded and concurrent-save diagnostics are ordinary Errors without safeForUser. NotificationSettings and ExpirationReminderEditor use cataloged fallbacks through safeWorkspaceErrorMessage.",
+      "evidence": [
+        "apps/web/src/lib/components/workspace/settings/NotificationSettings.svelte: load, save, saveTimezone",
+        "apps/web/src/lib/components/workspace/settings/ExpirationReminderEditor.svelte: save catch",
+        "apps/web/src/lib/application/workspaceSafeError.ts: safeWorkspaceErrorMessage"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/NotificationSettings.svelte",
+      "strings": [
+        "Another settings request is in progress."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "The concurrent-save guard is not display copy. Its timezone and reminder-editor callers catch it and use cataloged recovery.",
+      "evidence": [
+        "apps/web/src/lib/components/workspace/settings/NotificationSettings.svelte: saveTimezone catch",
+        "apps/web/src/lib/components/workspace/settings/ExpirationReminderEditor.svelte: save catch"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/adapters/voice/ExpoVoiceAudioCore.ts",
+      "classification": "technical-diagnostic",
+      "reason": "Native recording and playback failures are ordinary Errors. The voice interaction boundary maps them to cataloged failure state rather than displaying these exception messages. This classification does not certify microphone-permission UX or physical audio acceptance.",
+      "evidence": [
+        "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: start/stop handlers and buildFailedVoiceRealtimeState",
+        "apps/mobile/src/application/voice/RealtimeVoiceSession.ts: recording/playback error propagation"
+      ]
+    },
+    {
       "file": "apps/web/src/lib/adapters/realtime/browserConversationTransport.ts",
       "classification": "technical-diagnostic",
       "reason": "Thrown transport/validation errors become typed failure categories or are caught by InventoryConversation; raw exception messages are not rendered.",
@@ -278,10 +332,6 @@
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/adapters/uploads/ExpoDirectUploadTransport.ts",
-      "candidates": 3
-    },
-    {
       "file": "apps/mobile/src/application/archives/ArchiveTask.ts",
       "candidates": 3
     },
@@ -446,19 +496,11 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetCommands.ts",
-      "candidates": 1
-    },
-    {
       "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetPhotos.ts",
       "candidates": 1
     },
     {
       "file": "apps/mobile/src/adapters/inventories/ApiInventoryDirectory.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/adapters/uploads/DirectUploadPolicy.ts",
       "candidates": 1
     },
     {

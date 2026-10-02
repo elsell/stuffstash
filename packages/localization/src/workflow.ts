@@ -1,5 +1,6 @@
 /** Complete workflow messages, including variable-derived notices. */
 export const workflowMessages = {
+  "photos.storageUploadFailed": "Could not upload the photo. Try again.",
   "browse.list": "List",
   "browse.map": "Map",
   "customization.fromHousehold": "From {household}",
@@ -56,6 +57,9 @@ export const workflowMessages = {
   "settings.versionUnknown": "Unknown",
   "voice.openEntityIn": "Open {title} in {context}",
   "voice.openEntity": "Open {title}",
+  "auth.refreshRequired": "Sign in again to refresh your Stuff Stash session.",
+  "auth.unusableSession": "Sign-in did not return a usable Stuff Stash session.",
+  "auth.unrefreshableSession": "Sign-in did not return a refreshable Stuff Stash session.",
   "voice.entityPosition": "{label} ({position} of {total})",
   "move.cannotContainSelf": "An asset cannot be moved into itself.",
   "move.saved": "Moved {title}.",
@@ -207,6 +211,9 @@ export const workflowMessages = {
   "progress.navigation.upcoming": "Go to {step}, not started step",
   "progress.navigation.described": "{label}. {description}",
   "sharing.invitation.message": "You’re invited to {inventory} in Stuff Stash.\n\n{link}",
+  "recovery.uploadConfiguration": "Could not start the upload. Check your server settings and try again.",
+  "recovery.uploadFailed": "Could not upload the file. Try again.",
+  "recovery.uploadContentUnavailable": "This file is no longer available. Choose it again.",
   "sharing.invitation.title": "Share Stuff Stash invitation",
   "sharing.export.title": "Export inventory",
   "notifications.channel.expiration": "Expiration reminders",

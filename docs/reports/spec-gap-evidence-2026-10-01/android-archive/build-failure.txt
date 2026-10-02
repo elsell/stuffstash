@@ -1,0 +1,52 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.0.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+FAILURE: Build failed with an exception.
+
+* Where:
+Settings file '<disposable-source>/apps/mobile/android/settings.gradle' line: 21
+
+* What went wrong:
+Error resolving plugin [id: 'com.facebook.react.settings']
+> Multiple build operations failed.
+      The contents of the immutable workspace '<audit-gradle-cache>/caches/9.0.0/transforms/1565f26e0a40d00851fa1032b137a2c2' have been modified. These workspace directories are not supposed to be modified once they are created. The modification might have been caused by an external process, or could be the result of disk corruption.
+  outputDirectory:
+   - transformed (Directory, 980b9333a7f8b188609ff032d1c0aa41)
+     - analysis (Directory, 4fd5bfd658339311850833b13545918d)
+  
+  resultsFile:
+   - results.bin (RegularFile, 5f25a148939d360a42916101141f626d)
+  
+      The contents of the immutable workspace '<audit-gradle-cache>/caches/9.0.0/transforms/f005700c8f197c2d322edcafc4f4a0a5' have been modified. These workspace directories are not supposed to be modified once they are created. The modification might have been caused by an external process, or could be the result of disk corruption.
+  outputDirectory:
+   - transformed (Directory, 980b9333a7f8b188609ff032d1c0aa41)
+     - analysis (Directory, 4fd5bfd658339311850833b13545918d)
+  
+  resultsFile:
+   - results.bin (RegularFile, 5f25a148939d360a42916101141f626d)
+
+   > The contents of the immutable workspace '<audit-gradle-cache>/caches/9.0.0/transforms/1565f26e0a40d00851fa1032b137a2c2' have been modified. These workspace directories are not supposed to be modified once they are created. The modification might have been caused by an external process, or could be the result of disk corruption.
+     outputDirectory:
+      - transformed (Directory, 980b9333a7f8b188609ff032d1c0aa41)
+        - analysis (Directory, 4fd5bfd658339311850833b13545918d)
+     
+     resultsFile:
+      - results.bin (RegularFile, 5f25a148939d360a42916101141f626d)
+
+   > The contents of the immutable workspace '<audit-gradle-cache>/caches/9.0.0/transforms/f005700c8f197c2d322edcafc4f4a0a5' have been modified. These workspace directories are not supposed to be modified once they are created. The modification might have been caused by an external process, or could be the result of disk corruption.
+     outputDirectory:
+      - transformed (Directory, 980b9333a7f8b188609ff032d1c0aa41)
+        - analysis (Directory, 4fd5bfd658339311850833b13545918d)
+     
+     resultsFile:
+      - results.bin (RegularFile, 5f25a148939d360a42916101141f626d)
+
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (Powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 8s
+terminal exit=1

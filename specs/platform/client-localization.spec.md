@@ -40,6 +40,16 @@ Expose text direction so web/native hosts can choose their platform direction
 without forcing a production device-wide RTL reload. No claim of native RTL
 acceptance may be made from a pure formatter or browser test.
 
+### Authentication recovery messages
+
+Mobile authentication-required errors must carry cataloged text for session
+refresh failure, unusable sign-in tokens and missing required refresh tokens.
+Some command screens can show the typed error message before navigation returns
+to sign-in; onboarding's separate fallback does not cover those consumers.
+Preserve error types, token validation, storage clearing, refresh coalescing and
+session-generation isolation. Verify the three failure paths through the existing
+session ports under a pseudolocale, alongside the existing security regressions.
+
 ## Migration and enforcement
 
 Migrate reusable controls and everyday workflows before administrative surfaces.
@@ -54,6 +64,17 @@ Critical tests cover plural zero/one/many, English fallback under a non-English
 locale, parameter safety, independent translators and pseudolocales. Representative
 browser and native workflows verify expanded labels, search, approval and return.
 Do not create a separate test for every extracted label.
+
+### Archive review counts
+
+Both clients must render restore-review counts using shared locale-aware plural
+messages: item/tag/photo/file totals, custom-type/field totals, and complete
+omission/remapping notices. Zero, one and many must select the appropriate form.
+Keep summary ordering in catalog templates; never concatenate an English noun to
+a formatted number. A shared presentation formatter accepts only preview counts,
+not transport/domain objects or user titles. Critical tests cover singular and
+mixed totals, zero/many notices and expanded-locale output. This changes wording,
+not archive selection, validation or approval.
 
 ## References
 
@@ -282,6 +303,17 @@ without changing the previously selected inventory. Repeated continuation cursor
 and the bounded page limit must fail with cataloged recovery, preserving their
 existing request bounds. Cancellation remains control flow, not recovery copy.
 
+### Attachment upload recovery
+
+Mobile attachment upload recovery must use complete catalog messages for three
+failure groups: invalid target or method, failed upload response, and missing
+local file content. Invalid targets and methods must fail before loading or
+calling native upload code; they must not trigger JSON fallback or completion.
+Keep HTTPS/local-development policy, permitted methods and successful upload
+behavior unchanged. Missing file guidance must ask the user to choose it again.
+Keep native file transfer injectable at the transport adapter so rejection and
+completion behavior can be checked without replacing native modules.
+
 ### Svelte collection expressions
 
 The rendered-copy gate must inspect display properties inside Svelte each-block
@@ -313,3 +345,12 @@ archived settings loading labels use complete messages for each closed state.
 Do not interpolate internal kind, action or lifecycle identifiers into translated
 sentences. Preserve English recovery meaning, draft retention, privacy of transport
 errors, and command behavior. User-authored names remain verbatim parameters.
+
+### Browser photo upload recovery
+
+Storage HTTP rejection and transport failure must use cataloged recovery text even
+when the exception is explicitly safe for presentation. Preserve direct-upload
+failure: neither case may silently retry through JSON or complete metadata.
+Critical tests cover both causes, presentation through the safe-error boundary and
+expanded-locale output. Keep technical target-selection and invalid-invitation
+errors distinct from this deliberately user-visible upload error.

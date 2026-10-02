@@ -111,6 +111,24 @@ archive compatibility/security, and connected-native investigation. They do not
 close residual G6 copy migration or V1 physical, connected-native, assistive,
 directional-layout and broader performance obligations.
 
+## Local-provider acceptance
+
+The production compatible adapter's controlled protocol tests remain separate
+from real-model acceptance. Hosted run37071655138 at `969e2ef8` failed the profile
+diagnostic and lookup-argument contract with pinned Ollama 0.9.5/Qwen3 0.6B.
+Cleanup passed; final-answer replay was not reached. Keep this deployment
+unverified, retain the [bounded failure evidence](../../docs/reports/spec-gap-evidence-2026-10-01/local-provider/README.md),
+and do not retry unchanged or gate unrelated releases on it.
+
+## Android archive acceptance — stopped setup attempt
+
+At `588e4153`, the existing Android audit emulator booted after setup and disk
+recovery, but Gradle rejected modified generated caches before app compilation.
+Upload integrity, rejection/cancellation recovery and restore approval were not
+run. No current APK or native acceptance is claimed. The investigation is stopped;
+no unchanged retry or per-entry cache deletion. Retain physical file-provider and
+assistive acceptance separately. [Terminal evidence and next-step constraint](../../docs/reports/spec-gap-evidence-2026-10-01/android-archive/README.md).
+
 ## Current objective — October 1, 2026
 
 Close the documentation, implementation and verification gaps in

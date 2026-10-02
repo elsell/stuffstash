@@ -1,0 +1,14 @@
+{
+  "stages": [
+    {
+      "name": "profile-diagnostic",
+      "passed": false,
+      "elapsedMs": 5182
+    },
+    {
+      "name": "read-tool-result-answer",
+      "passed": false,
+      "elapsedMs": 2991
+    }
+  ]
+}
