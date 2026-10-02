@@ -515,3 +515,21 @@ it('bounds sparse kind-filter scans and preserves the continuation cursor', asyn
   expect(client.listAssetRequests).toHaveLength(5);
   expect(page.assets).toEqual([]); expect(page.hasMore).toBe(true); expect(page.nextCursor).toBeDefined();
 });
+
+it.each(['', 'filters'])('shows recoverable copy and stops invalid pagination for query %j', async (query) => {
+  class BrokenPaginationClient extends FakeInventoryApiClient {
+    override async listAssets(...args: Parameters<FakeInventoryApiClient['listAssets']>) {
+      const page = await super.listAssets(...args);
+      return { ...page, pagination: { ...page.pagination, hasMore: true, nextCursor: null } };
+    }
+    override async searchAssets(...args: Parameters<FakeInventoryApiClient['searchAssets']>) {
+      const page = await super.searchAssets(...args);
+      return { ...page, pagination: { ...page.pagination, hasMore: true, nextCursor: null } };
+    }
+  }
+  const client = new BrokenPaginationClient();
+  const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+  await expect(repository.browseAssets({ query, limit: 1, lifecycleState: 'active', checkoutState: 'any', kind: 'item', sort: 'updated_desc' }))
+    .rejects.toThrow('Could not load more items. Try again.');
+  expect(query ? client.searchAssetRequests : client.listAssetRequests).toHaveLength(1);
+});
