@@ -167,3 +167,81 @@ func TestArchiveRejectsUnindexedBytesAndFalseDirectoryCount(t *testing.T) {
 		}
 	}
 }
+
+func TestWriterCannotExceedReaderDirectoryBudget(t *testing.T) {
+	l := limits()
+	l.MetadataBytes = 10000
+	l.Entries = 110
+	var media []Media
+	source := contentSource{}
+	for i := 0; i < 100; i++ {
+		b := []byte{byte(i)}
+		h := digest(b)
+		media = append(media, Media{SHA256: h, SizeBytes: 1})
+		source[h] = b
+	}
+	var out bytes.Buffer
+	if err := Write(context.Background(), &out, []byte(`{"assets":[]}`), Selection{}, testTime(), media, source, l); err != ErrLimit {
+		t.Fatalf("expected directory limit, got %v", err)
+	}
+}
+func TestRequiredManifestCollectionsAndEmptyMediaSizes(t *testing.T) {
+	for _, emptyFile := range []bool{false, true} {
+		var valid bytes.Buffer
+		var files []Media
+		source := contentSource{}
+		if emptyFile {
+			h := digest(nil)
+			files = []Media{{SHA256: h, SizeBytes: 0}}
+			source[h] = nil
+		}
+		if err := Write(context.Background(), &valid, []byte(`{"assets":[]}`), Selection{}, testTime(), files, source, limits()); err != nil {
+			t.Fatal(err)
+		}
+		z, err := zip.NewReader(bytes.NewReader(valid.Bytes()), int64(valid.Len()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var broken bytes.Buffer
+		w := zip.NewWriter(&broken)
+		for _, f := range z.File {
+			r, err := f.Open()
+			if err != nil {
+				t.Fatal(err)
+			}
+			data, err := io.ReadAll(r)
+			r.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if f.Name == manifestName {
+				var m map[string]any
+				if err = json.Unmarshal(data, &m); err != nil {
+					t.Fatal(err)
+				}
+				if emptyFile {
+					delete(m["media"].([]any)[0].(map[string]any), "sizeBytes")
+				} else {
+					delete(m, "media")
+				}
+				data, err = json.Marshal(m)
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+			entry, err := w.Create(f.Name)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err = entry.Write(data); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err = w.Close(); err != nil {
+			t.Fatal(err)
+		}
+		if _, err = Read(context.Background(), bytes.NewReader(broken.Bytes()), int64(broken.Len()), limits()); err == nil {
+			t.Fatal("missing required manifest field accepted")
+		}
+	}
+}

@@ -56,6 +56,16 @@ func Write(ctx context.Context, w io.Writer, inventory []byte, selection Selecti
 	if len(m.Media) > limits.Entries-2 {
 		return ErrLimit
 	}
+	// Bound the directory as well as manifest data so every successful write
+	// fits the reader's allocation limit. Reserve the largest ZIP64 size/offset
+	// extension for each header; ordinary ZIP headers are smaller.
+	directoryBudget := limits.MetadataBytes
+	for _, name := range []string{manifestName, inventoryName} {
+		directoryBudget -= int64(46 + len(name) + 28)
+	}
+	if directoryBudget < 0 || int64(len(m.Media)) > directoryBudget/int64(46+len("media/")+64+28) {
+		return ErrLimit
+	}
 	metadata, err := json.Marshal(m)
 	if err != nil {
 		return err
