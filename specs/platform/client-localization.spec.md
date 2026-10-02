@@ -40,6 +40,16 @@ Expose text direction so web/native hosts can choose their platform direction
 without forcing a production device-wide RTL reload. No claim of native RTL
 acceptance may be made from a pure formatter or browser test.
 
+### Authentication recovery messages
+
+Mobile authentication-required errors must carry cataloged text for session
+refresh failure, unusable sign-in tokens and missing required refresh tokens.
+Some command screens can show the typed error message before navigation returns
+to sign-in; onboarding's separate fallback does not cover those consumers.
+Preserve error types, token validation, storage clearing, refresh coalescing and
+session-generation isolation. Verify the three failure paths through the existing
+session ports under a pseudolocale, alongside the existing security regressions.
+
 ## Migration and enforcement
 
 Migrate reusable controls and everyday workflows before administrative surfaces.
