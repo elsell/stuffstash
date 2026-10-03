@@ -6,16 +6,20 @@ export class ManualPrintRequest implements PrintIntent {
     rendered: LabelPreview | null = null;
     result: PrintJob | null = null;
     private ambiguous = false;
+    private previewGeneration = 0;
     private pending: Promise<PrintJob> | null = null;
     constructor(private readonly repository: PrintingRepository, private readonly scope: PrintScope, private readonly assetId: string, private readonly key: string) { }
     invalidate() { if (this.locked)
-        throw new PrintingFailure('conflict'); this.rendered = null; this.selection = null; }
-    async preview(selection: LabelSelection, media: LabelMedia) {
+        throw new PrintingFailure('conflict'); this.previewGeneration++; this.rendered = null; this.selection = null; }
+    async preview(selection: LabelSelection, media: LabelMedia, signal?: AbortSignal) {
         this.invalidate();
         if (!Number.isInteger(selection.copies) || selection.copies < 1)
             throw new PrintingFailure('invalid');
+        const generation = this.previewGeneration;
         const captured = { ...selection };
         const rendered = await this.repository.preview(this.scope, this.assetId, captured, media);
+        if (generation !== this.previewGeneration || signal?.aborted)
+            throw new PrintingFailure('conflict');
         this.selection = captured;
         this.rendered = rendered;
         return rendered;

@@ -758,6 +758,9 @@ stable idempotency key; uncertain API delivery freezes that request until retry.
 Session-owned intents survive dialog dismissal and route navigation, preserving
 the exact pending request, selection, and preview for reopening. A definite
 rejection permits correction only if no previous attempt had ambiguous delivery.
+Preview operations carry a generation fence. A newer preview, selection change,
+or canceled dialog invalidates older render responses; a late response cannot
+replace the selection currently shown or submitted.
 Preview bytes come through authenticated generated-client content methods and
 local object URLs are released on selection changes and dismissal. No credential
 is attached to arbitrary server-provided content URLs.

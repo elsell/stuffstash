@@ -22,10 +22,11 @@ let { scope, assetId, repository, intents, onClose, onRestoreFocus }: {
 let request = $state(untrack(() => intents.forAsset(scope, assetId)));
 let printers = $state<RegisteredPrinter[]>([]), templates = $state<LabelTemplate[]>([]), printerId = $state(''), templateKey = $state(''), showReference = $state(true), copies = $state(1);
 let busy = $state(true), locked = $state(untrack(() => request.locked)), error = $state(''), previewUrl = $state(''), rotation = $state(0), job = $state<PrintJob | null>(untrack(() => request.result)), alive = true;
+const previewLifetime = new AbortController();
 const printer = $derived(printers.find(p => p.id === printerId));
 const template = $derived(templates.find(p => `${p.id}:${p.version}` === templateKey));
 onMount(() => { void load(); });
-onDestroy(() => { alive = false; releasePreview(); });
+onDestroy(() => { alive = false; previewLifetime.abort(); releasePreview(); });
 function releasePreview() { if (previewUrl)
     URL.revokeObjectURL(previewUrl); previewUrl = ''; }
 function changed() { if (locked)
@@ -61,7 +62,7 @@ finally {
 } }
 async function preview() { if (!printer || !template || busy || locked)
     return; busy = true; error = ''; releasePreview(); try {
-    const rendered = await request.preview({ printerId, expectedMediaFingerprint: printer.mediaFingerprint, templateId: template.id, templateVersion: template.version, showReference, copies }, printer.media);
+    const rendered = await request.preview({ printerId, expectedMediaFingerprint: printer.mediaFingerprint, templateId: template.id, templateVersion: template.version, showReference, copies }, printer.media, previewLifetime.signal);
     if (alive) {
         rotation = rendered.displayRotation;
         previewUrl = URL.createObjectURL(rendered.bytes);

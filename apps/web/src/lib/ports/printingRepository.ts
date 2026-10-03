@@ -24,7 +24,7 @@ export interface PrintIntent {
     readonly rendered: LabelPreview | null;
     readonly result: PrintJob | null;
     invalidate(): void;
-    preview(selection: LabelSelection, media: LabelMedia): Promise<LabelPreview>;
+    preview(selection: LabelSelection, media: LabelMedia, signal?: AbortSignal): Promise<LabelPreview>;
     submit(): Promise<PrintJob>;
 }
 export interface PrintIntents {

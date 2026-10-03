@@ -61,3 +61,25 @@ it('allows correcting a definite rejection but keeps a previously ambiguous requ
     expect(request.locked).toBe(true);
     expect(repo.queued.size).toBe(1);
 });
+
+
+class DelayedPreviewRepository extends FakePrintingRepository {
+ readonly deliveries: Array<()=>void>=[];
+ override async preview(...args:Parameters<FakePrintingRepository['preview']>){
+  const rendered=await super.preview(...args);
+  await new Promise<void>(resolve=>{this.deliveries.push(resolve);});
+  return rendered;
+ }
+}
+it('fences a late preview from a dismissed dialog or older selection',async()=>{
+ const repo=new DelayedPreviewRepository();const intents=new SessionPrintIntents(repo,()=> 'intent');const request=intents.forAsset(repo.scope,'asset');const printer=repo.destinations[0];
+ const selection={printerId:printer.id,expectedMediaFingerprint:printer.mediaFingerprint,templateId:'qr-title',templateVersion:1,showReference:true,copies:1};
+ const old=request.preview(selection,printer.media);const rejected=expect(old).rejects.toMatchObject({kind:'conflict'});await Promise.resolve();
+ const reopened=intents.forAsset(repo.scope,'asset');const current=reopened.preview({...selection,copies:2},printer.media);await Promise.resolve();repo.deliveries[1]();await current;
+ repo.deliveries[0]();await rejected;const job=await reopened.submit();expect(job.copies).toBe(2);expect(repo.queued.size).toBe(1);
+});
+it('does not retain a preview whose dialog was canceled',async()=>{
+ const repo=new DelayedPreviewRepository();const request=new ManualPrintRequest(repo,repo.scope,'asset','intent');const printer=repo.destinations[0];const controller=new AbortController();
+ const pending=request.preview({printerId:printer.id,expectedMediaFingerprint:printer.mediaFingerprint,templateId:'qr-title',templateVersion:1,showReference:true,copies:1},printer.media,controller.signal);
+ const rejected=expect(pending).rejects.toMatchObject({kind:'conflict'});await Promise.resolve();controller.abort();repo.deliveries[0]();await rejected;await expect(request.submit()).rejects.toMatchObject({kind:'invalid'});expect(repo.queued.size).toBe(0);
+});
