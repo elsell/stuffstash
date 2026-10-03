@@ -445,3 +445,31 @@ cannot replace a newer stable download. Production docs are dispatched against
 main after that PR is observed merged; requesting auto-merge alone is insufficient.
 A failed docs refresh is reported separately and can be retried by dispatching
 Docs Pages against main. Failed Release runs never trigger a production docs build.
+
+### Worker journal and local device reservation
+
+The Linux print worker holds a nonblocking OS lock on the actual resolved USB
+character-device inode before claiming jobs. It retains that device connection
+for its active worker lifetime, so separate users or journal directories cannot
+bypass physical exclusion. Device identity is revalidated through trusted local
+discovery before opening; unsupported locking fails closed. A separate journal
+file lock serializes recovery state keyed by the discovered physical identity. Its
+private state directory and files are owned by the current user and inaccessible
+to other users. Lock release follows process exit; a second worker fails clearly
+instead of sharing an active printer connection. Unsupported platforms reject USB
+worker startup without affecting ordinary CLI commands.
+
+Each device journal is a versioned, checksummed envelope bound to that device.
+Missing files and invalid/corrupt state are distinct from an initialized idle
+journal. A write atomically replaces a same-directory temporary file, fsyncs the
+file before replacement and the directory afterwards, and acknowledges persistence
+only when both succeed. Completed-state clearing writes a durable idle envelope;
+it does not erase evidence by deleting the journal. Claim tokens remain owner-only
+local secrets and are never included in diagnostics.
+
+The worker records each copy's submission intent durably before sending printer
+bytes, then records positively observed completion before attempting another
+copy. An API start acknowledgement and current lease are additional gates before
+submission. Recovery inspects API state before new claims; an earlier process's
+submission intent can produce uncertainty/reconciliation, never an automatic
+physical replay. Journal or lock failures are fail-closed printer conditions.
