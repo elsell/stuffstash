@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { t } from '$lib/presentation/localization';
+  import { t, localization } from '$lib/presentation/localization';
+ import { expirationMonth } from '$lib/presentation/expirationMonth';
  import type { ExpirationItem } from '$lib/ports/expirationRepository';
  import type { Asset } from '$lib/domain/inventory';
  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
@@ -8,7 +9,7 @@
  import AssetThumb from '../AssetThumb.svelte';
  import AssetExpirationLabel from '../AssetExpirationLabel.svelte';
  let { items, onOpenAsset, grouped = true }: { items: ExpirationItem[]; onOpenAsset: (asset: Asset) => void; grouped?: boolean } = $props();
- function group(item: ExpirationItem) { const month = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${item.expiration!.date.slice(0,7)}-01T12:00:00Z`)); return item.expirationContext?.state === 'expired' ? t('expiration.expiredMonth', { month }) : month; }
+ function group(item: ExpirationItem) { return expirationMonth(item.expiration!.date, item.expirationContext?.state === 'expired', localization); }
  function open(event: MouseEvent, item: Asset) { if (shouldHandleWorkspaceLinkClick(event)) { event.preventDefault(); onOpenAsset(item); } }
 </script>
 <div class="expiry-rows">

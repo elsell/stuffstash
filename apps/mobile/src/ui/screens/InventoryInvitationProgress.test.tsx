@@ -31,7 +31,7 @@ it('keeps joining and opening named during progress and permits opening recovery
     await h.run(() => failOpen?.(new Error('offline')));
     expect(h.byLabel('Open inventory')?.props.accessibilityState).toEqual({ disabled: false });
     expect(h.allText()).toContain('The inventory could not be opened. Your access was still added.');
-    expect(h.allText()).toContain('You now have access to ');
+    expect(h.allText()).toContain('You now have access to Kitchen.');
   } finally { await h.unmount(); }
 });
 

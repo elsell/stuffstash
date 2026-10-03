@@ -561,3 +561,13 @@ presentation, permissions, cancellation or keyboard behavior.
 Verify all supported roles/statuses, reordered translated metadata with intact
 user values, and locale-specific expiry dates through the production presenter.
 The known sharing-menu keyboard obstruction remains issue #239.
+
+## Date presentation consumers
+
+Invitation acceptance expiry, mobile History day headings and web Expiration month
+headings must use the client translator's date formatter. Preserve History's
+local-calendar grouping and record order, and Expiration's UTC month anchoring.
+Invitation acceptance success uses a whole named-placeholder message preserving
+the inventory name. Verify non-default formatting locale and invalid History
+dates without changing grouping semantics. These copy/formatting changes do not
+claim native navigation, assistive or physical-device acceptance.

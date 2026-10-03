@@ -578,6 +578,7 @@ export const mobileMessages = {
   "mobile.InventoryExportAction.preparingExport": "Preparing export…",
   "mobile.InventoryExportAction.cancelExport": "Cancel export",
   "mobile.InventoryExportAction.retryExport": "Retry export",
+  "invitation.acceptedInventory": "You now have access to {inventoryName}.",
   "mobile.InventoryInvitationScreen.invitationNotAvailable": "Invitation not available",
   "mobile.InventoryInvitationScreen.thisInvitationLinkIsIncompleteOrInvalidAskThe": "This invitation link is incomplete or invalid. Ask the sender for a new link.",
   "mobile.InventoryInvitationScreen.checkingInvitation": "Checking invitation",
