@@ -398,3 +398,8 @@ controls. The list heading remains outside scrolling content and already clears
 the navigation header. The Show value is a short, in-place choice: use the shared
 native choice picker with Changes and All events, not an action-menu trigger that
 can collapse its selected label into an ellipsis. Keep the current value visible.
+
+Label identity provisioning and authorized label reads/renders/downloads use
+localized action labels in web activity and mobile asset history. In particular,
+`label.provisioned` reads Label created and `label.rendered` reads Label prepared;
+neither rendering nor downloading is described as a physically completed print.
