@@ -1,3 +1,5 @@
+import { StuffStashAPIError } from '@stuff-stash/api-client';
+import { PrintRequestRejected } from '../../application/printing/PrintSubmission';
 import { CatalogRecoveryError } from '../../application/shared/CatalogRecoveryError';
 import {
   type InventoryMutationKind,
@@ -29,10 +31,14 @@ export class ApiInventoryAssetCommands {
   constructor(private readonly client: InventoryApiClient, private readonly directory: ApiInventoryDirectory, private readonly traversal: ApiInventoryAssetTraversal, private readonly directUploadTransport: DirectUploadTransport, private readonly directUploadPolicy: DirectUploadTargetPolicy, private readonly mutationObserver: InventoryMutationObserver) {}
   async createAsset(input: CreateInventoryAssetInput): Promise<AssetSummary> {
     const selected = await this.directory.selectedForCommand();
+    if (input.printRequest && (input.printRequest.scope.tenantId !== selected.tenant.id || input.printRequest.scope.inventoryId !== selected.inventory.id)) throw new PrintRequestRejected();
     const inventory = emptyInventorySummary(selected.tenant, selected.inventory);
-    const parent = input.parentAssetId ? await this.client.getAsset(selected.tenant.id, selected.inventory.id, input.parentAssetId) : undefined;
+    const parent = input.parentAssetId ? await this.client.getAsset(selected.tenant.id, selected.inventory.id, input.parentAssetId).catch(error => { if (input.printRequest) return undefined; throw error; }) : undefined;
     const currentPlacementAssets = parent ? [parent, ...await this.traversal.loadAssetAncestors(parent)] : [];
+    const selection = input.printRequest?.selection;
     const asset = await this.client.createAsset(inventory.tenantId, inventory.id, {
+      ...(selection ? { printLabel: { printerId: selection.printerId, expectedMediaFingerprint: selection.mediaFingerprint, copies: selection.copies,
+        templateId: selection.template.id, templateVersion: selection.template.version, templateOptions: { showReference: selection.template.showReference } } } : {}),
       kind: input.kind,
       expiration: input.expiration,
       customAssetTypeId: input.customAssetTypeId,
@@ -40,7 +46,7 @@ export class ApiInventoryAssetCommands {
       description: input.description,
       parentAssetId: input.parentAssetId,
       ...(input.tagIds !== undefined ? { tagIds: [...input.tagIds] } : {})
-    });
+    }, input.printRequest?.key).catch(error => { if (input.printRequest && error instanceof StuffStashAPIError && [400, 409, 422].includes(error.status)) throw new PrintRequestRejected(); throw error; });
     this.observeMutation(
       'asset_created',
       inventory.tenantId,
@@ -54,7 +60,7 @@ export class ApiInventoryAssetCommands {
       currentPlacementAssets,
       [asset]
     );
-    return mapAsset(inventory.name, asset, placementAssets);
+    return { ...mapAsset(inventory.name, asset, placementAssets), printJobId: asset.printJobId };
   }
 
   async createAssetTag(input: CreateInventoryAssetTagInput): Promise<AssetTagSummary> {

@@ -1,3 +1,4 @@
+import type { CreatePrintRequest } from '../printing/PrintingWorkspace';
 import type { AssetExpiration } from '../../domain/assets/AssetSummary';
 import {
   InventoryId,
@@ -101,6 +102,7 @@ export type AssetSearchMatchLabels = {
 };
 
 export type CreateInventoryAssetInput = {
+  readonly printRequest?: CreatePrintRequest;
   readonly expiration?: AssetExpiration;
   readonly customAssetTypeId?: string;
   readonly kind: AssetKind;

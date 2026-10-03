@@ -1,3 +1,4 @@
+import type { CreateAssetCommandInput } from './CreateAssetCommand';
 import type { SelectedAssetPhoto } from './PhotoSelectionQuery';
 import type { AssetKind, AssetExpiration } from '../../domain/assets/AssetSummary';
 import type { CreateAssetTagDraft } from '../assets/AssetTagDraftResolution';
@@ -13,6 +14,8 @@ export type AddAssetDraftParent = {
 };
 
 export type AddAssetDraft = {
+  readonly printLabel?: boolean;
+  readonly pendingPrintCreate?: CreateAssetCommandInput;
   readonly inlineTag?: { readonly name: string; readonly color: string };
   readonly expiration?: AssetExpiration;
   readonly customAssetTypeId?: string;

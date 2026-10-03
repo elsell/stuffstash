@@ -291,3 +291,10 @@ it('preserves expiration precision and supports clearing without changing ordina
   await repository.updateAsset({ assetId: assetId('asset-filters'), title: 'Renamed' });
   expect(client.updatedAssetInput?.expiration).toBeUndefined();
 });
+
+it('rejects a print intent captured in a different selected inventory before submitting an asset', async () => {
+  const client = new FakeInventoryApiClient(); const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+  await expect(repository.createAsset({ kind: 'item', title: 'Lamp', description: '', printRequest: { key: 'request', scope: { tenantId: 'tenant-other', inventoryId: 'inventory-other' },
+    selection: { printerId: 'printer', mediaFingerprint: 'media', copies: 1, template: { id: 'qr-title', version: 1, showReference: true } } } })).rejects.toThrow();
+  expect(client.createdAssetInput).toBeUndefined();
+});

@@ -6,7 +6,7 @@ import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { AppSwitchField } from '../components/AppSwitchField';
 import { SettingsLoadingRow, SettingsNavigationRow, SettingsSection, SettingsValueRow, useSettingsListStyles } from '../screens/SettingsList';
-import { connectorState, printerReadiness, printJobStatus } from './PrintingStatus';
+import { connectorState, connectorAvailability, printerAttention, printerReadiness, printJobStatus } from './PrintingStatus';
 import { usePrintingTask } from './usePrintingTask';
 
 export function PrinterSettingsScreen({ workspace, scope, canConfigure, onJob }: { readonly workspace: PrintingWorkspace; readonly scope: PrintScope; readonly canConfigure: boolean; readonly onJob: (id: string) => void }) {
@@ -47,9 +47,11 @@ export function PrinterSettingsScreen({ workspace, scope, canConfigure, onJob }:
       {!catalog.printers.length ? <Text style={{ color: palette.textMuted }}>{t('printing.mobile.empty')}</Text> : null}
       {catalog.printers.map(printer => <SettingsSection key={printer.id} title={printer.name} footer={printer.retired ? t('printing.mobile.retired') : printerReadiness(printer.readiness)}>
         <SettingsValueRow label={t('labels.mobile.size')} value={printer.mediaName} />
+        {printerAttention(printer.readinessReason) ? <Text style={{ padding: 16, color: palette.text }}>{printerAttention(printer.readinessReason)}</Text> : null}
+        {printer.reportedAt ? <Text style={{ paddingHorizontal: 16, color: palette.textMuted }}>{t('printing.mobile.reportedAt', { time: new Date(printer.reportedAt).toLocaleString() })}</Text> : null}
         {catalog.connectors.filter(connector => connector.printerIds.includes(printer.id)).map(connector => <View key={connector.id} style={{ padding: 16, gap: 4 }}>
           <Text style={{ color: palette.text }}>{t('printing.mobile.connector', { name: connector.name })}</Text>
-          <Text style={{ color: palette.textMuted }}>{connectorState(connector.state)}</Text>
+          <Text style={{ color: palette.textMuted }}>{connectorAvailability(connector.availability)} · {connectorState(connector.state)}</Text>
           <Text style={{ color: palette.textMuted }}>{connector.lastSeenAt ? t('printing.mobile.lastSeen', { time: new Date(connector.lastSeenAt).toLocaleString() }) : t('printing.mobile.neverSeen')}</Text>
         </View>)}
       </SettingsSection>)}

@@ -187,3 +187,13 @@ performed for the mobile printing controls candidate.
   inspect the printer and verify the app explains the paused queue without
   automatically issuing another label. Background/return and screen-reader
   traversal must preserve accessible controls and avoid private preview leakage.
+
+For the create-and-print follow-up, open Add item with automatic printing enabled.
+Confirm the native switch starts on, stays off after you turn it off and navigate
+away/back, and resets to the inventory default for a new cleared draft. Enable it,
+save an item and follow View print job. Confirm one item and one physical label.
+When a submission response is lost, Retry Save must retain the original item and
+label request; fields stay locked until its outcome is recovered. Check this on
+iPhone/iPad and Android with the keyboard visible. These device checks remain
+unverified; controlled source tests cover initialization, retained requests,
+prepared tag identity and cross-inventory rejection.
