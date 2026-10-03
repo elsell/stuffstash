@@ -8,11 +8,26 @@ archive and restore flow remains the immediate delivery priority.
 
 ## Current delivery and remaining acceptance — October 3
 
-Sharing issue #239 now has a reviewed direct-confirmation candidate. Two bounded
-native runs support initial presentation but did not complete recovery acceptance.
-Deliver after required checks while retaining the open follow-up and the
-[precise native limits](../../docs/reports/spec-gap-evidence-2026-10-01/sharing-direct-confirmation/README.md).
-Do not spend another unchanged native run on the remaining native-test failures.
+Product delivery through **v0.28.31 is complete**: #326/v0.28.27 Sharing
+metadata, #328/v0.28.28 date grouping, #330/v0.28.29 direct invitation cancellation,
+#331/v0.28.30 mobile dates and #332/v0.28.31 web timestamps. All exact-source
+release workflows succeeded. [Merge/check/release evidence](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/delivery-v0.28.27-v0.28.31.json)
+records each batch separately from runtime acceptance.
+
+Paul now serves web v0.28.31 at infra revision
+`6ed67e123cd1b2a6d653c6e8c6e35009b7368db7`, with ready replicas and HTTP200
+checks ([rollout](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.31.json)).
+API v0.28.26 remains deployed. Infra revision
+`07396debd7cc8d23d5ec17b4d1b95df829906821` corrected the voice origin allowlist
+behind TLS termination; eight deployed origin/authentication checks pass.
+[Voice evidence](../../docs/reports/spec-gap-evidence-2026-10-01/voice-origin/README.md)
+does not claim an authenticated speech roundtrip. #335 records the operator
+guidance and pending speech check.
+
+Sharing #239 remains open after v0.28.29: initial confirmation presentation has
+native evidence, but full recovery remains unverified. Two bounded runs exhausted
+the investigation budget; no unchanged third run.
+[Evidence](../../docs/reports/spec-gap-evidence-2026-10-01/sharing-direct-confirmation/README.md).
 
 User-device checks are tracked in the [testing checklist](../../docs/reports/user-testing-checklist.md).
 Per the user's October 3 instruction, pending user testing is not a delivery or
@@ -20,7 +35,7 @@ goal blocker. Continue independent work and keep missing acceptance explicitly
 unverified; do not confuse this policy with a passing test or waive required checks.
 
 
-Delivery snapshot through v0.28.26 API publication: product batches #310, #314,
+Historical delivery snapshot through v0.28.26 API publication: product batches #310, #314,
 #316 and #318 shipped as v0.28.22–v0.28.25 with successful TestFlight upload and
 changelog jobs. Documentation-only #317 merged; its release workflow correctly
 skipped publication and created no product tag. #321 was superseded by #322.
@@ -31,8 +46,8 @@ The earlier [v0.28.20–v0.28.21 record](../../docs/reports/spec-gap-evidence-20
 and [preceding releases](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/localization-delivery-through-v0.28.19.json)
 retain their original evidence.
 
-Paul's web deployment is v0.28.26, infra revision `de14fb7b1802d9faae5cb1a45633b72a1eef83a3`.
-The API is v0.28.26, infra revision `5f2e02c73183d1525b632c89bf3a489cd253b0d6`.
+At that historical snapshot, Paul's web deployment was v0.28.26, infra revision `de14fb7b1802d9faae5cb1a45633b72a1eef83a3`.
+The API rollout was v0.28.26, infra revision `5f2e02c73183d1525b632c89bf3a489cd253b0d6`.
 [Web rollout](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.26.json)
 and [API rollout](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/return-cancel-v0.28.26.json)
 record pinned images, Flux revision, ready replicas and HTTP200 health checks.

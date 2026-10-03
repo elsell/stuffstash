@@ -1,0 +1,27 @@
+{
+  "tag": "v0.28.28",
+  "source": "74a2429e8448f51b8ccbad1e6a0a142a1899529d",
+  "web": "ghcr.io/elsell/stuffstash-web@sha256:a8b55d1128066f400897d1ebef5af922834898b3c483cc0768a9df9ffa9b07f5",
+  "releaseURL": "https://github.com/elsell/stuffstash/releases/tag/v0.28.28",
+  "releaseRunId": 37130530600,
+  "rollout": {
+    "release": "v0.28.28",
+    "releaseSource": "74a2429e8448f51b8ccbad1e6a0a142a1899529d",
+    "infraCommit": "cb39f3792b159f2c986f1c92a33b1fa007c703e4",
+    "webImage": "ghcr.io/elsell/stuffstash-web@sha256:a8b55d1128066f400897d1ebef5af922834898b3c483cc0768a9df9ffa9b07f5",
+    "scope": "web-only rollout; not authenticated acceptance",
+    "webHTTP": 200,
+    "webHTTPObservations": [
+      200
+    ],
+    "apiHTTP": 200,
+    "apiHTTPObservations": [
+      200
+    ],
+    "fluxRevision": "master@sha1:cb39f3792b159f2c986f1c92a33b1fa007c703e4",
+    "updatedReplicas": 1,
+    "availableReplicas": 1,
+    "outcome": "ready"
+  },
+  "outcome": "deployed"
+}
