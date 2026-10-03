@@ -18,8 +18,9 @@ export class PrintingFake implements PrintingRepository {
   }
   async jobs() { return [...this.submitted.values()]; }
   async job(_scope: typeof scope, id: string) { const job = this.submitted.get(id); if (!job) throw new Error('Missing'); return job; }
-  dropResolution = false;
+  dropResolution = false; loseResolutionBeforeCommit = false;
   async resolve(_scope: typeof scope, job: PrintJob, outcome: PrintOutcome) {
+    if (this.loseResolutionBeforeCommit) { this.loseResolutionBeforeCommit = false; throw new Error('Connection lost'); }
     if (this.deny) throw new Error('Forbidden');
     const current = this.submitted.get(job.id);
     if (current?.resolution?.reportedOutcome === outcome) return current;

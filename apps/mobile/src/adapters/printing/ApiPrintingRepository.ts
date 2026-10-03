@@ -49,7 +49,7 @@ export class ApiPrintingRepository implements PrintingRepository {
 function mapSettings(value: WireSettings): PrintSettings { return { revision: value.revision, defaultPrinterId: value.defaultPrinterId, printOnCreateDefault: value.printOnCreateDefault,
   template: { id: value.template.id, version: value.template.version, showReference: value.template.options.showReference } }; }
 function mapJob(value: WireJob): PrintJob { return { id: value.id, assetId: value.assetId, printerId: value.printerId, status: value.status, revision: value.revision, copies: value.copies,
-  idleConfirmed: !!value.attempts?.at(-1)?.idleConfirmedAt, resolution: value.resolution ? { reportedOutcome: reportedOutcome(value.resolution.reportedOutcome) } : undefined,
+  latestAttemptId: value.attempts?.at(-1)?.id, idleConfirmed: !!value.attempts?.at(-1)?.idleConfirmedAt, resolution: value.resolution ? { reportedOutcome: reportedOutcome(value.resolution.reportedOutcome) } : undefined,
   completedCopies: Math.max(0, ...(value.attempts ?? []).map(attempt => attempt.completedCopies)) }; }
 async function allPages<T>(read: (cursor?: string) => Promise<{ items: T[]; nextCursor?: string }>, signal: AbortSignal) {
   const items: T[] = []; const seen = new Set<string>(); let cursor: string | undefined;

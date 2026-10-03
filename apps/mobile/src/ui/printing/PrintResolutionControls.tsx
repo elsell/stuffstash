@@ -7,14 +7,16 @@ import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { useSettingsListStyles } from '../screens/SettingsList';
 
-export function PrintResolutionControls({ workspace, scope, job, lifetime, onResolved }: {
+export type PendingResolution = { job: PrintJob; outcome: PrintOutcome };
+
+export function PrintResolutionControls({ workspace, scope, job, lifetime, pending, onResolved }: {
   readonly workspace: PrintingWorkspace; readonly scope: PrintScope; readonly job: PrintJob;
+  readonly pending: { current: PendingResolution | undefined };
   readonly lifetime: { current: AbortController | undefined }; readonly onResolved: (job: PrintJob) => void;
 }) {
   const { styles, palette } = useSettingsListStyles();
-  const [outcome, setOutcome] = useState<PrintOutcome | ''>(''); const [acknowledged, setAcknowledged] = useState(false);
+  const [outcome, setOutcome] = useState<PrintOutcome | ''>(pending.current?.outcome ?? ''); const [acknowledged, setAcknowledged] = useState(!!pending.current);
   const [busy, setBusy] = useState(false); const [failed, setFailed] = useState(false); const running = useRef(false);
-  const pending = useRef<{ job: PrintJob; outcome: PrintOutcome } | undefined>(undefined);
   const locked = busy || !!pending.current;
   const resolve = async () => {
     const owner = lifetime.current;

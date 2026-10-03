@@ -952,3 +952,11 @@ refresh. Successful acknowledgement displays the human report and preserved
 uncertainty, never a confirmed completion or automatic reprint. Native controls
 reuse the existing picker, switch, command button, and job-detail navigation.
 Actual layout and assistive navigation remain recorded device follow-ups.
+
+A pending native acknowledgement remains bound to its original attempt and job
+revision during polling or an ambiguous retry. An explicit Refresh status read
+that confirms a different current revision or latest attempt discards that old
+intent and clears both the outcome choice and acknowledgement. The user must
+make both choices again; the client never rebases an old acknowledgement onto a
+new attempt. Refreshing the same revision retains the exact pending payload,
+including when the loading state temporarily unmounts the controls.
