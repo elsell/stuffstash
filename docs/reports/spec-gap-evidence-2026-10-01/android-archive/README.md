@@ -1,6 +1,9 @@
 # Android archive acceptance — October 2, 2026
 
-**Not accepted.** The emulator booted, but the app did not compile. None of the
+The later [hosted build and scoped runtime result](hosted-d44531ba/README.md)
+closed native transfer and synthetic restore-review checks.
+
+**Original attempt: not accepted.** The emulator booted, but the app did not compile. None of the
 three planned runtime checks ran at source `588e415326463566c63abf4e061e89663627d383`.
 This is environment evidence, not a reproduced product failure.
 

@@ -1,0 +1,13 @@
+{
+  "source": "d44531ba",
+  "checks": {
+    "native-transfer": "passed: 1MiB hash/authentication; redirect and oversized rejection; recovery and cancellation",
+    "restore-review": "passed: preview, close without approval, reopen, approve, destination open"
+  },
+  "limits": [
+    "Synthetic repository and picker for approval UI",
+    "Loopback peer for native upload; no production credentials",
+    "No physical document-provider, TalkBack, or connected restore acceptance"
+  ],
+  "outcome": "passed"
+}

@@ -32,9 +32,9 @@ Evidence:
   sharing/cleanup also passed. The iPhone legacy share assertion timed out despite
   the correct file appearing in the system share sheet; phone dismissal/cleanup
   was not reached and remains unverified.
-- Android debug build `37027458024` passed. Android runtime and physical document
-  provider/recipient behavior remain unverified; simulator evidence does not close
-  these obligations.
+- Android debug build `37027458024` passed. Later hosted build and scoped runtime
+  acceptance are recorded below; physical document provider/recipient behavior
+  remains unverified and is not closed by emulator evidence.
 
 Release `37033608570` succeeded for **v0.28.0**, including TestFlight build
 **162.1**, Apple processing and changelog readback. Paul GitOps commit
@@ -48,7 +48,7 @@ production restore; the connected acceptance above ran in isolated CI.
 Documentation follow-up #245 also carries the v0.28.0 self-host image pins from
 #246, superseding the older pin-only #240/#243. Physical iPhone archive saving,
 file picking and restored-photo opening have been requested from the user on162.1.
-Keep those results, Android runtime and broader audit acceptance open until verified.
+Keep physical results and broader audit acceptance open until verified.
 
 ## Delivered recovery copy and triage
 
@@ -120,14 +120,19 @@ Cleanup passed; final-answer replay was not reached. Keep this deployment
 unverified, retain the [bounded failure evidence](../../docs/reports/spec-gap-evidence-2026-10-01/local-provider/README.md),
 and do not retry unchanged or gate unrelated releases on it.
 
-## Android archive acceptance — stopped setup attempt
+## Android archive acceptance — scoped runtime evidence
 
-At `588e4153`, the existing Android audit emulator booted after setup and disk
-recovery, but Gradle rejected modified generated caches before app compilation.
-Upload integrity, rejection/cancellation recovery and restore approval were not
-run. No current APK or native acceptance is claimed. The investigation is stopped;
-no unchanged retry or per-entry cache deletion. Retain physical file-provider and
-assistive acceptance separately. [Terminal evidence and next-step constraint](../../docs/reports/spec-gap-evidence-2026-10-01/android-archive/README.md).
+The original local attempt at `588e4153` stopped on generated Gradle cache
+corruption before app compilation. A fresh hosted build `37080427792` at
+`d44531ba49ee840c8ad9e1b991952f95a7efd0a1` succeeded. Its verified APK ran on
+Paul's isolated API 36 emulator: native 1 MiB upload integrity/authentication,
+redirect/oversized-response rejection, recovery and cancellation passed.
+The first approval attempt matched the page title instead of the action. A
+selector correction was verified against that saved UI tree, then one bounded
+run of the same APK passed preview, close/reopen, approval and the synthetic
+destination callback. No product change or rebuild was required. This does not
+prove opening a real restored inventory. Physical file-provider, authenticated
+native restore and assistive acceptance remain separate. [Scoped runtime evidence](../../docs/reports/spec-gap-evidence-2026-10-01/android-archive/hosted-d44531ba/README.md).
 
 ## Current objective — October 1, 2026
 
