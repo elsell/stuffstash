@@ -6,17 +6,22 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 type Authorizer struct {
-	mu               sync.RWMutex
-	tenantOwners     map[tenant.ID]map[identity.PrincipalID]struct{}
-	inventoryOwners  map[inventory.InventoryID]map[identity.PrincipalID]struct{}
-	inventoryEditors map[inventory.InventoryID]map[identity.PrincipalID]struct{}
-	inventoryViewers map[inventory.InventoryID]map[identity.PrincipalID]struct{}
-	inventoryTenants map[inventory.InventoryID]tenant.ID
+	printingUnavailable  bool
+	printConnectorAgents map[printing.ConnectorID]printing.ServiceAccountID
+	printConsumers       map[printing.PrinterID]map[printing.ServiceAccountID]bool
+	printInventories     map[printing.PrinterID]string
+	mu                   sync.RWMutex
+	tenantOwners         map[tenant.ID]map[identity.PrincipalID]struct{}
+	inventoryOwners      map[inventory.InventoryID]map[identity.PrincipalID]struct{}
+	inventoryEditors     map[inventory.InventoryID]map[identity.PrincipalID]struct{}
+	inventoryViewers     map[inventory.InventoryID]map[identity.PrincipalID]struct{}
+	inventoryTenants     map[inventory.InventoryID]tenant.ID
 }
 
 func NewAuthorizer() *Authorizer {

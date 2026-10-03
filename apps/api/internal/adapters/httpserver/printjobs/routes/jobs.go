@@ -38,6 +38,7 @@ func output(j printing.Job, status int, err error) (*dto.Output, error) {
 	return &dto.Output{Status: status, CacheControl: "private, no-store", Body: shared.SuccessEnvelope[dto.PrintJob]{Data: mapper.Job(j), Meta: shared.Meta{TenantID: j.Scope.TenantID}}}, nil
 }
 func Register(api huma.API, a app.App) {
+	registerConsumers(api, a)
 	huma.Post(api, path+"/assets/{assetId}/print-jobs", func(ctx context.Context, in *dto.CreateInput) (*dto.Output, error) {
 		scope, err := authenticate(ctx, a, in.Scope)
 		if err != nil {

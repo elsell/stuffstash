@@ -37,8 +37,10 @@ func jobError(err error) error {
 	switch {
 	case errors.Is(err, ports.ErrPrintJobNotFound), errors.Is(err, ports.ErrPrintNotFound):
 		return apperrors.ErrNotFound
-	case errors.Is(err, ports.ErrConflict), errors.Is(err, ports.ErrPrintConflict), errors.Is(err, label.ErrJobConflict):
+	case errors.Is(err, ports.ErrConflict), errors.Is(err, ports.ErrPrintConflict), errors.Is(err, label.ErrJobConflict), errors.Is(err, label.ErrLeaseExpired):
 		return apperrors.ErrConflict
+	case errors.Is(err, label.ErrInvalidOutcome):
+		return apperrors.ErrInvalidInput
 	case errors.Is(err, ports.ErrPrintDenied), errors.Is(err, label.ErrAttemptOwnership):
 		return ports.ErrForbidden
 	}

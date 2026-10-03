@@ -531,6 +531,101 @@ mutable render. This is separate from short-lived download previews. Runtime
 configuration controls maximum copies (default 20), artifact bytes (default 1 MiB),
 artifact lifetime (default 7 days), terminal history lifetime (default 30 days),
 claim lease (default 60 seconds), and readiness freshness (default 90 seconds).
-Expiry removes private artifact bytes while preserving job/attempt metadata and
-safe audit history; an expired artifact cannot be started or downloaded. An
+Artifact expiry makes content unavailable for new output; terminal cleanup removes
+its private bytes while preserving safe audit history. An
 uncertain reservation is never removed by retention cleanup.
+### Durable Connector Reconciliation
+
+The connector's desired `generation` and acknowledged `synced_generation` form
+its durable authorization outbox record. Approval and binding/revocation changes
+persist the new generation together with audit history in one transaction. The
+worker scans mismatched generations and synchronizes the latest complete desired
+state under the connector lock; it never replays a stale captured grant payload.
+The acknowledged generation advances only after all required printer inventory
+relationships and connector relationships have been delivered. A failed external
+write or failed database commit leaves the outbox pending and consumers denied.
+
+Consumer readiness report reasons are finite safe codes: empty for ready,
+`device_unavailable`, `device_busy`, `paper_empty`, `cover_open`, `hardware_error`,
+or `unknown`. Device error strings and USB paths must not become report reasons.
+
+Connector runtime policy is configured with `STUFF_STASH_PRINT_CONNECTOR_`
+variables: `PAIRING_LIFETIME` (10m), `CREDENTIAL_LIFETIME` (720h),
+`ACTIVATION_LIFETIME` (5m), `AUTHORIZATION_TIMEOUT` (5s), `POLL_INTERVAL` (5s),
+`REPORT_MAX_AGE` (1m), and `BATCH_SIZE` (100). Invalid bounds fail startup.
+The existing environment-configured per-client-IP HTTP rate limiter covers
+pairing creation, status, proof exchange and approval guessing. Request bodies
+and polling-token headers are never included in observability or audit fields.
+
+`POST /print-connector-pairings/{pairingId}/review` is the human approval preview:
+it requires current `inventory.configure` for the selected tenant/inventory and
+the short code in its body. It returns the connector name, public-key fingerprint
+and candidate ID/name/adapter only; protected device identities remain hidden.
+Approval submits the same code with the explicit candidate-to-printer selection.
+
+Pairing creation returns `verificationUrl` at the configured HTTPS
+`STUFF_STASH_PUBLIC_WEB_BASE_URL` plus `/print-connectors/pair/{pairingId}`.
+The pairing ID is a public reference, not authorization; neither short code nor
+polling token appears in this URL. Without a configured public web base, new
+pairing creation is unavailable (503); already configured consumers remain
+operational. Existing label rendering uses the same public web base setting.
+
+### Credential Rotation Protocol
+
+The CLI starts a fresh key-bound pairing. An inventory administrator submits its
+pairing ID and short code to the existing connector's `credential-rotation`
+endpoint with the connector generation precondition. This approves the new key
+for the same connector and service principal without changing any printer/device
+binding. The human response contains only the pairing reference and expiry.
+
+Exchange stores a pending credential with the next credential version and a
+bounded activation deadline. The old credential remains valid until the first
+heartbeat authenticated by the pending credential atomically activates it. That
+heartbeat clears the pending fields and invalidates the previous version. Pending
+credentials may only activate through heartbeat; they cannot claim or fetch work.
+Expired pending credentials never become active, and a subsequent fresh pairing
+may replace them. Replayed pairing exchanges never return either credential.
+Approval, issuance, and activation write atomic, safe lifecycle audit records;
+ordinary heartbeat timestamps and readiness reports remain operational telemetry
+and do not create one audit entry per polling request.
+
+Rotation approval captures the current credential version. Exchange rejects a
+stale approval if another rotation has already activated, and allows only one
+unexpired pending credential at a time. A delayed exchange therefore cannot
+replace a newer activated credential or overwrite another still-live pending key.
+### Consumer Claim Transport And Recovery
+
+The worker durably creates a random attempt ID, process session ID, and canonical
+base64url 32-byte claim secret before POST `/print-consumer/claims`. Its body
+contains these values and `printerId`. Only the secret's SHA-256 digest is stored.
+An identical claim retry reads that same attempt; changing printer/session/secret
+for an existing attempt conflicts and never creates another output attempt.
+Attempt and session identifiers are bounded opaque ASCII values (16–100 characters).
+
+Start, renewal and outcome bodies contain `sessionId`, `claimToken`, and expected
+`revision`; outcome adds finite kind/reason, completed copies and retryability.
+Content reads use `X-Print-Session-ID`, `X-Print-Claim-Token`, and
+`X-Print-Revision` headers. No secret appears in a URL. Every operation checks the
+current credential and fully consistent printer authorization. Content additionally
+requires ownership of the current unexpired attempt and an unexpired artifact.
+Recovery reads never return the claim secret, label title, QR URL, or PNG bytes.
+Unsettled discovery is filtered to the authenticated connector, supports an optional
+printer filter, and uses scoped cursor pagination. A recovered record is evidence,
+never permission to resume earlier-session physical output.
+
+### Scheduled Job Maintenance
+
+The API runs bounded job maintenance at the configured cleanup interval using its
+injected clock. Expired unstarted leases return to queued with no-output evidence;
+expired started leases become uncertain and retain their printer reservation.
+Artifact expiry before a job starts makes that job definitively failed; it must
+not be reclaimed or rerendered. Expiry never changes a printing or uncertain job
+into a safe-to-retry result.
+
+Private artifact bytes are removed only from terminal completed, failed, or
+canceled jobs after artifact expiry. Queued, claimed, printing, and uncertain
+content stays protected until the job transitions to a terminal state. Terminal
+job and attempt metadata may be removed after the terminal history lifetime,
+measured from its last state transition; audit history remains. The request
+idempotency window ends when that terminal job is removed. Cleanup uses the same
+printer lock as claims and state changes and rechecks eligibility under the lock.

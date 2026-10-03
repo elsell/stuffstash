@@ -33,8 +33,14 @@ worktrees. Merged slices include CLI OIDC discovery and human login, generated G
 server rendering and stable label resolution, the Linux QL-800 adapter, and
 registered printer configuration. Human queue create/read/list/cancel and immutable
 artifact persistence now pass HTTP isolation/retry checks; production PostgreSQL
-verifies exclusive claims and uncertain reservations. Connector pairing and worker
-integration, retention, inventory defaults, and client job controls remain open.
+verifies exclusive claims and uncertain reservations. Connector pairing, credential rotation, and consumer claim/start/outcome/recovery
+APIs pass critical HTTP checks. PostgreSQL verifies recovery enumeration stays
+inside connector, tenant, and inventory boundaries. The consumer API and SDK are
+integrated with the CLI worker. Scheduled lease reconciliation and terminal-only
+retention pass critical tests and are under review in PR #357. CLI registration
+and foreground operation now pass stateful protocol, recovery, credential-isolation,
+and revoked-credential tests; web approval, inventory defaults, atomic create-and-print,
+and client job controls remain open.
 No physical output has been verified. See
 [asset labels](../printing/asset-labels.spec.md),
 [printer integration](../printing/printer-integration.spec.md), and [CLI](cli.spec.md).
@@ -52,7 +58,8 @@ templates produce immutable API-rendered artifacts for that registered size,
 consumed through a versioned contract rather than adapter-owned layouts.
 [Generated printing docs](printing-catalog-docs.spec.md) adds registry-derived
 printer/template/size catalogs and production-rendered PNG examples, automatically
-regenerated and checked in PR CI. This automation is specified, not implemented. Each project release must publish
+regenerated and checked in PR CI. The catalog implementation is under review in PR #352. CLI release publication
+has merged in PR #350; an actual published release remains to be verified. Each project release must publish
 version-stamped CLI binaries and checksums; verified release metadata refreshes
 concrete download commands in the docs. Implementation is now authorized as an
 active goal: orchestrate parallel agents and ship small coherent functional PRs,
