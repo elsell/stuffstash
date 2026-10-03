@@ -16,6 +16,9 @@ output="$(cd "$output" && pwd)"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 export GOWORK=off CGO_ENABLED=0
+# Export runtime registrations without probing hardware. Both binary metadata and
+# publication metadata describe these same adapters, including cross-builds.
+(cd "$root/apps/cli" && go run -mod=readonly -buildvcs=false ./cmd/stuffstash printers catalog --json) > "$tmp/printers.json"
 for os in linux darwin windows; do
   (cd "$root/apps/cli" && GOOS="$os" GOARCH=amd64 go list -mod=readonly -buildvcs=false -deps -f '{{if .Module}}{{.Module.Path}}{{end}}' ./cmd/stuffstash)
 done | sort -u | sed '/^$/d' > "$tmp/module-paths"
@@ -65,11 +68,15 @@ if expected not in Path(sys.argv[1]).read_bytes():
 PYVERSION
   if [[ "$os/$arch" == "$(go env GOOS)/$(go env GOARCH)" ]]; then
     "$directory/$binary" version --json > "$directory/version.json"
-    python3 - "$directory/version.json" "$version" "$commit" <<'PYSMOKE'
+    python3 - "$directory/version.json" "$version" "$commit" "$tmp/printers.json" <<'PYSMOKE'
 import json,sys
 with open(sys.argv[1]) as handle: value=json.load(handle)
 if value['version'] != sys.argv[2] or value['commit'] != sys.argv[3]:
     raise SystemExit('CLI reports incorrect release metadata')
+with open(sys.argv[4]) as handle: printers=json.load(handle)
+expected=any(p['transport'].startswith('usb') and value['os'] in p['platforms'] for p in printers)
+if value['usbPrinting'] != expected:
+    raise SystemExit('CLI USB capability disagrees with registered printer adapters')
 PYSMOKE
   fi
   if [[ -f "$root/LICENSE" ]]; then cp "$root/LICENSE" "$directory/LICENSE"; fi
@@ -99,14 +106,15 @@ checksum = hashlib.sha256(artifact.read_bytes()).hexdigest()
 artifact.with_name(artifact.name + '.sha256').write_text(f'{checksum}  {artifact.name}\n')
 PY
 done
-python3 - "$output" "$version" "$commit" <<'PY'
+python3 - "$output" "$version" "$commit" "$tmp/printers.json" <<'PY'
 from pathlib import Path
 import json, sys
-out, version, commit = sys.argv[1:]
+out, version, commit, catalog = sys.argv[1:]
+printers=json.loads(Path(catalog).read_text())
 assets=[]
 for system,arch in [('linux','amd64'),('linux','arm64'),('darwin','amd64'),('darwin','arm64'),('windows','amd64')]:
     filename=f'stuffstash_{version}_{system}_{arch}'+('.zip' if system=='windows' else '.tar.gz')
     checksum=(Path(out)/(filename+'.sha256')).read_text().split()[0]
-    assets.append(dict(os=system,architecture=arch,name=filename,sha256=checksum,usbPrinting=False))
+    assets.append(dict(os=system,architecture=arch,name=filename,sha256=checksum,usbPrinting=any(p['transport'].startswith('usb') and system in p['platforms'] for p in printers)))
 (Path(out)/'stuffstash-cli-release.json').write_text(json.dumps(dict(version=version,commit=commit,assets=assets),indent=2)+'\n')
 PY
