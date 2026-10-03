@@ -29,6 +29,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 	if err == nil && len(options.Command) == 1 && options.Command[0] == "version" {
 		return exit(output, output.Result(version.Current()))
 	}
+	if err == nil && len(options.Command) == 2 && options.Command[0] == "printers" && (options.Command[1] == "catalog" || options.Command[1] == "discover") {
+		return exit(output, printerCommand(ctx, options.Command[1], getenv, output))
+	}
 	if err == nil {
 		err = oidcauth.ValidateURL(options.Server, options.AllowLoopbackHTTP)
 	}
@@ -77,10 +80,13 @@ const Help = `Stuff Stash CLI
   stuffstash assets archive ID
   stuffstash assets restore ID
   stuffstash version
+  stuffstash printers discover
+  stuffstash printers catalog [--json]
 
 Context: --server, --tenant, --inventory or STUFF_STASH_CLI_SERVER,
 STUFF_STASH_CLI_TENANT, STUFF_STASH_CLI_INVENTORY. No implicit inventory selection.
 Finite commands accept --json. Mutations accept --idempotency-key.
 Headless credential storage: explicitly set STUFF_STASH_CLI_CREDENTIAL_FILE.
-Printer commands are not available in this build.
+Local printer discovery and catalog export do not need login.
+Queued printing commands are not available in this build.
 `
