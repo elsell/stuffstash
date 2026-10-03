@@ -1,6 +1,20 @@
 import { t } from '$lib/presentation/localization';
 
 const actionMessages = {
+  "print_job.claimed": "audit.action.print_job.claimed",
+  "print_job.started": "audit.action.print_job.started",
+  "print_job.completed": "audit.action.print_job.completed",
+  "print_job.failed": "audit.action.print_job.failed",
+  "print_job.uncertain": "audit.action.print_job.uncertain",
+  "print_job.released": "audit.action.print_job.released",
+  "print_job.content_downloaded": "audit.action.print_job.content_downloaded",
+  "print_attempt.viewed": "audit.action.print_attempt.viewed",
+  "print_attempt.listed": "audit.action.print_attempt.listed",
+  "print_connector.credential_rotation_requested": "audit.action.print_connector.credential_rotation_requested",
+  "print_connector.credential_issued": "audit.action.print_connector.credential_issued",
+  "print_connector.activated": "audit.action.print_connector.activated",
+  "print_connector.credential_rotated": "audit.action.print_connector.credential_rotated",
+
   "print_connector.pairing_reviewed": "audit.action.print_connector.pairing_reviewed",
   "print_connector.viewed": "audit.action.print_connector.viewed",
   "print_connector.listed": "audit.action.print_connector.listed",

@@ -593,3 +593,22 @@ Rotation approval captures the current credential version. Exchange rejects a
 stale approval if another rotation has already activated, and allows only one
 unexpired pending credential at a time. A delayed exchange therefore cannot
 replace a newer activated credential or overwrite another still-live pending key.
+### Consumer Claim Transport And Recovery
+
+The worker durably creates a random attempt ID, process session ID, and canonical
+base64url 32-byte claim secret before POST `/print-consumer/claims`. Its body
+contains these values and `printerId`. Only the secret's SHA-256 digest is stored.
+An identical claim retry reads that same attempt; changing printer/session/secret
+for an existing attempt conflicts and never creates another output attempt.
+Attempt and session identifiers are bounded opaque ASCII values (16–100 characters).
+
+Start, renewal and outcome bodies contain `sessionId`, `claimToken`, and expected
+`revision`; outcome adds finite kind/reason, completed copies and retryability.
+Content reads use `X-Print-Session-ID`, `X-Print-Claim-Token`, and
+`X-Print-Revision` headers. No secret appears in a URL. Every operation checks the
+current credential and fully consistent printer authorization. Content additionally
+requires ownership of the current unexpired attempt and an unexpired artifact.
+Recovery reads never return the claim secret, label title, QR URL, or PNG bytes.
+Unsettled discovery is filtered to the authenticated connector, supports an optional
+printer filter, and uses scoped cursor pagination. A recovered record is evidence,
+never permission to resume earlier-session physical output.

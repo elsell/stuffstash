@@ -53,6 +53,7 @@ type PrintLeaseRenewal struct {
 }
 
 type PrintJobRepository interface {
+	ListPrintConsumerAttempts(context.Context, printing.Scope, printing.ConnectorID, printing.PrinterID, int, string) ([]printing.Job, error)
 	FindPrintJobRequest(context.Context, printing.Scope, string, string) (printing.Job, string, error)
 	GetPrintJobContent(context.Context, printing.Scope, printing.JobID, time.Time) ([]byte, error)
 	RenewPrintJob(context.Context, PrintLeaseRenewal) (printing.Job, error)

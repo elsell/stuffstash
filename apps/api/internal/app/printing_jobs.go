@@ -10,3 +10,10 @@ func (a App) WithPrintJobs(repository ports.PrintJobRepository, config printing.
 	return a
 }
 func (a App) PrintJobs() *printing.JobService { return a.printJobs }
+
+func (a App) PrintConsumerJobs() printing.ConsumerService {
+	if !a.PrintConnectorsConfigured() {
+		return printing.ConsumerService{}
+	}
+	return printing.ConsumerService{Jobs: a.printJobs, Access: a.PrintConnectors()}
+}

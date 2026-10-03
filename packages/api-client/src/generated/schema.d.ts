@@ -191,6 +191,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/print-consumer/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get print consumer attempts */
+        get: operations["get-print-consumer-attempts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-consumer/attempts/{attemptId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get print consumer attempts by attempt ID */
+        get: operations["get-print-consumer-attempts-by-attempt-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-consumer/attempts/{attemptId}/reconciliation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post print consumer attempts by attempt ID reconciliation */
+        post: operations["post-print-consumer-attempts-by-attempt-id-reconciliation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-consumer/claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post print consumer claims */
+        post: operations["post-print-consumer-claims"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-consumer/claims/{attemptId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List print consumer claims by attempt ID content */
+        get: operations["list-print-consumer-claims-by-attempt-id-content"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-consumer/claims/{attemptId}/outcome": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post print consumer claims by attempt ID outcome */
+        post: operations["post-print-consumer-claims-by-attempt-id-outcome"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-consumer/claims/{attemptId}/renewal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post print consumer claims by attempt ID renewal */
+        post: operations["post-print-consumer-claims-by-attempt-id-renewal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-consumer/claims/{attemptId}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post print consumer claims by attempt ID start */
+        post: operations["post-print-consumer-claims-by-attempt-id-start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/print-consumer/heartbeat": {
         parameters: {
             query?: never;
@@ -1911,6 +2047,23 @@ export interface paths {
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id"];
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}/credential-rotation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID print connectors by connector ID credential rotation */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id-credential-rotation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/print-jobs": {
         parameters: {
             query?: never;
@@ -3588,6 +3741,87 @@ export interface components {
             email?: string;
             id: string;
         };
+        PrintArtifact: {
+            /** Format: int64 */
+            byteLength: number;
+            contentType: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: int64 */
+            heightPixels: number;
+            sha256: string;
+            /** Format: int64 */
+            widthPixels: number;
+        };
+        PrintClaimProof: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/PrintClaimProof.json
+             */
+            readonly $schema?: string;
+            claimToken: string;
+            /** Format: int64 */
+            revision: number;
+            sessionId: string;
+        };
+        PrintClaimRequest: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/PrintClaimRequest.json
+             */
+            readonly $schema?: string;
+            attemptId: string;
+            claimToken: string;
+            printerId: string;
+            sessionId: string;
+        };
+        PrintConsumerAttempt: {
+            artifact?: components["schemas"]["PrintArtifact"];
+            attemptId: string;
+            /** Format: int64 */
+            copies: number;
+            jobId: string;
+            /** Format: date-time */
+            leaseExpiresAt: string;
+            leaseValid: boolean;
+            media?: components["schemas"]["PrintConsumerMedia"];
+            mediaFingerprint: string;
+            outcome: components["schemas"]["PrintOutcome"];
+            printerId: string;
+            /** Format: int64 */
+            protocolVersion: number;
+            /** Format: int64 */
+            revision: number;
+            sessionId: string;
+            /** Format: date-time */
+            settledAt?: string;
+            /** Format: date-time */
+            startedAt?: string;
+            status: string;
+        };
+        PrintConsumerMedia: {
+            colorMode: string;
+            cutPolicy: string;
+            /** Format: int64 */
+            displayRotation: number;
+            /** Format: int64 */
+            heightMicrometers: number;
+            marginsMicrometers: components["schemas"]["PrintMediaMargins"];
+            orientation: string;
+            presetId: string;
+            /** Format: int64 */
+            rasterHeight: number;
+            /** Format: int64 */
+            rasterWidth: number;
+            /** Format: int64 */
+            resolutionDpi: number;
+            /** Format: int32 */
+            version: number;
+            /** Format: int64 */
+            widthMicrometers: number;
+        };
         PrintJob: {
             assetId?: string;
             attempts: components["schemas"]["PrintJobAttempt"][] | null;
@@ -3651,6 +3885,49 @@ export interface components {
         };
         PrintJobTemplateOptions: {
             showReference: boolean;
+        };
+        PrintMediaMargins: {
+            /** Format: int64 */
+            bottom: number;
+            /** Format: int64 */
+            left: number;
+            /** Format: int64 */
+            right: number;
+            /** Format: int64 */
+            top: number;
+        };
+        PrintOutcome: {
+            /** Format: int64 */
+            completedCopies: number;
+            /** @enum {string} */
+            kind: "completed" | "no_output" | "uncertain";
+            /** @enum {string} */
+            reason: "" | "lease_expired" | "canceled" | "device_unavailable" | "invalid_artifact" | "device_failure" | "partial_output" | "unknown";
+            retryable: boolean;
+        };
+        PrintOutcomeRequest: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/PrintOutcomeRequest.json
+             */
+            readonly $schema?: string;
+            claimToken: string;
+            outcome: components["schemas"]["PrintOutcome"];
+            /** Format: int64 */
+            revision: number;
+            sessionId: string;
+        };
+        PrintReconciliation: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/PrintReconciliation.json
+             */
+            readonly $schema?: string;
+            outcome: components["schemas"]["PrintOutcome"];
+            /** Format: int64 */
+            revision: number;
         };
         Printer: {
             adapterId: string;
@@ -3844,6 +4121,18 @@ export interface components {
             number: number;
             settingsMigration?: string;
             workflowId: string;
+        };
+        RotateCredentialInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/RotateCredentialInputBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            generation: number;
+            pairingId: string;
+            userCode: string;
         };
         SearchAncestor: {
             id: string;
@@ -4334,6 +4623,16 @@ export interface components {
             data: components["schemas"]["NotificationResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListPrintConsumerAttempt: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListPrintConsumerAttempt.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["PrintConsumerAttempt"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeListPrintJob: {
             /**
              * Format: uri
@@ -4492,6 +4791,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["PrincipalResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopePrintConsumerAttempt: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopePrintConsumerAttempt.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["PrintConsumerAttempt"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopePrintJob: {
@@ -5285,6 +5594,303 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopePairingReview"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-print-consumer-attempts": {
+        parameters: {
+            query?: {
+                printerId?: string;
+                status?: "unsettled";
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListPrintConsumerAttempt"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-print-consumer-attempts-by-attempt-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintConsumerAttempt"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-print-consumer-attempts-by-attempt-id-reconciliation": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrintReconciliation"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintConsumerAttempt"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-print-consumer-claims": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrintClaimRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintConsumerAttempt"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "list-print-consumer-claims-by-attempt-id-content": {
+        parameters: {
+            query?: never;
+            header: {
+                Authorization?: string;
+                "X-Print-Session-ID": string;
+                "X-Print-Claim-Token": string;
+                "X-Print-Revision": number;
+            };
+            path: {
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    "Content-Type"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-print-consumer-claims-by-attempt-id-outcome": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrintOutcomeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintConsumerAttempt"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-print-consumer-claims-by-attempt-id-renewal": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrintClaimProof"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintConsumerAttempt"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-print-consumer-claims-by-attempt-id-start": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrintClaimProof"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintConsumerAttempt"];
                 };
             };
             /** @description Error */
@@ -10976,6 +11582,47 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeConnector"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id-credential-rotation": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                connectorId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RotateCredentialInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePairingStatus"];
                 };
             };
             /** @description Error */
