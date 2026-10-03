@@ -569,3 +569,27 @@ The pairing ID is a public reference, not authorization; neither short code nor
 polling token appears in this URL. Without a configured public web base, new
 pairing creation is unavailable (503); already configured consumers remain
 operational. Existing label rendering uses the same public web base setting.
+
+### Credential Rotation Protocol
+
+The CLI starts a fresh key-bound pairing. An inventory administrator submits its
+pairing ID and short code to the existing connector's `credential-rotation`
+endpoint with the connector generation precondition. This approves the new key
+for the same connector and service principal without changing any printer/device
+binding. The human response contains only the pairing reference and expiry.
+
+Exchange stores a pending credential with the next credential version and a
+bounded activation deadline. The old credential remains valid until the first
+heartbeat authenticated by the pending credential atomically activates it. That
+heartbeat clears the pending fields and invalidates the previous version. Pending
+credentials may only activate through heartbeat; they cannot claim or fetch work.
+Expired pending credentials never become active, and a subsequent fresh pairing
+may replace them. Replayed pairing exchanges never return either credential.
+Approval, issuance, and activation write atomic, safe lifecycle audit records;
+ordinary heartbeat timestamps and readiness reports remain operational telemetry
+and do not create one audit entry per polling request.
+
+Rotation approval captures the current credential version. Exchange rejects a
+stale approval if another rotation has already activated, and allows only one
+unexpired pending credential at a time. A delayed exchange therefore cannot
+replace a newer activated credential or overwrite another still-live pending key.

@@ -50,6 +50,9 @@ func (s ConnectorService) Update(ctx context.Context, input UpdateConnector) (po
 			}
 			r.Connector.State = printing.ConnectorRevoked
 			r.Connector.CredentialHash = ""
+			r.Connector.PendingCredentialHash = ""
+			r.Connector.PendingCredentialVersion = 0
+			r.Connector.PendingPublicKey = nil
 			r.Connector.CredentialVersion++
 		}
 		r.Connector.Generation++

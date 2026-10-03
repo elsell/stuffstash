@@ -27,7 +27,7 @@ func TestPairingRepositoryKeepsPendingGrantsDeniedAndExchangeConsumed(t *testing
 	if _, err := s.ApprovePrintPairing(ctx, ports.PairingApproval{PairingID: p.ID, CodeHash: p.CodeHash, Now: now, Registration: ports.ConnectorRegistration{Connector: c}, Audit: record}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.ConsumePrintPairing(ctx, p.ID, now, "hash", now.Add(time.Hour), now.Add(time.Minute)); err == nil {
+	if _, err := s.ConsumePrintPairing(ctx, ports.PairingExchange{PairingID: p.ID, Now: now, CredentialHash: "hash", CredentialExpiresAt: now.Add(time.Hour), ActivationDeadline: now.Add(time.Minute), Audit: auditRecord(t, "issued", tenant.ID("tenant"), inventory.InventoryID("inventory"), audit.ActionPrintConnectorCredentialIssued)}); err == nil {
 		t.Fatal("pending grants issued credential")
 	}
 	pending, err := s.PendingPrintConnectorScopes(ctx, 10)
@@ -37,17 +37,17 @@ func TestPairingRepositoryKeepsPendingGrantsDeniedAndExchangeConsumed(t *testing
 	if err := s.SynchronizePrintConnector(ctx, scope, c.ID, func(context.Context, ports.ConnectorRegistration, []printing.Printer) error { return nil }); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.ConsumePrintPairing(ctx, p.ID, now, "hash", now.Add(time.Hour), now.Add(time.Minute)); err != nil {
+	if _, err := s.ConsumePrintPairing(ctx, ports.PairingExchange{PairingID: p.ID, Now: now, CredentialHash: "hash", CredentialExpiresAt: now.Add(time.Hour), ActivationDeadline: now.Add(time.Minute), Audit: auditRecord(t, "issued", tenant.ID("tenant"), inventory.InventoryID("inventory"), audit.ActionPrintConnectorCredentialIssued)}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.ConsumePrintPairing(ctx, p.ID, now, "hash", now.Add(time.Hour), now.Add(time.Minute)); err == nil {
+	if _, err := s.ConsumePrintPairing(ctx, ports.PairingExchange{PairingID: p.ID, Now: now, CredentialHash: "hash", CredentialExpiresAt: now.Add(time.Hour), ActivationDeadline: now.Add(time.Minute), Audit: auditRecord(t, "issued", tenant.ID("tenant"), inventory.InventoryID("inventory"), audit.ActionPrintConnectorCredentialIssued)}); err == nil {
 		t.Fatal("replayed credential issuance")
 	}
 	current, err := s.FindPrintConnectorCredential(ctx, "hash")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.HeartbeatPrintConnector(ctx, current, now.Add(2*time.Minute)); err == nil {
+	if _, err := s.HeartbeatPrintConnector(ctx, current, now.Add(2*time.Minute), nil); err == nil {
 		t.Fatal("expired activation accepted")
 	}
 }

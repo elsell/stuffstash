@@ -168,3 +168,12 @@ type PairingReviewOutput struct {
 	CacheControl string `header:"Cache-Control"`
 	Body         shared.SuccessEnvelope[PairingReview]
 }
+
+type RotateCredentialInput struct {
+	ConnectorInput
+	Body struct {
+		Generation uint64 `json:"generation" minimum:"1"`
+		PairingID  string `json:"pairingId"`
+		UserCode   string `json:"userCode"`
+	}
+}

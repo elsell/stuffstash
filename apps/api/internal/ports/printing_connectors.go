@@ -43,19 +43,39 @@ type PrinterHealthReport struct {
 	Report    printing.PrinterReport
 }
 
+type RotationApproval struct {
+	PairingID   printing.PairingID
+	CodeHash    string
+	Scope       printing.Scope
+	ConnectorID printing.ConnectorID
+	Generation  uint64
+	Now         time.Time
+	Audit       audit.Record
+}
+
+type PairingExchange struct {
+	PairingID                               printing.PairingID
+	Now                                     time.Time
+	CredentialHash                          string
+	CredentialExpiresAt, ActivationDeadline time.Time
+	Audit                                   audit.Record
+}
+type ConnectorActivationAudit func(printing.Connector, bool) (audit.Record, error)
+
 type ConnectorRepository interface {
+	ApprovePrintCredentialRotation(context.Context, RotationApproval) (printing.Pairing, error)
 	ListPrintPrinterHealth(context.Context, printing.Scope, printing.PrinterID) ([]PrinterHealthReport, error)
 	UpdatePrintConnector(context.Context, printing.Scope, printing.ConnectorID, uint64, ConnectorMutation, ConnectorAudit) (ConnectorRegistration, error)
 	CreatePrintPairing(context.Context, printing.Pairing) error
 	GetPrintPairing(context.Context, printing.PairingID) (printing.Pairing, error)
 	ApprovePrintPairing(context.Context, PairingApproval) (ConnectorRegistration, error)
-	ConsumePrintPairing(context.Context, printing.PairingID, time.Time, string, time.Time, time.Time) (printing.Connector, error)
+	ConsumePrintPairing(context.Context, PairingExchange) (printing.Connector, error)
 	GetPrintConnector(context.Context, printing.Scope, printing.ConnectorID) (ConnectorRegistration, error)
 	ListPrintConnectors(context.Context, printing.Scope, int, string) ([]ConnectorRegistration, error)
 	// Credential lookup is an authentication boundary, never a human resource read.
 	FindPrintConnectorCredential(context.Context, string) (printing.Connector, error)
 	SynchronizePrintConnector(context.Context, printing.Scope, printing.ConnectorID, ConnectorAuthorizationSync) error
 	PendingPrintConnectorScopes(context.Context, int) ([]printing.Connector, error)
-	HeartbeatPrintConnector(context.Context, printing.Connector, time.Time) (printing.Connector, error)
+	HeartbeatPrintConnector(context.Context, printing.Connector, time.Time, ConnectorActivationAudit) (printing.Connector, error)
 	ReportPrintPrinter(context.Context, printing.ConsumerAuthority, printing.PrinterReport, time.Time) error
 }

@@ -12,6 +12,7 @@ import (
 )
 
 func registerConnectors(api huma.API, application app.App) {
+	registerCredentialRotation(api, application)
 	const detail = "/tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}"
 	huma.Patch(api, detail, func(ctx context.Context, input *dto.UpdateConnectorInput) (*dto.ConnectorOutput, error) {
 		actor, err := printerActor(ctx, application, input.PrinterScope)

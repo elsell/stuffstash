@@ -2,6 +2,7 @@ package gormstore
 
 import (
 	"context"
+	"crypto/subtle"
 	"errors"
 	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -74,13 +75,17 @@ func (s Store) FindPrintConnectorCredential(ctx context.Context, hash string) (p
 		return printing.Connector{}, ports.ErrPrintDenied
 	}
 	var model printingConnectorModel
-	if err := s.db.WithContext(ctx).Where(&printingConnectorModel{CredentialHash: hash}).First(&model).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where(clause.Or(clause.Eq{Column: clause.Column{Name: "credential_hash"}, Value: hash}, clause.Eq{Column: clause.Column{Name: "pending_credential_hash"}, Value: hash})).First(&model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return printing.Connector{}, ports.ErrPrintDenied
 		}
 		return printing.Connector{}, err
 	}
-	return model.domain(), nil
+	c := model.domain()
+	if c.PendingCredentialHash == hash && c.State != printing.ConnectorRevoked {
+		return c.PendingCredentialIdentity(), nil
+	}
+	return c, nil
 }
 func (s Store) SynchronizePrintConnector(ctx context.Context, scope printing.Scope, id printing.ConnectorID, sync ports.ConnectorAuthorizationSync) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -132,7 +137,7 @@ func (s Store) PendingPrintConnectorScopes(ctx context.Context, limit int) ([]pr
 	}
 	return out, nil
 }
-func (s Store) HeartbeatPrintConnector(ctx context.Context, authenticated printing.Connector, now time.Time) (printing.Connector, error) {
+func (s Store) HeartbeatPrintConnector(ctx context.Context, authenticated printing.Connector, now time.Time, makeAudit ports.ConnectorActivationAudit) (printing.Connector, error) {
 	var result printing.Connector
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		model, err := lockPrintConnector(tx, authenticated.Scope, authenticated.ID)
@@ -140,13 +145,37 @@ func (s Store) HeartbeatPrintConnector(ctx context.Context, authenticated printi
 			return err
 		}
 		c := model.domain()
-		if c.ServiceAccountID != authenticated.ServiceAccountID || c.CredentialVersion != authenticated.CredentialVersion || c.Generation != c.SyncedGeneration || !c.CredentialExpiresAt.After(now) {
+		if c.ServiceAccountID != authenticated.ServiceAccountID || c.Generation != c.SyncedGeneration || c.State == printing.ConnectorRevoked {
 			return ports.ErrPrintDenied
 		}
-		if c.State == printing.ConnectorAwaitingActivation && c.ActivationDeadline.After(now) {
-			c.State = printing.ConnectorActive
-		} else if c.State != printing.ConnectorActive {
-			return ports.ErrPrintDenied
+		activating := c.State == printing.ConnectorAwaitingActivation
+		pending := c.PendingCredentialHash != "" && c.PendingCredentialVersion == authenticated.CredentialVersion && subtle.ConstantTimeCompare([]byte(c.PendingCredentialHash), []byte(authenticated.CredentialHash)) == 1
+		if pending {
+			if !c.PendingCredentialExpiresAt.After(now) || !c.PendingActivationDeadline.After(now) {
+				return ports.ErrPrintDenied
+			}
+			c.ActivatePending()
+		} else {
+			if c.CredentialVersion != authenticated.CredentialVersion || subtle.ConstantTimeCompare([]byte(c.CredentialHash), []byte(authenticated.CredentialHash)) != 1 || !c.CredentialExpiresAt.After(now) {
+				return ports.ErrPrintDenied
+			}
+			if c.State == printing.ConnectorAwaitingActivation && c.ActivationDeadline.After(now) {
+				c.State = printing.ConnectorActive
+			} else if c.State != printing.ConnectorActive {
+				return ports.ErrPrintDenied
+			}
+		}
+		if pending || activating {
+			if makeAudit == nil {
+				return ports.ErrPrintConflict
+			}
+			record, err := makeAudit(c, pending)
+			if err != nil {
+				return err
+			}
+			if err := createAuditRecord(tx, record); err != nil {
+				return err
+			}
 		}
 		c.LastSeenAt = &now
 		c.UpdatedAt = now
