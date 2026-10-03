@@ -302,5 +302,14 @@ export const workflowMessages = {
   "evaluation.failure.forbidden_operation": "Forbidden operation",
   "evaluation.failure.unexpected_mutation": "Unexpected change",
   "evaluation.failure.unexpected_proposal": "Unexpected proposal",
-  "evaluation.failure.unknown": "Unexpected result"
+  "evaluation.failure.unknown": "Unexpected result",
+  "evaluation.mustMention": "Must mention: {items}",
+  "evaluation.comparisonSelected": {
+    one: "Selected run: {verdict} · {count} call · {seconds} s",
+    other: "Selected run: {verdict} · {count} calls · {seconds} s"
+  },
+  "evaluation.comparisonCurrent": {
+    one: "This run: {verdict} · {count} call · {seconds} s",
+    other: "This run: {verdict} · {count} calls · {seconds} s"
+  }
 } as const;

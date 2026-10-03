@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { localization, t } from '../../presentation/localization';
 import type { AssetPhotoViewModel } from '../../application/assets/AssetViewModels';
 
 export type AssetPhotoViewerModel = {
@@ -32,7 +32,7 @@ export function assetPhotoViewerModel(
 
   return {
     photo: photos[selectedIndex] as AssetPhotoViewModel,
-    positionLabel: t('mobile.AssetPhotoWorkspacePresentation.of', { value: String((selectedIndex + 1).toString()), value2: String(photos.length.toString()) }),
+    positionLabel: t('mobile.AssetPhotoWorkspacePresentation.of', { value: selectedIndex + 1, value2: photos.length }),
     previousPhotoId: photos[selectedIndex - 1]?.id,
     nextPhotoId: photos[selectedIndex + 1]?.id
   };
@@ -81,7 +81,7 @@ export function assetPhotoViewerModelAtIndex(
   }
   return {
     photo,
-    positionLabel: t('mobile.AssetPhotoWorkspacePresentation.of', { value: String((imageIndex + 1).toString()), value2: String(photos.length.toString()) }),
+    positionLabel: t('mobile.AssetPhotoWorkspacePresentation.of', { value: imageIndex + 1, value2: photos.length }),
     previousPhotoId: photos[imageIndex - 1]?.id,
     nextPhotoId: photos[imageIndex + 1]?.id
   };
@@ -139,7 +139,7 @@ function formatByteSize(sizeBytes: number | undefined): string | undefined {
   }
 
   if (sizeBytes < 1024) {
-    return `${sizeBytes.toString()} B`;
+    return `${localization.number(sizeBytes)} B`;
   }
 
   const units = ['KB', 'MB', 'GB'] as const;
@@ -151,6 +151,7 @@ function formatByteSize(sizeBytes: number | undefined): string | undefined {
     unitIndex += 1;
   }
 
-  const rounded = value >= 10 ? Math.round(value).toString() : value.toFixed(1);
+  const precision = value >= 10 ? 0 : 1;
+  const rounded = localization.number(value, { minimumFractionDigits: precision, maximumFractionDigits: precision });
   return `${rounded} ${units[unitIndex]}`;
 }
