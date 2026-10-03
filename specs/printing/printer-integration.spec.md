@@ -405,7 +405,10 @@ message broker, public webhook receiver, or persistent event stream is required.
   between claim and start, credential rotation without privilege change,
   pending outbox grants/removals, reordered grant/revoke events, and fail-closed
   SpiceDB outages, and retirement between start and outcome/reconciliation.
-  No database-only authorization fallback is permitted.
+  No database-only authorization fallback is permitted. Pull-request CI runs the
+  real-SpiceDB acceptance runner, rather than silently skipping these tests.
+  PostgreSQL CI also runs concurrent default initialization and atomic asset-plus-
+  print creation, alongside claim and connector concurrency checks.
 - Real HTTP adversarial tests before endpoints: anonymous, wrong-role,
   cross-tenant/inventory/printer, forged IDs, expired/revoked credentials, pairing
   guessing/replay/approval races, wrong key, stolen code without polling secret,
