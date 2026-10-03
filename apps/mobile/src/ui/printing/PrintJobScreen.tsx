@@ -1,3 +1,4 @@
+import { PrintResolutionControls, printOutcomeLabel } from './PrintResolutionControls';
 import { useCallback, useRef, useState } from 'react';
 import { ScrollView, Text } from 'react-native';
 import type { PrintScope, PrintingWorkspace } from '../../application/printing/PrintingWorkspace';
@@ -23,9 +24,11 @@ export function PrintJobScreen({ workspace, scope, jobId, canPrint }: { readonly
     {task.loading ? <SettingsLoadingRow label={t('printing.mobile.loading')} /> : null}
     {task.error ? <Text accessibilityRole="alert" style={styles.errorMessage}>{t('printing.mobile.unavailable')}</Text> : null}
     {job ? <>
-      <Text accessibilityRole="header" accessibilityLiveRegion="polite" style={styles.detailTitle}>{printJobStatus(job.status)}</Text>
+      <Text accessibilityRole="header" accessibilityLiveRegion="polite" style={styles.detailTitle}>{job.resolution ? t('printing.mobile.resolved') : printJobStatus(job.status)}</Text>
       <Text style={{ color: palette.text }}>{t('printing.mobile.copyProgress', { completed: job.completedCopies, total: job.copies })}</Text>
       {job.status === 'uncertain' ? <Text style={{ color: palette.text }}>{t('printing.mobile.uncertain')}</Text> : null}
+      {job.resolution ? <><Text style={{ color: palette.text }}>{printOutcomeLabel(job.resolution.reportedOutcome)}</Text><Text style={{ color: palette.textMuted }}>{t('printing.mobile.resolvedDetail')}</Text></> : null}
+      {canPrint && job.status === 'uncertain' ? <PrintResolutionControls workspace={workspace} scope={scope} job={job} lifetime={task.lifetime} onResolved={task.setData} /> : null}
       {canPrint && ['queued', 'claimed'].includes(job.status) ? <NativeCommandButton label={t('printing.mobile.cancel')} disabled={busy} role="destructive" onPress={() => void cancel()} /> : null}
     </> : null}
     {failed ? <Text accessibilityRole="alert" style={styles.errorMessage}>{t('printing.mobile.unavailable')}</Text> : null}

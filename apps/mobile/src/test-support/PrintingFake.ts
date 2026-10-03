@@ -1,5 +1,5 @@
 import { PrintRequests } from '../application/printing/PrintSubmission';
-import type { PrintCatalog, PrintJob, PrintSettings, PrintingRepository, PrintingWorkspace } from '../application/printing/PrintingWorkspace';
+import type { PrintCatalog, PrintJob, PrintOutcome, PrintSettings, PrintingRepository, PrintingWorkspace } from '../application/printing/PrintingWorkspace';
 const scope = { tenantId: 'tenant', inventoryId: 'inventory' };
 export class PrintingFake implements PrintingRepository {
   settings: PrintSettings = { revision: 1, defaultPrinterId: 'printer', template: { id: 'qr-title', version: 1, showReference: true }, printOnCreateDefault: false };
@@ -18,6 +18,17 @@ export class PrintingFake implements PrintingRepository {
   }
   async jobs() { return [...this.submitted.values()]; }
   async job(_scope: typeof scope, id: string) { const job = this.submitted.get(id); if (!job) throw new Error('Missing'); return job; }
+  dropResolution = false;
+  async resolve(_scope: typeof scope, job: PrintJob, outcome: PrintOutcome) {
+    if (this.deny) throw new Error('Forbidden');
+    const current = this.submitted.get(job.id);
+    if (current?.resolution?.reportedOutcome === outcome) return current;
+    if (!current || current.revision !== job.revision || current.status !== 'uncertain' || !current.idleConfirmed) throw new Error('Conflict');
+    const next = { ...current, status: 'failed', revision: current.revision + 1, resolution: { reportedOutcome: outcome } };
+    this.submitted.set(job.id, next);
+    if (this.dropResolution) { this.dropResolution = false; throw new Error('Response lost'); }
+    return next;
+  }
   async cancel(_scope: typeof scope, job: PrintJob) { const next = { ...job, status: 'canceled', revision: job.revision + 1 }; this.submitted.set(job.id, next); return next; }
   workspace(): PrintingWorkspace { return { repository: this, requests: new PrintRequests(this, () => 'request'), newRequestKey: () => 'request', files: { preview: async () => ({ uri: 'file:///private/label.png', release: () => { this.releases++; } }), deliver: async () => {} } }; }
 }

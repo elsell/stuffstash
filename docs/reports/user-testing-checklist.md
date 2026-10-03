@@ -197,3 +197,13 @@ label request; fields stay locked until its outcome is recovered. Check this on
 iPhone/iPad and Android with the keyboard visible. These device checks remain
 unverified; controlled source tests cover initialization, retained requests,
 prepared tag identity and cross-inventory rejection.
+
+For mobile uncertainty recovery, open a job with uncertain output. Before its
+latest attempt reports idle, confirm Resolve job is disabled and the guidance
+asks you to check the printer/connector. Once idle is reported, choose what you
+observed, explicitly acknowledge uncertainty, and resolve. Confirm the screen
+says Uncertainty acknowledged and retains your report without claiming confirmed
+completion or printing again. Lose a response once and retry the same
+acknowledgement. Verify viewer accounts have no recovery controls, and exercise
+the outcome picker and acknowledgement with enlarged text and VoiceOver/TalkBack.
+Status: source/stateful-fake evidence only; native acceptance remains unverified.
