@@ -521,3 +521,11 @@ Label options offers editors a Print options task for custom printer/template
 selection and preview; viewers retain download access only. Scope cancellation
 before submission stops the quick request. Cancellation after submission retains
 its recovery identity and never implies that enqueueing was undone.
+
+Native custom print/reprint options expose a positive whole-number copy input.
+The API's configured maximum remains authoritative; do not hard-code its default
+as a client limit. Reject empty, fractional, nonnumeric or nonrepresentable counts
+locally. Changing copies invalidates the preview, just like changing the template.
+A first definite rejection preserves the draft for correction; any prior ambiguous
+submission keeps its original count, payload and key locked until recovery.
+Quick-default requests, asset creation and diagnostic test requests remain one copy.

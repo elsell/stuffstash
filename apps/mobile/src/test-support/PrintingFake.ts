@@ -22,8 +22,8 @@ export class PrintingFake implements PrintingRepository {
   }
   async saveSettings(_scope: typeof scope, value: PrintSettings) { if (value.revision !== this.settings.revision) throw new Error('Conflict'); this.settings = { ...value, revision: value.revision + 1 }; return this.settings; }
   async preview() { this.previews++; return { file: { bytes: new Uint8Array([1]), format: 'png' as const, width: 306, height: 991, rotation: 90 }, fingerprint: 'selection' }; }
-  async submit(_scope: typeof scope, assetId: string, selection: { printerId: string }, key: string) {
-    const job = this.submitted.get(key) ?? { id: key, assetId, printerId: selection.printerId, status: 'queued', revision: 1, copies: 1, completedCopies: 0 };
+  async submit(_scope: typeof scope, assetId: string, selection: PrintSelection, key: string) {
+    const job = this.submitted.get(key) ?? { id: key, assetId, printerId: selection.printerId, status: 'queued', revision: 1, copies: selection.copies, completedCopies: 0 };
     this.submitted.set(key, job);
     if (this.drop) { this.drop = false; throw new Error('Response lost'); } return job;
   }
@@ -45,7 +45,7 @@ export class PrintingFake implements PrintingRepository {
     const fingerprint = JSON.stringify(['test', _scope, printerId, selection]);
     if (this.printIntents.has(key) && this.printIntents.get(key) !== fingerprint) throw new Error('Conflict');
     if (this.printIntents.has(key)) return this.submitted.get(key)!;
-    const job = { id: key, kind: 'printer_test', printerId, status: 'queued', revision: 1, copies: 1, completedCopies: 0 };
+    const job = { id: key, kind: 'printer_test', printerId, status: 'queued', revision: 1, copies: selection.copies, completedCopies: 0 };
     this.printIntents.set(key, fingerprint); this.queuedSelections.set(key, selection); this.submitted.set(key, job);
     if (this.drop) { this.drop = false; throw new Error('Response lost'); } return job;
   }

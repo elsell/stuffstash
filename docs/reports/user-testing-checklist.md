@@ -239,3 +239,8 @@ unverified beyond source and stateful-fake checks.
   automatic reads; Refresh status remains available. With networking unavailable,
   retries should slow down and recover when networking returns. Source-level
   clock-controlled tests pass; this native lifecycle check remains unverified.
+
+- [ ] In native Print options or a linked asset reprint, choose several copies.
+  Changing the count must clear the old preview. A rejected server limit leaves
+  the draft editable; a lost submission response keeps the count locked for retry.
+  Quick Print label, create-and-print, and test labels still request one copy.
