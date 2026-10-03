@@ -210,7 +210,7 @@ export function AssetBreadcrumbTrail({
       ref={scroll}
       onLayout={revealParent}
       onContentSizeChange={revealParent}
-      accessibilityLabel={t('mobile.AssetCard.location', { value: String(segments.map((segment) => segment.title).join(', ')) })}
+      accessibilityLabel={t('mobile.AssetCard.location', { value: String(localization.list(segments.map((segment) => segment.title))) })}
       horizontal
       showsHorizontalScrollIndicator={false}
       style={styles.breadcrumbScroller}

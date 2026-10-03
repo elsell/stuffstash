@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { localization, t } from '../../presentation/localization';
 import type {
   AssetDetailViewModel,
   AssetParentLocationCrumbViewModel
@@ -117,7 +117,7 @@ export function assetDetailPlacement(
   }
 
   return {
-    accessibilityLabel: t('mobile.AssetDetailPresentation.location2', { value: String(crumbs.map((crumb) => crumb.title).join(', ')) }),
+    accessibilityLabel: t('mobile.AssetDetailPresentation.location2', { value: String(localization.list(crumbs.map((crumb) => crumb.title))) }),
     crumbs
   };
 }

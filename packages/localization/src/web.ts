@@ -840,7 +840,6 @@ export const webMessages = {
   "web.RunResult.expected": "Expected",
   "web.RunResult.observed": "Observed",
   "web.RunResult.outcome": "Outcome:",
-  "web.RunResult.referencedItems": "Referenced items:",
   "web.RunResult.inside": "inside",
   "web.RunResult.executedOperations": "Executed operations:",
   "web.RunResult.differences": "Differences",

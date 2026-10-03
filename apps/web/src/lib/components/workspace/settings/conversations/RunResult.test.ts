@@ -1,5 +1,5 @@
 import { afterEach, expect, it } from 'vitest';
-import { t } from '$lib/presentation/localization';
+import { localization, t } from '$lib/presentation/localization';
 import { mount, unmount } from 'svelte';
 import { createConversationSession, type ConversationSession } from '$lib/adapters/query/conversationSession';
 import type { CaseRevision } from '$lib/domain/conversationCase';
@@ -10,9 +10,9 @@ afterEach(async () => { if (component) await unmount(component); component = und
 it('lazily reads the pinned case and exposes a mismatched creation kind', async () => {
   const reads: string[] = [];
   const revision: CaseRevision = { id: 'pinned', caseId: 'case', number: 1, authorId: 'owner', createdAt: '', definition: {
-    title: 'Another box', utterance: 'Add another box', assets: [], expectations: { kind: 'proposal', referencedAssets: [], locations: [], forbiddenOperations: [],
+    title: 'Another box', utterance: 'Add another box', assets: [{ id: 'tent', title: 'My tent', kind: 'item', description: '', parentId: '', tagNames: [] }, { id: 'bin', title: 'Summer bin', kind: 'container', description: '', parentId: '', tagNames: [] }], expectations: { kind: 'proposal', referencedAssets: [], locations: [], forbiddenOperations: [],
       proposals: [{ operation: 'create', newTitle: 'Box', newKind: 'container', targetId: '', destinationId: '', details: '' }] } } };
-  const result: Result = { caseRevisionId: 'pinned', observation: { kind: 'proposal', referencedAssets: [], locations: [], executedOperations: [],
+  const result: Result = { caseRevisionId: 'pinned', observation: { kind: 'proposal', referencedAssets: ['tent', 'bin'], locations: [], executedOperations: ['create', 'move'],
     proposals: [{ operation: 'create', newTitle: 'Box', newKind: 'item', targetId: '', destinationId: '', details: '' }] },
     verdict: { passed: false, failures: [{ code: 'proposal_mismatch', fixtureId: '', operation: 'create' }] }, modelCalls: 2, durationMilliseconds: 350, completedAt: '' };
   const unsupported = async (): Promise<never> => { throw new Error('Read only'); };
@@ -27,6 +27,8 @@ it('lazily reads the pinned case and exposes a mismatched creation kind', async 
   expect(document.body.textContent).toContain('(' + t('asset.kind.item') + ')');
   expect(document.body.textContent).toContain(t('case.operation.create'));
   expect(document.body.textContent).toContain(t('case.outcome.proposal'));
+  expect(document.body.textContent).toContain(t('web.RunResult.executedOperationsFull', { value: localization.list([t('case.operation.create'), t('case.operation.move')]) }));
+  expect(document.body.textContent).toContain(t('evaluation.referencedItems', { items: localization.list(['My tent', 'Summer bin']) }));
   expect(result.observation.proposals[0].operation).toBe('create');
   expect(result.observation.proposals[0].newKind).toBe('item');
 });
