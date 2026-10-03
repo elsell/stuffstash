@@ -755,6 +755,9 @@ It selects a registered destination, compatible template/options and copies,
 then requests the actual server-rendered preview. Any selection change discards
 that preview. Queue submission includes its selection/media fingerprints and a
 stable idempotency key; uncertain API delivery freezes that request until retry.
+Session-owned intents survive dialog dismissal and route navigation, preserving
+the exact pending request, selection, and preview for reopening. A definite
+rejection permits correction only if no previous attempt had ambiguous delivery.
 Preview bytes come through authenticated generated-client content methods and
 local object URLs are released on selection changes and dismissal. No credential
 is attached to arbitrary server-provided content URLs.
@@ -809,3 +812,8 @@ its selection for correction and discards that unused request key. Network error
 server failures and any other ambiguous outcome retain the immutable intent. Once
 any attempt was ambiguous, a later rejection cannot prove that an earlier attempt
 did not enqueue: keep the original key and payload until success is recovered.
+Web settings and manual label controls are implemented with faithful stateful
+fakes covering settings conflicts, permission loss, preview media mismatch and
+ambiguous queue delivery. Chromium fixture review exercised 1280px settings and
+390px preview/queue status using the generated renderer PNG; this is not evidence
+of connected OIDC or physical printer execution.
