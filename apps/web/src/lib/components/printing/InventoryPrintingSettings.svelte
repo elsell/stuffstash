@@ -10,6 +10,7 @@ import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 import { Label } from '$lib/components/ui/label/index.js';
 import PairingChoice from './PairingChoice.svelte';
 import PrintJobList from './PrintJobList.svelte';
+import PrinterTestDialog from './PrinterTestDialog.svelte';
 import AssetPrintDialog from './AssetPrintDialog.svelte';
 let { scope, repository, intents, canConfigure, canPrint }: {
     scope: PrintScope;
@@ -20,13 +21,16 @@ let { scope, repository, intents, canConfigure, canPrint }: {
 } = $props();
 let printers = $state<RegisteredPrinter[]>([]), connectors = $state<PrintConnector[]>([]), templates = $state<LabelTemplate[]>([]), jobs = $state<PrintJob[]>([]);
 let draft = $state<PrintDefaults | null>(null), busy = $state(true), error = $state(''), saved = $state(false), conflict = $state(false), nextCursor = $state<string | undefined>();
+let testPrinterId=$state('');
+let testTrigger:HTMLElement|undefined;
+function openTest(printer:RegisteredPrinter,trigger:HTMLElement){if(!canPrint||busy||printer.retired||!intents)return;testTrigger=trigger;testPrinterId=printer.id;}
 let reprint = $state<PrintJob | null>(null);
 let reprintTrigger: HTMLElement | undefined;
 function openReprint(job: PrintJob, trigger: HTMLElement) {
     if (!canPrint || busy || !intents || !job.assetId || !['completed','failed','canceled'].includes(job.status)) return;
     reprintTrigger=trigger; reprint=job;
 }
-$effect(()=>{ if(!canPrint) reprint=null; });
+$effect(()=>{ if(!canPrint){reprint=null;testPrinterId='';} });
 const activePrinters = $derived(printers.filter(p => !p.retired));
 const selectedTemplate = $derived(draft ? `${draft.templateId}:${draft.templateVersion}` : '');
 const missingDefault = $derived(Boolean(draft?.defaultPrinterId && !activePrinters.some(p => p.id === draft?.defaultPrinterId)));
@@ -113,7 +117,7 @@ async function resolve(job:PrintJob,outcome:ReportedPrintOutcome){if(!canPrint||
   </section>
   <section><div class="section-heading"><h2>{t('web.Printing.registered')}</h2><Button.Root variant="outline" disabled={busy} onclick={()=>void refresh()}>{t('web.Printing.refresh')}</Button.Root></div>
    {#if printers.length===0}<p>{t('web.Printing.emptyPrinters')}</p>{/if}
-   <ul>{#each printers as printer(printer.id)}<li><strong>{printer.name}</strong><p>{printer.media.name} · {printer.retired?t('web.Printing.retired'):readinessLabel(printer.readiness)}</p></li>{/each}</ul>
+   <ul>{#each printers as printer(printer.id)}<li><strong>{printer.name}</strong><p>{printer.media.name} · {printer.retired?t('web.Printing.retired'):readinessLabel(printer.readiness)}</p>{#if canPrint&&intents&&!printer.retired}<Button.Root variant="outline" disabled={busy} onclick={event=>openTest(printer,event.currentTarget)}>{t('web.Printing.testLabel')}</Button.Root>{/if}</li>{/each}</ul>
    {#if canConfigure}<p>{t('web.Printing.registrationHelp')}</p>{/if}
   </section>
   <section><h2>{t('web.Printing.connectors')}</h2>{#if connectors.length===0}<p>{t('web.Printing.emptyConnectors')}</p>{/if}<ul>{#each connectors as connector(connector.id)}<li><strong>{connector.name}</strong><p>{connectorStatusLabel(connector)}</p><p>{t('web.Printing.lastSeen')}: {connector.lastSeenAt?timestampLabel(connector.lastSeenAt):t('web.Printing.neverSeen')}</p></li>{/each}</ul></section>
@@ -122,5 +126,8 @@ async function resolve(job:PrintJob,outcome:ReportedPrintOutcome){if(!canPrint||
 </section>
 {#if reprint?.assetId && intents && canPrint}
  {#key reprint.id}<AssetPrintDialog {scope} assetId={reprint.assetId} predecessor={reprint.id} {repository} {intents} onClose={()=>{reprint=null;}} onRestoreFocus={()=>reprintTrigger?.focus()}/>{/key}
+{/if}
+{#if testPrinterId && intents && canPrint}
+ {#key testPrinterId}<PrinterTestDialog {scope} printerId={testPrinterId} {repository} {intents} onClose={()=>{testPrinterId='';}} onRestoreFocus={()=>testTrigger?.focus()}/>{/key}
 {/if}
 <style>.printing-settings{display:grid;gap:var(--space-6);max-width:48rem}.defaults-form{display:grid;gap:var(--space-3);max-width:32rem}.check-row{display:flex;gap:var(--space-3);align-items:center}.section-heading{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;justify-content:space-between}ul{list-style:none;padding:0;display:grid;gap:var(--space-3)}li{border-bottom:1px solid var(--border);padding-block:var(--space-2)}p{color:var(--muted-foreground);margin-block:var(--space-2)}strong,p{overflow-wrap:anywhere}</style>

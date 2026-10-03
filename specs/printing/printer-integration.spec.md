@@ -999,3 +999,22 @@ store. Lost-response retries survive navigation with the same immutable payload;
 only a definitive first rejection permits correction. Native task navigation,
 existing pickers, and contextual command buttons are reused. No new confirmation
 modal or automatic reprint is introduced.
+### Web explicit printer test
+
+Each non-retired printer offers editors an explicit Print test label command.
+Use a bounded dialog showing the named destination, registered media, and a flat
+layout picker. Explain that it prints one diagnostic label and creates no asset;
+this is not an asset-label preview. Opening or configuring the dialog does not
+print. Submission fixes copies to one and captures the current media fingerprint.
+Retain the exact scoped printer request across dismissal/navigation and ambiguous
+responses; repeated submit retries that intent. Display its normal job status and
+allow refresh/cancel/manual uncertainty resolution. A terminal job permits an
+explicit new test with a new key, never an automatic retry or reprint. Retired
+printers and viewers have no test command. Permission/workspace changes dismiss
+the dialog; Escape restores focus to the initiating printer command.
+
+Chromium fixtures at 390px and 1280px verify the diagnostic explanation, explicit
+submission, lost-response dismissal/reopen/retry, and Escape focus restoration.
+Stateful component tests verify no automatic job and no asset, one copy only,
+viewer/retired-printer restrictions, and exactly one job after response loss.
+Physical printer output remains outside this browser evidence.

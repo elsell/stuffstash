@@ -44,7 +44,11 @@ export class FakePrintingRepository implements PrintingRepository {
         if (!['completed', 'failed', 'canceled'].includes(prior.status)) throw new PrintingFailure('conflict');
         return this.enqueue(scope, prior.assetId, selection, previewFingerprint, key, predecessor);
     }
-    private async enqueue(scope: PrintScope, assetId: string, selection: LabelSelection, previewFingerprint: string, key: string, predecessor?: string) {
+    async testPrinter(scope:PrintScope,printerId:string,selection:LabelSelection,key:string){
+        this.check(scope);if(selection.printerId!==printerId||selection.copies!==1)throw new PrintingFailure('invalid');
+        return this.enqueue(scope,undefined,selection,JSON.stringify({selection}),key);
+    }
+    private async enqueue(scope: PrintScope, assetId: string | undefined, selection: LabelSelection, previewFingerprint: string, key: string, predecessor?: string) {
         this.check(scope);
         if (!this.canPrint)
             throw new PrintingFailure('denied');
