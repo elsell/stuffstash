@@ -13,9 +13,9 @@ The source build includes label previews and scanning, web connector approval,
 printer settings, and print controls in web and mobile. A foreground CLI worker
 runs registered printer queues. See [connector setup](../../cli/#register-a-printer-connector).
 Initialize label identities once using the [self-host instructions](../../self-host-operations/#set-up-labels-and-printing).
-This catalog describes
-the candidate source, and must not be read as a promise that an older downloadable
-CLI has the same features. See [CLI installation](../../cli/) for current downloads.
+These instructions describe the current source build. An older downloadable CLI
+may not include every command; check [versioned downloads](../../cli-downloads/)
+or [build from source](../../cli/#install-from-source).
 
 Initial hardware support is **Brother QL-800, USB, Linux, with 29 × 90 mm labels**.
 Physical printing and scanning still need device verification. Other printer models,
@@ -26,19 +26,24 @@ roll sizes, and remote wake are not part of the initial supported setup.
 In inventory settings, choose the default printer and layout, then choose whether
 new items should print a label by default. You can change that choice on the create
 form. On an existing item, container, or location, use its menu to print a label.
-Preview the layout before sending it to the printer.
+Preview the layout before sending it to the printer. Inventory printing settings
+show registered printers and recent jobs. Use **Print test label** to check a
+printer without creating an inventory item; it prints only after confirmation.
 
 A queued job can wait while its printer is unavailable. Connector availability and
 printer readiness are separate: a healthy computer cannot print through a powered-off
 printer. If a job's outcome is uncertain, check the physical label and follow the
 recovery controls after the connector confirms the printer is idle. Resolving that
-status never prints another label automatically.
+status never prints another label automatically. When you need another copy,
+choose **Print another label** on a finished job and review the new request.
+If a response is lost, use the offered retry to recover the same request.
 
 ## Choose the loaded size
 
 When registering a printer, select the label size physically loaded in it. The app
 trusts that setting; automatic roll detection is not required. After changing a
-roll, update its setting before requesting more labels. Existing jobs retain their
+roll, edit the printer in inventory printing settings before requesting more
+labels. Initially, only the 29 × 90 mm preset is available. Existing jobs retain their
 original size instead of silently stretching to another size.
 
 A printer is independent of its layout. Use **QR and title** when a readable name

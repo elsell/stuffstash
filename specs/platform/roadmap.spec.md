@@ -1,85 +1,63 @@
 # Roadmap Spec
 
-## Printing catalog delivery candidate
-
-The printer catalog now comes from the executable CLI adapter registration and
-shared first-party media profile; previews use the production API renderer.
-Candidate pages, PNG/PDF originals and an owned-output manifest are generated
-offline and checked in PR/production documentation builds. QR decoding, dimensions,
-deterministic bytes and narrow output ownership are verified. Desktop light and
-phone dark browser checks cover responsive examples and original downloads;
-these do not establish physical printing or native camera behavior.
-
-## CLI release delivery slice
-
-The publication candidate stages exact five-platform CLI archives alongside the
-self-host bundle, verifies bytes before stable publication, and supports original
-run repair. Verified metadata generates pinned downloads through a maintenance PR;
-docs dispatch follows its actual merge. Local fake-remote integrity checks are
-separate from the first live GitHub publication, which remains unverified until a
-release is cut. Registry-rendered catalog delivery is tracked separately above.
-
 ## In Progress: Labels, Printers, And CLI — October 3, 2026
 
-Delivered foundations now include human CLI authentication/inventory commands,
-server rendering, and the Linux USB QL-800 adapter. The registration slice adds
-authenticated inventory printer CRUD and executable media profiles to both
-generated SDKs. Connector pairing and job dispatch remain separate work; registering
-a printer alone does not enable automatic output. Physical output remains unverified.
+Design PR #337 is merged. The integrated implementation now includes registered
+printers and connectors, server-rendered QR labels, inventory print defaults,
+atomic create-and-print, and manual print/reprint/test-label controls in web,
+mobile, and the CLI. Both clients expose queue status, separate connector health
+from printer readiness, allow registered media changes, and support explicit
+uncertain-outcome recovery. CLI registration, credential rotation, and the
+foreground worker use the generated Go SDK. SpiceDB scopes connector principals;
+claim tokens fence attempts. Browser PKCE and provider-enabled device-code login
+remain available for human commands.
 
-The user authorized specification of QR labels/scanning and registered CLI print
-consumers. Design PR #337 is merged; implementation is underway in isolated
-worktrees. Merged slices include CLI OIDC discovery and human login, generated Go SDK,
-server rendering and stable label resolution, the Linux QL-800 adapter, and
-registered printer configuration. Human queue create/read/list/cancel and immutable
-artifact persistence now pass HTTP isolation/retry checks; production PostgreSQL
-verifies exclusive claims and uncertain reservations. Connector pairing, credential rotation, and consumer claim/start/outcome/recovery
-APIs pass critical HTTP checks. PostgreSQL verifies recovery enumeration stays
-inside connector, tenant, and inventory boundaries. The consumer API and SDK are
-integrated with the CLI worker. Scheduled lease reconciliation and terminal-only
-retention shipped in PR #357. CLI registration
-and foreground operation now pass stateful protocol, recovery, credential-isolation,
-and revoked-credential tests and shipped in PR #358. Inventory defaults shipped in PR #360. Atomic create-and-print now passes HTTP scope/replay checks,
-late-write rollback, and concurrent PostgreSQL creation with exactly one asset
-and job; generated clients share the explicit print selection. Mobile printer controls and atomic creation now pass integrated source checks and
-critical stateful-fake recovery/scope tests; web approval and client controls are
-in review. Linked reprints/test labels (#366), human CLI queue commands (#368),
-and explicit uncertain resolution with locked device-idle proof (#369) are
-implemented and progressing through the native PR stack. Dispatch readiness
-fencing shipped in #364; connector/device health projection is in #365.
-No physical output has been verified. See
-[asset labels](../printing/asset-labels.spec.md),
+Delivery continues through small PRs in the native GitHub stack. Required CI,
+remaining integration review, and final release verification are not complete.
+Critical tests use faithful stateful fakes; tests that merely repeat implementation
+are outside the delivery goal. Keep parallel implementation in isolated worktrees.
+See [asset labels](../printing/asset-labels.spec.md),
 [printer integration](../printing/printer-integration.spec.md), and [CLI](cli.spec.md).
-Sequence: contract/security and job-state tests; API label/registration/job slice;
-CLI pairing and built-in Linux QL-800 adapter; web/mobile printing and scanning;
-physical-device evidence and operator documentation. Implement atomic claims,
-separate connector/printer health, and safe uncertain-outcome recovery together.
-Connector credentials authenticate service accounts; SpiceDB relationships scope
-printer access, and claim tokens separately fence print attempts. The CLI requires
-a generated Go SDK from the shared OpenAPI artifact and supports browser PKCE
-and provider-enabled device-code human login. Register each printer with one
-user-selected label size; trust that setting without mandatory roll detection.
-Size remains editable; mismatching queued jobs wait without resizing. Independent
-templates produce immutable API-rendered artifacts for that registered size,
-consumed through a versioned contract rather than adapter-owned layouts.
-[Generated printing docs](printing-catalog-docs.spec.md) adds registry-derived
-printer/template/size catalogs and production-rendered PNG examples, automatically
-regenerated and checked in PR CI. The catalog implementation shipped in PR #352. CLI release publication
-has merged in PR #350. Release v0.38.1 publishes all five CLI targets and
-checksums; the downloaded Linux archive checksum, embedded tag/commit, and
-printer catalog were verified. Its USB capability metadata correction is in #370;
-actual Linux USB discovery remains available. Generated download metadata is in
-#367; physical output and native device flows remain unverified. Each project release must publish
-version-stamped CLI binaries and checksums; verified release metadata refreshes
-concrete download commands in the docs. Implementation is now authorized as an
-active goal: orchestrate parallel agents and ship small coherent functional PRs,
-writing only critical security, recovery, integration, and artifact tests.
-Initial required printer/media support is only the USB QL-800 on Linux. Its
-media profile derives from the user's old script: 29 x 90 mm, 306 x 991
-raster. Actual USB completion reporting, media/scan behavior, and packaging remain
-unverified. Remote wake/smart outlets and a shared hosted QR resolver are outside
-the first release. Pending user-device checks do not block unrelated delivery;
-this specification does not close existing audit or acceptance work.
+
+### Verified behavior
+
+- HTTP authorization and isolation checks cover human and connector boundaries.
+  Real PostgreSQL checks verify exclusive claims, scoped recovery, atomic rollback,
+  and concurrent create retries producing exactly one asset and print job.
+- Stateful worker checks cover lost responses, durable journals, readiness fencing,
+  revocation, and uncertain output. Client checks cover retained request identities,
+  scope changes, and fresh acknowledgement after a newer uncertain attempt.
+- Connected browser acceptance completed in 41.8 seconds against the production
+  web build with real Dex, PostgreSQL, and SpiceDB. It covered connector approval,
+  the registered label preset, inventory defaults, checked create-and-print,
+  idempotent replay with one queued job, and authorized label resolution while
+  denying anonymous and unrelated users. The printer remained offline; this is
+  not physical printing evidence. The harness and queued-state screenshot capture
+  are recorded in commit `5b7c027be`.
+- Registry-generated printer, media, and template pages use the production renderer
+  for PNG/PDF examples. Offline drift checks validate owned outputs; QR decoding,
+  dimensions, deterministic rendering, and responsive catalog views are verified.
+  See [generated printing docs](printing-catalog-docs.spec.md).
+- Release publication has shipped five-platform CLI archives, checksums, and
+  embedded tag/commit metadata. The downloaded v0.38.1 Linux archive checksum,
+  version, and printer catalog were verified. This evidence predates the USB
+  capability metadata correction in #370; verification of a published release
+  containing the final implementation remains pending. Verified release metadata
+  updates pinned download commands through a maintenance PR.
+
+### Hardware and delivery limits
+
+Initial hardware/media support is only Brother QL-800 over USB on Linux with
+29 × 90 mm stock (physical profile 29 × 89.8 mm, raster 306 × 991). Registration
+trusts the user's loaded-size selection; queued labels retain their original
+media. Templates remain independent of printers. Remote wake, additional media,
+and a shared hosted QR resolver are outside this delivery.
+
+No QL-800 was attached on the inspected host. Actual USB completion, physical QR
+scanning, host udev/service setup, and named native camera/share/print journeys
+remain unverified. Source checks and connected browser acceptance do not replace
+those checks. Pending user-device evidence does not block unrelated delivery and
+must not be reported as a pass or as closure of existing acceptance work.
 
 ## Integration priority clarification — October 2, 2026
 
@@ -572,7 +550,8 @@ transport, cancellation, permission, and native action tests are required with
 client checks. Native ExpoCamera/ExpoPrint pod lock regeneration uses CI's actual
 macOS resolver. Physical QL-800 printing and named-device camera/share/print
 acceptance remain unverified in the consolidated user checklist. Registered
-printer job/settings UI remains a subsequent integrated slice.
+printer controls, settings, and recovery are now part of the integrated delivery
+tracked above; their source checks do not establish native-device acceptance.
 
 ## Maintenance
 
