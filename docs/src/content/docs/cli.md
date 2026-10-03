@@ -234,7 +234,8 @@ stuffstash print-jobs reprint JOB_ID --printer PRINTER_ID
 These commands enqueue work for the connector; they do not send USB output from
 the computer running the command. A test prints one diagnostic label. A reprint
 creates a new job linked to the original; unresolved uncertain jobs require
-explicit resolution first.
+explicit resolution first. Use inventory printing settings in the web or mobile
+app to resolve an uncertain outcome after checking the physical printer.
 
 Omit `--printer` to use the inventory's configured default. Template selection
 also uses inventory defaults; override it with `--template qr-title
@@ -267,6 +268,7 @@ saved. If activation fails after saving, run `connectors print run` with the sam
 connector to retry activation. A rotation does not create a new printer or change
 its label size. Stop the old worker and restart it after rotation so it loads the
 new credential; existing uncertain jobs still require their normal recovery.
+
 ### Save or resolve a label
 
 You can save labels without running a USB connector:
@@ -283,7 +285,7 @@ as `labels print`. Omit the media selector to use the default printer. Choose a
 catalog media preset to render without registering a printer. Paired `--width-mm`
 and `--height-mm` also select an exact supported profile; the nominal 29 × 90 mm
 Brother preset has a physical profile of 29 × 89.8 mm. Unsupported sizes are
-rejected instead of being resized. See [supported label sizes](./printing/label-sizes/)
+rejected instead of being resized. See [supported label sizes](../printing/label-sizes/)
 for available templates and stock.
 
 PNG and PDF downloads are checked against the server's checksum before saving.
