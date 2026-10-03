@@ -279,3 +279,67 @@ for [generated printing docs](printing-catalog-docs.spec.md). Registered runtime
 adapters, supported platforms/transports, and media presets drive the website's
 support catalog. Verify export/runtime parity; no docs-only list or USB access is
 required for export. Candidate support and physical verification remain distinct.
+
+## GitHub Release Binaries And Download Documentation
+
+- Once the CLI ships, every normal project release that is cut must build and
+  publish the CLI from that exact release commit under the same project tag.
+  Do not create an unrelated CLI version stream or publish an unversioned build
+  from a moving branch. Documentation-only changes retain existing no-release
+  behavior; they do not manufacture tags just to refresh download instructions.
+- Embed the exact release tag/version and source commit in the binary using
+  build-time values. `stuffstash version` and `stuffstash version --json` expose
+  both plus OS/architecture and enabled connector capabilities. Development
+  builds clearly identify themselves as development; a release build must fail
+  if required version inputs are absent or inconsistent with its release plan.
+- Attach per-platform archives, checksum manifest, and available build provenance
+  to the GitHub release. Each archive includes the executable and required
+  licenses/notices. Archive names include tag, OS, and architecture, with a stable
+  naming convention documented before publishing the first CLI release.
+- Initial required downloadable target is Linux amd64, covering the user's USB
+  QL-800 host; additional API-only platforms may be shipped when verified, but
+  must not imply USB printing support on unimplemented platforms. Decide and
+  record the supported release matrix before wiring builds. Pin toolchain,
+  build actions, system/native USB dependencies, and generator versions.
+- Build and smoke-check `version --json` against the planned tag/commit before
+  publication. Verify archives can be unpacked and the documented binary runs
+  on supported clean hosts. Checksum/provenance generation covers final bytes,
+  including any required native runtime, not an earlier unsigned artifact.
+- Publish release assets before advertising download availability. Partial
+  failures must not advance the documented current CLI version; never overwrite
+  existing versioned assets with different bytes. A retry verifies existing
+  assets and completes missing publication idempotently.
+- The docs install section shows a copyable `curl --fail --location` command
+  using the exact newest successfully published stable CLI tag and a compatible
+  platform archive, followed by checksum verification, extraction, and a version
+  check. No `curl | sh`, floating binary URL in the generated command, or promise
+  that a missing platform asset exists. A release-index link may be provided too.
+- On successful release publication, automatically refresh version/asset/hash
+  metadata through the existing release-maintenance update mechanism and trigger
+  the documentation build. Generate the install snippet from this metadata;
+  never manually replace versions across prose. The update must not trigger an
+  endless release loop. Track docs-update failures separately and retry safely.
+- Metadata contains only verified published assets and records the release
+  commit. PR/offline docs builds use checked-in metadata without querying GitHub
+  or guessing from tags; release automation performs online asset verification.
+  Prerelease/draft/failed releases do not replace the stable install snippet.
+- Before the first CLI release, docs say it is not yet available rather than
+  emitting a broken download command. Generated supported-printer pages link to
+  installation instructions, keeping binary download facts in one place.
+
+## Delivery And Critical-Test Budget
+
+The user explicitly prioritizes full delivery in small, coherent PRs and asks
+for coordinated parallel agents. Parallelize renderer/registry, API/security/job
+services, CLI/SDK/release, and client/docs work at stable interfaces with explicit
+file ownership and integration review. Do not ship disconnected scaffolding as
+completed functionality or mistake a passing isolated module for the full feature.
+
+Write only critical tests: authentication/authorization and tenant isolation,
+atomic claims/idempotency and duplicate-output risks, crash/recovery paths,
+render/scan integrity, essential connected user flows, and release/generated
+artifact correctness. Existing acceptance lists name risks to verify, not a
+mandate for one test per bullet or exhaustive combinations. Do not write tests
+that repeat generated code, constants, types, or implementation statements already
+codified by the code. Preserve required checks and review, use behavioral fakes,
+and resolve integration defects rather than expanding low-value test coverage.

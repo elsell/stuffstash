@@ -20,7 +20,11 @@ templates produce immutable API-rendered artifacts for that registered size,
 consumed through a versioned contract rather than adapter-owned layouts.
 [Generated printing docs](printing-catalog-docs.spec.md) adds registry-derived
 printer/template/size catalogs and production-rendered PNG examples, automatically
-regenerated and checked in PR CI. This automation is specified, not implemented.
+regenerated and checked in PR CI. This automation is specified, not implemented. Each project release must publish
+version-stamped CLI binaries and checksums; verified release metadata refreshes
+concrete download commands in the docs. Implementation is now authorized as an
+active goal: orchestrate parallel agents and ship small coherent functional PRs,
+writing only critical security, recovery, integration, and artifact tests.
 Initial required printer/media support is only the USB QL-800 on Linux. Its
 media profile derives from the user's old script: 29 x 90 mm, 306 x 991
 raster. Actual USB completion reporting, media/scan behavior, and packaging remain

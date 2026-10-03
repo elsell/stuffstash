@@ -143,3 +143,12 @@ are reference documentation, not a user-managed media catalog in the app.
   possible, with unverified hardware behavior explicitly marked. Keep outstanding
   user-device checks in the shared user-testing checklist without blocking
   independent delivery or claiming those tests passed.
+
+## CLI Download Link Integration
+
+Generated printer pages link to the automatically updated CLI install section
+specified in [CLI release binaries](cli.spec.md#github-release-binaries-and-download-documentation).
+That section renders a pinned `curl` command for the newest successfully published
+stable CLI release from verified release metadata, including checksum steps.
+Catalog generation remains offline; release publication owns metadata refresh.
+Do not advertise a future adapter as supported by an older downloadable binary.
