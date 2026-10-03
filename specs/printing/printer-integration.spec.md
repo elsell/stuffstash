@@ -855,3 +855,24 @@ Chromium fixture review at 1280px/390px confirms one menu, the three editor
 commands versus one viewer command, keyboard opening, and Escape focus return
 from both download and queued-print surfaces. Controlled repository tests verify
 preview cancellation on asset/workspace changes and editor-access removal.
+
+### Browser credential replacement approval
+
+A pairing URL with the public tenant, inventory, and connector identifiers opens
+an existing-connector replacement task. Partial or invalid targeting fails closed;
+it never falls back to new registration. Preserve the exact target through sign-in.
+The page finds the authorized inventory, reads that connector, and displays both
+before requesting the pairing code. Review must identify a rotation-only pairing.
+Explicit approval sends the reviewed connector generation and pairing/code to the
+existing scoped credential-rotation API. No printer creation, discovery, or media
+selection occurs. A conflict retains the task for review again; permission loss
+cannot turn this into a different inventory or connector. Show success only after
+the API confirms approval. Credentials remain private to the CLI exchange.
+
+The replacement form reuses the existing authentication Card, labeled Input, and
+Button primitives. The named connector and inventory remain visible while entering
+the code, reviewing its fingerprint, and explicitly approving. Source/fake checks
+cover inaccessible target, stale generation, and separate review/approval. A
+controlled browser fixture verified 1280px and 390px form layout, keyboard review,
+no narrow horizontal overflow, and explicit success; this is not connected OIDC
+or a physical credential replacement claim.

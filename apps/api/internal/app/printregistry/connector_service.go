@@ -31,6 +31,7 @@ type ConnectorService struct {
 }
 
 type BeginPairing struct {
+	Rotation   bool
 	Name       string
 	PublicKey  []byte
 	Candidates []printing.PairingCandidate
@@ -65,7 +66,7 @@ func (s ConnectorService) Begin(ctx context.Context, input BeginPairing) (Pairin
 		return PairingStarted{}, errors.New("invalid connector policy")
 	}
 	input.Name = strings.TrimSpace(input.Name)
-	if !validPrinterName(input.Name) || len(input.PublicKey) != 32 || len(input.Candidates) < 1 || len(input.Candidates) > 16 {
+	if !validPrinterName(input.Name) || len(input.PublicKey) != 32 || (!input.Rotation && len(input.Candidates) < 1) || (input.Rotation && len(input.Candidates) != 0) || len(input.Candidates) > 16 {
 		return PairingStarted{}, apperrors.ErrInvalidInput
 	}
 	ids := map[string]bool{}
@@ -96,7 +97,7 @@ func (s ConnectorService) Begin(ctx context.Context, input BeginPairing) (Pairin
 		return PairingStarted{}, err
 	}
 	now := s.Registry.Clock.Now()
-	p := printing.Pairing{ID: printing.PairingID(s.Registry.IDs.NewID()), Name: input.Name, PublicKey: append([]byte(nil), input.PublicKey...), Candidates: append([]printing.PairingCandidate(nil), input.Candidates...), PollHash: s.Secrets.Digest(token), CodeHash: s.Secrets.Digest(code), State: printing.PairingPending, ExpiresAt: now.Add(s.Policy.PairingLifetime), CreatedAt: now}
+	p := printing.Pairing{Rotation: input.Rotation, ID: printing.PairingID(s.Registry.IDs.NewID()), Name: input.Name, PublicKey: append([]byte(nil), input.PublicKey...), Candidates: append([]printing.PairingCandidate(nil), input.Candidates...), PollHash: s.Secrets.Digest(token), CodeHash: s.Secrets.Digest(code), State: printing.PairingPending, ExpiresAt: now.Add(s.Policy.PairingLifetime), CreatedAt: now}
 	if err := s.Repository.CreatePrintPairing(ctx, p); err != nil {
 		return PairingStarted{}, registryError(err)
 	}

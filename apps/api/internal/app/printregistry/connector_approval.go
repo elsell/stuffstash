@@ -17,7 +17,7 @@ func (s ConnectorService) Approve(ctx context.Context, input ApprovePairing) (po
 		return ports.ConnectorRegistration{}, connectorError(err)
 	}
 	now := s.Registry.Clock.Now()
-	if p.State != printing.PairingPending || !p.ExpiresAt.After(now) || !s.Secrets.Matches(input.UserCode, p.CodeHash) || len(input.Bindings) < 1 || len(input.Bindings) > len(p.Candidates) {
+	if p.Rotation || p.State != printing.PairingPending || !p.ExpiresAt.After(now) || !s.Secrets.Matches(input.UserCode, p.CodeHash) || len(input.Bindings) < 1 || len(input.Bindings) > len(p.Candidates) {
 		return ports.ConnectorRegistration{}, apperrors.ErrInvalidInput
 	}
 	c := printing.Connector{ID: printing.ConnectorID(s.Registry.IDs.NewID()), Scope: input.Actor.Scope, ServiceAccountID: printing.ServiceAccountID(s.Registry.IDs.NewID()), Name: p.Name, State: printing.ConnectorPending, PublicKey: append([]byte(nil), p.PublicKey...), CredentialVersion: 1, Generation: 1, CreatedAt: now, UpdatedAt: now}

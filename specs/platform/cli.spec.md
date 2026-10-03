@@ -546,6 +546,28 @@ selection. The CLI never automatically retries with a new key. Cancellation read
 the current revision and relies on the API's compare-and-swap fence. Human output
 identifies queued jobs as queued and includes the creation's print-job ID.
 
+### Existing connector credential rotation
+
+`stuffstash connectors print rotate --connector ID` loads the existing connector's
+local identity, creates a fresh key-bound pairing, and directs the user to browser
+approval for that exact tenant, inventory, and connector. The verification URL
+carries those public identifiers as `tenantId`, `inventoryId`, and `connectorId`
+query parameters; these express intent and never authorize rotation. The browser
+requires authenticated configuration permission and explicit replacement approval
+through the existing credential-rotation command, rather than new registration.
+
+The CLI rejects an exchanged credential for any different server, tenant,
+inventory, or connector before saving or activating it. Expired local credentials
+may identify the target: only the human approval grants a replacement. A successful
+exchange persists the replacement before its activation heartbeat; failed storage
+leaves the old credential untouched, and failed activation retains the replacement
+for the worker's existing activation recovery. No credential or polling secret is
+included in the URL or output. Run the normal worker command after activation.
+
+Rotation starts an explicitly marked `rotation: true` pairing with no discovered
+printer candidates; it works while the printer is disconnected or powered off.
+Ordinary registration still requires candidates. Rotation-only pairings cannot
+use the new-registration approval command, and review exposes their purpose.
 ### Standalone Label Commands
 
 `labels templates` lists the authorized versioned catalog. `labels resolve URL`
