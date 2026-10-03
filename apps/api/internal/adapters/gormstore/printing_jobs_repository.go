@@ -34,12 +34,12 @@ func (s Store) ListPrintJobs(ctx context.Context, scope printing.Scope, printer 
 	if scope.TenantID == "" || scope.InventoryID == "" || limit < 1 || limit > 100 {
 		return nil, ports.ErrConflict
 	}
-	q := scopedPrintJobs(s.db.WithContext(ctx), scope).Where("id > ?", after)
+	q := scopedPrintJobs(s.db.WithContext(ctx), scope).Where(clause.Gt{Column: "id", Value: after})
 	if printer != "" {
 		q = q.Where(&printingJobModel{PrinterID: string(printer)})
 	}
 	var rows []printingJobModel
-	if err := q.Order("id ASC").Limit(limit).Find(&rows).Error; err != nil {
+	if err := q.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).Limit(limit).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	result := make([]printing.Job, 0, len(rows))

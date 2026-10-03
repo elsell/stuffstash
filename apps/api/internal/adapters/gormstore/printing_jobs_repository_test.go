@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"gorm.io/gorm/clause"
 	"testing"
 	"time"
 
@@ -38,7 +39,7 @@ func TestPrintingQueuePersistsIdempotencyAndRollsBackAuditFailure(t *testing.T) 
 	}
 	// Replay survives a restart and later printer configuration changes.
 	s = NewStore(s.db)
-	if err = s.db.Model(&printingPrinterModel{}).Where("id = ?", "printer").Update("retired", true).Error; err != nil {
+	if err = s.db.Model(&printingPrinterModel{}).Where(clause.Eq{Column: "id", Value: "printer"}).Update("retired", true).Error; err != nil {
 		t.Fatal(err)
 	}
 	if got, created, err := s.CreatePrintJob(ctx, input); err != nil || created || got.ID != job.ID {
@@ -51,7 +52,7 @@ func TestPrintingQueuePersistsIdempotencyAndRollsBackAuditFailure(t *testing.T) 
 	if _, err := s.GetPrintJob(ctx, printing.Scope{TenantID: "other", InventoryID: "inventory"}, job.ID); !errors.Is(err, ports.ErrPrintJobNotFound) {
 		t.Fatalf("cross tenant: %v", err)
 	}
-	if err = s.db.Model(&printingPrinterModel{}).Where("id = ?", "printer").Update("retired", false).Error; err != nil {
+	if err = s.db.Model(&printingPrinterModel{}).Where(clause.Eq{Column: "id", Value: "printer"}).Update("retired", false).Error; err != nil {
 		t.Fatal(err)
 	}
 	input.Job.ID = "second"
@@ -103,6 +104,17 @@ func TestPrintingQueueDurableClaimExpiryAndPrinterHold(t *testing.T) {
 	if err != nil || !found {
 		t.Fatalf("claim: %v %v", found, err)
 	}
+	var auditCountBefore, auditCountAfter int64
+	if err = s.db.Model(&auditRecordModel{}).Count(&auditCountBefore).Error; err != nil {
+		t.Fatal(err)
+	}
+	renewed, err := s.RenewPrintJob(ctx, ports.PrintLeaseRenewal{Authority: authority, Owner: owner, JobID: job.ID, Revision: job.Revision, Now: now.Add(time.Second), Lease: time.Minute})
+	if err != nil || renewed.Revision != job.Revision+1 {
+		t.Fatalf("renew: %v", err)
+	}
+	if err = s.db.Model(&auditRecordModel{}).Count(&auditCountAfter).Error; err != nil || auditCountBefore != auditCountAfter {
+		t.Fatalf("lease renewal created history: %v", err)
+	}
 	s = NewStore(s.db)
 	if recovered, err := s.FindPrintAttempt(ctx, scope, "connector", owner.AttemptID); err != nil || recovered.ID != job.ID {
 		t.Fatalf("lost response recovery: %v", err)
@@ -117,7 +129,7 @@ func TestPrintingQueueDurableClaimExpiryAndPrinterHold(t *testing.T) {
 	if _, err = s.UpdatePrintJob(ctx, ports.PrintJobUpdate{Scope: scope, PrinterID: "printer", JobID: job.ID, Authority: &authority, Now: now, Change: func(j *printing.Job, p printing.Printer) error { return j.Start(owner, now, j.Revision) }, Audit: auditFor}); err != nil {
 		t.Fatal(err)
 	}
-	input.Now = now.Add(time.Minute)
+	input.Now = now.Add(2 * time.Minute)
 	if _, found, err = s.ClaimPrintJob(ctx, input); err != nil || found {
 		t.Fatalf("uncertain printer redispatched: %v %v", found, err)
 	}
@@ -125,7 +137,7 @@ func TestPrintingQueueDurableClaimExpiryAndPrinterHold(t *testing.T) {
 	if err != nil || stored.Status != printing.JobUncertain {
 		t.Fatalf("uncertainty not durable: %v", err)
 	}
-	if err = s.db.Where("id = ?", "printer").First(&p).Error; err != nil || p.ActiveJobID != string(job.ID) {
+	if err = s.db.Where(clause.Eq{Column: "id", Value: "printer"}).First(&p).Error; err != nil || p.ActiveJobID != string(job.ID) {
 		t.Fatalf("uncertain hold lost: %v", err)
 	}
 }

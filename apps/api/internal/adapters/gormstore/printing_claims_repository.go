@@ -83,7 +83,7 @@ func (s Store) ClaimPrintJob(ctx context.Context, input ports.PrintClaim) (resul
 			return nil
 		}
 		var before printingJobModel
-		e = scopedPrintJobs(tx, input.Authority.Scope).Clauses(clause.Locking{Strength: "UPDATE"}).Where(&printingJobModel{PrinterID: p.ID, Status: string(printing.JobQueued), MediaFingerprint: p.MediaFingerprint}).Order("created_at ASC").Order("id ASC").First(&before).Error
+		e = scopedPrintJobs(tx, input.Authority.Scope).Clauses(clause.Locking{Strength: "UPDATE"}).Where(&printingJobModel{PrinterID: p.ID, Status: string(printing.JobQueued), MediaFingerprint: p.MediaFingerprint}).Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}}).Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).First(&before).Error
 		if errors.Is(e, gorm.ErrRecordNotFound) {
 			return nil
 		}

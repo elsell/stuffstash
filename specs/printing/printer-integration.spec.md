@@ -519,3 +519,8 @@ no caller treats a reservation or database registration as an authorization gran
   relationship before granting/synchronizing connector bindings; pending sync
   remains denied by the persistence fence. A human registration alone grants no
   service principal access.
+
+Lease renewal uses a dedicated repository command, under the same connector,
+binding, printer and job locks, that can change only the current owned attempt
+lease and job revision/timestamp. It does not emit a history record and cannot
+be used as a general mutation or audit bypass.

@@ -42,7 +42,17 @@ type PrintJobUpdate struct {
 	Audit     PrintJobAudit
 }
 
+type PrintLeaseRenewal struct {
+	Authority printing.ConsumerAuthority
+	Owner     printing.AttemptAuthority
+	JobID     printing.JobID
+	Revision  uint64
+	Now       time.Time
+	Lease     time.Duration
+}
+
 type PrintJobRepository interface {
+	RenewPrintJob(context.Context, PrintLeaseRenewal) (printing.Job, error)
 	CreatePrintJob(context.Context, PrintJobCreate) (printing.Job, bool, error)
 	GetPrintJob(context.Context, printing.Scope, printing.JobID) (printing.Job, error)
 	ListPrintJobs(context.Context, printing.Scope, printing.PrinterID, int, string) ([]printing.Job, error)
