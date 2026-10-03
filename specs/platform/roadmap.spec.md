@@ -19,11 +19,13 @@ a printer alone does not enable automatic output. Physical output remains unveri
 
 The user authorized specification of QR labels/scanning and registered CLI print
 consumers. Design PR #337 is merged; implementation is underway in isolated
-worktrees. The first slice adds public CLI OIDC discovery, separately configured
-audiences, provider-gated device sign-in, and bundled Dex client registration.
-Generated CLI/auth/inventory operations and label rendering are proceeding in
-parallel. Printer queues, connectors, client flows, and release publishing remain
-open; no physical output has been verified. See
+worktrees. Merged slices include CLI OIDC discovery and human login, generated Go SDK,
+server rendering and stable label resolution, the Linux QL-800 adapter, and
+registered printer configuration. Human queue create/read/list/cancel and immutable
+artifact persistence now pass HTTP isolation/retry checks; production PostgreSQL
+verifies exclusive claims and uncertain reservations. Connector pairing and worker
+integration, retention, inventory defaults, and client job controls remain open.
+No physical output has been verified. See
 [asset labels](../printing/asset-labels.spec.md),
 [printer integration](../printing/printer-integration.spec.md), and [CLI](cli.spec.md).
 Sequence: contract/security and job-state tests; API label/registration/job slice;

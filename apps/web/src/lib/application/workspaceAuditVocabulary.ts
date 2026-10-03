@@ -1,6 +1,10 @@
 import { t } from '$lib/presentation/localization';
 
 const actionMessages = {
+ "print_job.queued": "audit.action.print_job.queued",
+ "print_job.viewed": "audit.action.print_job.viewed",
+ "print_job.listed": "audit.action.print_job.listed",
+ "print_job.canceled": "audit.action.print_job.canceled",
   "printer.registered": "audit.action.printer.registered",
   "printer.viewed": "audit.action.printer.viewed",
   "printer.listed": "audit.action.printer.listed",
@@ -125,6 +129,7 @@ const actionMessages = {
 } as const;
 
 const targetMessages = {
+ "print_job": "audit.target.print_job",
   "archive_job": "audit.target.archive_job",
   "notification_device": "audit.target.notification_device",
   "notification": "audit.target.notification",
