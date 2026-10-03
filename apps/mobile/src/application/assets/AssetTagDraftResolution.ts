@@ -1,3 +1,4 @@
+import type { InventoryCommandScope } from '../home/InventorySummaryRepository';
 import { CatalogRecoveryError } from '../shared/CatalogRecoveryError';
 import { assetTagKeyFromDisplayName } from '../../domain/assets/AssetSummary';
 
@@ -12,7 +13,7 @@ export type CreateAssetTagDraft = {
 };
 
 export type AssetTagCreateRepository = {
-  createAssetTag?: (input: CreateAssetTagDraft) => Promise<{ readonly id: string }>;
+  createAssetTag?: (input: CreateAssetTagDraft & { readonly scope?: InventoryCommandScope }) => Promise<{ readonly id: string }>;
 };
 
 export type InlineAssetTagResolution =
@@ -170,7 +171,8 @@ export function reconcilePendingAssetTagDrafts(input: {
 
 export async function createPendingAssetTags(
   repository: AssetTagCreateRepository,
-  pendingTags: readonly CreateAssetTagDraft[]
+  pendingTags: readonly CreateAssetTagDraft[],
+  scope?: InventoryCommandScope
 ): Promise<readonly string[]> {
   if (pendingTags.length === 0) {
     return [];
@@ -186,6 +188,7 @@ export async function createPendingAssetTags(
     }
     const color = normalizeTagColor(tag.color ?? '');
     created.push(await repository.createAssetTag({
+      ...(scope ? { scope } : {}),
       displayName,
       color
     }));

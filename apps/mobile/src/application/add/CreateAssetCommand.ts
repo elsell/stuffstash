@@ -48,7 +48,7 @@ export class CreateAssetCommand {
     let attempt = requestIdentity ? this.printAttempts.get(requestIdentity) : undefined;
     if (!attempt) {
       const reconciledTags = reconcilePendingAssetTagDrafts({ selectedTagIds: input.tagIds ?? [], pendingTags: input.newTags ?? [], activeTags: input.activeTags ?? [] });
-      const createdTagIds = await createPendingAssetTags(this.inventories, reconciledTags.pendingTags).catch(error => { if (input.printRequest) throw new PrintRequestRejected(); throw error; });
+      const createdTagIds = await createPendingAssetTags(this.inventories, reconciledTags.pendingTags, input.printRequest?.scope).catch(error => { if (input.printRequest) throw new PrintRequestRejected(); throw error; });
       const tagIds = [...reconciledTags.tagIds, ...createdTagIds];
       attempt = { ambiguous: false, input: {
         kind: input.kind ?? 'item', expiration: input.expiration, customAssetTypeId: input.customAssetTypeId,

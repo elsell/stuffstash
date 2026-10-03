@@ -461,3 +461,10 @@ exposes View print job; parent creation never inherits the item print switch.
 The API client accepts `createAsset(tenantId, inventoryId, input, idempotencyKey?)`;
 `input.printLabel` comes from the generated atomic selection contract and the
 mapped result retains optional `printJobId`. No extra enqueue call is made.
+
+Every pending-tag write that prepares a create-and-print request carries its
+captured tenant/inventory scope. The mobile adapter checks that scope against the
+current selection before each write and uses the captured IDs in the API request.
+Changing inventory while an earlier tag write is in flight may finish that write
+in its original inventory, but no later tag or asset may target the replacement
+inventory. The final atomic create retains its own scope fence.

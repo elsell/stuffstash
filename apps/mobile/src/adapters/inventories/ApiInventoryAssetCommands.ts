@@ -65,11 +65,13 @@ export class ApiInventoryAssetCommands {
 
   async createAssetTag(input: CreateInventoryAssetTagInput): Promise<AssetTagSummary> {
     const selected = await this.directory.selectedForCommand();
-    const tag = await this.client.createAssetTag(selected.tenant.id, selected.inventory.id, {
+    if (input.scope && (input.scope.tenantId !== selected.tenant.id || input.scope.inventoryId !== selected.inventory.id)) throw new PrintRequestRejected();
+    const scope = input.scope ?? { tenantId: selected.tenant.id, inventoryId: selected.inventory.id };
+    const tag = await this.client.createAssetTag(scope.tenantId, scope.inventoryId, {
       displayName: input.displayName,
       ...(input.color !== undefined ? { color: input.color } : {})
     });
-    this.observeMutation('asset_tag_created', selected.tenant.id, selected.inventory.id);
+    this.observeMutation('asset_tag_created', scope.tenantId, scope.inventoryId);
     return mapAssetTag(tag);
   }
 
