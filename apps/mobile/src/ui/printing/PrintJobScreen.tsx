@@ -7,7 +7,11 @@ import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsLoadingRow, useSettingsListStyles } from '../screens/SettingsList';
 import { printJobStatus } from './PrintingStatus';
-import { usePrintingTask } from './usePrintingTask';
+import { usePrintingTask, type PrintingPolling } from './usePrintingTask';
+const jobPolling: PrintingPolling<PrintJob> = {
+  intervalMilliseconds: 5000, maximumDelayMilliseconds: 60000,
+  shouldContinue: job => !canReprint(job),
+};
 export function PrintJobScreen({ workspace, scope, jobId, canPrint, onReprint }: { readonly workspace: PrintingWorkspace; readonly scope: PrintScope; readonly jobId: string; readonly canPrint: boolean; readonly onReprint?: (id: string) => void }) {
   const { styles, palette } = useSettingsListStyles();
   const pendingResolution = useRef<PendingResolution | undefined>(undefined);
@@ -21,7 +25,7 @@ export function PrintJobScreen({ workspace, scope, jobId, canPrint, onReprint }:
     }
     return next;
   }, [workspace, scope.tenantId, scope.inventoryId, jobId]);
-  const task = usePrintingTask(load, jobId, 5000); const job = task.data;
+  const task = usePrintingTask(load, jobId, jobPolling); const job = task.data;
   const [busy, setBusy] = useState(false); const running = useRef(false); const [failed, setFailed] = useState(false);
   const resolved = (next: PrintJob) => { pendingResolution.current = undefined; task.setData(next); };
   const refresh = () => { explicitRefresh.current = true; task.reload(); };

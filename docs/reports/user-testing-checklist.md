@@ -230,3 +230,11 @@ label size, and confirm that unsaved default remains intact. Viewers must see th
 size without edit controls. Queued labels retain their original media. Check
 picker/back behavior and enlarged text on native devices; status remains
 unverified beyond source and stateful-fake checks.
+
+### Mobile print-status lifecycle
+
+- [ ] On a native build, watch an active print job, background the app, then return.
+  Status should refresh on return. Completed, failed, and canceled jobs should stop
+  automatic reads; Refresh status remains available. With networking unavailable,
+  retries should slow down and recover when networking returns. Source-level
+  clock-controlled tests pass; this native lifecycle check remains unverified.
