@@ -379,8 +379,8 @@ backoff. Duration values use Go notation, such as `30s` or `5m`.
 
 ## API: Labels (development builds)
 
-These settings apply to the label identity and private download API. Client
-printing/scanning and physical printer delivery are separate work in progress.
+These settings enable asset label downloads and scanning in the app and website.
+Direct delivery through registered physical printers is separate work in progress.
 Invalid values fail startup. An empty label base disables label operations.
 
 | Variable | Default | Purpose |

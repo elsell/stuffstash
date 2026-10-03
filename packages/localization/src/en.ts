@@ -1,3 +1,5 @@
+import { labelWebMessages } from './labels-web';
+import { labelMobileMessages } from './labels-mobile';
 import { archiveMessages } from './archive';
 import { workflowMessages } from './workflow';
 import { mobileMessages } from './mobile';
@@ -6,6 +8,8 @@ import type { Catalog } from './translator';
 
 /** English source catalog. Keys describe presentation context, never wire values. */
 export const en = {
+  ...labelWebMessages,
+  ...labelMobileMessages,
   ...archiveMessages,
   ...workflowMessages,
   ...mobileMessages,

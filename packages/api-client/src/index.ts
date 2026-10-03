@@ -10,3 +10,5 @@ export { ExpirationClient, type ExpirationWorkspaceOptions, type ExpirationWorks
 
 export { InventoryExportClient, type InventoryExportFormat } from "./inventoryExportClient";
 export { ArchiveClient, type ArchiveJob, type ArchivePreview, type ArchiveScope } from './archiveClient';
+export {LabelsClient, type LabelMedia, type LabelTemplateSelection, type LabelRenderRequest} from './labelsClient';
+export {parseLabelLink, LabelLinkError, type LabelReference} from './labelLink';
