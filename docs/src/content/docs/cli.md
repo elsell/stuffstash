@@ -273,6 +273,9 @@ for available templates and stock.
 
 PNG and PDF downloads are checked against the server's checksum before saving.
 The output path must be new: an existing file or symlink is never overwritten.
+Saving label files currently requires Linux or macOS. Windows refuses file output
+until a private Windows file adapter is available; listing templates, resolving
+labels, and requesting prints still work.
 `--json` reports the path, format, and checksum without mixing image bytes into
 terminal output. Saving a label does not enqueue a print job.
 

@@ -563,3 +563,8 @@ PNG/PDF content type, a bounded 16 MiB download, and SHA-256 before publishing.
 Write a private file atomically without replacing any existing path or symlink;
 failed or canceled downloads leave no output file. Output reports the path, format
 and digest through the presentation port, never binary bytes mixed with JSON.
+
+Private label-file publication initially supports Linux and macOS. Windows must
+fail closed without creating a file until a Windows adapter establishes and verifies
+an owner-only DACL; Unix mode 0600 alone is not evidence of Windows privacy.
+Other Windows label and queue commands remain supported.

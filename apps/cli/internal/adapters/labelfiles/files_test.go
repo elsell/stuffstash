@@ -1,10 +1,11 @@
+//go:build !windows
+
 package labelfiles
 
 import (
 	"context"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 )
 
@@ -23,7 +24,7 @@ func TestPublicationPreservesExistingFilesAndLeavesNoPartialOutput(t *testing.T)
 		t.Fatalf("original changed: %q %v", data, err)
 	}
 	info, _ := os.Stat(path)
-	if runtime.GOOS != "windows" && info.Mode().Perm() != 0600 {
+	if info.Mode().Perm() != 0600 {
 		t.Fatal("output is not private")
 	}
 	link := filepath.Join(dir, "link.png")
