@@ -2115,6 +2115,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/print-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID print settings */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-print-settings"];
+        /** Put tenants by tenant ID inventories by inventory ID print settings */
+        put: operations["put-tenants-by-tenant-id-inventories-by-inventory-id-print-settings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/printer-profiles": {
         parameters: {
             query?: never;
@@ -3495,6 +3513,19 @@ export interface components {
             /** Format: int64 */
             protocolVersion: number;
         };
+        InventoryPrintSettings: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/InventoryPrintSettings.json
+             */
+            readonly $schema?: string;
+            defaultPrinterId: string | null;
+            printOnCreateDefault: boolean;
+            /** Format: int64 */
+            revision: number;
+            template: components["schemas"]["PrintSettingsTemplate"];
+        };
         InventoryResponse: {
             access: components["schemas"]["AccessResponse"];
             id: string;
@@ -3930,6 +3961,15 @@ export interface components {
             outcome: components["schemas"]["PrintOutcome"];
             /** Format: int64 */
             revision: number;
+        };
+        PrintSettingsOptions: {
+            showReference: boolean;
+        };
+        PrintSettingsTemplate: {
+            id: string;
+            options: components["schemas"]["PrintSettingsOptions"];
+            /** Format: int32 */
+            version: number;
         };
         Printer: {
             adapterId: string;
@@ -4376,6 +4416,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["InstanceResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeInventoryPrintSettings: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeInventoryPrintSettings.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["InventoryPrintSettings"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeInventoryResponse: {
@@ -11746,6 +11796,82 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopePrintJob"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-print-settings": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInventoryPrintSettings"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "put-tenants-by-tenant-id-inventories-by-inventory-id-print-settings": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InventoryPrintSettings"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInventoryPrintSettings"];
                 };
             };
             /** @description Error */

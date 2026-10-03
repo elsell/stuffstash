@@ -19,6 +19,8 @@ import (
 )
 
 type Service struct {
+	Settings              ports.PrintSettingsRepository
+	SelectionValidator    ports.LabelSelectionValidator
 	Health                ports.ConnectorRepository
 	PrintingAuthorization ports.PrintingAuthorization
 	ReportMaxAge          time.Duration
