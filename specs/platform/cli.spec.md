@@ -93,6 +93,12 @@ stuffstash print-jobs reprint <job-id>
 - Human auth is needed for inventory commands. An unattended print worker uses
   the browser-approved, restricted connector credential instead; pairing may be
   approved from another device, so a headless USB host needs no local browser.
+  This credential authenticates a service account; the API authorizes printer
+  access with SpiceDB on every operation. It does not encode a trusted local
+  permission list, and the CLI never connects directly to SpiceDB.
+- Permission changes take effect without replacing connector credentials. Honor
+  authorization-pending state during pairing and fail-closed denial/outage during
+  work; credential rotation retains the same service-account identity.
 - Store secrets behind a credential-store port using an OS store where usable;
   on headless Linux support an explicitly configured owner-only credential file,
   refuse unsafe permissions, and write atomically. Do not copy arbitrary shell

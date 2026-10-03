@@ -21,7 +21,8 @@ connectors never publish status directly to other clients. See
   physical-printer sharing and scheduling are deferred. Reject known duplicate
   device bindings during registration; a connector must not bind a device twice.
 - A connector is an explicitly registered CLI installation within that inventory,
-  with ID, name, enabled/revoked state, authorized printer IDs, credential version,
+  with ID, name, enabled/revoked state, service-principal ID, approved binding
+  records with authorization-sync state, credential version,
   version/capability report, and server-observed heartbeat timestamp.
 - One connector may serve multiple explicitly approved printers. Several approved
   connectors may be eligible for a logical printer, but one local process per
@@ -70,10 +71,11 @@ connectors never publish status directly to other clients. See
   activated by a first authenticated heartbeat within the pairing activation
   window. No permanent unowned credential may remain active.
 - Store connector credentials hashed server-side and securely locally. Bind them
-  to connector, tenant, inventory, authorized printers, expiry, and version.
+  to the connector service principal, registration, expiry, and version.
+  Credentials establish identity, not a self-contained printer permission list.
   Rotation invalidates the old version; revocation applies on the next request.
   Never put secrets in URLs, command arguments, logs, job artifacts, or lists.
-- Connector credentials may heartbeat, report assigned printer status, claim
+- Authenticated connectors authorized by SpiceDB may heartbeat, report assigned printer status, claim
   eligible jobs, retrieve only their claimed artifacts, and report attempts.
   They cannot browse assets, create inventory content, register arbitrary
   printers, alter permissions, or reuse human endpoints as a human principal.
@@ -83,6 +85,56 @@ connectors never publish status directly to other clients. See
   connector ID. Reject stale/revoked credentials even with a valid claim token.
 - Pairing/lease/freshness/credential lifetimes and rate limits are validated
   environment-backed policy supplied through injected configuration and clocks.
+
+## Connector Authorization Through SpiceDB
+
+- Authenticate the credential as a distinct `service_account` principal. It is
+  neither the approving human nor a `user` principal. Approval does not copy the
+  human's inventory role to the connector.
+- Use the authorization port and SpiceDB for connector/printer access, as defined
+  in [SpiceDB schema](../identity-access/spicedb-schema.spec.md#planned-print-connector-authorization).
+  The API, not the CLI, calls SpiceDB. Database binding records capture approved
+  relationship intent and lifecycle; they are not an independent allowlist that
+  can grant access when SpiceDB denies or is unavailable.
+- A `print_connector#agent` relationship grants the service principal permission
+  to report its own connector heartbeat. A `printer#consumer` relationship grants
+  access to that printer's safe configuration/status, reporting, and work queue.
+  Both resources link explicitly to their inventory. No human inventory `view`,
+  `edit_asset`, or `configure` permission is granted to service accounts.
+- Every consumer request checks `print_connector.report` on its authenticated
+  registration. Each printer operation additionally checks the corresponding
+  `printer.view_consumer`, `printer.report`, or `printer.consume` permission.
+  For artifact reads, attempt recovery, renew/start/outcome/reconciliation, derive
+  the printer from the scoped persisted job and check `printer.consume`. Claim
+  ownership/session/token rules remain additional requirements, never substitutes
+  for authorization. Batch reports and discovery responses authorize each printer.
+- Resource tenancy, inventory equality, active registration, credential validity,
+  binding revocation/sync state, and operation-specific printer lifecycle rules
+  are independent deny-only checks. A mistaken cross-inventory relationship
+  cannot bypass these boundaries. Retirement blocks new claim/start/artifact
+  delivery, but an otherwise authorized owner may read, report the outcome of,
+  or reconcile an existing attempt. Explicit connector/binding revocation still
+  denies access; retirement alone must not strand completion evidence.
+- Approval/binding changes persist relationship intent, audit, and authorization
+  outbox events atomically. New grants remain pending until relationship delivery
+  succeeds; API responses expose pending state and CLI retry guidance. Do not
+  activate the pairing heartbeat deadline until its required grants are ready.
+- Binding removal immediately denies that binding while its relationship removal
+  is pending; full connector revocation also invalidates its credential. These
+  guards prevent stale SpiceDB relationships from granting revoked access during
+  outbox failure. Regrant requires a new binding generation and completed sync.
+- Outbox reconciliation must serialize by resource/binding generation and apply
+  the latest desired relationship state; delayed grants must not resurrect a
+  revoked relationship. Retries and repeated removals are idempotent.
+- Use fully consistent SpiceDB checks for consumer operations initially; do not
+  cache allows across requests. Fail closed on timeout/error/indeterminate result.
+  An operation already authorized/in flight may finish; already submitted device
+  output cannot be revoked. Loss of authorization before the next API operation
+  stops further output and uses the existing uncertain-outcome recovery policy.
+- The credential answers who, SpiceDB answers which printer/operation, and the
+  claim token answers which current attempt. Rotating credentials preserves the
+  service-principal identity and relationships; changing permissions requires
+  authorized relationship changes, not minting a more privileged credential.
 
 ## Atomic Claims And Attempts
 
@@ -203,14 +255,17 @@ Pairing uses `/print-connector-pairings` (create),
 `/{pairingId}/credential` (secret/key-bound exchange); all are POST. Pairing `GET /print-connector-pairings/{pairingId}` status polling
 uses the secret polling token in a request header rather than in the URL.
 
-Connector operations use `/print-consumer` and derive scope from credentials:
+Connector operations use `/print-consumer`; credentials authenticate the service
+principal, while scoped persistence and SpiceDB checks determine permitted access:
 `POST /heartbeat`, `POST /printer-reports`, `POST /claims`,
 `POST /claims/{attemptId}/renewal`, `POST /claims/{attemptId}/start`,
 `POST /claims/{attemptId}/outcome`, `POST /attempts/{attemptId}/reconciliation`,
 and `GET /claims/{attemptId}/content`. Claim token and revision are required on
 claim mutations/artifact access. `GET /attempts?status=unsettled` and
 `GET /attempts/{attemptId}` provide recovery reads restricted to attempts owned
-by the authenticated connector and its currently authorized printer bindings.
+by the authenticated connector and authorized through current SpiceDB
+`printer.consume` checks plus active scoped bindings and the operation-specific
+lifecycle rules above (including recovery reads for retired printers).
 Return job/attempt phase, lease validity, session owner, current revision, and safe
 outcome evidence; never unrelated jobs or asset content. A restarted session can
 inspect an earlier session's attempt and reconcile its evidence, but cannot use
@@ -248,6 +303,12 @@ message broker, public webhook receiver, or persistent event stream is required.
 
 ## Required Tests And Acceptance Evidence
 
+- Real-SpiceDB tests must prove grant/revoke, wrong-service-principal denial,
+  no human-role inheritance, cross-inventory edge rejection, permission loss
+  between claim and start, credential rotation without privilege change,
+  pending outbox grants/removals, reordered grant/revoke events, and fail-closed
+  SpiceDB outages, and retirement between start and outcome/reconciliation.
+  No database-only authorization fallback is permitted.
 - Real HTTP adversarial tests before endpoints: anonymous, wrong-role,
   cross-tenant/inventory/printer, forged IDs, expired/revoked credentials, pairing
   guessing/replay/approval races, wrong key, stolen code without polling secret,

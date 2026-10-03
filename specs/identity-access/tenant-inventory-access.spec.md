@@ -366,4 +366,10 @@ explicit machine-authentication extension, not a replacement for human OIDC.
 Inventory `view` permits safe printer/status discovery and label rendering;
 `edit_asset` permits physical print requests/cancellation/reprint, and `configure`
 permits registration, bindings, defaults, and revocation. Connector credentials
-never inherit human permissions. Adversarial boundary tests precede implementation.
+authenticate distinct service accounts and never inherit human permissions.
+SpiceDB connector/printer relationships authorize every consumer operation;
+registration records are lifecycle and relationship-intent data, not a parallel
+allowlist. Current claim ownership is an additional gate. See the
+[planned schema](spicedb-schema.spec.md#planned-print-connector-authorization)
+for outbox synchronization, immediate revocation fences, and fail-closed checks.
+Adversarial boundary tests precede implementation.
