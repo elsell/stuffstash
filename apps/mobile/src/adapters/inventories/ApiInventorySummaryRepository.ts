@@ -1,3 +1,4 @@
+import { CatalogRecoveryError } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import { assertReadActive } from '../../application/shared/ReadRequest';
 import { ReadPageGuard } from '../shared/ReadPageGuard';
@@ -292,7 +293,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       candidate.id === locationIdValue && candidate.kind === 'location'
     );
     if (!location) {
-      throw new Error(t('recovery.locationUnavailable'));
+      throw new CatalogRecoveryError('recovery.locationUnavailable');
     }
     const containedAssets = assets.filter((candidate) =>
       candidate.id !== location.id &&

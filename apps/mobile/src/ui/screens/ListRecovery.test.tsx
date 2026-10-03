@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { expect, it } from 'vitest';
 import { InventoryAssetsQuery } from '../../application/assets/InventoryAssetsQuery';
 import { LocationAssetsQuery } from '../../application/locations/LocationAssetsQuery';
@@ -31,6 +32,10 @@ for (const surface of ['inventory', 'location-content', 'locations'] as const) {
       await h.render(<MobileServerStateProvider client={client} scopeId="session" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider>{screen}</AppFeedbackProvider></MobileServerStateProvider>);
       await settle(); await settle();
       expect(h.byText('Could not load')).toBeDefined();
+      if (surface === 'location-content') {
+        expect(h.allText()).not.toContain('Connection unavailable');
+        expect(h.allText()).toContain(t('mobile.LocationAssetsRouteScreen.couldNotLoadLocation'));
+      }
       await h.press(h.byLabel('Retry'));
       await settle();
       expect(calls).toBe(2);

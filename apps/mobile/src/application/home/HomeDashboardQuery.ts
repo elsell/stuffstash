@@ -1,3 +1,4 @@
+import { CatalogRecoveryError } from '../shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import type { AssetCardViewModel } from '../assets/AssetViewModels';
 import { toAssetCardViewModel } from '../assets/AssetViewModels';
@@ -46,13 +47,13 @@ export class HomeDashboardQuery {
       workspace.inventories[0];
 
     if (!inventory) {
-      throw new Error(t('inventory.workspaceEmpty'));
+      throw new CatalogRecoveryError('inventory.workspaceEmpty');
     }
 
     const tenant = workspace.tenants.find((item) => item.id === inventory.tenantId);
 
     if (!tenant) {
-      throw new Error(t('inventory.tenantMissing'));
+      throw new CatalogRecoveryError('inventory.tenantMissing');
     }
 
     const overview = createInventoryOverview(tenant, inventory, workspace.inventories);
