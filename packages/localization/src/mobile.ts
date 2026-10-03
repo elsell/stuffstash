@@ -1,5 +1,7 @@
 /** mobile presentation messages. */
 export const mobileMessages = {
+  "audit.action.print_settings.viewed": "Print settings viewed",
+  "audit.action.print_settings.updated": "Print settings updated",
   "mobile.AppKeyboardAccessoryios.hidesTheKeyboardWithoutSubmitting": "Hides the keyboard without submitting",
   "mobile.AppKeyboardAccessoryios.dismissKeyboard": "Dismiss keyboard",
   "mobile.AppearancePicker.appearanceNotSaved": "Appearance not saved",
