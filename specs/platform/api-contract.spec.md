@@ -46,7 +46,7 @@ This spec does not define domain-specific endpoints. Domain specs must define th
 - Production exposure of interactive API documentation must be explicitly specified and security reviewed before it is enabled.
 - Generated OpenAPI output must include paths, methods, request bodies, response bodies, error bodies, status codes, authentication schemes, and pagination parameters.
 - The generated OpenAPI artifact must be reproducible from pinned dependencies and tool versions.
-- Client API code must be generated from the OpenAPI contract for web and mobile clients unless a spec explicitly justifies an exception.
+- Client API code must be generated from the OpenAPI contract for web, mobile, and CLI clients unless a spec explicitly justifies an exception.
 - Generated client code must not be edited manually.
 - Generated OpenAPI output and generated client code must have drift checks in pre-commit or CI once generation exists.
 
@@ -224,3 +224,12 @@ REST request body schemas must have domain-specific names when multiple adapter 
 ### Browser method parity (2026-09-11)
 
 The configured browser origin must be able to invoke every published REST method, including PUT for reminder preferences, individual read state and mark-all-read. Advertised preflight methods and preflight validation use one shared allowlist. Add an HTTP contract test that compares published OpenAPI operation methods with accepted preflights so future method additions cannot silently break browser clients. TRACE and unknown headers remain denied; exact origins, bearer authentication and tenant/recipient authorization are unchanged. Test the notification flow with browser Origin/preflight headers at the HTTP boundary, not only intercepted browser fixture responses.
+
+## Planned Go CLI SDK
+
+[CLI](cli.spec.md) requires a generated Go SDK from the same canonical
+`packages/api-client/openapi.json` as the TypeScript client. All Stuff Stash CLI
+API operations use that SDK behind an adapter. The planned generator version,
+configuration, output, and reproducible generation/drift checks must be established
+before code; no hand-maintained duplicate contract or generated-file edits.
+This extends client coverage without changing Huma's code-first server ownership.

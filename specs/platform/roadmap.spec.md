@@ -11,7 +11,9 @@ CLI pairing and built-in Linux QL-800 adapter; web/mobile printing and scanning;
 physical-device evidence and operator documentation. Implement atomic claims,
 separate connector/printer health, and safe uncertain-outcome recovery together.
 Connector credentials authenticate service accounts; SpiceDB relationships scope
-printer access, and claim tokens separately fence print attempts.
+printer access, and claim tokens separately fence print attempts. The CLI requires
+a generated Go SDK from the shared OpenAPI artifact and supports browser PKCE
+and provider-enabled device-code human login.
 Initial media profile derives from the user's old script: 29 x 90 mm, 306 x 991
 raster. Actual USB completion reporting, media/scan behavior, and packaging remain
 unverified. Remote wake/smart outlets and a shared hosted QR resolver are outside

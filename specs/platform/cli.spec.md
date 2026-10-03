@@ -21,6 +21,7 @@ The intended command vocabulary is:
 
 ```text
 stuffstash login --server <https-url>
+stuffstash login --server <https-url> --device-code
 stuffstash logout
 stuffstash inventories list
 stuffstash assets list --inventory <id>
@@ -82,10 +83,36 @@ stuffstash print-jobs reprint <job-id>
 - Use a loopback callback bound only to 127.0.0.1 on an ephemeral port and a
   one-time path/state. Validate issuer, audience, nonce, redirect, and returned
   state. Require provider support for the registered loopback redirect policy;
-  fail with setup guidance if unsupported. Device-code login is deferred rather
-  than assumed to exist on every OIDC provider.
+  fail with setup guidance if unsupported.
+- Support RFC 8628 device authorization for human login through `--device-code`
+  in the first release. It requires the configured issuer to advertise a device
+  authorization endpoint and the operator to enable the grant for the public CLI
+  client. Do not assume every OIDC provider supports it or ship a client secret.
+- Show the provider verification URL and user code; the user approves in a browser
+  on another device. No callback listener or local browser is required. Keep the
+  secret device code out of output/logs and clear pending state on completion,
+  denial, expiration, or cancellation. Poll at the provider's interval; honor
+  `authorization_pending`, `slow_down`, `access_denied`, and `expired_token`, with
+  bounded backoff on transport failures and a hard expiry deadline.
+- Device flow uses the configured issuer's discovered HTTPS endpoints, not
+  arbitrary endpoints from input. Validate the returned OIDC ID token's signature,
+  issuer, CLI audience, and expiry before storing a session. The provider must
+  support issuing an ID token for this grant and the requested `openid` scope;
+  an OAuth access-token-only response is incompatible with the current API and
+  must fail with guidance, not be reinterpreted as an ID token. Apply device-flow
+  validation independently; browser-only callback state/PKCE rules do not imply
+  that device flow uses a loopback callback.
+- Both login methods create the same human principal and obey the same SpiceDB
+  permissions. Device authorization does not register a print consumer or mint a
+  service-account credential. Connector pairing remains a separate API workflow.
+- If device flow is unavailable, fail explicitly and explain browser login with
+  PKCE where usable; never start a browser silently or fall back to password
+  collection. Test the bundled pinned Dex setup and document provider prerequisites
+  before claiming headless human login works. Standard reference:
+  [RFC 8628](https://www.rfc-editor.org/rfc/rfc8628).
 - Public CLI auth discovery is `GET /auth/cli/config`, containing issuer, public
-  client ID, scopes, and allowed loopback redirect policy only. It is additive to
+  client ID, scopes, allowed loopback redirect policy, and enabled login methods.
+  Device-flow availability must reflect issuer discovery and operator policy. It is additive to
   mobile auth discovery and must not expose secrets or change its callback rules.
 - Match the existing API's verified OIDC ID-token bearer convention using the
   explicitly allowed CLI audience. Refresh through the configured issuer when
@@ -178,9 +205,27 @@ stuffstash print-jobs reprint <job-id>
 - Add `apps/cli` to the Go workspace and root test/format/structural-hook coverage
   when implementation begins. No CLI entrypoint, adapter, or source file is
   exempt from project architecture, observability, or size rules.
-- API clients are generated from the pinned Huma OpenAPI contract with a reviewed
-  pinned Go generator recorded before use. Generated transport stays behind a
-  CLI API port; do not import the API module's `internal` packages.
+- Every Stuff Stash API call, including auth configuration, pairing, printer
+  status, claim/recovery, and artifact endpoints, uses a Go SDK automatically
+  generated from the same Huma-produced OpenAPI artifact used by web/mobile:
+  `packages/api-client/openapi.json`. The existing client there is TypeScript;
+  a Go SDK does not yet exist. No separately hand-maintained Go API schema or
+  endpoint/DTO layer is permitted.
+- Generate the Go SDK into `apps/cli/internal/adapters/httpapi/generated` with a
+  reviewed pinned generator recorded in the tooling spec before implementation.
+  Keep generated transport behind a project-owned CLI API port; map DTOs there
+  and never import the API module's `internal` packages or edit generated files.
+- Add root `make cli-client-generate` to regenerate the canonical OpenAPI artifact
+  first and then the Go SDK reproducibly. Add `make cli-client-check-generated`
+  to regenerate in isolation and fail on missing, stale, or unexpected output.
+  CI and applicable pre-commit checks must catch drift from API route/DTO,
+  OpenAPI artifact, generator configuration/version, or SDK changes. Retain the
+  existing TypeScript generation and drift checks from the same source.
+- SDK authentication hooks, streaming, timeouts, and error mapping are transport
+  concerns behind the adapter. No hand-written REST escape hatch for printer
+  operations. Provider OIDC discovery/token/device endpoints are external
+  protocols behind the auth adapter, not Stuff Stash OpenAPI endpoints; use a
+  reviewed pinned standards implementation for those integrations.
 - Unit/application tests use behavioral in-memory fakes for API, clock, printer,
   credential storage, journal, and output. Adapter integration tests verify actual
   parsing/transport and atomic persistent recovery, not mock call sequences.
@@ -188,6 +233,11 @@ stuffstash print-jobs reprint <job-id>
   expired tokens, cross-tenant scope, wrong role, pairing/revocation, and allowed
   human versus connector operations. CLI subprocess tests cover stable JSON,
   exit statuses, secrets absent from logs, cancellation, and restart recovery.
+- Device-flow tests cover supported/unsupported discovery and operator policy,
+  successful headless login, wrong issuer/audience/signature, access-token-only
+  response rejection, expiry/denial/cancellation, polling slowdown, transport
+  recovery, and no device-code/token leakage. Include a real configured OIDC
+  provider integration; fakes alone do not establish Dex compatibility.
 - Package pinned dependencies and required notices; verify checksums/provenance
   and a clean Linux installation that does not require the old Python project.
 - Physical printing and scan checks remain explicitly unverified until performed.

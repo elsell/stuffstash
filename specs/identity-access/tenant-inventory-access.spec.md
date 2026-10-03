@@ -360,7 +360,8 @@ screen's existing recovery handling.
 ## Planned CLI And Print Connector Authentication
 
 [CLI](../platform/cli.spec.md) specifies a separate public OIDC client for human
-CLI login. [Printer integration](../printing/printer-integration.spec.md) specifies
+CLI login with browser PKCE and provider-enabled device authorization; both
+produce the same human principal and SpiceDB permissions. [Printer integration](../printing/printer-integration.spec.md) specifies
 browser-approved restricted machine credentials for print consumers. This is an
 explicit machine-authentication extension, not a replacement for human OIDC.
 Inventory `view` permits safe printer/status discovery and label rendering;
