@@ -376,7 +376,7 @@ Human inventory output includes IDs and pagination continuation; JSON preserves
 client-owned result models and pagination, without token or provider error bodies.
 Initial portable release targets are Linux/macOS amd64 and arm64, plus Windows
 amd64; API commands use pure Go builds. USB capability is separately advertised
-and initially absent until the Linux Brother adapter is integrated.
+from the registered adapter platforms; Linux includes the Brother adapter.
 
 ## Initial Linux Brother Transport
 
@@ -538,3 +538,13 @@ before sending; an ambiguous failure can be retried with that exact key and
 selection. The CLI never automatically retries with a new key. Cancellation reads
 the current revision and relies on the API's compare-and-swap fence. Human output
 identifies queued jobs as queued and includes the creation's print-job ID.
+### Release capability metadata
+
+The Linux Brother adapter is now integrated. Linux amd64 and arm64 binaries
+advertise `usbPrinting: true`; macOS and Windows API binaries advertise false.
+This states compiled adapter availability, not device readiness or physical
+verification. The `version` command derives support from registered printer
+adapter descriptors for its target OS without touching USB devices. Release
+manifest capabilities derive from the same exported registry, and the release
+build compares native binary output with that registry. Release builds keep
+`CGO_ENABLED=0`: the Linux usblp transport is pure Go and must remain included.
