@@ -5,6 +5,8 @@ import "context"
 type EventName string
 
 const (
+	EventPrintJobQueued                            EventName = "print_job.queued"
+	EventPrintJobCanceled                          EventName = "print_job.canceled"
 	EventLabelProvisioned                          EventName = "label.provisioned"
 	EventLabelCleanupFailed                        EventName = "label.cleanup_failed"
 	EventPrinterRegistered                         EventName = "printer.registered"

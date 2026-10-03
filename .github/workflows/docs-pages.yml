@@ -1,6 +1,7 @@
 name: Docs Pages
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: [Release]
     types: [completed]
@@ -17,7 +18,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: docs-pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.event.workflow_run.head_sha }}
+  group: docs-pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'production' }}
   cancel-in-progress: false
 
 env:
@@ -28,7 +29,7 @@ env:
 jobs:
   build:
     name: Build docs
-    if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || github.event.action != 'closed'
+    if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || (github.event_name == 'pull_request' && github.event.action != 'closed') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -36,7 +37,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.event_name == 'pull_request' && github.sha || 'main' }}
 
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -52,12 +53,15 @@ jobs:
         run: pnpm --dir docs install --frozen-lockfile
 
       - name: Configure production base path
-        if: github.event_name == 'workflow_run'
+        if: github.event_name != 'pull_request'
         run: echo "STUFF_STASH_DOCS_BASE=/stuffstash/" >> "$GITHUB_ENV"
 
       - name: Configure pull request preview base path
         if: github.event_name == 'pull_request'
         run: echo "STUFF_STASH_DOCS_BASE=/stuffstash/pr-${{ github.event.pull_request.number }}/" >> "$GITHUB_ENV"
+
+      - name: Verify generated download documentation
+        run: python3 scripts/generate-cli-downloads.py --check
 
       - name: Build docs
         run: pnpm --dir docs build
@@ -73,7 +77,7 @@ jobs:
   deploy:
     name: Deploy docs
     needs: build
-    if: github.event_name == 'workflow_run' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -105,7 +109,7 @@ jobs:
           path: built-docs
 
       - name: Publish production docs
-        if: github.event_name == 'workflow_run'
+        if: github.event_name != 'pull_request'
         run: |
           mkdir -p pages
           find pages -mindepth 1 -maxdepth 1 ! -name .git ! -name 'pr-*' -exec rm -rf {} +

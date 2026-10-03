@@ -52,6 +52,10 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	realtimeVoiceProviderResolver := buildRealtimeVoiceProviderResolver(cfg, repositories, providerCredentialVault, stt, languageInference, tts)
 	importer := homebox.NewLegacyImporter(nil)
 	evaluations := buildEvaluationRuntime(cfg, evaluationSettings, workflowLimits, observer, authorizer, repositories, providerCredentialVault)
+	jobSettings, err := cfg.PrintJobs.Settings()
+	if err != nil {
+		return app.App{}, err
+	}
 	labels, err := buildLabels(cfg, repositories, authorizer, observer)
 	if err != nil {
 		return app.App{}, err
@@ -141,7 +145,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		TextToSpeech:                     tts,
 		RealtimeVoiceProviderResolver:    realtimeVoiceProviderResolver,
 	})
-	application = application.WithPrinterRegistry(repositories.printers, printingprofiles.Catalog{})
+	application = application.WithPrinterRegistry(repositories.printers, printingprofiles.Catalog{}).WithPrintJobs(repositories.printJobs, jobSettings)
 	application = application.WithImportWorker(importworker.NewInProcess(application, observer))
 	if _, err := application.ResumeRunningImportJobs(ctx, 25); err != nil {
 		return app.App{}, err

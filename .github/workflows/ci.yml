@@ -61,7 +61,7 @@ jobs:
       - name: Verify persistence concurrency
         env:
           STUFF_STASH_TEST_POSTGRES_DSN: postgres://benchmark:benchmark@localhost:5432/search_benchmark?sslmode=disable&statement_timeout=10000
-        run: go test -timeout=2m ./apps/api/internal/adapters/gormstore -run '^TestPostgres(Notification|Archive|Checkout|Label)' -count=1
+        run: go test -timeout=2m ./apps/api/internal/adapters/gormstore -run '^TestPostgres(Notification|Archive|Checkout|Label|Printing)' -count=1
       - name: Measure search repository
         env:
           STUFF_STASH_TEST_POSTGRES_DSN: postgres://benchmark:benchmark@localhost:5432/search_benchmark?sslmode=disable&statement_timeout=10000

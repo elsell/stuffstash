@@ -7,6 +7,11 @@ on:
     paths-ignore:
       - '.env.example'
   workflow_dispatch:
+    inputs:
+      repair_run_id:
+        description: 'Resume exact retained assets from a completed Release run (no rebuild)'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -23,6 +28,7 @@ env:
 jobs:
   validate:
     name: Validate release inputs
+    if: github.ref == 'refs/heads/main' && inputs.repair_run_id == ''
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -90,6 +96,19 @@ jobs:
             echo "Release tag ${{ needs.validate.outputs.next_tag }} already exists." >&2
             exit 1
           fi
+
+      - name: Setup Node for maintenance metadata
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Go for CLI releases
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build portable CLI archives
+        run: scripts/build-cli-release.sh "${{ needs.validate.outputs.next_tag }}" "$GITHUB_SHA" release-dist
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
@@ -202,13 +221,6 @@ jobs:
           subject-digest: ${{ steps.web_image.outputs.digest }}
           push-to-registry: true
 
-      - name: Create release tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "${{ needs.validate.outputs.next_tag }}" "${GITHUB_SHA}"
-          git push origin "${{ needs.validate.outputs.next_tag }}"
-
       - name: Build self-host release bundle
         run: |
           scripts/build-selfhost-release.sh \
@@ -217,87 +229,133 @@ jobs:
             --web-image "${{ steps.web_image.outputs.image_ref }}" \
             --output release-dist
 
-      - name: Create GitHub release
+      - name: Seal publication inputs
         run: |
-          release_ref="${GITHUB_SHA}"
           previous="${{ needs.validate.outputs.previous_tag }}"
-          if [ "$previous" = "none" ]; then
-            range="$release_ref"
-          else
-            range="${previous}..${release_ref}"
-          fi
-
+          range="$GITHUB_SHA"
+          if [ "$previous" != none ]; then range="${previous}..${GITHUB_SHA}"; fi
           {
             printf 'API image: `%s`\n\n' "${{ steps.api_image.outputs.image_ref }}"
-            printf 'API digest: `%s`\n\n' "${{ steps.api_image.outputs.digest }}"
-            printf 'Web image: `%s`\n\n' "${{ steps.web_image.outputs.image_ref }}"
-            printf 'Web digest: `%s`\n\n' "${{ steps.web_image.outputs.digest }}"
-            printf 'Changes:\n'
+            printf 'Web image: `%s`\n\nChanges:\n' "${{ steps.web_image.outputs.image_ref }}"
             git log --format='- %s (%h)' "$range"
-          } > release-notes.md
-
-          gh release create "${{ needs.validate.outputs.next_tag }}" \
-            --target "$release_ref" \
-            --title "${{ needs.validate.outputs.next_tag }}" \
-            --notes-file release-notes.md \
-            release-dist/stuffstash-selfhost.tar.gz \
-            release-dist/stuffstash-selfhost.tar.gz.sha256
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: Update self-host image digests
-        continue-on-error: true
-        run: |
-          node scripts/update-selfhost-image-refs.mjs \
+          } > release-dist/release-notes.md
+          python3 scripts/stage-release-publication.py --directory release-dist \
+            --tag "${{ needs.validate.outputs.next_tag }}" --commit "$GITHUB_SHA" \
             --api-image "${{ steps.api_image.outputs.image_ref }}" \
             --web-image "${{ steps.web_image.outputs.image_ref }}"
 
-      - name: Open self-host image digest update PR
-        continue-on-error: true
+      - name: Attest CLI archives
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661
+        with:
+          subject-path: |
+            release-dist/stuffstash_*.tar.gz
+            release-dist/stuffstash_*.zip
+
+      - name: Retain exact publication bytes for repair
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-publication
+          path: release-dist/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Create release tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .env.example
-          if git diff --cached --quiet; then
-            echo "Self-host image digests are already current."
-            exit 0
-          fi
-          digest_branch="release/self-host-images-${{ needs.validate.outputs.next_tag }}"
-          git commit -m "chore(release): update self-host image digests for ${{ needs.validate.outputs.next_tag }}"
-          if git ls-remote --exit-code --heads origin "$digest_branch" >/dev/null; then
-            git fetch origin "refs/heads/$digest_branch:refs/remotes/origin/$digest_branch"
-            git push --force-with-lease=refs/heads/"$digest_branch" origin HEAD:"$digest_branch"
-          else
-            git push origin HEAD:"$digest_branch"
-          fi
+          git tag "${{ needs.validate.outputs.next_tag }}" "$GITHUB_SHA"
+          git push origin "${{ needs.validate.outputs.next_tag }}"
 
-          {
-            printf '%s\n\n' "Updates \`.env.example\` to the image digests published for \`${{ needs.validate.outputs.next_tag }}\`."
-            printf '%s\n' "- API image: \`${{ steps.api_image.outputs.image_ref }}\`"
-            printf '%s\n' "- Web image: \`${{ steps.web_image.outputs.image_ref }}\`"
-          } > digest-pr-body.md
+      - name: Publish and verify release assets
+        run: python3 scripts/publish-release-assets.py release-dist --repository "$GITHUB_REPOSITORY" --metadata verified-cli-release.json
+        env:
+          GH_TOKEN: ${{ github.token }}
 
-          existing_pr="$(gh pr list --head "$digest_branch" --base main --state open --json number --jq '.[0].number // ""')"
-          if [ -n "$existing_pr" ]; then
-            pr_number="$existing_pr"
-            gh pr edit "$existing_pr" \
-              --title "chore(release): update self-host image digests for ${{ needs.validate.outputs.next_tag }}" \
-              --body-file digest-pr-body.md
-          else
-            gh pr create \
-              --base main \
-              --head "$digest_branch" \
-              --title "chore(release): update self-host image digests for ${{ needs.validate.outputs.next_tag }}" \
-              --body-file digest-pr-body.md
-            pr_number="$(gh pr list --head "$digest_branch" --base main --state open --json number --jq '.[0].number // ""')"
-            if [ -z "$pr_number" ]; then
-              echo "Could not find digest update PR for $digest_branch." >&2
-              exit 1
-            fi
-          fi
+      - name: Refresh verified download docs and self-host defaults
+        id: metadata
+        continue-on-error: true
+        run: scripts/refresh-release-metadata.sh release-dist verified-cli-release.json
+        env:
+          GH_TOKEN: ${{ github.token }}
 
-          gh workflow run ci.yml --ref "$digest_branch"
-          gh pr merge "$pr_number" --auto --squash --delete-branch
+      - name: Report deferred documentation refresh
+        if: steps.metadata.outcome == 'failure'
+        run: echo 'Release published, but metadata PR/docs refresh needs attention. Retry with repair_run_id for this run.' >> "$GITHUB_STEP_SUMMARY"
+
+  repair:
+    name: Resume original publication bytes
+    if: github.event_name == 'workflow_dispatch' && inputs.repair_run_id != '' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: write
+      pull-requests: write
+    steps:
+      - name: Checkout trusted publication tooling
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          fetch-depth: 0
+
+      - name: Verify original Release run
+        id: original
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPAIR_RUN_ID: ${{ inputs.repair_run_id }}
+        run: |
+          [[ "$REPAIR_RUN_ID" =~ ^[0-9]+$ ]] || exit 1
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$REPAIR_RUN_ID" > original-run.json
+          python3 - <<'PYRUN' >> "$GITHUB_OUTPUT"
+          import json
+          value=json.load(open('original-run.json'))
+          if value['path'] != '.github/workflows/release.yml' or value['head_branch'] != 'main' or value['status'] != 'completed':
+              raise SystemExit('Repair requires a completed original Release run on main')
+          print('commit='+value['head_sha'])
+          PYRUN
+
+      - name: Download original publication artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: release-publication
+          path: release-dist
+          run-id: ${{ inputs.repair_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Verify original commit and restore missing tag
+        env:
+          ORIGINAL_COMMIT: ${{ steps.original.outputs.commit }}
+        run: |
+          python3 - <<'PYPLAN'
+          import json, os, subprocess
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, 'scripts')
+          import importlib.util
+          spec=importlib.util.spec_from_file_location('publication','scripts/publish-release-assets.py')
+          module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+          plan=module.validate_plan(Path('release-dist'))
+          if plan['commit'] != os.environ['ORIGINAL_COMMIT']:
+              raise SystemExit('Artifact does not belong to the original run commit')
+          subprocess.run(['git','merge-base','--is-ancestor',plan['commit'],'origin/main'],check=True)
+          existing=subprocess.run(['git','rev-parse','--verify','refs/tags/'+plan['tag']],capture_output=True,text=True)
+          if existing.returncode:
+              subprocess.run(['git','tag',plan['tag'],plan['commit']],check=True)
+              subprocess.run(['git','push','origin','refs/tags/'+plan['tag']],check=True)
+          elif subprocess.check_output(['git','rev-parse',plan['tag']+'^{commit}'],text=True).strip()!=plan['commit']:
+              raise SystemExit('Existing tag points at another commit')
+          PYPLAN
+
+      - name: Resume and verify release publication
+        run: python3 scripts/publish-release-assets.py release-dist --repository "$GITHUB_REPOSITORY" --metadata verified-cli-release.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Setup Node for maintenance metadata
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Refresh verified download docs and self-host defaults
+        run: scripts/refresh-release-metadata.sh release-dist verified-cli-release.json
         env:
           GH_TOKEN: ${{ github.token }}
 
