@@ -356,3 +356,34 @@ in the same PR and must pass generation/drift checks.
   the existing asset or inventory target; content, QR URLs, and titles never enter
   audit metadata. Resolver failures for absent, foreign, tombstoned, and forbidden
   identities return the same safe 404. Existing HTTP rate limiting applies.
+
+### Inventory Print Settings Contract
+
+- `GET` and full-replacement `PUT /tenants/{tenantId}/inventories/{inventoryId}/print-settings`
+  return the shared success envelope with `revision`, nullable `defaultPrinterId`,
+  `template: {id, version, options: {showReference}}`, and `printOnCreateDefault`.
+  A missing row is a virtual revision-0 default: no printer, `qr-title` version 1,
+  reference shown, and automatic printing off. GET does not create settings.
+- PUT supplies the revision it read; initial creation requires 0 and subsequent
+  changes require the current revision. A conflict never overwrites another
+  administrator's change. Settings and their audit record commit atomically.
+- Inventory viewers may read; only inventory configurators may write. Explicit
+  tenant/inventory scope applies to settings and printer lookup. Connector
+  credentials cannot read or change these human settings.
+- A selected printer must belong to this inventory and be active. Automatic
+  printing requires a selected printer; clearing the printer requires automatic
+  printing off. Disabling automatic printing preserves independent template
+  selection, including when no destination is selected. Online/readiness state
+  does not constrain settings changes.
+- Template ID/version must exist in the built-in catalog. For a selected printer,
+  the real renderer validates compatibility using a synthetic title/reference and
+  a realistic instance/label URL under the configured public base URL. This does
+  not create label identity or artifacts and never prints. Actual asset content
+  is still validated independently when a job is requested.
+- The selected printer's active state and media/revision snapshot are rechecked
+  atomically when settings are saved. A concurrent retirement or media change
+  produces conflict. Later printer edits do not rewrite settings or queued jobs;
+  each new request revalidates its current destination.
+- A dedicated inventory print-settings repository owns persistence; this is not
+  mutable state inside the printer aggregate. Safe read history uses
+  `print_settings.viewed`; successful replacement uses `print_settings.updated`.
