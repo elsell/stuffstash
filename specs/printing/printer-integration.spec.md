@@ -855,6 +855,32 @@ Chromium fixture review at 1280px/390px confirms one menu, the three editor
 commands versus one viewer command, keyboard opening, and Escape focus return
 from both download and queued-print surfaces. Controlled repository tests verify
 preview cancellation on asset/workspace changes and editor-access removal.
+### Connector software and capability reports
+
+A heartbeat may include a bounded software report: version, source commit,
+platform, architecture, and up to 32 adapter capabilities. Each adapter reports
+its ID, supported consumer-contract versions, artifact formats, media preset
+IDs/versions, completion-evidence description, and optional wake support. These
+self-reported values describe installed software; they never grant authority,
+make a printer ready, or replace job validation. Device paths and secrets are
+excluded. The API validates bounds and records its own receipt timestamp.
+Omitting a report preserves the previous report and receipt time for older
+clients. Human connector reads expose this snapshot and timestamp under existing
+inventory authorization. Changed report content is audited; identical periodic
+telemetry only refreshes its server receipt time. The CLI builds the report from
+its baked-in version and actual registered adapters and includes it in each
+worker heartbeat, independently of individual printer availability.
+
+### Expired pairing cleanup
+
+Each connector-maintenance tick removes at most the configured connector batch
+size of expired pairing handshakes, including consumed and approved requests.
+Expiry uses the injected server clock and an indexed, bounded repository scan.
+The worker runs cleanup independently of authorization reconciliation failures.
+Cleanup removes handshake hashes, public keys, and discovered candidate snapshots;
+it never deletes connector registrations, credentials, bindings, jobs, or audit
+history. Unexpired pairings remain usable. No additional retention interval is
+needed because expired handshake credentials are already unusable.
 
 ### Browser credential replacement approval
 

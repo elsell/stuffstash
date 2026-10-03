@@ -79,7 +79,7 @@ func registerPairings(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-		c, err = service.Heartbeat(ctx, c)
+		c, err = service.HeartbeatWithReport(ctx, c, mapper.ConnectorReportInput(input.Body.Report))
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}

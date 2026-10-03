@@ -12,6 +12,8 @@ const (
 )
 
 type Connector struct {
+	Report                                                *ConnectorReport
+	ReportReceivedAt                                      *time.Time
 	PendingCredentialHash                                 string
 	PendingCredentialVersion                              uint64
 	PendingCredentialExpiresAt, PendingActivationDeadline time.Time

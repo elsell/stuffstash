@@ -41,6 +41,7 @@ func (timers) Wait(ctx context.Context, d time.Duration) error {
 func (timers) Delay(int) time.Duration { return time.Millisecond }
 
 type registry struct {
+	reportVersion       string
 	mu                  sync.Mutex
 	assigned            []printing.RegisteredPrinter
 	heartbeats, reports int
@@ -53,8 +54,11 @@ func (r *registry) notify() {
 	default:
 	}
 }
-func (r *registry) Heartbeat(context.Context, string) error {
+func (r *registry) Heartbeat(_ context.Context, _ string, report *printing.ConnectorReport) error {
 	r.mu.Lock()
+	if report != nil {
+		r.reportVersion = report.Version
+	}
 	r.heartbeats++
 	r.mu.Unlock()
 	r.notify()
@@ -132,6 +136,7 @@ func runtimeFixture(t *testing.T) (*printworker.Runtime, *registry, *devices) {
 
 func TestBlockedAndOfflineDevicesDoNotBlockConnectorHeartbeatOrEachOther(t *testing.T) {
 	runtime, r, d := runtimeFixture(t)
+	runtime.SoftwareReport = &printing.ConnectorReport{Version: "v1.2.3"}
 	r.assigned = []printing.RegisteredPrinter{{ID: "first", DeviceID: "usb-one"}, {ID: "second", DeviceID: "usb-two"}}
 	d.offline = "usb-two"
 	ctx, cancel := context.WithCancel(context.Background())
@@ -143,7 +148,11 @@ func TestBlockedAndOfflineDevicesDoNotBlockConnectorHeartbeatOrEachOther(t *test
 	for {
 		r.mu.Lock()
 		beats := r.heartbeats
+		version := r.reportVersion
 		r.mu.Unlock()
+		if beats > 0 && version != "v1.2.3" {
+			t.Fatal("offline printer lost connector software report")
+		}
 		d.mu.Lock()
 		both := d.opened["usb-one"] > 0 && d.opened["usb-two"] > 0
 		d.mu.Unlock()

@@ -53,6 +53,33 @@ func coverPrintConsumerScenarios(t *testing.T, coverage executedScenarioCoverage
 	server := NewServer(":0", application)
 	token := "Bearer " + credential.Credential
 	requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", token, map[string]any{"sessionId": "session-for-printing"}), 200)
+
+	software := map[string]any{"version": "v1.2.3", "commit": "test-commit", "platform": "linux", "architecture": "amd64", "adapters": []any{map[string]any{"id": "brother-ql800", "contractVersions": []int{1}, "formats": []string{"image/png"}, "media": []any{map[string]any{"id": "brother-ql800-29x90", "version": 1}}, "completionEvidence": "printing_completed_then_waiting", "wake": false}}}
+	reportBody := map[string]any{"sessionId": "session-for-printing", "report": software}
+	for _, bad := range []string{"", "Bearer dev:owner", "Bearer malformed"} {
+		requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", bad, reportBody), 401)
+	}
+	reported := performRequest(server, "POST", "/print-consumer/heartbeat", token, reportBody)
+	requireStatus(t, reported, 200)
+	reportedData := labelResponseData(t, reported.Body.Bytes())
+	if reportedData["report"].(map[string]any)["version"] != "v1.2.3" || reportedData["reportReceivedAt"] == nil {
+		t.Fatal("software report missing", reported.Body.String())
+	}
+	receipt := reportedData["reportReceivedAt"]
+	clock.now = clock.now.Add(time.Second)
+	legacyBeat := performRequest(server, "POST", "/print-consumer/heartbeat", token, map[string]any{"sessionId": "session-for-printing"})
+	requireStatus(t, legacyBeat, 200)
+	if labelResponseData(t, legacyBeat.Body.Bytes())["reportReceivedAt"] != receipt {
+		t.Fatal("omitted report falsely refreshed capabilities")
+	}
+	software["version"] = "invalid\nversion"
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", token, reportBody), 400)
+	software["version"] = "v1.2.3"
+	reportDetail := performRequest(server, "GET", labelPrefix+"/print-connectors/"+string(credential.Connector.ID), "Bearer dev:owner", nil)
+	requireStatus(t, reportDetail, 200)
+	if !strings.Contains(reportDetail.Body.String(), `"version":"v1.2.3"`) {
+		t.Fatal("human connector view lost software report")
+	}
 	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "ready"}), 200)
 	connectorPath := labelPrefix + "/print-connectors/" + string(credential.Connector.ID)
 	health := performRequest(server, "GET", connectorPath, "Bearer dev:owner", nil)

@@ -50,7 +50,7 @@ func runPrintConnector(ctx context.Context, options app.Options, getenv func(str
 	binding, _ := json.Marshal([]string{registration.Server, registration.TenantID, registration.InventoryID, registration.ConnectorID})
 	fingerprint := sha256.Sum256(binding)
 	worker := printworker.Worker{Jobs: api, Clock: clock, Waiter: printprocess.Waiter{}, Identity: identities, Observer: presentation.SilentObserver{}, Config: printworker.Config{Binding: hex.EncodeToString(fingerprint[:]), SessionID: session, MaxArtifactBytes: config.artifactBytes, LeaseSafety: config.safety, ObserveInterval: config.observe, ReadinessTimeout: config.readiness}}
-	service := printworker.Runtime{Registry: api, Devices: registeredDevices{runtimes: BuiltinPrinters(getenv)}, State: printstate.Store{Directory: config.directory}, Worker: worker, Backoff: printprocess.Backoff{Minimum: config.minimum, Maximum: config.maximum}, HeartbeatInterval: config.heartbeat, PollInterval: config.poll}
+	service := printworker.Runtime{SoftwareReport: connectorSoftwareReport(getenv), Registry: api, Devices: registeredDevices{runtimes: BuiltinPrinters(getenv)}, State: printstate.Store{Directory: config.directory}, Worker: worker, Backoff: printprocess.Backoff{Minimum: config.minimum, Maximum: config.maximum}, HeartbeatInterval: config.heartbeat, PollInterval: config.poll}
 	if err = output.Notice("Print connector running. Printer availability and jobs are visible in Stuff Stash. Press Ctrl-C to stop."); err != nil {
 		return err
 	}

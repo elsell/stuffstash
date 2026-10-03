@@ -13,6 +13,11 @@ func clonePrintPairing(p printing.Pairing) printing.Pairing {
 	return p
 }
 func clonePrintConnector(c printing.Connector) printing.Connector {
+	c.Report = c.Report.Clone()
+	if c.ReportReceivedAt != nil {
+		v := *c.ReportReceivedAt
+		c.ReportReceivedAt = &v
+	}
 	c.PublicKey = append([]byte(nil), c.PublicKey...)
 	c.PendingPublicKey = append([]byte(nil), c.PendingPublicKey...)
 	if c.LastSeenAt != nil {
