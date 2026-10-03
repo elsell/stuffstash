@@ -154,7 +154,7 @@ describe('Home interactions through mounted components', () => {
     await h.run(() => pending.resolve(snapshot([]))); await settle();
   });
   it('preserves cataloged empty-workspace guidance from the real query', async () => {
-    repository.load = async () => ({ checkedOutAssets: [], workspace: { tenants: [], inventories: [] } });
+    repository.load = async () => ({ checkedOutAssets: [], workspace: { tenants: [], inventories: [], defaultInventoryId: inventoryId('inventory-home') } });
     await render();
     expect(h.allText()).toContain(t('inventory.workspaceEmpty'));
     expect(h.byLabel('Retry loading Home')).toBeDefined();
