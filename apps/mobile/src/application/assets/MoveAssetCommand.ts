@@ -1,3 +1,4 @@
+import { CatalogRecoveryError } from '../shared/CatalogRecoveryError';
 import { t } from "../../presentation/localization";
 import { assetId } from '../../domain/assets/AssetSummary';
 import type { InventoryAssetUpdateRepository } from '../home/InventorySummaryRepository';
@@ -20,7 +21,7 @@ export class MoveAssetCommand {
     const targetAssetId = assetId(input.assetId);
     const parentAssetId = input.parentAssetId ? assetId(input.parentAssetId) : null;
     if (parentAssetId === targetAssetId) {
-      throw new Error(t("move.cannotContainSelf"));
+      throw new CatalogRecoveryError('move.cannotContainSelf');
     }
 
     const updated = await this.inventories.updateAsset({

@@ -1,3 +1,4 @@
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import { InvitationEmailInput } from './InvitationEmailInput';
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
@@ -346,7 +347,7 @@ function confirmCancel(invitation: InventoryInvitationSummary, cancel: (value: I
 }
 
 function readableError(error: unknown): string {
-  return error instanceof Error ? error.message : t('mobile.InventorySharingScreen.theActionFailedSafelyTryAgain');
+  return catalogRecoveryMessage(error, t('mobile.InventorySharingScreen.theActionFailedSafelyTryAgain'));
 }
 
 function createStyles(colors: MobileColorPalette) {

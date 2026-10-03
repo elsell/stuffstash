@@ -1,3 +1,4 @@
+import { CatalogRecoveryError } from '../shared/CatalogRecoveryError';
 import { t } from "../../presentation/localization";
 import { assetId, type AssetKind, type AssetExpiration } from '../../domain/assets/AssetSummary';
 import type { ActiveAssetTagReference, CreateAssetTagDraft } from '../assets/AssetTagDraftResolution';
@@ -34,7 +35,7 @@ export class CreateAssetCommand {
   async execute(input: CreateAssetCommandInput): Promise<CreateAssetCommandResult> {
     const title = input.title.trim();
     if (title.length === 0) {
-      throw new Error(t('recovery.nameRequired'));
+      throw new CatalogRecoveryError('recovery.nameRequired');
     }
 
     const reconciledTags = reconcilePendingAssetTagDrafts({

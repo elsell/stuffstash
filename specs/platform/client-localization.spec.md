@@ -430,3 +430,12 @@ upload precondition guidance. Lifecycle recovery may recognize the existing
 active-children or archived-parent diagnostic category, but never interpolate
 the diagnostic itself into visible text. Use complete cataloged action guidance,
 retain authored asset names, and preserve retry, draft retention and visit scope.
+
+### Mobile editor, settings and sharing recovery
+
+Use catalog-only recovery for Add/edit/move submission, account/provider settings
+commands, and invitation creation/copy/share/cancellation. Preserve cataloged
+validation, explicit missing-link guidance, and field/destination/photo drafts.
+Provider required-field validation carries a catalog key rather than arbitrary
+text. Ordinary exceptions must not appear in inline errors, notices or alerts.
+Keep duplicate-command guards, one-time invitation handling and retry behavior.

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { Platform } from 'react-native';
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
 import { setScreenFocused } from '../../test-support/navigation';
@@ -223,6 +224,8 @@ it.each(['copy', 'share', 'cancel'] as const)('keeps %s recovery beside its task
       await settle(h);
     };
     await perform();
+    expect(h.allText()).not.toContain('Try this action again');
+    expect(h.allText()).toContain(t('mobile.InventorySharingScreen.theActionFailedSafelyTryAgain'));
     const recovery = h.byText(`Could not ${action} invitation`);
     expect(recovery).toBeDefined();
     let parent = recovery?.parent;

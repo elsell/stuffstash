@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { CatalogRecoveryError } from '../shared/CatalogRecoveryError';
 import { assetTagKeyFromDisplayName } from '../../domain/assets/AssetSummary';
 
 export type ActiveAssetTagReference = {
@@ -176,7 +176,7 @@ export async function createPendingAssetTags(
     return [];
   }
   if (!repository.createAssetTag) {
-    throw new Error(t('recovery.tagUnavailable'));
+    throw new CatalogRecoveryError('recovery.tagUnavailable');
   }
   const created = [];
   for (const tag of pendingTags) {

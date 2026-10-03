@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { CatalogRecoveryError } from '../shared/CatalogRecoveryError';
 import {
   ProviderProfileRepository,
   ProviderProfileTestResult
@@ -10,12 +10,12 @@ export class TestProviderProfileCommand {
   async execute(providerProfileId: string): Promise<ProviderProfileTestResult> {
     const trimmed = providerProfileId.trim();
     if (trimmed.length === 0) {
-      throw new Error(t('providerTest.chooseProfile'));
+      throw new CatalogRecoveryError('providerTest.chooseProfile');
     }
 
     const result = await this.profiles.testProviderProfile(trimmed);
     if (result.status !== 'succeeded') {
-      throw new Error(t('providerTest.failed'));
+      throw new CatalogRecoveryError('providerTest.failed');
     }
     return result;
   }

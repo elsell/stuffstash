@@ -1,3 +1,5 @@
+import { CatalogRecoveryError, catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
+import { t } from '../../presentation/localization';
 import { describe, expect, it } from 'vitest';
 import {
   assertSelectableParent,
@@ -34,6 +36,14 @@ const babyItem: ParentLookupResult = {
 };
 
 describe('AddAssetScreen parent resolution', () => {
+  it('preserves catalog guidance when the selected parent becomes unavailable before save', () => {
+    const selected = resolveParentAssetId([garage], 'Garage', garage.id);
+    const changed = { ...garage, canSelectAsParent: false, disabledReason: 'private stale-parent diagnostic' };
+    let failure: unknown;
+    try { resolveParentAssetId([changed], 'Garage', selected); } catch (error) { failure = error; }
+    expect(failure).toBeInstanceOf(CatalogRecoveryError);
+    expect(catalogRecoveryMessage(failure, 'fallback')).toBe(t('recovery.chooseParent'));
+  });
   it('resolves an exact typed parent without requiring the row to be tapped', () => {
     expect(resolveParentAssetId([garage], ' garage ', undefined)).toBe('asset-garage');
   });

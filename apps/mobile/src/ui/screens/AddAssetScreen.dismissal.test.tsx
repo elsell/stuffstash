@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { typeInNativeSearch } from '../../test-support/NativeSearchDriver';
 import { AddDestinationTaskProvider, useAddDestinationTask } from '../navigation/AddDestinationTask';
 import { AssetTagSelectionTaskProvider, useAssetTagSelectionTask } from '../navigation/AssetTagSelectionTask';
@@ -165,7 +166,8 @@ it('preserves the submitted draft and prevents duplicate saves while saving is p
     await h.run(() => rejectSave(new Error('Save unavailable')));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 20)));
     expect(h.byText('Could not save asset')).toBeDefined();
-    const failure = h.byText('Save unavailable');
+    expect(h.allText()).not.toContain('Save unavailable');
+    const failure = h.byText(t('mobile.AddAssetScreen.couldNotSaveAsset'));
     expect(failure).toBeDefined();
     // Feedback must belong to the presented form, not the root overlay.
     let ancestor = failure?.parent;
@@ -174,10 +176,10 @@ it('preserves the submitted draft and prevents duplicate saves while saving is p
     const revealError = failure?.parent?.props.onLayout;
     expect(revealError).toBeTypeOf('function');
     await h.run(() => setNativeHeaderHeight(72));
-    await h.run(() => h.byText('Save unavailable')?.parent?.props.onLayout());
+    await h.run(() => h.byText(t('mobile.AddAssetScreen.couldNotSaveAsset'))?.parent?.props.onLayout());
     expect(scrollCommandsForTest().at(-1)).toEqual({ y: -72, animated: false });
     await h.run(() => setNativeHeaderHeight(96));
-    await h.run(() => h.byText('Save unavailable')?.parent?.props.onLayout());
+    await h.run(() => h.byText(t('mobile.AddAssetScreen.couldNotSaveAsset'))?.parent?.props.onLayout());
     expect(scrollCommandsForTest().at(-1)).toEqual({ y: -96, animated: false });
     expect(ancestor?.props.scrollToOverflowEnabled).toBe(true);
     expect(h.byLabel('Asset name')?.props.editable).toBe(true);
@@ -232,7 +234,7 @@ for (const operation of ['parent', 'photo', 'library-failure', 'camera-failure']
       await h.run(() => finish());
       await h.run(() => new Promise(resolve => setTimeout(resolve, 20)));
       if (operation !== 'photo') {
-        const message = operation === 'parent' ? 'Parent unavailable' : operation === 'library-failure' ? 'Library unavailable' : 'Camera unavailable';
+        const message = t(operation === 'parent' ? 'mobile.AddAssetScreen.couldNotCreateParent' : operation === 'library-failure' ? 'mobile.AddAssetScreen.couldNotSelectPhotos' : 'mobile.AddAssetScreen.couldNotTakePhoto');
         let owner = h.byText(message)?.parent;
         while (owner && owner.type !== 'ScrollView') owner = owner.parent;
         expect(owner?.type).toBe('ScrollView');

@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { CatalogRecoveryError } from '../../application/shared/CatalogRecoveryError';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 
 export type ParentSelection = {
@@ -36,7 +36,7 @@ export function resolveParentAssetId(
     return exactParent.id;
   }
 
-  throw new Error(t('recovery.createParent'));
+  throw new CatalogRecoveryError('recovery.createParent');
 }
 
 export function resolveSelectedParent(
@@ -57,7 +57,7 @@ export function resolveSelectedParent(
 
 export function assertSelectableParent(parent: ParentSelection | ParentLookupResult | undefined): void {
   if (parent?.canSelectAsParent === false) {
-    throw new Error(parent.disabledReason ?? t('recovery.chooseParent'));
+    throw new CatalogRecoveryError('recovery.chooseParent');
   }
 }
 

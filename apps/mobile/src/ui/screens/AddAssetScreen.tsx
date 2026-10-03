@@ -1,3 +1,5 @@
+import { CatalogRecoveryError } from '../../application/shared/CatalogRecoveryError';
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import {MeasuredImage as Image} from '../components/MeasuredImage';
 import { t } from '../../presentation/localization';
 import { SelectionRow } from '../components/SelectionRow';
@@ -272,7 +274,7 @@ function ScopedAddAssetScreen({
         lastParent
       );
       if (parentAssetId && !selectedParent) {
-        throw new Error(t('recovery.reselectParent'));
+        throw new CatalogRecoveryError('recovery.reselectParent');
       }
       assertSelectableParent(selectedParent);
       const resolvedParentAssetId = resolveParentAssetId(
@@ -349,7 +351,7 @@ function ScopedAddAssetScreen({
       const refreshed = await addContext.refetch({ throwOnError: true });
       const context = refreshed.data;
       if (!context) {
-        throw new Error(t('recovery.refreshInventory'));
+        throw new CatalogRecoveryError('recovery.refreshInventory');
       }
       setLoadState({ status: 'ready', context });
       const reconciled = reconcileCreatedAssetTags(stagedTags, context.assetTags);
@@ -1010,7 +1012,7 @@ function isParentSelection(
 }
 
 function readableError(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
+  return catalogRecoveryMessage(error, fallback);
 }
 
 function createStyles(colors: MobileColorPalette) {

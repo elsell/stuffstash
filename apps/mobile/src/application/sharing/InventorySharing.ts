@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { CatalogRecoveryError } from '../shared/CatalogRecoveryError';
 import type { ReadRequest } from '../shared/ReadRequest';
 export type InventoryInvitationRelationship = 'viewer' | 'editor';
 export type InventoryInvitationStatus = 'pending' | 'accepted' | 'revoked' | 'cancelled' | 'expired';
@@ -45,16 +45,16 @@ export interface InvitationLinkActions {
 }
 
 /** The server confirmed scope metadata, but its one-time link could not be used. */
-export class InventoryInvitationLinkUnavailableError extends Error {
+export class InventoryInvitationLinkUnavailableError extends CatalogRecoveryError {
   constructor() {
-    super(t('mobile.InventorySharing.stuffStashDidNotReturnTheOneTimeInvitation'));
+    super('mobile.InventorySharing.stuffStashDidNotReturnTheOneTimeInvitation');
     this.name = 'InventoryInvitationLinkUnavailableError';
   }
 }
 
-export class InventorySharingPermissionError extends Error {
+export class InventorySharingPermissionError extends CatalogRecoveryError {
   constructor() {
-    super(t('mobile.InventorySharing.youDoNotHavePermissionToManageInvitationsFor'));
+    super('mobile.InventorySharing.youDoNotHavePermissionToManageInvitationsFor');
     this.name = 'InventorySharingPermissionError';
   }
 }
@@ -78,7 +78,7 @@ export class CreateInventoryInvitationCommand {
     requireShare(scope);
     const email = input.email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      throw new Error(t('sharing.emailRequired'));
+      throw new CatalogRecoveryError('sharing.emailRequired');
     }
     let result: CreatedInventoryInvitation;
     try {
@@ -99,7 +99,7 @@ export class CancelInventoryInvitationCommand {
     requireShare(scope);
     const id = invitationId.trim();
     if (id.length === 0) {
-      throw new Error(t('sharing.invitationRequired'));
+      throw new CatalogRecoveryError('sharing.invitationRequired');
     }
     await this.invitations.cancel(scope, id);
     this.observer.onInvitationsChanged(scope, id);
