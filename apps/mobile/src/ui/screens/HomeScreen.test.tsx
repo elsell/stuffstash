@@ -223,6 +223,8 @@ describe('Home interactions through mounted components', () => {
     await h.run(() => pending.resolve({ id: 'checkout-one', assetId: checkedOut.id })); await settle();
     expect(h.byLabel('Optional return details')).toBeDefined();
     expect(h.byText('Could not save return details')).toBeDefined();
+    expect(h.allText()).not.toContain('Try again');
+    expect(h.allText()).toContain(t('mobile.useHomeReturnActions.returnDetailsWereNotSaved'));
     expect(h.byLabel('Return details error')).toBeDefined();
     const previousScrolls = scrollCommandsForTest().length;
     expect(h.allByType('ScrollView').some(view => view.props.scrollToOverflowEnabled === true)).toBe(true);

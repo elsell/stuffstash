@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { CatalogRecoveryError } from '../../application/shared/CatalogRecoveryError';
 import { assertReadActive } from '../../application/shared/ReadRequest';
 import type {
   Asset,
@@ -66,7 +66,7 @@ export class ApiInventoryAssetBrowse {
       assertReadActive(input.signal);
       nextCursor = page.pagination.nextCursor ?? undefined;
       hasMore = page.pagination.hasMore;
-      if (hasMore && (!nextCursor || seenCursors.has(nextCursor))) throw new Error(t('recovery.browseContinuation'));
+      if (hasMore && (!nextCursor || seenCursors.has(nextCursor))) throw new CatalogRecoveryError('recovery.browseContinuation');
       if (nextCursor) seenCursors.add(nextCursor);
       cursor = nextCursor;
     } while (selectedAssets.length < desiredMatches && hasMore && scannedPages < maxBrowseScanPages);
@@ -118,7 +118,7 @@ export class ApiInventoryAssetBrowse {
       assertReadActive(input.signal);
       nextCursor = page.pagination.nextCursor ?? undefined;
       hasMore = page.pagination.hasMore;
-      if (hasMore && (!nextCursor || seenCursors.has(nextCursor))) throw new Error(t('recovery.browseContinuation'));
+      if (hasMore && (!nextCursor || seenCursors.has(nextCursor))) throw new CatalogRecoveryError('recovery.browseContinuation');
       if (nextCursor) seenCursors.add(nextCursor);
       cursor = nextCursor;
     } while (selectedResults.length < desiredMatches && hasMore && scannedPages < maxBrowseScanPages);

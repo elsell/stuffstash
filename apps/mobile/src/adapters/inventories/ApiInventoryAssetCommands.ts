@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { CatalogRecoveryError } from '../../application/shared/CatalogRecoveryError';
 import {
   type InventoryMutationKind,
   type InventoryMutationObserver
@@ -120,7 +120,7 @@ export class ApiInventoryAssetCommands {
         sizeBytes: input.sizeBytes
       });
       if (!isDirectUploadTargetSupported(directUpload.url, this.directUploadPolicy)) {
-        throw new Error(t('recovery.uploadConfiguration'));
+        throw new CatalogRecoveryError('recovery.uploadConfiguration');
       }
       const uploaded = await this.directUploadTransport.upload({
         upload: directUpload,

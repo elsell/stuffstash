@@ -1,3 +1,4 @@
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 
@@ -159,30 +160,32 @@ export function handleAssetOverflowAction(
 export function assetLifecycleFailurePresentation(
   action: AssetLifecycleActionKind,
   asset: Pick<AssetDetailViewModel, 'title' | 'canContainAssets'>,
-  cause: string
+  cause: unknown
 ): AssetLifecycleFailurePresentation {
-  const validationKind = lifecycleValidationKind(cause);
+  const diagnostic = cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : '';
+  const validationKind = lifecycleValidationKind(diagnostic);
+  const fallback = catalogRecoveryMessage(cause, t('mobile.AssetDetailRouteScreen.lifecycleActionFailed'));
   switch (action) {
     case 'archive':
       return {
         title: t('mobile.AssetLifecyclePresentation.couldNotArchive', { title: String(asset.title) }),
         message: validationKind === 'active_children' && asset.canContainAssets
-          ? t('mobile.AssetLifecyclePresentation.moveOrArchiveActiveThingsInsideThisAssetThen', { cause: String(cause) })
-          : cause
+          ? t('mobile.AssetLifecyclePresentation.moveOrArchiveActiveThingsInsideThisAssetThen')
+          : fallback
       };
     case 'restore':
       return {
         title: t('mobile.AssetLifecyclePresentation.couldNotRestore', { title: String(asset.title) }),
         message: validationKind === 'archived_parent'
-          ? t('mobile.AssetLifecyclePresentation.checkThatItsParentIsActiveThenTryAgain', { cause: String(cause) })
-          : cause
+          ? t('mobile.AssetLifecyclePresentation.checkThatItsParentIsActiveThenTryAgain')
+          : fallback
       };
     case 'delete':
       return {
         title: t('mobile.AssetLifecyclePresentation.couldNotPermanentlyDelete', { title: String(asset.title) }),
         message: validationKind === 'active_children' && asset.canContainAssets
-          ? t('mobile.AssetLifecyclePresentation.permanentDeleteWillNotContinueWhileActiveThingsAre', { cause: String(cause) })
-          : cause
+          ? t('mobile.AssetLifecyclePresentation.permanentDeleteWillNotContinueWhileActiveThingsAre')
+          : fallback
       };
   }
 }

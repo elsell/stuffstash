@@ -879,7 +879,7 @@ describe('asset lifecycle presentation helpers', () => {
       canContainAssets: true
     }, 'Asset has active children.')).toEqual({
       title: 'Could not archive Tool box',
-      message: 'Asset has active children. Move or archive active things inside this asset, then try again.'
+      message: 'Move or archive active things inside this asset, then try again.'
     });
 
     expect(assetLifecycleFailurePresentation('restore', {
@@ -887,7 +887,7 @@ describe('asset lifecycle presentation helpers', () => {
       canContainAssets: false
     }, 'Parent is archived.')).toEqual({
       title: 'Could not restore Water bottle',
-      message: 'Parent is archived. Check that its parent is active, then try again.'
+      message: 'Check that its parent is active, then try again.'
     });
 
     expect(assetLifecycleFailurePresentation('delete', {
@@ -895,7 +895,7 @@ describe('asset lifecycle presentation helpers', () => {
       canContainAssets: true
     }, 'Asset has active children.')).toEqual({
       title: 'Could not permanently delete Tool box',
-      message: 'Asset has active children. Permanent delete will not continue while active things are inside it.'
+      message: 'Permanent delete will not continue while active things are inside it.'
     });
 
     expect(assetLifecycleFailurePresentation('archive', {
@@ -903,7 +903,7 @@ describe('asset lifecycle presentation helpers', () => {
       canContainAssets: true
     }, 'Network request failed.')).toEqual({
       title: 'Could not archive Tool box',
-      message: 'Network request failed.'
+      message: 'Lifecycle action failed.'
     });
 
     expect(assetLifecycleFailurePresentation('restore', {
@@ -911,7 +911,7 @@ describe('asset lifecycle presentation helpers', () => {
       canContainAssets: false
     }, 'Session expired.')).toEqual({
       title: 'Could not restore Water bottle',
-      message: 'Session expired.'
+      message: 'Lifecycle action failed.'
     });
   });
 });

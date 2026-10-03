@@ -1,3 +1,4 @@
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePullRefreshFeedback } from '../serverState/usePullRefreshFeedback';
@@ -44,7 +45,7 @@ export function InventoryAssetsRouteScreen({
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       {inventoryAssets.isPending && !inventoryAssets.data ? <LoadingState /> : null}
       {inventoryAssets.isError && !inventoryAssets.data ? (
-        <ErrorState retrying={inventoryAssets.isFetching} onRetry={() => { if (!inventoryAssets.isFetching) void inventoryAssets.refetch(); }} message={readableError(inventoryAssets.error, t('mobile.InventoryAssetsRouteScreen.couldNotLoadAssets'))} />
+        <ErrorState retrying={inventoryAssets.isFetching} onRetry={() => { if (!inventoryAssets.isFetching) void inventoryAssets.refetch(); }} message={catalogRecoveryMessage(inventoryAssets.error, t('mobile.InventoryAssetsRouteScreen.couldNotLoadAssets'))} />
       ) : null}
       {inventoryAssets.data ? (
         <InventoryAssetList
@@ -130,9 +131,6 @@ function ErrorState({ message, retrying, onRetry }: { readonly message: string; 
   );
 }
 
-function readableError(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
-}
 
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
