@@ -301,6 +301,94 @@
           "conclusion": "success"
         }
       ]
+    },
+    {
+      "pr": 304,
+      "version": "v0.28.18",
+      "verifiedHead": "687869ce51d901563253e90483d8cc1782c9bd0c",
+      "checks": {
+        "Docs Pages": {
+          "conclusion": "success",
+          "headSha": "687869ce51d901563253e90483d8cc1782c9bd0c",
+          "status": "completed",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37103486857"
+        },
+        "CI": {
+          "conclusion": "success",
+          "headSha": "687869ce51d901563253e90483d8cc1782c9bd0c",
+          "status": "completed",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37103486860"
+        }
+      },
+      "merge": "7a16cde34ba005ea91e4000d4d873c3eccade625",
+      "release": {
+        "conclusion": "success",
+        "headSha": "7a16cde34ba005ea91e4000d4d873c3eccade625",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37104009243"
+      },
+      "jobs": [
+        {
+          "name": "Validate release inputs",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish release images and attestations",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Build and upload tagged iOS release",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Publish build changelog / publish",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "pr": 305,
+      "version": "v0.28.19",
+      "verifiedHead": "c5ac522866536e9644299f9269dbc8cf9f95c839",
+      "checks": {
+        "Docs Pages": {
+          "conclusion": "success",
+          "headSha": "c5ac522866536e9644299f9269dbc8cf9f95c839",
+          "status": "completed",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37104134084"
+        },
+        "CI": {
+          "conclusion": "success",
+          "headSha": "c5ac522866536e9644299f9269dbc8cf9f95c839",
+          "status": "completed",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37104134081"
+        }
+      },
+      "merge": "07ffd62275a994b83445803593e4a27eac5d584d",
+      "release": {
+        "conclusion": "success",
+        "headSha": "07ffd62275a994b83445803593e4a27eac5d584d",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37105572828"
+      },
+      "jobs": [
+        {
+          "name": "Validate release inputs",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish release images and attestations",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Build and upload tagged iOS release",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Publish build changelog / publish",
+          "conclusion": "success"
+        }
+      ]
     }
   ]
 }

@@ -8,20 +8,22 @@ archive and restore flow remains the immediate delivery priority.
 
 ## Current delivery and remaining acceptance — October 3
 
-Reviewed batches through PR #296 are merged and released. The seven localization
-and recovery batches #289/#290/#291/#292/#294/#295/#296 shipped separately as
-v0.28.11–v0.28.17. Each has successful checks on its final integration commit and
-successful release jobs; the final merge is
-`b89a8a566a27d91392d9f63f4b5592a26a0ae1e1`, release37101320565.
-[Exact delivery records](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/localization-delivery-through-v0.28.17.json)
-include TestFlight and changelog job outcomes. Merge conflicts retained the
+Reviewed localization and recovery batches through PR #305 are merged and
+released. #289/#290/#291/#292/#294/#295/#296 shipped as v0.28.11–v0.28.17;
+#304 (photo/evaluation metadata) and #305 (audit history vocabulary) shipped as
+v0.28.18 and v0.28.19. #303 reconciled the preceding delivery documentation.
+Each product batch has successful checks on its final integration commit and
+successful release jobs. The final merge is
+`07ffd62275a994b83445803593e4a27eac5d584d`, release37105572828.
+[Exact delivery records](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/localization-delivery-through-v0.28.19.json)
+include TestFlight and changelog job outcomes. Integration conflicts retained the
 reviewed source trees. #295's docs download failure recovered on one retry;
 its successful product CI was not rerun to conceal a product failure.
 
-Paul GitOps commit `7cb62998cae732851c36abf160dd8ab20efdf1ca` targets the
-v0.28.17 web digest. The [rollout record](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.17.json)
+Paul GitOps commit `d2708075620d1798a82e9b17584fbc222ada2588` deployed the
+v0.28.19 web digest. The [rollout record](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.19.json)
 records the applied revision, replica readiness and web/API HTTP results.
-The API remains on v0.28.0: only API tests changed since that release.
+The API remains on v0.28.0: these batches contain no production API changes.
 Rollout readiness is not a new authenticated production journey.
 
 The full audit remains incomplete. Release success does not close these gaps:
