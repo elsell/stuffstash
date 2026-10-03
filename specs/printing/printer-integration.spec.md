@@ -467,6 +467,38 @@ keep hardware acceptance explicitly unverified and do not represent it as passin
   audit history because it reads static shipped capability metadata, not stored
   inventory content. Profile responses identify supported platforms and whether
   the profile has been physically verified.
+
+## Queue Implementation Contract
+
+The queue aggregate owns transitions and attempt history. It receives time from
+its caller (the application injects its clock) and never reads wall time itself.
+An attempt records a connector, process session, constant-time-verifiable claim
+secret digest, lease expiry, start time, and outcome evidence. Mutations compare
+an expected monotonic job revision as well as ownership and lease. Repeating an
+already recorded identical outcome is safe without changing revision/history.
+An expired pre-start attempt requeues; an expired started attempt becomes uncertain
+and retains the printer reservation. Reconciliation may resolve only the owning
+connector's original uncertain attempt, after current authorization, without
+resuming device output. Explicit no-output evidence may requeue a transient
+failure; partial output or ambiguous evidence never does. Physical evidence is monotonic:
+a known completed copy or partial output cannot later become zero output.
+Repeating an identical recorded uncertain report is also an idempotent readback,
+including after lease expiry; it cannot resume output or change history.
+
+A mutex-backed repository fake must reproduce atomic printer reservation, job
+selection and compare-and-set transitions, not scripted responses. Production
+PostgreSQL transactions lock the printer row before selecting or mutating its
+active job. All repositories require tenant and inventory scope. The application
+rechecks current permission, binding lifecycle, media and asset state before start.
+
+Durable storage keeps indexed scope, printer, queue state and idempotency columns
+alongside the versioned rendering snapshot and attempt evidence. A unique scoped
+actor/request key prevents duplicate jobs even when concurrent requests select
+different printers. An attempt index retains its connector and job association
+for authenticated lost-response recovery, including after settlement. Job state,
+printer reservation, attempt index and audit writes commit or roll back together.
+Registration denial fences use connector → binding → printer → job lock order;
+no caller treats a reservation or database registration as an authorization grant.
 - Registry services live in `internal/app/printregistry`; rendering and labels
   remain in `internal/app/printing`. A human creates the logical printer with a
   name, adapter, and media preset. Pairing creation supplies local discovered
@@ -487,3 +519,18 @@ keep hardware acceptance explicitly unverified and do not represent it as passin
   relationship before granting/synchronizing connector bindings; pending sync
   remains denied by the persistence fence. A human registration alone grants no
   service principal access.
+
+Lease renewal uses a dedicated repository command, under the same connector,
+binding, printer and job locks, that can change only the current owned attempt
+lease and job revision/timestamp. It does not emit a history record and cannot
+be used as a general mutation or audit bypass.
+
+The initial queue stores bounded rendered PNG bytes with the job in the same
+transaction, so an acknowledged queued job never refers to an uncommitted or
+mutable render. This is separate from short-lived download previews. Runtime
+configuration controls maximum copies (default 20), artifact bytes (default 1 MiB),
+artifact lifetime (default 7 days), terminal history lifetime (default 30 days),
+claim lease (default 60 seconds), and readiness freshness (default 90 seconds).
+Expiry removes private artifact bytes while preserving job/attempt metadata and
+safe audit history; an expired artifact cannot be started or downloaded. An
+uncertain reservation is never removed by retention cleanup.

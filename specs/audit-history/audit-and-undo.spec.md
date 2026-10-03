@@ -405,3 +405,8 @@ localized action labels in web activity and mobile asset history. In particular,
 neither rendering nor downloading is described as a physically completed print.
 Printer registration, viewing, listing, and configuration updates likewise use
 localized activity titles; these inventory events do not imply printing a label.
+
+Print job history has its own `print_job` target. Queueing and cancellation
+record the job identity, actor and inventory atomically with the change. Job
+list/detail reads use safe read audits; queueing is never described as printing
+or hardware-confirmed completion.
