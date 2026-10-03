@@ -180,8 +180,9 @@ performed for the mobile printing controls candidate.
 - Change the default layout and automatic-print switch, Save, leave and return.
   Confirm saved values. Back before Save must leave stored defaults unchanged.
   With a viewer account, inspect printers without editable defaults.
-- Open an active item, container and location → More → Print label. Select the
-  printer, preview the QR/title label and print. Follow queued/preparing/printing
+- Open an active item, container and location → More → Print label. With a
+  compatible default, this should queue one label without another confirmation.
+  Use Label options → Print options to select a printer and preview before printing. Follow queued/preparing/printing
   to the reported result. Confirm physical paper output on the QL-800 separately.
 - Cancel a queued job while the printer is unavailable. For uncertain output,
   inspect the printer and verify the app explains the paused queue without

@@ -9,7 +9,7 @@ import { useAppearancePalette } from '../theme/AppearanceContext';
 import { t } from '../../presentation/localization';
 
 type Preview = { uri: string; release(): void; file: LabelFile };
-export function LabelOptionsScreen({ workspace, assetId, scope }: { readonly workspace: LabelWorkspace; readonly assetId: string; readonly scope: LabelScope }) {
+export function LabelOptionsScreen({ workspace, assetId, scope, onPrintOptions }: { readonly workspace: LabelWorkspace; readonly assetId: string; readonly scope: LabelScope; readonly onPrintOptions?: () => void }) {
   const colors = useAppearancePalette(); const dimensions = useWindowDimensions();
   const [catalog, setCatalog] = useState<{ profiles: readonly LabelProfile[]; templates: readonly LabelTemplate[] }>();
   const [selection, setSelection] = useState<LabelSelection>();
@@ -54,6 +54,7 @@ export function LabelOptionsScreen({ workspace, assetId, scope }: { readonly wor
   const rotated = preview && Math.abs(preview.file.rotation) % 180 === 90;
   const height = preview ? width * (rotated ? preview.file.width / preview.file.height : preview.file.height / preview.file.width) : 0;
   return <ScrollView contentContainerStyle={{ padding: 24, gap: 16, paddingBottom: 48 }} style={{ backgroundColor: colors.background }}>
+    {onPrintOptions ? <NativeCommandButton label={t('printing.mobile.options')} disabled={busy} onPress={onPrintOptions} /> : null}
     {busy ? <View accessibilityLiveRegion="polite"><ActivityIndicator /><Text style={{ color: colors.text }}>{t('labels.mobile.loading')}</Text></View> : null}
     {error ? <><Text accessibilityRole="alert" style={{ color: colors.danger }}>{t('labels.mobile.unavailable')}</Text><NativeCommandButton label={t('labels.mobile.retry')} disabled={busy} onPress={() => setReload(value => value + 1)} /></> : null}
     {catalog && !selection ? <Text style={{ color: colors.text }}>{t('labels.mobile.mediaUnavailable')}</Text> : null}
