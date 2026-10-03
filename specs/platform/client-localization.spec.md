@@ -514,3 +514,12 @@ Error. Preserve specific adapter messages explicitly marked safe for users; gene
 validation messages use the catalog fallback. Existing session-expiry handling
 runs first and retains its sign-in behavior. Failed editing retains drafts and
 confirmed tag creations, so retry cannot duplicate successful side effects.
+
+The same boundary applies inside asset edit/lifecycle dialogs, move-here selection,
+and the workspace context switcher's creation form. A parent error handler does
+not sanitize exceptions rethrown to these child surfaces. Each child uses the
+shared safe-error presenter and its operation-specific catalog fallback, retaining
+drafts or selection for retry and explicitly safe adapter validation guidance.
+Parent handlers that rethrow to these dialogs must preserve the original typed
+error and its safe-for-user marker, rather than wrapping sanitized text in an
+unmarked Error and losing actionable validation details.

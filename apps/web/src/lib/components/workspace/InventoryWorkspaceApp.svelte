@@ -346,7 +346,7 @@
       }
       error = safeWorkspaceErrorMessage(caught, t('web.InventoryWorkspaceApp.actionFailed'));
       if (rethrow) {
-        throw new Error(error);
+        throw caught;
       }
     } finally {
       busy = false;
@@ -465,7 +465,7 @@
         };
       }
       error = safeWorkspaceErrorMessage(caught, t('web.InventoryWorkspaceApp.actionFailed'));
-      throw new Error(error);
+      throw caught;
     } finally {
       busy = false;
     }

@@ -112,6 +112,26 @@ describe('ContainedAssetWorkspace', () => {
     expect(onMoveHere).toHaveBeenCalledWith(expect.objectContaining({ id: 'hammer' }));
   });
 
+  it('keeps the move selection retryable without exposing internal failures', async () => {
+    let attempts = 0;
+    render(container, { moveHereOpen: true, onMoveHere: async () => {
+      attempts += 1;
+      throw attempts === 1 ? new Error('PRIVATE_MOVE_DIAGNOSTIC')
+        : Object.assign(new Error('This destination is no longer available.'), { safeForUser: true });
+    } });
+    await tick();
+    button('Select Hammer').click();
+    await tick();
+    button('Move Hammer here').click();
+    await tick();
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Move not saved. Hammer stayed where it was.'));
+    expect(document.body.textContent).not.toContain('PRIVATE_MOVE_DIAGNOSTIC');
+    button('Move Hammer here').click();
+    await tick();
+    expect(attempts).toBe(2);
+    await vi.waitFor(() => expect(document.body.textContent).toContain('This destination is no longer available.'));
+  });
+
   it('hides spatial mutation actions without permission', () => {
     render(container, { canCreate: false, canEdit: false });
     expect(document.body.textContent).not.toContain('Add item here');
