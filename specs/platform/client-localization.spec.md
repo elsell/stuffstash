@@ -475,3 +475,9 @@ render referenced assets through a complete message and format referenced assets
 and executed-operation lists with the locale formatter. Empty summaries retain
 existing translated guidance. These changes do not alter selection, navigation,
 fixture identity, or operation wire values.
+
+Conversation-result presentation also maps supported verdict failure codes to
+catalog labels, with cataloged guidance for unknown codes rather than treating
+wire identifiers as prose. Result summaries pluralize model-call counts and use
+locale number formatting for seconds. Raw verdict codes and measured durations
+remain unchanged in the result model.

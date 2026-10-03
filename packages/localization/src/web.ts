@@ -988,7 +988,6 @@ export const webMessages = {
   "web.RunDetails.ofCasesCompletedPassedFull": "{completedCases} of {totalCases} cases completed · {passedCases} passed",
   "web.RunDetails.referenceFull": "Reference: {failureCode}",
   "web.RunDetails.noPassingResultRecordedFull": "{value} — no passing result recorded.",
-  "web.RunResult.modelCallsSecondsFull": "{value} · {modelCalls} model calls · {value3} seconds",
   "web.RunResult.outcomeFull": "Outcome: {kind}",
   "web.RunResult.insideFull": "{value} inside {value2}",
   "web.RunResult.executedOperationsFull": "Executed operations: {value}",

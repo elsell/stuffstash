@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { evaluationFailureLabel } from '$lib/presentation/conversationResultLabels';
   import { caseOperationLabel, caseOutcomeLabel } from '$lib/presentation/conversationCaseLabels';
   import { assetKindLabel } from '$lib/presentation/assetKindLabel';
   import { localization, t } from '$lib/presentation/localization';
@@ -17,7 +18,7 @@
   }), () => session.client);
   const title = (id: string) => fixture.data?.definition.assets.find(asset => asset.id === id)?.title ?? t('web.RunResult.unknownFixture');
 </script>
-<p>{t('web.RunResult.modelCallsSecondsFull', { value: t(result.verdict.passed ? 'evaluation.passed' : 'evaluation.failed'), modelCalls: result.modelCalls, value3: (result.durationMilliseconds / 1000).toFixed(1) })}</p>
+<p>{t('evaluation.resultSummary', { verdict: t(result.verdict.passed ? 'evaluation.passed' : 'evaluation.failed'), count: result.modelCalls, seconds: localization.number(result.durationMilliseconds / 1000, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })}</p>
 <Button.Root variant="outline" aria-expanded={expanded} onclick={() => { expanded = !expanded; }}>{expanded ? t('web.RunResult.hideResult') : t('web.RunResult.compareExpectedAndObserved')}</Button.Root>
 {#if expanded}
   {#if fixture.isPending}<p role="status">{t('web.RunResult.loadingExpectedResult')}</p>{:else if fixture.isError}<p role="alert">{t('web.RunResult.couldNotLoadTheSavedExpectations')} <Button.Root onclick={() => fixture.refetch()}>{t('web.RunResult.retryExpectations')}</Button.Root></p>
@@ -27,7 +28,7 @@
       <ul>{#each result.observation.locations as location}<li>{t('web.RunResult.insideFull', { value: title(location.assetId), value2: title(location.ancestorId) })}</li>{/each}</ul>
       <ul>{#each result.observation.proposals as proposal}<li>{caseOperationLabel(proposal.operation)}{#if proposal.newKind} ({assetKindLabel(proposal.newKind)}){/if}: {proposal.newTitle || title(proposal.targetId)}{#if proposal.destinationId} → {title(proposal.destinationId)}{/if}{#if proposal.details} · {proposal.details}{/if}</li>{/each}</ul>
       <p>{t('web.RunResult.executedOperationsFull', { value: localization.list(result.observation.executedOperations.map(caseOperationLabel)) || t('evaluation.none') })}</p>
-      {#if !result.verdict.passed}<h5>{t('web.RunResult.differences')}</h5><ul>{#each result.verdict.failures as failure}<li>{failure.code.replaceAll('_', ' ')}{#if failure.fixtureId}: {title(failure.fixtureId)}{/if}{#if failure.operation} ({caseOperationLabel(failure.operation)}){/if}</li>{/each}</ul>{/if}
+      {#if !result.verdict.passed}<h5>{t('web.RunResult.differences')}</h5><ul>{#each result.verdict.failures as failure}<li>{evaluationFailureLabel(failure.code)}{#if failure.fixtureId}: {title(failure.fixtureId)}{/if}{#if failure.operation} ({caseOperationLabel(failure.operation)}){/if}</li>{/each}</ul>{/if}
     </section></div>{/if}
 {/if}
 <style>.result-comparison { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1rem; margin-top: 1rem; overflow-wrap: anywhere; } h5 { font-weight: 600; }</style>
