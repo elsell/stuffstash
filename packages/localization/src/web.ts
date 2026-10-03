@@ -1,5 +1,25 @@
 /** web presentation messages. */
 export const webMessages = {
+  "audit.action.print_job.claimed": "Print job claimed",
+  "audit.action.print_job.started": "Printing started",
+  "audit.action.print_job.completed": "Printing completed",
+  "audit.action.print_job.failed": "Printing failed",
+  "audit.action.print_job.uncertain": "Print outcome uncertain",
+  "audit.action.print_job.released": "Print job returned to queue",
+  "audit.action.print_job.content_downloaded": "Print content downloaded",
+  "audit.action.print_attempt.viewed": "Print attempt viewed",
+  "audit.action.print_attempt.listed": "Print attempts viewed",
+  "audit.action.print_connector.credential_rotation_requested": "Print connector credential replacement requested",
+  "audit.action.print_connector.credential_issued": "Print connector credential issued",
+  "audit.action.print_connector.activated": "Print connector activated",
+  "audit.action.print_connector.credential_rotated": "Print connector credential replaced",
+
+  "audit.action.print_connector.pairing_reviewed": "Printer connection reviewed",
+  "audit.action.print_connector.viewed": "Print connector viewed",
+  "audit.action.print_connector.listed": "Print connectors viewed",
+  "audit.action.print_connector.updated": "Print connector updated",
+  "audit.action.print_connector.approved": "Print connector approved",
+
  "audit.action.print_job.queued": "Label queued",
  "audit.action.print_job.viewed": "Print job viewed",
  "audit.action.print_job.listed": "Print jobs viewed",

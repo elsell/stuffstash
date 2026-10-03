@@ -46,6 +46,10 @@ func (a Access) OpenTransport(ctx context.Context, device printing.Device) (port
 		unix.Close(fd)
 		return nil, ports.Failure("unavailable", "printer path is not a character device")
 	}
+	if err := lockDevice(fd); err != nil {
+		unix.Close(fd)
+		return nil, err
+	}
 	return &transport{fd: fd}, nil
 }
 func (t *transport) Read(ctx context.Context, p []byte) (int, error) {
@@ -99,4 +103,16 @@ func (t *transport) Close() error {
 	var err error
 	t.once.Do(func() { err = unix.Close(t.fd) })
 	return err
+}
+
+// lockDevice uses the actual resolved device inode, shared across users and
+// journal directories. Unsupported locking fails closed rather than falling back.
+func lockDevice(fd int) error {
+	if err := unix.Flock(fd, unix.LOCK_EX|unix.LOCK_NB); err != nil {
+		if errors.Is(err, unix.EWOULDBLOCK) {
+			return ports.ErrDeviceInUse
+		}
+		return ports.Failure("unavailable", "could not exclusively lock the printer device")
+	}
+	return nil
 }

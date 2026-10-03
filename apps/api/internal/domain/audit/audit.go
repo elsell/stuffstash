@@ -40,6 +40,15 @@ func (id PrincipalID) String() string {
 type Action string
 
 const (
+	ActionPrintAttemptsListed                       Action = "print_attempt.listed"
+	ActionPrintJobClaimed                           Action = "print_job.claimed"
+	ActionPrintJobStarted                           Action = "print_job.started"
+	ActionPrintJobCompleted                         Action = "print_job.completed"
+	ActionPrintJobFailed                            Action = "print_job.failed"
+	ActionPrintJobUncertain                         Action = "print_job.uncertain"
+	ActionPrintJobReleased                          Action = "print_job.released"
+	ActionPrintJobContentDownloaded                 Action = "print_job.content_downloaded"
+	ActionPrintAttemptViewed                        Action = "print_attempt.viewed"
 	ActionPrintJobQueued                            Action = "print_job.queued"
 	ActionPrintJobViewed                            Action = "print_job.viewed"
 	ActionPrintJobsListed                           Action = "print_job.listed"
@@ -50,6 +59,15 @@ const (
 	ActionLabelRendered                             Action = "label.rendered"
 	ActionLabelContentDownloaded                    Action = "label.content_downloaded"
 	ActionLabelTemplatesListed                      Action = "label.templates_listed"
+	ActionPrintConnectorCredentialIssued            Action = "print_connector.credential_issued"
+	ActionPrintConnectorActivated                   Action = "print_connector.activated"
+	ActionPrintConnectorCredentialRotated           Action = "print_connector.credential_rotated"
+	ActionPrintConnectorRotationRequested           Action = "print_connector.credential_rotation_requested"
+	ActionPrintPairingReviewed                      Action = "print_connector.pairing_reviewed"
+	ActionPrintConnectorViewed                      Action = "print_connector.viewed"
+	ActionPrintConnectorListed                      Action = "print_connector.listed"
+	ActionPrintConnectorUpdated                     Action = "print_connector.updated"
+	ActionPrintConnectorApproved                    Action = "print_connector.approved"
 	ActionPrinterRegistered                         Action = "printer.registered"
 	ActionPrinterViewed                             Action = "printer.viewed"
 	ActionPrintersListed                            Action = "printer.listed"
@@ -168,7 +186,7 @@ const (
 func NewAction(value string) (Action, bool) {
 	action := Action(strings.TrimSpace(value))
 	switch action {
-	case ActionPrintJobQueued, ActionPrintJobViewed, ActionPrintJobsListed, ActionPrintJobCanceled, ActionPrinterRegistered, ActionPrinterViewed, ActionPrintersListed, ActionPrinterUpdated, ActionLabelProvisioned, ActionLabelViewed, ActionLabelResolved, ActionLabelRendered, ActionLabelContentDownloaded, ActionLabelTemplatesListed, ActionArchiveJobViewed, ActionArchiveJobCreated, ActionArchiveJobUpdated, ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
+	case ActionPrintPairingReviewed, ActionPrintConnectorViewed, ActionPrintConnectorListed, ActionPrintConnectorUpdated, ActionPrintConnectorApproved, ActionPrintJobQueued, ActionPrintJobViewed, ActionPrintJobsListed, ActionPrintJobCanceled, ActionPrinterRegistered, ActionPrinterViewed, ActionPrintersListed, ActionPrinterUpdated, ActionLabelProvisioned, ActionLabelViewed, ActionLabelResolved, ActionLabelRendered, ActionLabelContentDownloaded, ActionLabelTemplatesListed, ActionArchiveJobViewed, ActionArchiveJobCreated, ActionArchiveJobUpdated, ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated, ActionPrintConnectorCredentialIssued, ActionPrintConnectorActivated, ActionPrintConnectorCredentialRotated, ActionPrintConnectorRotationRequested, ActionPrintAttemptsListed, ActionPrintJobClaimed, ActionPrintJobStarted, ActionPrintJobCompleted, ActionPrintJobFailed, ActionPrintJobUncertain, ActionPrintJobReleased, ActionPrintJobContentDownloaded, ActionPrintAttemptViewed,
 		ActionTenantViewed,
 		ActionTenantListed,
 		ActionTenantUpdated,

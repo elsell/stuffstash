@@ -450,3 +450,77 @@ Release publication retains the release ID returned by draft creation and refres
 that resource directly while uploading and verifying assets. It does not depend
 on a newly created draft immediately appearing in the release collection. Remote
 read failures still fail closed; no unverified asset or release is advertised.
+### Worker journal and local device reservation
+
+The Linux print worker holds a nonblocking OS lock on the actual resolved USB
+character-device inode before claiming jobs. It retains that device connection
+for its active worker lifetime, so separate users or journal directories cannot
+bypass physical exclusion. Device identity is revalidated through trusted local
+discovery before opening; unsupported locking fails closed. A separate journal
+file lock serializes recovery state keyed by the discovered physical identity. Its
+private state directory and files are owned by the current user and inaccessible
+to other users. Lock release follows process exit; a second worker fails clearly
+instead of sharing an active printer connection. Unsupported platforms reject USB
+worker startup without affecting ordinary CLI commands.
+
+Each device journal is a versioned, checksummed envelope bound to that device.
+Missing files and invalid/corrupt state are distinct from an initialized idle
+journal. A write atomically replaces a same-directory temporary file, fsyncs the
+file before replacement and the directory afterwards, and acknowledges persistence
+only when both succeed. Completed-state clearing writes a durable idle envelope;
+it does not erase evidence by deleting the journal. Claim tokens remain owner-only
+local secrets and are never included in diagnostics.
+
+The worker records each copy's submission intent durably before sending printer
+bytes, then records positively observed completion before attempting another
+copy. An API start acknowledgement and current lease are additional gates before
+submission. Recovery inspects API state before new claims; an earlier process's
+submission intent can produce uncertainty/reconciliation, never an automatic
+physical replay. Journal or lock failures are fail-closed printer conditions.
+
+### Local Connector Registration State
+
+- `connectors print register --name NAME` discovers candidate devices without
+  opening them, starts key-bound browser pairing, and displays the short code
+  and approval URL. The approving user selects the inventory, printer, and
+  explicit media profile in the browser. The CLI never borrows a human token.
+- Save the exchanged connector credential, canonical API server, tenant,
+  inventory, connector ID, and expiry before sending the activation heartbeat.
+  A failed save must not activate the credential. A lost activation response can
+  be retried with the saved credential. Pairing private keys and poll secrets
+  remain temporary process state and never appear in output.
+- Connector credentials use a separate OS-keyring namespace. Headless operators
+  may explicitly set `STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE` to an owner-only
+  file. This file stores one connector; replacing a different registration needs
+  an explicit separate path. It must never overwrite human login credentials. Cross-process locking
+  serializes identity checks and atomic file replacement so competing
+  registrations cannot both activate after overwriting each other.
+- `--connector ID` or `STUFF_STASH_CLI_CONNECTOR_ID` selects the saved connector
+  for foreground operation. Live authorized device bindings and media come from
+  the API. `STUFF_STASH_CLI_PRINT_STATE_DIRECTORY` or `--journal-dir` selects
+  persistent recovery state separately from credential storage.
+
+The foreground worker consumes all assigned printers by default. One connector
+heartbeat loop refreshes assignments; each distinct physical device has its own
+serial worker holding its device connection and journal reservation. An offline
+printer does not block another printer. Removed or changed physical/media assignments cancel and join their old worker
+before a replacement can open that device. Retirement stops new claims while
+allowing an already-started attempt to finish and durable evidence to reconcile;
+recovery for a retired printer does not require the hardware to be online.
+Duplicate physical bindings fail closed instead of racing two queues. Terminal
+credential failures cancel all workers and return re-pair guidance; transient
+failures use bounded jittered backoff. Runtime timing and backoff are injected
+through ports, with environment-backed defaults selected in bootstrap.
+
+Foreground runtime defaults are a 5-second connector heartbeat/assignment refresh,
+2-second idle job poll, 5-second readiness probe, 1-second completion observation
+interval, 5-second lease safety margin, and 16 MiB artifact limit. Operators may
+set `STUFF_STASH_CLI_PRINT_HEARTBEAT_INTERVAL`, `STUFF_STASH_CLI_PRINT_POLL_INTERVAL`,
+`STUFF_STASH_CLI_PRINT_READINESS_TIMEOUT`, `STUFF_STASH_CLI_PRINT_OBSERVE_INTERVAL`,
+`STUFF_STASH_CLI_PRINT_LEASE_SAFETY`, and `STUFF_STASH_CLI_PRINT_MAX_ARTIFACT_BYTES`.
+Reconnect backoff uses equal jitter from 1 to 30 seconds, configurable through
+`STUFF_STASH_CLI_PRINT_BACKOFF_MIN` and `STUFF_STASH_CLI_PRINT_BACKOFF_MAX`.
+Durations and limits are validated before device access. The default persistent
+journal directory is `stuffstash/print-state` under the OS user configuration
+directory, with owner-only permissions; `--journal-dir` overrides it. Recovery
+runs before hardware access, including when an active printer is powered off.
