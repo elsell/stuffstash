@@ -137,6 +137,8 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	}
 	stopLabelCleanup := startLabelCleanup(ctx, application.Labels(), labelSettings.CleanupInterval, observer)
 	defer stopLabelCleanup()
+	stopPrintCleanup := startPrintJobCleanup(ctx, application.PrintJobs(), observer)
+	defer stopPrintCleanup()
 	stopNotifications := startNotificationWorker(ctx, application.Notifications(), observer, notificationConfig)
 	defer stopNotifications()
 	stopPush := startNotificationPushWorker(ctx, application.Notifications(), observer, pushConfig)

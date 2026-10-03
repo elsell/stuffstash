@@ -133,6 +133,9 @@ func TestPostgresPrintingClaimsSerializeAcrossConnectors(t *testing.T) {
 	if _, err = s.UpdatePrintJob(ctx, ports.PrintJobUpdate{Scope: scope, PrinterID: pid, JobID: job.ID, Authority: &authority, Now: now, Change: func(j *printing.Job, p printing.Printer) error { return j.Start(owner, now, j.Revision) }, Audit: auditFor}); err != nil {
 		t.Fatal(err)
 	}
+	if _, e := s.MaintainPrintJobs(ctx, ports.PrintJobMaintenance{Now: now.Add(time.Minute), TerminalBefore: now.Add(-24 * time.Hour), Limit: 100, Audit: auditFor}); e != nil {
+		t.Fatal(e)
+	}
 	owner.AttemptID = printing.AttemptID(ids.NewID())
 	if _, found, e := s.ClaimPrintJob(ctx, ports.PrintClaim{Authority: authority, Owner: owner, Now: now.Add(time.Minute), Lease: time.Minute, ReportMaxAge: time.Hour, Audit: auditFor}); e != nil || found {
 		t.Fatalf("uncertain output must retain printer: %v %v", found, e)

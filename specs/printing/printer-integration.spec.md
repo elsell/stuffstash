@@ -531,8 +531,8 @@ mutable render. This is separate from short-lived download previews. Runtime
 configuration controls maximum copies (default 20), artifact bytes (default 1 MiB),
 artifact lifetime (default 7 days), terminal history lifetime (default 30 days),
 claim lease (default 60 seconds), and readiness freshness (default 90 seconds).
-Expiry removes private artifact bytes while preserving job/attempt metadata and
-safe audit history; an expired artifact cannot be started or downloaded. An
+Artifact expiry makes content unavailable for new output; terminal cleanup removes
+its private bytes while preserving safe audit history. An
 uncertain reservation is never removed by retention cleanup.
 ### Durable Connector Reconciliation
 
@@ -612,3 +612,20 @@ Recovery reads never return the claim secret, label title, QR URL, or PNG bytes.
 Unsettled discovery is filtered to the authenticated connector, supports an optional
 printer filter, and uses scoped cursor pagination. A recovered record is evidence,
 never permission to resume earlier-session physical output.
+
+### Scheduled Job Maintenance
+
+The API runs bounded job maintenance at the configured cleanup interval using its
+injected clock. Expired unstarted leases return to queued with no-output evidence;
+expired started leases become uncertain and retain their printer reservation.
+Artifact expiry before a job starts makes that job definitively failed; it must
+not be reclaimed or rerendered. Expiry never changes a printing or uncertain job
+into a safe-to-retry result.
+
+Private artifact bytes are removed only from terminal completed, failed, or
+canceled jobs after artifact expiry. Queued, claimed, printing, and uncertain
+content stays protected until the job transitions to a terminal state. Terminal
+job and attempt metadata may be removed after the terminal history lifetime,
+measured from its last state transition; audit history remains. The request
+idempotency window ends when that terminal job is removed. Cleanup uses the same
+printer lock as claims and state changes and rechecks eligibility under the lock.
