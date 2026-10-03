@@ -35,7 +35,12 @@ The full audit remains incomplete. Release success does not close these gaps:
   The residual TypeScript snapshot at `a93b524a` has a scoped caller review of
   31 files, retained as exact-string classifications. This is not a refreshed
   whole-client scan or complete derived/template-copy acceptance; candidate
-  counts are not defect counts or proof of complete migration.
+  counts are not defect counts or proof of complete migration. The follow-up source review found
+  inline web Browse expiration labels bypassing the catalog; the current batch
+  catalogs those links and guards inline each-block labels. Existing RTL
+  search/proposal artifacts were visually reviewed without another native run;
+  [scoped evidence](../../docs/reports/spec-gap-evidence-2026-10-01/native-search/README.md)
+  preserves broader mirroring and physical/assistive limits.
 - Connected native acceptance: system-auth-browser discovery stopped the iPhone
   investigation before sign-in and isolation checks; no unchanged retry.
 - Android connected acceptance verifies real browser sign-in return, persisted

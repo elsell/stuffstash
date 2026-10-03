@@ -22,7 +22,7 @@ export function embeddedDisplayMessages(source, filename) {
       seen.add(key); found.push({ text: text.trim(), offset });
     }
   };
-  function script(text, offset = 0, expression = false, rendered = true, templateBindings = new Map(), moduleScript = false) {
+  function script(text, offset = 0, expression = false, rendered = true, templateBindings = new Map(), moduleScript = false, eachCollection = false) {
     if (expression) { text = `(${text})`; offset -= 1; }
     const ast = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true, filename.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     const scopes = new Map();
@@ -131,6 +131,19 @@ export function embeddedDisplayMessages(source, filename) {
       } else if (ts.isJsxExpression(node)) output(node.expression);
       ts.forEachChild(node, visit);
     }
+    function inlineArrayLabels(node) {
+      if (ts.isArrayLiteralExpression(node)) {
+        for (const value of node.elements) {
+          if ((ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)) &&
+              (/\s/.test(value.text) || /^[A-Z][a-z]+$/.test(value.text))) output(value);
+          else if (ts.isArrayLiteralExpression(value)) inlineArrayLabels(value);
+        }
+      } else if (ts.isParenthesizedExpression(node)) inlineArrayLabels(node.expression);
+    }
+    if (eachCollection) {
+      const statement = ast.statements[0];
+      if (statement && ts.isExpressionStatement(statement)) inlineArrayLabels(statement.expression);
+    }
     properties(ast);
     if (expression) { const statement = ast.statements[0]; if (rendered && statement && ts.isExpressionStatement(statement)) output(statement.expression); }
     else visit(ast);
@@ -183,7 +196,7 @@ export function embeddedDisplayMessages(source, filename) {
       return;
     }
     if (node.type === 'EachBlock') {
-      script(source.slice(node.expression.start, node.expression.end), node.expression.start, true, false, templateBindings);
+      script(source.slice(node.expression.start, node.expression.end), node.expression.start, true, false, templateBindings, false, true);
       const nested = bindTemplate(templateBindings, [node.context]);
       if (node.index) nested.set(node.index, {});
       visit(node.body, nested);

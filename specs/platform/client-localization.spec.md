@@ -537,3 +537,11 @@ Binding checks distinguish lexical declarations and Svelte each/await/snippet
 values. Ambiguous Svelte const/legacy slot or module-script names are left to
 caller review; direct rendered-expression checks still apply. This conservative
 limit avoids rejecting unrelated diagnostics because of same-named values.
+
+### Expiration Browse entry labels
+
+Web Browse expiration links must use catalog messages for the soon, expired and
+all-date modes, including when labels are supplied by an inline each-block array.
+The rendered-copy guard must inspect inline each-block array values; protocol
+mode IDs remain unchanged. Verify the three rendered links under the expanded
+pseudolocale and preserve their mode/query/scope navigation targets.
