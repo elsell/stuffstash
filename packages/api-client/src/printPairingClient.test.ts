@@ -17,6 +17,11 @@ class PairingHTTPFake {
                 printerId: string;
             }[];
         };
+        const allowed = new URL(request.url).pathname.endsWith('/review')
+            ? ['tenantId', 'inventoryId', 'userCode']
+            : ['tenantId', 'inventoryId', 'userCode', 'bindings'];
+        if (Object.keys(body).some(key => !allowed.includes(key)))
+            return this.failure(422);
         if (body.tenantId !== 'tenant' || body.inventoryId !== 'inventory' || body.userCode !== 'ABCD1234')
             return this.failure(400);
         if (new URL(request.url).pathname.endsWith('/review'))
@@ -32,7 +37,7 @@ it('uses code-bound authenticated review and approval without URL secrets or dev
     const api = new PairingHTTPFake();
     let token = 'viewer';
     const client = new PrintPairingClient({ baseUrl: 'https://stash.example', tokenProvider: () => token, fetch: api.fetch });
-    const scope = { tenantId: 'tenant', inventoryId: 'inventory' };
+    const scope = { tenantId: 'tenant', inventoryId: 'inventory', name: 'Home', tenantName: 'Household' };
     await expect(client.review('pair', scope, 'ABCD1234')).rejects.toMatchObject({ status: 403 });
     token = 'owner';
     await expect(client.review('pair', { ...scope, inventoryId: 'foreign' }, 'ABCD1234')).rejects.toMatchObject({ status: 400 });

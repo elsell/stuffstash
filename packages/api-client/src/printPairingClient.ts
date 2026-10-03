@@ -9,7 +9,7 @@ export class PrintPairingClient {
     constructor(options: StuffStashClientOptions) { this.transport = createAuthenticatedTransport(options); }
     async review(pairingId: string, scope: PairingScope, userCode: string) {
         const result = await this.transport.POST('/print-connector-pairings/{pairingId}/review', {
-            params: { path: { pairingId } }, body: { ...scope, userCode }
+            params: { path: { pairingId } }, body: { tenantId: scope.tenantId, inventoryId: scope.inventoryId, userCode }
         });
         return unwrap(result);
     }
@@ -18,7 +18,7 @@ export class PrintPairingClient {
         printerId: string;
     }[]) {
         return unwrap(await this.transport.POST('/print-connector-pairings/{pairingId}/approval', {
-            params: { path: { pairingId } }, body: { ...scope, userCode, bindings }
+            params: { path: { pairingId } }, body: { tenantId: scope.tenantId, inventoryId: scope.inventoryId, userCode, bindings }
         }));
     }
     async connector(scope:PairingScope,connectorId:string){
