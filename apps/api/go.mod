@@ -59,6 +59,7 @@ require (
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/segmentio/asm v1.1.3 // indirect
 	github.com/segmentio/encoding v0.5.4 // indirect
+	github.com/stuffstash/stuff-stash/printingprofiles v0.0.0
 	github.com/tinylib/msgp v1.6.4 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
@@ -86,3 +87,5 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/ini.v1 v1.67.2 // indirect
 )
+
+replace github.com/stuffstash/stuff-stash/printingprofiles => ../../packages/printingprofiles
