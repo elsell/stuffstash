@@ -1,0 +1,84 @@
+# Tests to try when convenient
+
+Pending checks do not hold up development or releases. This is the single list
+of tests that need your device or judgment; no need to answer each one now.
+All unchecked items are **unverified**, not known failures.
+
+When reporting a result, include the app version/build, device, and iOS or Android
+version. “Passed” is enough for a successful check. For a failure, describe the
+last action and what happened; a screenshot or recording helps when convenient.
+Use a small test inventory for changes. Do not remove your original inventory.
+
+## 1. Save and restore an archive on iPhone
+
+Status: pending. Archive support shipped in v0.28.0, TestFlight build 162.1;
+record the actual newer build you test. Connected browser and Android tests
+already cover a round trip, but Android required an ADB file-copy bridge and
+therefore did not verify saving through a real share recipient.
+
+- [ ] In Inventory Settings, create an export archive with Photos and Other files
+  included. Use a test inventory containing a photo and, if available, a tag,
+  custom field and another file. Wait for Ready, share it, and save to Files.
+  **Expected:** a ZIP is saved and remains available after leaving the app.
+- [ ] Choose that ZIP through the restore file picker. Review the inventory
+  contents before approving a restore into a new inventory.
+  **Expected:** the review matches the source; no existing inventory is replaced.
+- [ ] Open the restored inventory and a photo. Compare item names, locations,
+  tags and any custom fields/files included in the test inventory.
+  **Expected:** the data matches and included media opens. The original inventory
+  is still intact.
+- [ ] Separately try a JSON or CSV export; dismiss the share sheet once, then
+  export again and save the file.
+  **Expected:** cancel returns normally and the second export saves successfully.
+  CSV is a flat report, not a complete backup; use the archive for restoration.
+
+Evidence: [archive acceptance](spec-gap-evidence-2026-10-01/android-onboarding-archive/README.md).
+
+## 2. iPhone sign-in and return
+
+Status: pending. Android and browser sign-in have connected evidence; iPhone
+runner authentication stopped before completing the system-browser journey.
+
+- [ ] If convenient, sign out and sign back in through the system browser.
+  **Expected:** the browser returns to Stuff Stash, the correct household and
+  inventory open, and closing/reopening the app preserves the session.
+- [ ] Open Browse, search for an item, open Details, then return to Browse and Home.
+  **Expected:** the correct inventory stays selected, results remain usable, and
+  returning does not leave a stuck refresh spinner.
+
+Evidence: [connected native limitations](spec-gap-evidence-2026-10-01/connected-native/README.md)
+and [Android workflow results](spec-gap-evidence-2026-10-01/core-workflows/android-connected/README.md).
+
+## 3. Screen-reader use, if available
+
+Status: pending. Emulator TalkBack showed focus, but did not establish complete
+activation or spoken output. This does not require you to learn a screen reader;
+skip it unless you already use VoiceOver or TalkBack or want to try it.
+
+- [ ] With VoiceOver or TalkBack, navigate Home → Browse → an item's Details → Back.
+  **Expected:** controls announce useful names and state; focus follows a sensible
+  order, actions activate, and nothing needed to return is unreachable.
+- [ ] Open Filters, choose an option, apply it, then clear it.
+  **Expected:** the selected option is announced and results are reachable after
+  the sheet closes; focus does not remain trapped in the closed sheet.
+
+## Judgments awaiting your preference
+
+These are decisions, not failed tests, and do not block other work.
+
+- Android: the List/Map switcher shifts sideways when Filters disappears in Map.
+  Should it stay anchored in the same position?
+- Web: returning from a filtered Browse → Details → cancelled Move can return to
+  Home. Should Back instead restore the filtered Browse view?
+
+## Already confirmed or tracked elsewhere
+
+- Notification delivery: user confirmed; no repeat requested.
+- Photo double-tap zoom: user confirmed working.
+- Photo swiping briefly closing the viewer: user confirmed fixed.
+- iOS sharing actions obscured by the keyboard: known release follow-up
+  [#239](https://github.com/elsell/stuffstash/issues/239), not an unverified test.
+  Request a targeted retest after a relevant fix.
+
+Local-model acceptance needs a new model/host decision after its bounded failed
+comparison. It is an engineering follow-up, not a device test for this checklist.

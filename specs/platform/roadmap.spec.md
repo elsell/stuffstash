@@ -8,6 +8,12 @@ archive and restore flow remains the immediate delivery priority.
 
 ## Current delivery and remaining acceptance — October 3
 
+User-device checks are tracked in the [testing checklist](../../docs/reports/user-testing-checklist.md).
+Per the user's October 3 instruction, pending user testing is not a delivery or
+goal blocker. Continue independent work and keep missing acceptance explicitly
+unverified; do not confuse this policy with a passing test or waive required checks.
+
+
 Reviewed localization and recovery batches through PR #305 are merged and
 released. #289/#290/#291/#292/#294/#295/#296 shipped as v0.28.11–v0.28.17;
 #304 (photo/evaluation metadata) and #305 (audit history vocabulary) shipped as
