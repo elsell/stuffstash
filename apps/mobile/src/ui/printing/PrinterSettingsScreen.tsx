@@ -1,3 +1,4 @@
+import { PrinterTestCommand } from './PrinterTestCommand';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import type { PrintScope, PrintSettings, PrintingWorkspace } from '../../application/printing/PrintingWorkspace';
@@ -9,7 +10,7 @@ import { SettingsLoadingRow, SettingsNavigationRow, SettingsSection, SettingsVal
 import { connectorState, connectorAvailability, printerAttention, printerReadiness, printJobStatus } from './PrintingStatus';
 import { usePrintingTask } from './usePrintingTask';
 
-export function PrinterSettingsScreen({ workspace, scope, canConfigure, onJob }: { readonly workspace: PrintingWorkspace; readonly scope: PrintScope; readonly canConfigure: boolean; readonly onJob: (id: string) => void }) {
+export function PrinterSettingsScreen({ workspace, scope, canConfigure, canPrint = false, onJob }: { readonly workspace: PrintingWorkspace; readonly scope: PrintScope; readonly canConfigure: boolean; readonly canPrint?: boolean; readonly onJob: (id: string) => void }) {
   const { palette, styles } = useSettingsListStyles();
   const load = useCallback(async (signal: AbortSignal) => ({ catalog: await workspace.repository.catalog(scope, signal), jobs: await workspace.repository.jobs(scope, signal) }), [workspace, scope.tenantId, scope.inventoryId]);
   const task = usePrintingTask(load, `${scope.tenantId}/${scope.inventoryId}`);
@@ -47,6 +48,7 @@ export function PrinterSettingsScreen({ workspace, scope, canConfigure, onJob }:
       {!catalog.printers.length ? <Text style={{ color: palette.textMuted }}>{t('printing.mobile.empty')}</Text> : null}
       {catalog.printers.map(printer => <SettingsSection key={printer.id} title={printer.name} footer={printer.retired ? t('printing.mobile.retired') : printerReadiness(printer.readiness)}>
         <SettingsValueRow label={t('labels.mobile.size')} value={printer.mediaName} />
+        {canPrint ? <PrinterTestCommand workspace={workspace} scope={scope} printer={printer} template={catalog.settings.template} lifetime={task.lifetime} onQueued={onJob} /> : null}
         {printerAttention(printer.readinessReason) ? <Text style={{ padding: 16, color: palette.text }}>{printerAttention(printer.readinessReason)}</Text> : null}
         {printer.reportedAt ? <Text style={{ paddingHorizontal: 16, color: palette.textMuted }}>{t('printing.mobile.reportedAt', { time: new Date(printer.reportedAt).toLocaleString() })}</Text> : null}
         {catalog.connectors.filter(connector => connector.printerIds.includes(printer.id)).map(connector => <View key={connector.id} style={{ padding: 16, gap: 4 }}>

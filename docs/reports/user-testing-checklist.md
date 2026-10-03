@@ -207,3 +207,15 @@ completion or printing again. Lose a response once and retry the same
 acknowledgement. Verify viewer accounts have no recovery controls, and exercise
 the outcome picker and acknowledgement with enlarged text and VoiceOver/TalkBack.
 Status: source/stateful-fake evidence only; native acceptance remains unverified.
+
+For mobile reprints and diagnostics, open a completed/failed/canceled job and
+choose Reprint label. Pick current printer/template settings, preview an asset
+label, and submit. Confirm the new job links to its predecessor and the original
+job is unchanged. Uncertain and active jobs must not offer reprint. Lose a response,
+leave the task, and return: Retry must recover the same job without another label.
+In Inventory Settings → Printers, Print test label must enqueue one diagnostic
+label only when pressed; entry and refresh must do nothing. Diagnostic reprints
+explain fixed test content without pretending to preview an asset. Verify viewer
+accounts cannot issue either command. Check back navigation, narrow/enlarged text,
+and VoiceOver/TalkBack. Status: source and controlled-fake checks only; native
+runtime and physical output remain unverified.

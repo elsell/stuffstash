@@ -70,4 +70,9 @@ export const printingMobileMessages = {
   'printing.mobile.waitingForIdle': 'The connector must confirm the printer is idle before this job can be resolved. Check the printer and its connection, then refresh.',
   'printing.mobile.resolved': 'Uncertainty acknowledged',
   'printing.mobile.resolvedDetail': 'Your report was saved. Physical completion was not confirmed. Another label requires a separate reprint request.',
+  'printing.mobile.reprint': 'Reprint label',
+  'printing.mobile.reprintUnavailable': 'Only completed, failed, or canceled jobs can be reprinted. Resolve uncertain output first.',
+  'printing.mobile.diagnostic': 'This prints the fixed Stuff Stash test label. Its QR code is a diagnostic example, not an inventory item.',
+  'printing.mobile.testLabel': 'Print test label',
+  'printing.mobile.retryTest': 'Retry test label',
 } as const;
