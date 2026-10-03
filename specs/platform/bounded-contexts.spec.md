@@ -145,6 +145,17 @@ The data portability context owns:
 - Future import formats.
 - Future media export packaging.
 
+### Printing
+
+Printing owns stable asset-label identities, QR resolution, label rendering,
+registered inventory printers, restricted CLI connectors, print jobs and attempts.
+Assets keep lifecycle ownership; inventories keep label defaults; identity/access
+supplies human authorization and restricted machine authentication. Physical USB
+protocols are adapters, not domain behavior. See
+[asset labels](../printing/asset-labels.spec.md),
+[printer integration](../printing/printer-integration.spec.md), and
+[CLI](cli.spec.md). These are specified, not yet implemented.
+
 ## Cross-Context Rules
 
 - Tenants are the top-level security boundary.

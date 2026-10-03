@@ -187,3 +187,11 @@ The system must eventually support things that can be used up, such as medicine,
 ## Expiration Extension
 
 `../expiration/expiration-tracking.spec.md` defines optional precision-preserving expiration metadata and the narrow exception allowing initial custom type assignment on an existing untyped asset. Existing assigned-type replacement remains prohibited. Retained fields and tags must validate and persist atomically with audit.
+
+## Planned Label Integration
+
+[Asset labels](../printing/asset-labels.spec.md) defines shared item/container/location
+label identities and an explicit print-after-create command option. Printing is
+application orchestration, not an asset entity's USB or transport responsibility.
+Asset plus requested label/job/audit commit atomically with scoped idempotency;
+printing failures after commit never undo asset creation. Not yet implemented.

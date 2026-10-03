@@ -1,5 +1,21 @@
 # Roadmap Spec
 
+## Specified Next: Labels, Printers, And CLI — October 3, 2026
+
+The user authorized specification of QR labels/scanning and registered CLI print
+consumers. Design is specified; implementation has not begun. See
+[asset labels](../printing/asset-labels.spec.md),
+[printer integration](../printing/printer-integration.spec.md), and [CLI](cli.spec.md).
+Sequence: contract/security and job-state tests; API label/registration/job slice;
+CLI pairing and built-in Linux QL-800 adapter; web/mobile printing and scanning;
+physical-device evidence and operator documentation. Implement atomic claims,
+separate connector/printer health, and safe uncertain-outcome recovery together.
+Initial media profile derives from the user's old script: 29 x 90 mm, 306 x 991
+raster. Actual USB completion reporting, media/scan behavior, and packaging remain
+unverified. Remote wake/smart outlets and a shared hosted QR resolver are outside
+the first release. Pending user-device checks do not block unrelated delivery;
+this specification does not close existing audit or acceptance work.
+
 ## Integration priority clarification — October 2, 2026
 
 A first-class CLI takes priority over further MCP work. MCP remains a supported

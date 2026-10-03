@@ -356,3 +356,14 @@ redirecting its screen. The underlying authorized inventory/account operation
 still completes; this guard does not reverse its effect. Current-session success
 still clears the link and returns Home, and failures remain available to the
 screen's existing recovery handling.
+
+## Planned CLI And Print Connector Authentication
+
+[CLI](../platform/cli.spec.md) specifies a separate public OIDC client for human
+CLI login. [Printer integration](../printing/printer-integration.spec.md) specifies
+browser-approved restricted machine credentials for print consumers. This is an
+explicit machine-authentication extension, not a replacement for human OIDC.
+Inventory `view` permits safe printer/status discovery and label rendering;
+`edit_asset` permits physical print requests/cancellation/reprint, and `configure`
+permits registration, bindings, defaults, and revocation. Connector credentials
+never inherit human permissions. Adversarial boundary tests precede implementation.
