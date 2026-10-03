@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-03",
+  "source": "a93b524a387e8d01ad28cf58b34002cdb880e5d6",
+  "equivalentIntegrationCommit": "13dfec0efc8520135c98bf1b0ee42907484cc55d",
+  "tree": "bedbd049d5b95394f9394cb7800b4cbb8d11d36c",
+  "apkSHA256": "650307b6db7fa59c33c2b30723e6e3899b15c5a5b0946e986247940916275e20",
+  "build": {
+    "conclusion": "success",
+    "headSha": "a93b524a387e8d01ad28cf58b34002cdb880e5d6",
+    "status": "completed",
+    "url": "https://github.com/elsell/stuffstash/actions/runs/37110497691"
+  },
+  "environment": {
+    "device": "Android API36 emulator-5580",
+    "server": "isolated Paul API/Dex/SpiceDB/Garage",
+    "apiVersion": "v0.28.0",
+    "apiDigest": "sha256:bf7fa6f60fe27f1ba87a1248fcae12325eb0907efcac93e46fb45dfd7b12f8d8",
+    "normalProductionRoutes": true,
+    "injectedSession": false
+  },
+  "passed": [
+    "Real browser sign-in as fresh Setup principal",
+    "Create household returns directly to Home",
+    "Owner sign-in return",
+    "Authenticated archive export with photos and other files selected",
+    "Downloaded ZIP presented to Android share sheet",
+    "System document picker selects downloaded archive from Downloads",
+    "Upload and validation produce review: 6 items, 4 photos",
+    "Close and reopen staged review without reupload",
+    "Rename destination, approve restore and open new inventory",
+    "Restored original photo renders in native viewer"
+  ],
+  "limitations": [
+    "ADB copied actual downloaded app-cache ZIP to Downloads because no local-save share recipient was available; native recipient saving remains unverified",
+    "Fixture contains no tags, custom types, custom fields or non-photo files",
+    "Photo rendering verified visually, not by byte equality in this native run",
+    "TalkBack service enabled with visible focus only; complete focus order, accessibility activation and spoken output remain unverified",
+    "Later Home/Browse refresh errors appeared during TalkBack inspection; cause not diagnosed and not attributed to accessibility",
+    "No iPhone or physical-device acceptance"
+  ],
+  "talkBack": {
+    "version": "16.0.0.738667889",
+    "versionCode": "60149353",
+    "outcome": "partial-not-accepted",
+    "audio": "emulator launched with no-audio",
+    "cleanup": "restored originally disabled accessibility settings"
+  }
+}

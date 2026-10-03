@@ -35,15 +35,22 @@ The full audit remains incomplete. Release success does not close these gaps:
   Remaining inventory candidates still require caller review; candidate counts
   are not defect counts or proof of complete migration.
 - Connected native acceptance: system-auth-browser discovery stopped the iPhone
-  investigation before sign-in and isolation checks. Android archive fixtures
-  passed native transfer and synthetic approval, not authenticated native restore.
-- Android connected acceptance at `43dabdcc` now verifies real browser sign-in
-  return, persisted-session relaunch, native sign-out and second-principal asset
-  isolation. [Evidence](../../docs/reports/spec-gap-evidence-2026-10-01/android-connected/README.md)
-  records the production-route APK and isolated real server. A newly created
-  household incorrectly opens Containing location; root navigation recovers.
-  Fix that onboarding route in the next product batch. This does not close iPhone,
-  authenticated archive, physical or assistive acceptance.
+  investigation before sign-in and isolation checks; no unchanged retry.
+- Android connected acceptance verifies real browser sign-in return, persisted
+  session, native sign-out and second-principal asset isolation. PR #309 merged
+  at `c1c1184b` and release37110696922 succeeded.
+- The next frozen batch's three gaps are post-setup root navigation, authenticated
+  Android archive acceptance and a representative TalkBack journey. The normal
+  APK at `a93b524a` verifies fresh household creation returns to Home and an
+  authenticated archive export/upload/review/restore opens a restored photo.
+  [Scoped runtime evidence](../../docs/reports/spec-gap-evidence-2026-10-01/android-onboarding-archive/README.md)
+  records an ADB bridge between the actual downloaded ZIP and system picker;
+  native recipient saving is still unverified. TalkBack showed visible focus,
+  but complete activation and spoken-output acceptance remain open. Later
+  Home/Browse refresh errors are recorded without an unproven diagnosis.
+  Ship the verified navigation fix; these limits remain audit follow-ups.
+- Web workspace creation, editing and shared action recovery now use the existing
+  safe localized presenter. PR #311 merged at `42ae0fe3`; release is pending.
 - Physical file-provider/recipient and assistive acceptance remain unverified.
   Existing user-confirmed notification delivery is preserved, not reopened.
 - The previously recorded iOS sharing-menu keyboard overlap and proposed web
