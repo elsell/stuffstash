@@ -42,9 +42,9 @@ or native workflow. Existing API authorization tests remain separate evidence.
 
 **Follow-up discovered:** household creation succeeded but initially landed on
 “Containing location” with “This proposal is no longer available for editing”
-(`household-created-wrong-route.png`). Root navigation recovered Home. This is an
-unresolved onboarding navigation defect; the full onboarding journey did not pass.
-Track it in the next product batch rather than rerunning this unchanged APK.
+(`household-created-wrong-route.png`). Root navigation recovered Home. The full onboarding journey did not pass in that build. The subsequent
+[onboarding acceptance](../android-onboarding-archive/README.md) records the fix
+and fresh-household runtime verification; no unchanged APK retry was used.
 
 The native-intent fix suppresses warm callback navigation while AuthSession retains
 its original URL event and state/PKCE validation. Cold callbacks return to root
