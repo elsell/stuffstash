@@ -15,3 +15,12 @@ export function printingFailureMessage(error: unknown) { if (error instanceof Pr
 } return t('web.Printing.unavailable'); }
 
 export function reportedPrintOutcomeLabel(outcome:ReportedPrintOutcome){return t(outcome==='printed'?'web.Printing.reportPrinted':outcome==='not_printed'?'web.Printing.reportNotPrinted':'web.Printing.reportUnknown');}
+
+export function labelMediaName(media:{name:string;widthMicrometers:number;heightMicrometers:number}){
+    return media.name.trim()||t('web.Printing.mediaDimensions',{width:media.widthMicrometers/1000,height:media.heightMicrometers/1000});
+}
+export function connectorAvailabilityLabel(value:PrintConnector){return t(value.availability==='online'?'web.Printing.computerOnline':value.availability==='offline'?'web.Printing.computerOffline':'web.Printing.computerUnknown');}
+export function readinessReasonLabel(reason:string){
+    const reasons={device_unavailable:'web.Printing.reasonUnavailable',device_busy:'web.Printing.reasonBusy',paper_empty:'web.Printing.reasonPaper',cover_open:'web.Printing.reasonCover',hardware_error:'web.Printing.reasonHardware'} as const;
+    return t(reasons[reason as keyof typeof reasons]??'web.Printing.reasonUnknown');
+}

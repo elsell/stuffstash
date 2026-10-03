@@ -1,11 +1,12 @@
-import type { ReportedPrintOutcome, LabelTemplate, PrintDefaults, PrintScope, RegisteredPrinter, PrintConnector, PrintJob, PrintPage, LabelSelection, LabelPreview, LabelMedia } from '$lib/domain/printing';
+import type { ReportedPrintOutcome, PrinterMediaChoice, LabelTemplate, PrintDefaults, PrintScope, RegisteredPrinter, PrintConnector, PrintJob, PrintPage, LabelSelection, LabelPreview, LabelMedia } from '$lib/domain/printing';
 export interface PrintingRepository {
     printers(scope: PrintScope): Promise<RegisteredPrinter[]>;
     connectors(scope: PrintScope): Promise<PrintConnector[]>;
+    mediaProfiles(scope: PrintScope): Promise<PrinterMediaChoice[]>;
     templates(scope: PrintScope): Promise<LabelTemplate[]>;
     settings(scope: PrintScope): Promise<PrintDefaults>;
     saveSettings(scope: PrintScope, settings: PrintDefaults): Promise<PrintDefaults>;
-    updatePrinter(scope: PrintScope, printer: RegisteredPrinter, name: string, retired: boolean): Promise<RegisteredPrinter>;
+    updatePrinter(scope: PrintScope, printer: RegisteredPrinter, name: string, retired: boolean, media?: LabelMedia): Promise<RegisteredPrinter>;
     preview(scope: PrintScope, assetId: string, selection: LabelSelection, media: LabelMedia): Promise<LabelPreview>;
     createJob(scope: PrintScope, assetId: string, selection: LabelSelection, previewFingerprint: string, key: string): Promise<PrintJob>;
     reprint(scope: PrintScope, predecessor: string, selection: LabelSelection, previewFingerprint: string, key: string): Promise<PrintJob>;

@@ -2,7 +2,7 @@
 import { onMount } from 'svelte';
 import { t } from '$lib/presentation/localization';
 import { timestampLabel } from '$lib/presentation/timestamp';
-import { readinessLabel, connectorStatusLabel, printingFailureMessage } from '$lib/presentation/printing';
+import { labelMediaName, connectorAvailabilityLabel, readinessReasonLabel, readinessLabel, connectorStatusLabel, printingFailureMessage } from '$lib/presentation/printing';
 import { PrintingFailure, type ReportedPrintOutcome, type PrintScope, type PrintDefaults, type RegisteredPrinter, type PrintConnector, type LabelTemplate, type PrintJob } from '$lib/domain/printing';
 import type { PrintingRepository, PrintIntents } from '$lib/ports/printingRepository';
 import * as Button from '$lib/components/ui/button/index.js';
@@ -10,6 +10,7 @@ import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 import { Label } from '$lib/components/ui/label/index.js';
 import PairingChoice from './PairingChoice.svelte';
 import PrintJobList from './PrintJobList.svelte';
+import PrinterSettingsDialog from './PrinterSettingsDialog.svelte';
 import PrinterTestDialog from './PrinterTestDialog.svelte';
 import AssetPrintDialog from './AssetPrintDialog.svelte';
 let { scope, repository, intents, canConfigure, canPrint }: {
@@ -21,6 +22,10 @@ let { scope, repository, intents, canConfigure, canPrint }: {
 } = $props();
 let printers = $state<RegisteredPrinter[]>([]), connectors = $state<PrintConnector[]>([]), templates = $state<LabelTemplate[]>([]), jobs = $state<PrintJob[]>([]);
 let draft = $state<PrintDefaults | null>(null), busy = $state(true), error = $state(''), saved = $state(false), conflict = $state(false), nextCursor = $state<string | undefined>();
+let editing=$state<RegisteredPrinter|null>(null);
+let editTrigger:HTMLElement|undefined;
+function editPrinter(printer:RegisteredPrinter,trigger:HTMLElement){if(!canConfigure||busy)return;editTrigger=trigger;editing=printer;}
+$effect(()=>{if(!canConfigure)editing=null;});
 let testPrinterId=$state('');
 let testTrigger:HTMLElement|undefined;
 function openTest(printer:RegisteredPrinter,trigger:HTMLElement){if(!canPrint||busy||printer.retired||!intents)return;testTrigger=trigger;testPrinterId=printer.id;}
@@ -106,7 +111,7 @@ async function resolve(job:PrintJob,outcome:ReportedPrintOutcome){if(!canPrint||
    {#if !canConfigure}<p>{t('web.Printing.readOnly')}</p>{/if}
    {#if missingDefault}<p role="status">{t('web.Printing.missingDefault')}</p>{/if}
    <form onsubmit={save} class="defaults-form">
-    <PairingChoice id="default-print-destination" label={t('web.Printing.defaultPrinter')} value={draft.defaultPrinterId??''} options={[{value:'',label:t('web.Printing.noDefault')},...activePrinters.map(p=>({value:p.id,label:`${p.name} — ${p.media.name}`}))]} disabled={!canConfigure||busy||conflict} onChange={value=>{if(draft){draft.defaultPrinterId=value||null;if(!value)draft.printOnCreateDefault=false;saved=false;}}}/>
+    <PairingChoice id="default-print-destination" label={t('web.Printing.defaultPrinter')} value={draft.defaultPrinterId??''} options={[{value:'',label:t('web.Printing.noDefault')},...activePrinters.map(p=>({value:p.id,label:`${p.name} — ${labelMediaName(p.media)}`}))]} disabled={!canConfigure||busy||conflict} onChange={value=>{if(draft){draft.defaultPrinterId=value||null;if(!value)draft.printOnCreateDefault=false;saved=false;}}}/>
     <PairingChoice id="default-print-template" label={t('web.Printing.template')} value={selectedTemplate} options={templates.map(template=>({value:`${template.id}:${template.version}`,label:template.name}))} disabled={!canConfigure||busy||conflict} onChange={value=>{const template=templates.find(t=>`${t.id}:${t.version}`===value);if(draft&&template){draft.templateId=template.id;draft.templateVersion=template.version;saved=false;}}}/>
     <div class="check-row"><Checkbox id="default-print-reference" bind:checked={draft.showReference} disabled={!canConfigure||busy||conflict}/><Label for="default-print-reference">{t('web.Printing.showReference')}</Label></div>
     <div class="check-row"><Checkbox id="default-auto-print" bind:checked={draft.printOnCreateDefault} disabled={!canConfigure||busy||conflict||!draft.defaultPrinterId||missingDefault}/><Label for="default-auto-print">{t('web.Printing.autoPrint')}</Label></div>
@@ -117,10 +122,10 @@ async function resolve(job:PrintJob,outcome:ReportedPrintOutcome){if(!canPrint||
   </section>
   <section><div class="section-heading"><h2>{t('web.Printing.registered')}</h2><Button.Root variant="outline" disabled={busy} onclick={()=>void refresh()}>{t('web.Printing.refresh')}</Button.Root></div>
    {#if printers.length===0}<p>{t('web.Printing.emptyPrinters')}</p>{/if}
-   <ul>{#each printers as printer(printer.id)}<li><strong>{printer.name}</strong><p>{printer.media.name} · {printer.retired?t('web.Printing.retired'):readinessLabel(printer.readiness)}</p>{#if canPrint&&intents&&!printer.retired}<Button.Root variant="outline" disabled={busy} onclick={event=>openTest(printer,event.currentTarget)}>{t('web.Printing.testLabel')}</Button.Root>{/if}</li>{/each}</ul>
+   <ul>{#each printers as printer(printer.id)}<li><strong>{printer.name}</strong><p>{labelMediaName(printer.media)} · {printer.retired?t('web.Printing.retired'):readinessLabel(printer.readiness)}</p>{#if printer.readinessReason}<p>{readinessReasonLabel(printer.readinessReason)}</p>{/if}{#if printer.reportedAt}<p>{t('web.Printing.reportedAt',{time:timestampLabel(printer.reportedAt)})}</p>{/if}{#if canConfigure}<Button.Root variant="outline" disabled={busy} onclick={event=>editPrinter(printer,event.currentTarget)}>{t('web.Printing.editPrinter')}</Button.Root>{/if}{#if canPrint&&intents&&!printer.retired}<Button.Root variant="outline" disabled={busy} onclick={event=>openTest(printer,event.currentTarget)}>{t('web.Printing.testLabel')}</Button.Root>{/if}</li>{/each}</ul>
    {#if canConfigure}<p>{t('web.Printing.registrationHelp')}</p>{/if}
   </section>
-  <section><h2>{t('web.Printing.connectors')}</h2>{#if connectors.length===0}<p>{t('web.Printing.emptyConnectors')}</p>{/if}<ul>{#each connectors as connector(connector.id)}<li><strong>{connector.name}</strong><p>{connectorStatusLabel(connector)}</p><p>{t('web.Printing.lastSeen')}: {connector.lastSeenAt?timestampLabel(connector.lastSeenAt):t('web.Printing.neverSeen')}</p></li>{/each}</ul></section>
+  <section><h2>{t('web.Printing.connectors')}</h2>{#if connectors.length===0}<p>{t('web.Printing.emptyConnectors')}</p>{/if}<ul>{#each connectors as connector(connector.id)}<li><strong>{connector.name}</strong><p>{connectorStatusLabel(connector)} · {connectorAvailabilityLabel(connector)}</p><p>{t('web.Printing.lastSeen')}: {connector.lastSeenAt?timestampLabel(connector.lastSeenAt):t('web.Printing.neverSeen')}</p></li>{/each}</ul></section>
   <section><h2>{t('web.Printing.jobs')}</h2><PrintJobList {jobs} {printers} {scope} {canPrint} {busy} onCancel={cancel} onResolve={resolve} onReprint={intents?openReprint:undefined}/>{#if nextCursor}<Button.Root variant="outline" disabled={busy} onclick={()=>void moreJobs()}>{t('web.Printing.moreJobs')}</Button.Root>{/if}</section>
  {/if}
 </section>
@@ -129,5 +134,8 @@ async function resolve(job:PrintJob,outcome:ReportedPrintOutcome){if(!canPrint||
 {/if}
 {#if testPrinterId && intents && canPrint}
  {#key testPrinterId}<PrinterTestDialog {scope} printerId={testPrinterId} {repository} {intents} onClose={()=>{testPrinterId='';}} onRestoreFocus={()=>testTrigger?.focus()}/>{/key}
+{/if}
+{#if editing && canConfigure}
+ {#key editing.id}<PrinterSettingsDialog {scope} printer={editing} {repository} onSaved={updated=>{printers=printers.map(p=>p.id===updated.id?updated:p);}} onClose={()=>{editing=null;}} onRestoreFocus={()=>editTrigger?.focus()}/>{/key}
 {/if}
 <style>.printing-settings{display:grid;gap:var(--space-6);max-width:48rem}.defaults-form{display:grid;gap:var(--space-3);max-width:32rem}.check-row{display:flex;gap:var(--space-3);align-items:center}.section-heading{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;justify-content:space-between}ul{list-style:none;padding:0;display:grid;gap:var(--space-3)}li{border-bottom:1px solid var(--border);padding-block:var(--space-2)}p{color:var(--muted-foreground);margin-block:var(--space-2)}strong,p{overflow-wrap:anywhere}</style>

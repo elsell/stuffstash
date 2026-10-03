@@ -32,15 +32,19 @@ export interface RegisteredPrinter {
     media: LabelMedia;
     mediaFingerprint: string;
     readiness: PrinterReadiness;
+    readinessReason?: string;
+    reportedAt?: string;
 }
 export interface PrintConnector {
     id: string;
     name: string;
     state: string;
     authorizationPending: boolean;
+    availability?: 'online' | 'offline' | 'unknown';
     lastSeenAt?: string;
     printerIds: string[];
 }
+export interface PrinterMediaChoice { adapterId: string; media: LabelMedia; }
 export interface LabelTemplate {
     id: string;
     version: number;
