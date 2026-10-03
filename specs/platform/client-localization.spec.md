@@ -449,3 +449,11 @@ The copy gate must reject direct ordinary-Error message/fallback conditionals in
 rendered text, display properties, and returned presentation helpers. Typed
 catalog recovery and diagnostic-only categorization remain permitted. This
 syntactic guard complements caller review; it is not data-flow verification.
+
+### Custom-field types and terminal invitation titles
+
+Custom-field editor choices, locked type values and collection summaries must use
+one catalog mapping for every supported field type. Keep wire type identifiers,
+authored field names and authored enum options unchanged. Cancelled and revoked
+invitation titles are complete catalog messages, never untranslated status values
+inserted into a sentence. Verify these consumers in the expanded pseudolocale.

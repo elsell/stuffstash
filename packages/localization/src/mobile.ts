@@ -1037,7 +1037,6 @@ export const mobileMessages = {
   "mobile.InventoryExportAction.youNoLongerHaveAccessToExportThisInventory": "You no longer have access to export this inventory.",
   "mobile.InventoryExportAction.thisInventoryExceedsTheServerSExportLimitAsk": "This inventory exceeds the server’s export limit. Ask your administrator to increase it.",
   "mobile.InventoryExportAction.couldNotExportThisInventoryTryAgain": "Could not export this inventory. Try again.",
-  "mobile.InventoryInvitationScreen.invitation": "Invitation {label}",
   "mobile.InventoryMapScreen.found": "Found {title} · {placementLabel}",
   "mobile.InventoryMapScreen.showDetailsFor": "Show details for {title}",
   "mobile.InventorySharingScreen.sharingUnavailable": "Sharing unavailable",

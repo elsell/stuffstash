@@ -279,5 +279,13 @@ export const workflowMessages = {
   "sharing.linkFailed.copy": "Could not copy invitation",
   "sharing.linkFailed.share": "Could not share invitation",
   "customization.loading.active": "Loading active settings…",
-  "customization.loading.archived": "Loading archived settings…"
+  "customization.loading.archived": "Loading archived settings…",
+  "customization.fieldType.text": "Text",
+  "customization.fieldType.number": "Number",
+  "customization.fieldType.boolean": "Boolean",
+  "customization.fieldType.date": "Date",
+  "customization.fieldType.url": "Url",
+  "customization.fieldType.enum": "Enum",
+  "invitation.title.revoked": "Invitation revoked",
+  "invitation.title.cancelled": "Invitation cancelled"
 } as const;

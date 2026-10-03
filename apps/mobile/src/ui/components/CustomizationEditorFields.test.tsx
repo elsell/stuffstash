@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useState } from 'react';
 import { expect, it } from 'vitest';
 import { Platform } from 'react-native';
@@ -204,4 +205,13 @@ it.each(['ios', 'android'])('retains rejected enum editing and resets accepted n
     expect(h.byLabel('Remove camping-kit')).toBeDefined();
     expect(h.byText('saved · Existing')).toBeDefined();
   } finally { await h.unmount(); Platform.OS = originalPlatform; }
+});
+
+it.each(['text', 'number', 'boolean', 'date', 'url', 'enum'] as const)('catalogs the locked %s field type', async fieldType => {
+  const h = new MobileRenderHarness();
+  try {
+    await h.render(<CustomizationFieldControls persistedEnumOptions={[]} persistedTargetIds={[]} applicability="all_assets" canMutate eligibleTypes={[]} enumOptions={[]} fieldType={fieldType} mode="edit" newOption=""
+      onApplicability={() => {}} onEnumOptions={() => {}} onFieldType={() => {}} onNewOption={() => {}} onTargets={() => {}} targetIds={[]} />);
+    expect(h.allText()).toContain(t(`customization.fieldType.${fieldType}`));
+  } finally { await h.unmount(); }
 });

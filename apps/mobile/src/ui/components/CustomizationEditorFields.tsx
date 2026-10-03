@@ -1,3 +1,4 @@
+import { customFieldTypeLabel } from '../../presentation/CustomFieldTypeLabel';
 import { t } from '../../presentation/localization';
 import { useState, type ReactNode, type RefObject } from 'react';
 import { Platform, StyleSheet, Text, View, type TextInput } from 'react-native';
@@ -21,7 +22,7 @@ export function CustomizationFieldControls(props: { readonly persistedApplicabil
   const unavailableSavedCount = unavailableTargets.filter(id => props.persistedTargetIds.includes(id)).length;
   const unavailableDraftTargets = unavailableTargets.filter(id => !props.persistedTargetIds.includes(id));
   return <>
-    <View style={styles.formRow}>{props.mode === 'edit' ? <Text style={styles.label}>{t('mobile.CustomizationEditorFields.type')}</Text> : null}{props.mode === 'edit' ? <Text style={styles.lockedValue}>{capitalize(props.fieldType)}</Text> : <SingleChoicePicker disabled={disabled} label={t('mobile.CustomizationEditorFields.type')} onChange={props.onFieldType} options={types.map((value) => ({ label: capitalize(value), value }))} value={props.fieldType} />}</View>
+    <View style={styles.formRow}>{props.mode === 'edit' ? <Text style={styles.label}>{t('mobile.CustomizationEditorFields.type')}</Text> : null}{props.mode === 'edit' ? <Text style={styles.lockedValue}>{customFieldTypeLabel(props.fieldType)}</Text> : <SingleChoicePicker disabled={disabled} label={t('mobile.CustomizationEditorFields.type')} onChange={props.onFieldType} options={types.map((value) => ({ label: customFieldTypeLabel(value), value }))} value={props.fieldType} />}</View>
     {props.fieldType === 'enum' ? <View style={styles.formRow}><Text style={styles.label}>{t('mobile.CustomizationEditorFields.options')}</Text>{props.enumOptions.map(option => props.persistedEnumOptions.includes(option) || !props.canMutate
       ? <Text key={option} style={styles.lockedValue}>{props.persistedEnumOptions.includes(option) ? t('mobile.CustomizationEditorFields.existing', { option: String(option) }) : option}</Text>
       : <NativeCommandButton key={option} label={t('mobile.CustomizationEditorFields.remove', { option: String(option) })} disabled={disabled}
@@ -107,7 +108,6 @@ function SingleChoicePicker<Value extends string>({ disabled, label, onChange, o
     onChange={next => { const option = options.find(item => item.value === next); if (!disabled && option) onChange(option.value); }} />;
 }
 
-function capitalize(value: string) { return value.charAt(0).toUpperCase() + value.slice(1).replaceAll('_', ' '); }
 
 function createStyles(colors: MobileColorPalette) { return StyleSheet.create({
   formRow: { gap: spacing.sm, padding: spacing.md }, labelRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }, label: { color: colors.text, fontSize: 15, fontWeight: '700' }, required: { color: colors.textMuted, fontSize: 13 }, input: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, color: colors.text, flex: 1, fontSize: 16, minHeight: 44, paddingHorizontal: spacing.sm, paddingVertical: spacing.sm }, multiline: { minHeight: 100, textAlignVertical: 'top' }, disabled: { opacity: 0.55 }, validationText: { color: colors.danger, fontSize: 13 }, readOnly: { color: colors.textMuted, fontSize: 14, lineHeight: 20 }, readOnlyValue: { color: colors.text, fontSize: 17, lineHeight: 23 }, lockedValue: { color: colors.text, fontSize: 15, minHeight: 30 }, enumOptionInput: { gap: spacing.sm }, enumDraftInput: { flex: 0 }
