@@ -14,10 +14,12 @@ import (
 	exportapp "github.com/stuffstash/stuff-stash/internal/app/dataportability"
 	mediaapp "github.com/stuffstash/stuff-stash/internal/app/media"
 	notificationapp "github.com/stuffstash/stuff-stash/internal/app/notifications"
+	printingapp "github.com/stuffstash/stuff-stash/internal/app/printing"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 type App struct {
+	labels                       *printingapp.LabelService
 	exportService                exportapp.Service
 	notificationService          notificationapp.Service
 	conversationContextBytes     int
@@ -101,6 +103,7 @@ type App struct {
 }
 
 type Dependencies struct {
+	Labels                           *printingapp.LabelService
 	ExportEncoder                    ports.InventoryExportEncoder
 	ExportMaxRecords, ExportMaxBytes int
 	NotificationPreferences          ports.NotificationPreferencesRepository
@@ -218,6 +221,7 @@ func New(deps Dependencies) App {
 		}}
 	}
 	app := App{
+		labels:                       deps.Labels,
 		conversationContextBytes:     deps.ConversationContextBytes,
 		observer:                     observer,
 		auth:                         deps.Auth,

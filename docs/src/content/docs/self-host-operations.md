@@ -240,3 +240,34 @@ Retry accepts 1–1000 failed jobs and resets their attempt count. It leaves act
 completed jobs alone. These commands use the container's database credentials and
 write operational logs to stderr. The command entrypoint is covered by CI; the
 Compose examples have not yet been exercised against a released image.
+
+## Initialize label identities (development builds)
+
+The label API can provision stable asset links and create private PNG/PDF
+labels. App and website printing/scanning controls are still being delivered;
+this API does not send labels to a physical printer. Use the running API's
+OpenAPI explorer for its **labels** operations.
+
+Give the API an HTTPS `STUFF_STASH_PUBLIC_WEB_BASE_URL`, or set
+`STUFF_STASH_LABEL_BASE_URL` to a separate stable address. Include any path
+prefix. Pass these values to the API process through your deployment's
+environment configuration; the current Compose file does not forward them
+from `.env` automatically. Printed URLs require the corresponding web landing
+route, which is not included in this API-only slice.
+
+After applying database migrations, initialize the instance identity once:
+
+```sh
+docker compose -f compose.selfhost.yaml exec app /app/stuff-stash labels bootstrap-instance
+```
+
+The command uses the container's database settings. Repeating it returns the
+same identity. Keep that identity and the label mappings in full database
+backups when moving the instance. JSON/CSV imports into another instance do not
+preserve label links. An ordinary camera still needs the printed hostname to
+remain reachable after an address change.
+
+Downloads require current inventory access and expire after one hour by default.
+See [label configuration](../configuration/#api-labels-development-builds).
+The bootstrap command has been verified with persistent SQLite; this Compose
+example has not yet been exercised against a released image.

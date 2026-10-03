@@ -122,6 +122,12 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		return err
 	}
 	defer stopEvaluations()
+	labelSettings, err := cfg.Labels.Settings()
+	if err != nil {
+		return err
+	}
+	stopLabelCleanup := startLabelCleanup(ctx, application.Labels(), labelSettings.CleanupInterval, observer)
+	defer stopLabelCleanup()
 	stopNotifications := startNotificationWorker(ctx, application.Notifications(), observer, notificationConfig)
 	defer stopNotifications()
 	stopPush := startNotificationPushWorker(ctx, application.Notifications(), observer, pushConfig)

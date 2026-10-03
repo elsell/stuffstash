@@ -376,3 +376,26 @@ minute with a 15-minute backoff cap. Configure these with
 `STUFF_STASH_PUSH_MAX_ATTEMPTS`, `STUFF_STASH_PUSH_RETRY_INITIAL_DELAY`, and
 `STUFF_STASH_PUSH_RETRY_MAXIMUM_DELAY`. Provider retry deadlines may extend that
 backoff. Duration values use Go notation, such as `30s` or `5m`.
+
+## API: Labels (development builds)
+
+These settings apply to the label identity and private download API. Client
+printing/scanning and physical printer delivery are separate work in progress.
+Invalid values fail startup. An empty label base disables label operations.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `STUFF_STASH_PUBLIC_WEB_BASE_URL` | empty | HTTPS web address used for label links when no separate label base is set. |
+| `STUFF_STASH_LABEL_BASE_URL` | public web base | Optional stable HTTPS label address, including any path prefix. No credentials, query, or fragment. |
+| `STUFF_STASH_LABEL_RENDER_TTL` | `1h` | Private preview/download lifetime; at most `24h`. |
+| `STUFF_STASH_LABEL_RENDER_MAX_BYTES` | `1048576` | Maximum stored artifact size; at most 16 MiB. |
+| `STUFF_STASH_LABEL_CLEANUP_INTERVAL` | `1m` | Remove expired previews at this interval; at most `1h`. Access expires even before cleanup runs. |
+| `STUFF_STASH_LABEL_MAX_PIXELS` | `4000000` | Maximum raster pixels; at most 16 million. |
+| `STUFF_STASH_LABEL_MAX_URL_BYTES` | `2048` | Maximum QR URL bytes; at most 4096. Dense QRs can still exceed a label's readable capacity. |
+| `STUFF_STASH_LABEL_MAX_TITLE_RUNES` | `2048` | Maximum title characters accepted by rendering; at most 4096. |
+| `STUFF_STASH_LABEL_MAX_REFERENCE_RUNES` | `128` | Maximum reference characters; at most 512. |
+
+Use the [one-time bootstrap command](../self-host-operations/#initialize-label-identities-development-builds)
+after database migration. Rendering currently supports the built-in font's
+Latin, Greek, and Cyrillic coverage; unsupported text returns an error rather
+than printing replacement boxes. QR-only labels can omit the title.

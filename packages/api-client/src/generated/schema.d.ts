@@ -38,6 +38,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/instance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get instance */
+        get: operations["get-instance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/labels/v1/{instanceId}/{labelId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get labels v1 by instance ID by label ID */
+        get: operations["get-labels-v1-by-instance-id-by-label-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -1100,6 +1134,41 @@ export interface paths {
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkouts-by-checkout-id-return-details"];
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID assets by asset ID label */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-label"];
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID assets by asset ID label */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-label"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label-renders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID assets by asset ID label renders */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-label-renders"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore": {
         parameters: {
             query?: never;
@@ -1424,6 +1493,40 @@ export interface paths {
         put?: never;
         /** Post tenants by tenant ID inventories by inventory ID imports jobs by job ID start */
         post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id-start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/label-renders/{renderId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List tenants by tenant ID inventories by inventory ID label renders by render ID content */
+        get: operations["list-tenants-by-tenant-id-inventories-by-inventory-id-label-renders-by-render-id-content"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/label-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID label templates */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-label-templates"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2882,6 +2985,11 @@ export interface components {
              */
             sizeBytes: number;
         };
+        InstanceResponse: {
+            instanceId: string;
+            /** Format: int64 */
+            protocolVersion: number;
+        };
         InventoryResponse: {
             access: components["schemas"]["AccessResponse"];
             id: string;
@@ -2936,6 +3044,25 @@ export interface components {
             status: "pending" | "accepted" | "revoked" | "cancelled" | "expired";
             tenantId: string;
         };
+        LabelResponse: {
+            assetId: string;
+            instanceId: string;
+            inventoryId: string;
+            labelId: string;
+            lifecycleState: string;
+            tenantId: string;
+            url: string;
+        };
+        Margins: {
+            /** Format: int64 */
+            bottom: number;
+            /** Format: int64 */
+            left: number;
+            /** Format: int64 */
+            right: number;
+            /** Format: int64 */
+            top: number;
+        };
         Measurement: {
             /** Format: double */
             durationMs: number;
@@ -2949,6 +3076,27 @@ export interface components {
             surface: "application" | "home" | "list" | "detail" | "gallery" | "fullscreen" | "upload";
             /** @enum {string} */
             variant: "none" | "small" | "medium" | "large" | "original";
+        };
+        Media: {
+            color_mode: string;
+            cut_policy: string;
+            /** Format: int64 */
+            display_rotation: number;
+            /** Format: int64 */
+            height_micrometers: number;
+            margins_micrometers: components["schemas"]["Margins"];
+            orientation: string;
+            preset_id?: string;
+            /** Format: int64 */
+            raster_height: number;
+            /** Format: int64 */
+            raster_width: number;
+            /** Format: int64 */
+            resolution_dpi: number;
+            /** Format: int32 */
+            version?: number;
+            /** Format: int64 */
+            width_micrometers: number;
         };
         Meta: {
             pagination?: components["schemas"]["PaginationMeta"];
@@ -3089,6 +3237,33 @@ export interface components {
             token: string;
             /** @enum {string} */
             transport: "apns" | "fcm";
+        };
+        RenderInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/RenderInputBody.json
+             */
+            readonly $schema?: string;
+            /** @enum {string} */
+            format: "png" | "pdf";
+            media: components["schemas"]["Media"];
+            template: components["schemas"]["TemplateSelection"];
+        };
+        RenderResponse: {
+            contentPath: string;
+            contentType: string;
+            /** Format: int64 */
+            displayRotation: number;
+            expiresAt: string;
+            /** Format: int64 */
+            heightPixels: number;
+            id: string;
+            mediaFingerprint: string;
+            selectionFingerprint: string;
+            sha256: string;
+            /** Format: int64 */
+            widthPixels: number;
         };
         ReplaceProviderProfileCredentialBody: {
             /**
@@ -3342,6 +3517,16 @@ export interface components {
             data: components["schemas"]["InboxReadAllResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeInstanceResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeInstanceResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["InstanceResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeInventoryResponse: {
             /**
              * Format: uri
@@ -3380,6 +3565,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["InvitationResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeLabelResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeLabelResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["LabelResponse"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeListArchiveJob: {
@@ -3592,6 +3787,16 @@ export interface components {
             data: components["schemas"]["Revision"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListTemplateResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListTemplateResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["TemplateResponse"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeListWorkflowHead: {
             /**
              * Format: uri
@@ -3652,6 +3857,16 @@ export interface components {
             data: components["schemas"]["ProviderProfileResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeRenderResponse: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeRenderResponse.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["RenderResponse"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeRevision: {
             /**
              * Format: uri
@@ -3701,6 +3916,28 @@ export interface components {
             readonly $schema?: string;
             data: components["schemas"]["VoiceProviderConfigurationResponse"];
             meta: components["schemas"]["Meta"];
+        };
+        TemplateOptions: {
+            show_reference: boolean;
+        };
+        TemplateResponse: {
+            defaults: components["schemas"]["TemplateOptions"];
+            font: string;
+            glyphCoverage: string;
+            id: string;
+            /** Format: int64 */
+            minimumQRModulePixels: number;
+            name: string;
+            options: string[] | null;
+            purpose: string;
+            /** Format: int32 */
+            version: number;
+        };
+        TemplateSelection: {
+            id: string;
+            options: components["schemas"]["TemplateOptions"];
+            /** Format: int32 */
+            version: number;
         };
         TenantResponse: {
             access: components["schemas"]["AccessResponse"];
@@ -4021,6 +4258,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeAccepted"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-instance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeInstanceResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-labels-v1-by-instance-id-by-label-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                instanceId: string;
+                labelId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeLabelResponse"];
                 };
             };
             /** @description Error */
@@ -7719,6 +8022,121 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-label": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeLabelResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-label": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeLabelResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-label-renders": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenderInputBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeRenderResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-restore": {
         parameters: {
             query?: never;
@@ -8806,6 +9224,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeImportJobResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "list-tenants-by-tenant-id-inventories-by-inventory-id-label-renders-by-render-id-content": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                renderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    "Content-Disposition"?: string;
+                    "Content-Type"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-label-templates": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListTemplateResponse"];
                 };
             };
             /** @description Error */

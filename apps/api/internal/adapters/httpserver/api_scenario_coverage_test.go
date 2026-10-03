@@ -30,6 +30,7 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 
 	coverage := newExecutedScenarioCoverage("real use")
 	coverCLIAuthScenario(t, coverage, false)
+	coverLabelScenarios(t, coverage, false)
 	runArchiveJobHTTPBoundary(t, &coverage, false)
 	coverNotificationInboxScenarios(t, coverage, false)
 	coverExpirationWorkspaceScenarios(t, coverage, false)
@@ -244,6 +245,7 @@ func adversarialScenarioOperations(t *testing.T) executedScenarioCoverage {
 	setup := realUseAdversarialFixture(t)
 	coverage := newExecutedScenarioCoverage("adversarial")
 	coverCLIAuthScenario(t, coverage, true)
+	coverLabelScenarios(t, coverage, true)
 	runArchiveJobHTTPBoundary(t, &coverage, true)
 	coverNotificationInboxScenarios(t, coverage, true)
 	coverExpirationWorkspaceScenarios(t, coverage, true)
