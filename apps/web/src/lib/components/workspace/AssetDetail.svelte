@@ -1,6 +1,5 @@
 <script lang="ts">
-  import AssetLabelAction from '../labels/AssetLabelAction.svelte';
-  import AssetPrintAction from "$lib/components/printing/AssetPrintAction.svelte";
+  import AssetLabelMenu from '../labels/AssetLabelMenu.svelte';
   import { timestampLabel } from '$lib/presentation/timestamp';
   import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import { t } from '$lib/presentation/localization';
@@ -714,8 +713,9 @@ import { assetKindLabel, assetLifecycleLabel } from '$lib/presentation/assetKind
 	          <div><dt>{t('web.AssetDetail.updated')}</dt><dd>{asset.updatedAt ? timestampLabel(asset.updatedAt) : t('web.AssetDetail.notAvailable')}</dd></div>
         </dl>
         <div class="detail-actions">
-          <AssetLabelAction scope={{tenantId:asset.tenantId,inventoryId:asset.inventoryId,assetId:asset.id}} disabled={saving || action !== null} />
-          {#if canEdit && asset.lifecycleState === "active"}<AssetPrintAction scope={{tenantId: asset.tenantId, inventoryId: asset.inventoryId}} assetId={asset.id} recentJobId={asset.printJobId}/>{/if}
+          {#key `${asset.tenantId}:${asset.inventoryId}:${asset.id}`}
+            <AssetLabelMenu scope={{tenantId:asset.tenantId,inventoryId:asset.inventoryId,assetId:asset.id}} canPrint={canEdit && asset.lifecycleState === 'active'} disabled={saving || action !== null} recentJobId={asset.printJobId}/>
+          {/key}
           <Button.Root href={actionHref('edit')} disabled={!actionIsAvailable('edit')} onclick={(event) => openAction(event, 'edit')}><Pencil /> {t('web.AssetDetail.edit')}</Button.Root>
 	          <Button.Root
 	            href={actionHref('move')}

@@ -835,3 +835,23 @@ true inventory default initializes checked, explicit unchecking survives title
 edits, and the control remains reachable above the action bar. Stateful workflow
 tests cover a committed child with a lost response followed by permission denial
 and successful same-key recovery, without duplicate parent/tag creation.
+
+### Unified web asset label menu
+
+Each asset detail exposes one More actions menu for its label tasks. Label options
+opens the existing download/system-print sheet for authorized viewers, including
+archived assets. Print label and the newly-created job's status entry are shown
+only for editors of active assets with a configured printing workspace. Saving or
+another asset action disables this menu and dismisses its transient surface.
+
+Use the existing accessible DropdownMenu, task sheet and print dialog. Selecting
+a command transfers focus into its surface; dismissal returns focus to the same
+More trigger. Asset identity changes remount the menu and its surfaces, aborting
+preview work; losing a required workspace or permission closes the corresponding
+surface. Combining the entry points does not broaden API permissions or discard
+session-owned unresolved print requests.
+
+Chromium fixture review at 1280px/390px confirms one menu, the three editor
+commands versus one viewer command, keyboard opening, and Escape focus return
+from both download and queued-print surfaces. Controlled repository tests verify
+preview cancellation on asset/workspace changes and editor-access removal.
