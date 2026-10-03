@@ -1,1 +1,43 @@
-null
+{
+  "version": "v0.38.1",
+  "commit": "0e52e16a268b8721e64f6298cd6934734b075d24",
+  "assets": [
+    {
+      "os": "linux",
+      "architecture": "amd64",
+      "name": "stuffstash_v0.38.1_linux_amd64.tar.gz",
+      "sha256": "50ceeac7bd076d471dc5ad74eaa2e1829ec6d9fcaeeb7712b474f977e85e5328",
+      "usbPrinting": false
+    },
+    {
+      "os": "linux",
+      "architecture": "arm64",
+      "name": "stuffstash_v0.38.1_linux_arm64.tar.gz",
+      "sha256": "dfc51538b5681f32fdc17062c55a5a295e0d9b6b019312f87244adce597ce541",
+      "usbPrinting": false
+    },
+    {
+      "os": "darwin",
+      "architecture": "amd64",
+      "name": "stuffstash_v0.38.1_darwin_amd64.tar.gz",
+      "sha256": "3bb4f0a7161d17bab9d54fc19aa29bd3039fe507bf9c4a1fd356662d7183c67c",
+      "usbPrinting": false
+    },
+    {
+      "os": "darwin",
+      "architecture": "arm64",
+      "name": "stuffstash_v0.38.1_darwin_arm64.tar.gz",
+      "sha256": "11afb7a4a8f41fe5dc8390206dc8dd043fa5e234c9abf1db50f56b5f7ee53f7b",
+      "usbPrinting": false
+    },
+    {
+      "os": "windows",
+      "architecture": "amd64",
+      "name": "stuffstash_v0.38.1_windows_amd64.zip",
+      "sha256": "798147c23564fe5a1dd283f11a32b3a2a7f52b97b6172f7d0fdb1799838c1a12",
+      "usbPrinting": false
+    }
+  ],
+  "repository": "elsell/stuffstash",
+  "publishedAt": "2026-10-03T21:07:43Z"
+}
