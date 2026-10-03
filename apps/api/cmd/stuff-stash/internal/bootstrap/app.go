@@ -141,7 +141,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		TextToSpeech:                     tts,
 		RealtimeVoiceProviderResolver:    realtimeVoiceProviderResolver,
 	})
-	application = application.WithPrinterCatalog(printingprofiles.Catalog{})
+	application = application.WithPrinterRegistry(repositories.printers, printingprofiles.Catalog{})
 	application = application.WithImportWorker(importworker.NewInProcess(application, observer))
 	if _, err := application.ResumeRunningImportJobs(ctx, 25); err != nil {
 		return app.App{}, err

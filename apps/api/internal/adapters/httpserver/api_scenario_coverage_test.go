@@ -30,6 +30,7 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 
 	coverage := newExecutedScenarioCoverage("real use")
 	coverPrinterProfileScenarios(t, coverage, false)
+	coverPrinterRegistryScenarios(t, coverage, false)
 	coverCLIAuthScenario(t, coverage, false)
 	coverLabelScenarios(t, coverage, false)
 	runArchiveJobHTTPBoundary(t, &coverage, false)
@@ -246,6 +247,7 @@ func adversarialScenarioOperations(t *testing.T) executedScenarioCoverage {
 	setup := realUseAdversarialFixture(t)
 	coverage := newExecutedScenarioCoverage("adversarial")
 	coverPrinterProfileScenarios(t, coverage, true)
+	coverPrinterRegistryScenarios(t, coverage, true)
 	coverCLIAuthScenario(t, coverage, true)
 	coverLabelScenarios(t, coverage, true)
 	runArchiveJobHTTPBoundary(t, &coverage, true)

@@ -46,6 +46,10 @@ const (
 	ActionLabelRendered                             Action = "label.rendered"
 	ActionLabelContentDownloaded                    Action = "label.content_downloaded"
 	ActionLabelTemplatesListed                      Action = "label.templates_listed"
+	ActionPrinterRegistered                         Action = "printer.registered"
+	ActionPrinterViewed                             Action = "printer.viewed"
+	ActionPrintersListed                            Action = "printer.listed"
+	ActionPrinterUpdated                            Action = "printer.updated"
 	ActionArchiveJobViewed                          Action = "archive_job.viewed"
 	ActionArchiveJobCreated                         Action = "archive_job.created"
 	ActionArchiveJobUpdated                         Action = "archive_job.updated"
@@ -160,7 +164,7 @@ const (
 func NewAction(value string) (Action, bool) {
 	action := Action(strings.TrimSpace(value))
 	switch action {
-	case ActionLabelProvisioned, ActionLabelViewed, ActionLabelResolved, ActionLabelRendered, ActionLabelContentDownloaded, ActionLabelTemplatesListed, ActionArchiveJobViewed, ActionArchiveJobCreated, ActionArchiveJobUpdated, ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
+	case ActionPrinterRegistered, ActionPrinterViewed, ActionPrintersListed, ActionPrinterUpdated, ActionLabelProvisioned, ActionLabelViewed, ActionLabelResolved, ActionLabelRendered, ActionLabelContentDownloaded, ActionLabelTemplatesListed, ActionArchiveJobViewed, ActionArchiveJobCreated, ActionArchiveJobUpdated, ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
 		ActionTenantViewed,
 		ActionTenantListed,
 		ActionTenantUpdated,

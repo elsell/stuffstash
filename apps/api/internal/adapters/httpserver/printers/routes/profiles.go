@@ -11,6 +11,7 @@ import (
 )
 
 func Register(api huma.API, application app.App) {
+	registerPrinters(api, application)
 	huma.Get(api, "/tenants/{tenantId}/inventories/{inventoryId}/printer-profiles", func(ctx context.Context, input *dto.ListProfilesInput) (*dto.ListProfilesOutput, error) {
 		principal, err := shared.Authenticate(ctx, application, input.Authorization)
 		if err != nil {

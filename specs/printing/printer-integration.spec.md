@@ -499,3 +499,23 @@ for authenticated lost-response recovery, including after settlement. Job state,
 printer reservation, attempt index and audit writes commit or roll back together.
 Registration denial fences use connector → binding → printer → job lock order;
 no caller treats a reservation or database registration as an authorization grant.
+- Registry services live in `internal/app/printregistry`; rendering and labels
+  remain in `internal/app/printing`. A human creates the logical printer with a
+  name, adapter, and media preset. Pairing creation supplies local discovered
+  candidates with an opaque candidate ID, display name, adapter ID, and protected
+  device identity. Approval maps candidate IDs to existing printer IDs; the
+  server requires matching adapters and persists the device binding. Human DTOs
+  never return the protected device identity, credentials, or local paths.
+- Heartbeats include a process session ID for observability but do not replace an
+  existing attempt owner. Connector last-seen time advances only on a heartbeat;
+  readiness reports have separate timestamps. Fresh heartbeat and readiness are
+  dispatch requirements, not prerequisites for reporting an earlier outcome.
+- Printer registration requires `Idempotency-Key`; its scope includes the human
+  actor and inventory. An identical replay returns the existing printer; reusing
+  the key with different registration content conflicts. Persistence stores only
+  a hash of the scoped request key and a canonical request fingerprint.
+- The initial printer CRUD slice creates logical registrations before connector
+  authorization. Pairing reconciliation must sync each printer's inventory
+  relationship before granting/synchronizing connector bindings; pending sync
+  remains denied by the persistence fence. A human registration alone grants no
+  service principal access.

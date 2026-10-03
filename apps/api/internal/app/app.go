@@ -20,6 +20,7 @@ import (
 
 type App struct {
 	labels                       *printingapp.LabelService
+	printerRepository            ports.PrinterRepository
 	printerCatalog               ports.PrinterCatalog
 	exportService                exportapp.Service
 	notificationService          notificationapp.Service
