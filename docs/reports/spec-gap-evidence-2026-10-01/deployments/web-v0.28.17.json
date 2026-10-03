@@ -1,0 +1,11 @@
+{
+  "infraCommit": "7cb62998cae732851c36abf160dd8ab20efdf1ca",
+  "release": "v0.28.17",
+  "webImage": "ghcr.io/elsell/stuffstash-web@sha256:851e71775b8a23fc9dec9586df9976758d06625a5532fc85f440318791c63d3a",
+  "fluxRevision": "master@sha1:7cb62998cae732851c36abf160dd8ab20efdf1ca",
+  "updatedReplicas": 1,
+  "availableReplicas": 1,
+  "webHTTP": 200,
+  "apiHTTP": 200,
+  "scope": "rollout and unauthenticated readiness only; not a new authenticated browser journey"
+}
