@@ -40,7 +40,7 @@ type printingConnectorModel struct {
 	ID                                                   string `gorm:"primaryKey"`
 	TenantID, InventoryID, ServiceAccountID, Name, State string
 	PublicKey                                            []byte
-	CredentialHash                                       string
+	CredentialHash                                       string `gorm:"uniqueIndex:idx_print_connector_credential,where:credential_hash <> ''"`
 	CredentialVersion                                    uint64
 	CredentialExpiresAt, ActivationDeadline              time.Time
 	Generation, SyncedGeneration                         uint64
