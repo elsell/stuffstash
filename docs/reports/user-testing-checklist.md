@@ -2,7 +2,7 @@
 
 Pending checks do not hold up development or releases. This is the single list
 of tests that need your device or judgment; no need to answer each one now.
-All unchecked items are **unverified**, not known failures.
+Unchecked items are **unverified**; known failures awaiting a fix are labeled separately.
 
 When reporting a result, include the app version/build, device, and iOS or Android
 version. “Passed” is enough for a successful check. For a failure, describe the
@@ -61,6 +61,18 @@ skip it unless you already use VoiceOver or TalkBack or want to try it.
 - [ ] Open Filters, choose an option, apply it, then clear it.
   **Expected:** the selected option is announced and results are reachable after
   the sheet closes; focus does not remain trapped in the closed sheet.
+
+## 4. Return cancellation after the API fix is deployed
+
+Status: reported failure reproduced against PostgreSQL; fix passes backend
+regression tests, deployment and device retest pending. Wait for confirmation that
+the API fix is deployed before trying this. No new iPhone build is required for
+the backend correction.
+
+- [ ] With a checked-out test item, tap Return on Home, then Cancel return in the
+  Return details sheet.
+  **Expected:** the sheet closes and the same item is checked out again; no
+  “Could not cancel return” message appears. Reopen Details to confirm its state.
 
 ## Judgments awaiting your preference
 

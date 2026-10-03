@@ -212,7 +212,7 @@ func (s Store) ApplyAssetCheckoutUndoableOperation(ctx context.Context, operatio
 		if !ok {
 			return fmt.Errorf("invalid asset checkout row %q", currentModel.ID)
 		}
-		if !asset.CheckoutsEquivalentForStaleCheck(current, expectedCurrent) {
+		if !checkoutsEquivalentForStorage(tx, current, expectedCurrent) {
 			return ports.ErrConflict
 		}
 		if current.ID != resulting.ID || current.TenantID != resulting.TenantID || current.InventoryID != resulting.InventoryID || current.AssetID != resulting.AssetID {
