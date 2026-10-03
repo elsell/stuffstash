@@ -3,6 +3,7 @@ package gormstore
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 	"gorm.io/gorm/clause"
 	"os"
 	"sync"
@@ -144,4 +145,42 @@ func TestPostgresPrintingClaimsSerializeAcrossConnectors(t *testing.T) {
 	if e != nil || stored.Status != printing.JobUncertain {
 		t.Fatalf("uncertainty lost: %v", e)
 	}
+	confirmed, err := s.UpdatePrintJob(ctx, ports.PrintJobUpdate{Scope: scope, PrinterID: pid, JobID: job.ID, Authority: &authority, Now: now.Add(time.Minute), Change: func(j *printing.Job, _ printing.Printer) error {
+		return j.ConfirmIdle(stored.Attempts[0].ID, authority.ConnectorID, now.Add(time.Minute), stored.Revision)
+	}, Audit: auditFor})
+	if err != nil {
+		t.Fatal(err)
+	}
+	resolveStart := make(chan struct{})
+	resolveResults := make(chan error, 2)
+	for _, actor := range []string{"human-one", "human-two"} {
+		go func(actor string) {
+			<-resolveStart
+			_, err := s.UpdatePrintJob(ctx, ports.PrintJobUpdate{Scope: scope, PrinterID: pid, JobID: job.ID, Now: now.Add(time.Minute), Change: func(j *printing.Job, _ printing.Printer) error {
+				return j.Resolve(actor, printing.ReportedUnknown, true, now.Add(time.Minute), confirmed.Revision)
+			}, Audit: auditFor})
+			resolveResults <- err
+		}(actor)
+	}
+	close(resolveStart)
+	winners := 0
+	for range 2 {
+		if err := <-resolveResults; err == nil {
+			winners++
+		} else if !errors.Is(err, printing.ErrJobConflict) {
+			t.Fatal(err)
+		}
+	}
+	if winners != 1 {
+		t.Fatalf("concurrent resolutions had %d winners", winners)
+	}
+	resolved, err := s.GetPrintJob(ctx, scope, job.ID)
+	if err != nil || resolved.Resolution == nil || resolved.Status != printing.JobFailed || resolved.Attempts[0].Outcome.Kind != printing.OutcomeUncertain {
+		t.Fatal("resolution lost physical evidence", err)
+	}
+	destination, err := s.GetPrinter(ctx, scope, pid)
+	if err != nil || destination.ActiveJobID != "" {
+		t.Fatal("resolution did not release reservation", err)
+	}
+
 }

@@ -21,6 +21,10 @@ func attemptStatus(value generated.PrintConsumerAttempt) (printing.AttemptStatus
 	// Attempt settlement takes precedence over the parent job, which may already
 	// be queued or claimed again after a proven no-output attempt.
 	if value.SettledAt != nil {
+		if value.ResolvedAt != nil && value.Status == "failed" && result.Outcome == printing.Uncertain {
+			result.Phase = printing.RemoteFailed
+			return result, nil
+		}
 		switch result.Outcome {
 		case printing.Completed:
 			result.Phase = printing.RemoteCompleted

@@ -38,7 +38,7 @@ func (w *Worker) Step(ctx context.Context, journal ports.LockedPrintState, print
 		return err
 	}
 	if record != nil {
-		err = w.recover(ctx, journal, *record)
+		err = w.recover(ctx, journal, *record, printer)
 		if err == nil {
 			w.Observer.Event(ctx, "cli.print.recovered")
 		}

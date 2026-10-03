@@ -177,3 +177,18 @@ func TestPrintArtifactLimitAndRedirectNeverLeakClaimCredentials(t *testing.T) {
 		t.Fatal("connector or claim credentials followed a redirect")
 	}
 }
+
+func TestResolvedUncertaintySettlesJournalWithoutFabricatingCompletion(t *testing.T) {
+	now := time.Now().UTC()
+	peer := &printPeer{attempt: generated.PrintConsumerAttempt{AttemptId: "attempt", SessionId: "session", JobId: "job", Revision: 8, Status: "failed", SettledAt: &now, ResolvedAt: &now, Outcome: generated.PrintOutcome{Kind: "uncertain"}}}
+	server := httptest.NewServer(peer)
+	defer server.Close()
+	client, err := httpapi.New(server.URL, "connector-secret", server.Client())
+	if err != nil {
+		t.Fatal(err)
+	}
+	status, err := client.Attempt(context.Background(), "attempt")
+	if err != nil || status.Phase != printing.RemoteFailed || status.Outcome != printing.Uncertain {
+		t.Fatal("resolved uncertainty remained blocked or fabricated evidence", status, err)
+	}
+}

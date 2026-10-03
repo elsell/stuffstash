@@ -72,6 +72,7 @@ func (j *journal) Save(_ context.Context, value *printing.JournalRecord) error {
 func (j *journal) Close() error { return nil }
 
 type api struct {
+	idleConfirmed          bool
 	clock                  *clock
 	claim                  printing.Claim
 	status                 *printing.AttemptStatus
@@ -155,6 +156,20 @@ func (a *api) Attempt(_ context.Context, attemptID string) (printing.AttemptStat
 	}
 	return *a.status, nil
 }
+func (a *api) ConfirmIdle(_ context.Context, id string, revision uint64) error {
+	if a.status == nil || a.status.AttemptID != id || a.status.Phase != printing.RemoteUncertain {
+		return errors.New("idle confirmation conflict")
+	}
+	if a.idleConfirmed {
+		return nil
+	}
+	if a.status.Revision != revision {
+		return errors.New("idle confirmation conflict")
+	}
+	a.status.Revision++
+	a.idleConfirmed = true
+	return nil
+}
 func (a *api) Reconcile(_ context.Context, _ string, revision uint64, evidence printing.Evidence) error {
 	if a.status.Phase != printing.RemoteUncertain || revision != a.status.Revision {
 		return errors.New("reconciliation conflict")
@@ -180,6 +195,12 @@ type printer struct {
 	ready       bool
 }
 
+func (p *printer) ConfirmIdle(context.Context) error {
+	if p.active != nil || !p.ready {
+		return ports.ErrRecoveryRequired
+	}
+	return nil
+}
 func (p *printer) Readiness(context.Context) (printing.Readiness, error) {
 	p.ready = true
 	return printing.Readiness{State: printing.Ready}, nil
@@ -299,5 +320,37 @@ func TestCorruptArtifactAndUnsettledAttemptPreventOutput(t *testing.T) {
 				t.Fatal("claimed despite unresolved prior attempt")
 			}
 		})
+	}
+}
+
+func TestUncertainRecoveryAttestsIdleWithoutReplayingAndWaitsForHuman(t *testing.T) {
+	w, a, j, p := fixture(t)
+	p.uncertainAt = 1
+	if err := w.Step(context.Background(), j, p); err == nil {
+		t.Fatal("expected uncertain submission")
+	}
+	if a.status.Phase != printing.RemoteUncertain {
+		t.Fatal("missing uncertain status")
+	}
+	if err := w.Step(context.Background(), j, p); !errors.Is(err, ports.ErrRecoveryRequired) {
+		t.Fatal(err)
+	}
+	if a.idleConfirmed {
+		t.Fatal("unavailable device attested")
+	}
+	// A fresh locked connection observes physical idle after the ambiguous write.
+	recoveredDevice := &printer{api: a, journal: j, ready: true}
+	if err := w.Step(context.Background(), j, recoveredDevice); !errors.Is(err, ports.ErrRecoveryRequired) {
+		t.Fatal(err)
+	}
+	if !a.idleConfirmed || j.record == nil || recoveredDevice.submissions != 0 {
+		t.Fatal("idle confirmation lost journal or replayed")
+	}
+	a.status.Phase = printing.RemoteFailed // Authorized server-side human resolution.
+	if err := w.Step(context.Background(), j, recoveredDevice); err != nil {
+		t.Fatal(err)
+	}
+	if j.record != nil || recoveredDevice.submissions != 0 {
+		t.Fatal("resolution recovery replayed output")
 	}
 }

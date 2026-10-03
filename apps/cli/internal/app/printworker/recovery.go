@@ -8,7 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 )
 
-func (w *Worker) recover(ctx context.Context, journal ports.LockedPrintState, record printing.JournalRecord) error {
+func (w *Worker) recover(ctx context.Context, journal ports.LockedPrintState, record printing.JournalRecord, printer ports.PrinterConnection) error {
 	if record.Binding != w.Config.Binding {
 		return ports.ErrRecoveryRequired
 	}
@@ -36,6 +36,22 @@ func (w *Worker) recover(ctx context.Context, journal ports.LockedPrintState, re
 				evidence.Outcome = printing.NoOutput
 				evidence.Reason = printing.NoReason
 			}
+		}
+		if evidence.Outcome == printing.Uncertain {
+			idle, ok := printer.(ports.PrinterIdleConfirmation)
+			if !ok {
+				return ports.ErrRecoveryRequired
+			}
+			check, cancel := context.WithTimeout(ctx, w.Config.ReadinessTimeout)
+			err = idle.ConfirmIdle(check)
+			cancel()
+			if err != nil {
+				return err
+			}
+			if err = w.Jobs.ConfirmIdle(ctx, record.AttemptID, status.Revision); err != nil {
+				return err
+			}
+			return ports.ErrRecoveryRequired
 		}
 		if err = w.Jobs.Reconcile(ctx, record.AttemptID, status.Revision, evidence); err != nil {
 			return err

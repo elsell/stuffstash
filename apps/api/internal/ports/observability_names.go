@@ -3,7 +3,7 @@ package ports
 // Known restricts exported event names to the reviewed domain vocabulary.
 func (name EventName) Known() bool {
 	switch name {
-	case EventPrintSettingsUpdated, EventPrintJobCleanupFailed, EventPrintJobClaimed, EventPrintJobStarted, EventPrintJobCompleted, EventPrintJobFailed, EventPrintJobUncertain, EventPrintJobReleased, EventPrintConnectorSyncFailed, EventPrinterRegistered, EventPrinterUpdated, EventPrintJobQueued, EventPrintJobCanceled:
+	case EventPrintSettingsUpdated, EventPrintJobReprinted, EventPrintJobResolved, EventPrintJobIdleConfirmed, EventPrintJobCleanupFailed, EventPrintJobClaimed, EventPrintJobStarted, EventPrintJobCompleted, EventPrintJobFailed, EventPrintJobUncertain, EventPrintJobReleased, EventPrintConnectorSyncFailed, EventPrinterRegistered, EventPrinterUpdated, EventPrintJobQueued, EventPrintJobCanceled:
 		return true
 	case EventLabelProvisioned, EventLabelCleanupFailed, EventNotificationDeviceUpdated, EventNotificationDeviceRevoked, EventNotificationWorkerFailed, EventNotificationCreated, EventNotificationPreferencesUpdated, EventThumbnailJobsRetried, EventBlobDeletionRechecked, EventThumbnailWorkerFailed, EventThumbnailJobResolved, EventClientPerformanceObserved, EventProfilingDeliveryFailed, EventTelemetryBatchesDropped, EventHealthChecked,
 		EventHTTPServerStartFailed,

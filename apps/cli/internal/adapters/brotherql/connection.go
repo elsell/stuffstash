@@ -141,3 +141,16 @@ func writeAll(ctx context.Context, transport ports.PrinterTransport, data []byte
 	}
 	return written, nil
 }
+
+// ConfirmIdle requires a fresh status response and refuses local submission
+// ambiguity. Recovery opens a new locked connection before calling this method.
+func (c *Connection) ConfirmIdle(ctx context.Context) error {
+	state, err := c.Readiness(ctx)
+	if err != nil {
+		return err
+	}
+	if state.State != printing.Ready {
+		return ports.ErrRecoveryRequired
+	}
+	return nil
+}
