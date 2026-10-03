@@ -208,6 +208,199 @@
         "apps/web/src/lib/components/workspace/NotificationInbox.svelte: markAll catch",
         "apps/web/src/lib/application/workspaceSafeError.ts"
       ]
+    },
+    {
+      "file": "apps/mobile/src/adapters/auth/ApiMobileAuthMetadataGateway.ts",
+      "strings": [
+        "Stuff Stash mobile sign-in is not configured for this instance.",
+        "Stuff Stash mobile sign-in metadata contains an unsupported redirect URI.",
+        "Stuff Stash mobile sign-in metadata is missing scopes."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "OnboardingScreen passes failures through onboardingError. Recognized cancellation, address and availability failures use catalog messages; other ordinary Errors use cataloged setup recovery. These literals are not rendered verbatim.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/OnboardingScreen.tsx: connect and setup catches",
+        "apps/mobile/src/ui/screens/OnboardingPresentation.ts: onboardingError"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/adapters/auth/ExpoOidcNativeClientCore.ts",
+      "strings": [
+        "Sign-in was cancelled.",
+        "Sign-in could not be completed. Try again.",
+        "Invalid sign-in callback.",
+        "Sign-in response did not include a usable authorization code.",
+        "Sign-in response did not include a usable ID token."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "OnboardingScreen passes failures through onboardingError. Recognized cancellation, address and availability failures use catalog messages; other ordinary Errors use cataloged setup recovery. These literals are not rendered verbatim.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/OnboardingScreen.tsx: connect and setup catches",
+        "apps/mobile/src/ui/screens/OnboardingPresentation.ts: onboardingError"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/application/onboarding/OnboardingCommand.ts",
+      "strings": [
+        "Setup is already in progress.",
+        "Name your tenant.",
+        "Create a tenant before creating an inventory.",
+        "Name your inventory.",
+        "No usable tenant is available for mobile onboarding.",
+        "No usable inventory is available for mobile onboarding."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "OnboardingScreen passes failures through onboardingError. Recognized cancellation, address and availability failures use catalog messages; other ordinary Errors use cataloged setup recovery. These literals are not rendered verbatim.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/OnboardingScreen.tsx: connect and setup catches",
+        "apps/mobile/src/ui/screens/OnboardingPresentation.ts: onboardingError"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/application/onboarding/ConnectionProfile.ts",
+      "strings": [
+        "Enter a Stuff Stash instance URL.",
+        "Enter a valid Stuff Stash instance URL.",
+        "Stuff Stash instance URLs must use HTTP or HTTPS."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "OnboardingScreen passes failures through onboardingError. Recognized cancellation, address and availability failures use catalog messages; other ordinary Errors use cataloged setup recovery. These literals are not rendered verbatim.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/OnboardingScreen.tsx: connect and setup catches",
+        "apps/mobile/src/ui/screens/OnboardingPresentation.ts: onboardingError"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/adapters/archives/NativeArchiveUpload.ts",
+      "strings": [
+        "Invalid archive upload method.",
+        "Archive redirects are not permitted.",
+        "Archive response exceeded its size limit."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "Archive screens replace ordinary task, protocol and native-transfer exceptions with cataloged recovery by status/code. The browser streaming-save-required code has a specific catalog message; its raw diagnostic is not displayed.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/InventoryArchiveScreen.tsx: report and run",
+        "apps/web/src/lib/components/workspace/settings/InventoryArchivePanel.svelte: failure and perform"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/adapters/archives/ApiInventoryArchiveRepository.ts",
+      "strings": [
+        "Unsupported archive job response."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "Archive screens replace ordinary task, protocol and native-transfer exceptions with cataloged recovery by status/code. The browser streaming-save-required code has a specific catalog message; its raw diagnostic is not displayed.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/InventoryArchiveScreen.tsx: report and run",
+        "apps/web/src/lib/components/workspace/settings/InventoryArchivePanel.svelte: failure and perform"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/application/archives/ArchiveTask.ts",
+      "strings": [
+        "No archive selected",
+        "Export requires an inventory",
+        "Archive task already running"
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "Archive screens replace ordinary task, protocol and native-transfer exceptions with cataloged recovery by status/code. The browser streaming-save-required code has a specific catalog message; its raw diagnostic is not displayed.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/InventoryArchiveScreen.tsx: report and run",
+        "apps/web/src/lib/components/workspace/settings/InventoryArchivePanel.svelte: failure and perform"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/adapters/archives/ApiInventoryArchiveRepository.ts",
+      "strings": [
+        "Unsupported archive job response."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "Archive screens replace ordinary task, protocol and native-transfer exceptions with cataloged recovery by status/code. The browser streaming-save-required code has a specific catalog message; its raw diagnostic is not displayed.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/InventoryArchiveScreen.tsx: report and run",
+        "apps/web/src/lib/components/workspace/settings/InventoryArchivePanel.svelte: failure and perform"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/adapters/archives/BrowserArchiveFileDelivery.ts",
+      "strings": [
+        "Streaming file save is required for this archive."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "Archive screens replace ordinary task, protocol and native-transfer exceptions with cataloged recovery by status/code. The browser streaming-save-required code has a specific catalog message; its raw diagnostic is not displayed.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/InventoryArchiveScreen.tsx: report and run",
+        "apps/web/src/lib/components/workspace/settings/InventoryArchivePanel.svelte: failure and perform"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/adapters/voice/WebSocketRealtimeVoiceTransport.ts",
+      "strings": [
+        "Sign in before starting a voice session.",
+        "Invalid conversation message.",
+        "Voice review session is not active.",
+        "Voice review decision has already been sent.",
+        "Voice session completed without a structured response.",
+        "A response is already pending.",
+        "Voice follow-up session is not active.",
+        "Voice socket closed before the session completed.",
+        "Voice photo approval metadata may only include reviewed metadata.",
+        "Voice server sent a reserved response delta event.",
+        "Voice server event sequence must be monotonic.",
+        "Voice server event changed session.",
+        "Voice server event arrived before session start.",
+        "Voice server event session did not match the active session.",
+        "Voice action plan expiration correction is missing.",
+        "Voice action plan expiration removal is invalid.",
+        "Voice action plan changes are invalid.",
+        "Voice action plan expiration is invalid.",
+        "Voice action plan risk must be a non-empty string.",
+        "Voice action plan could not be reviewed safely.",
+        "Voice structured response kind is not supported.",
+        "Voice response artifacts must be a bounded array.",
+        "Voice response artifact contains unsupported fields.",
+        "Voice response artifact is invalid.",
+        "Voice response artifact asset kind is invalid.",
+        "Voice event field acceptedCapabilities must match requested voice capabilities.",
+        "Voice event field commandResults must be an array.",
+        "Voice event field attachmentUploadIntents must be an array.",
+        "Voice action plan event status did not match the event type.",
+        "The conversation connection was interrupted."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "Ordinary voice transport/session failures become cataloged failure state through buildFailedVoiceRealtimeState. The connection_interrupted code selects cataloged interruption recovery. Internal protocol validation text is not the displayed error.",
+      "evidence": [
+        "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: approve, send and follow-up catches",
+        "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: buildFailedVoiceRealtimeState"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/application/voice/RealtimeVoiceSession.ts",
+      "strings": [
+        "Voice recording has not started.",
+        "Voice follow-up session is not active.",
+        "Photo attachments are not available in this build.",
+        "Attachment content is not available for JSON upload fallback."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "Ordinary voice transport/session failures become cataloged failure state through buildFailedVoiceRealtimeState. The connection_interrupted code selects cataloged interruption recovery. Internal protocol validation text is not the displayed error.",
+      "evidence": [
+        "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: approve, send and follow-up catches",
+        "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: buildFailedVoiceRealtimeState"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/adapters/voice/DevelopmentVoiceAudioRecorder.ts",
+      "strings": [
+        "Voice recording has not started."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "Ordinary voice transport/session failures become cataloged failure state through buildFailedVoiceRealtimeState. The connection_interrupted code selects cataloged interruption recovery. Internal protocol validation text is not the displayed error.",
+      "evidence": [
+        "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: approve, send and follow-up catches",
+        "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: buildFailedVoiceRealtimeState"
+      ]
     }
   ],
   "files": [
@@ -272,10 +465,6 @@
       "candidates": 6
     },
     {
-      "file": "apps/web/src/lib/adapters/api/stuffStashInventoryRepository.ts",
-      "candidates": 6
-    },
-    {
       "file": "apps/web/src/lib/components/workspace/AssetTagSelector.svelte",
       "candidates": 6
     },
@@ -288,11 +477,11 @@
       "candidates": 5
     },
     {
-      "file": "apps/mobile/src/application/auth/MobileAuthSession.ts",
+      "file": "apps/mobile/src/application/onboarding/OnboardingTestSupport.ts",
       "candidates": 5
     },
     {
-      "file": "apps/mobile/src/application/onboarding/OnboardingTestSupport.ts",
+      "file": "apps/web/src/lib/adapters/api/stuffStashInventoryRepository.ts",
       "candidates": 5
     },
     {
@@ -597,10 +786,6 @@
     },
     {
       "file": "apps/web/src/lib/application/workspaceAddFocus.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceAssetWorkflow.ts",
       "candidates": 1
     },
     {

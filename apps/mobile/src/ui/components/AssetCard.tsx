@@ -108,7 +108,7 @@ export function AssetCard({
       <View style={[styles.body, isRow ? styles.rowBody : undefined]}>
         <Pressable
           hitSlop={isRow ? { top: 12, bottom: 12 } : undefined}
-          accessibilityLabel={t('mobile.AssetCard.openAsset', { title: String(asset.title), value: String(asset.expiration ? `. ${expirationStatusLabel(asset.expirationContext) ?? 'Expiration'}: ${formatAssetExpiration(asset.expiration)}` : '') })}
+          accessibilityLabel={t('mobile.AssetCard.openAsset', { title: String(asset.title), value: String(asset.expiration ? `. ${expirationStatusLabel(asset.expirationContext) ?? t('asset.expirationFallback')}: ${formatAssetExpiration(asset.expiration)}` : '') })}
           accessibilityRole="button"
           onPress={onPress}
           style={({ pressed }) => [styles.openTextRegion, isRow ? styles.rowOpenTextRegion : undefined, pressed ? styles.openTextRegionPressed : undefined]}

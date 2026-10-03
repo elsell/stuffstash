@@ -200,7 +200,12 @@ Retain reviewed classifications alongside generated candidates, identifying exac
 strings when only part of a file was reviewed and caller evidence where errors
 are replaced with localized guidance. Keep protocol diagnostics and test/benchmark
 fixtures separate from product copy. A classification does not suppress the
-rendered-copy gate or establish that unreviewed strings are acceptable.
+rendered-copy gate or establish that unreviewed strings are acceptable. Reviewed onboarding/authentication diagnostics map through
+`onboardingError`; archive task/transfer diagnostics map through the mobile
+archive report function or web archive failure function; ordinary voice transport
+and session errors map through `buildFailedVoiceRealtimeState`. Retain those
+caller mappings in the inventory instead of translating internal exceptions.
+This source review does not establish native recovery or assistive acceptance.
 
 Step-progress navigation accessibility labels use complete catalog sentences for
 current, completed and upcoming steps, with step names/descriptions interpolated.
@@ -371,3 +376,38 @@ capitalized route identifiers. History's selected filter accessibility label use
 the same cataloged option label as its picker. The Add destination root fallback
 is cataloged; selected destination paths and user-authored unresolved names remain
 verbatim. Preserve filter draft staging, page transitions and destination choices.
+
+### Interpolated literal enforcement
+
+The rendered-copy gate must inspect literal interpolation values passed to the
+project's `t` function in TypeScript, JSX and Svelte. Catch direct English
+values, conditional/fallback values and values wrapped in `String`; a catalog
+template does not translate those values. Preserve message keys, variable
+references containing user text, nested catalog calls, numeric formatting and
+unrelated protocol/style values. This is bounded syntax checking, not proof of
+variable provenance or full client migration.
+
+The first interpolation-gate migration covers mobile voice-placement fallbacks,
+asset lifecycle notices, notification read actions and deferred entity labels;
+web containment permission guidance, notification actions, expiration summaries
+and conversation evaluation/activation summaries. Preserve user names, dates,
+durations, operation identifiers and selection state. Product-owned fallback
+words and sentence fragments must come from catalogs; read/unread actions and
+deferred entity labels use complete alternative messages.
+
+### Web domain-value presentation
+
+Render asset lifecycle badges, customization scope/boolean type labels, and
+conversation case/outcome/operation summaries through typed catalog mappings.
+Reuse the same mappings in expected and observed summaries, including forbidden
+and executed operation lists. Keep wire enums, fixture IDs, authored names and
+technical verdict codes unchanged; localization must not change evaluator inputs.
+
+### Web item creation recovery
+
+Creation and post-save refresh failures use cataloged recovery for ordinary
+exceptions through safeWorkspaceErrorMessage. Preserve explicitly safe server
+validation and user names. Saved items, created parents and tags must survive
+failures without duplicate creation. Unavailable tag creation uses an explicitly
+safe cataloged message. Verify initial failure, partial success and unavailable
+tag capability through the real workflow; preserve pseudo-localization.

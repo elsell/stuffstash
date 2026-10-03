@@ -10,7 +10,13 @@ const displayAttribute = name => ['title', 'label', 'message', 'description', 'p
 /** Only directly rendered copy. State, protocol and variable provenance need source review. */
 export function embeddedDisplayMessages(source, filename) {
   const found = [];
-  const add = (text, offset) => { if (human(text.replace(/\{[^}]+\}/g, '').trim())) found.push({ text: text.trim(), offset }); };
+  const seen = new Set();
+  const add = (text, offset) => {
+    const key = JSON.stringify([offset, text.trim()]);
+    if (human(text.replace(/\{[^}]+\}/g, '').trim()) && !seen.has(key)) {
+      seen.add(key); found.push({ text: text.trim(), offset });
+    }
+  };
   function script(text, offset = 0, expression = false, rendered = true) {
     if (expression) { text = `(${text})`; offset -= 1; }
     const ast = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true, filename.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
@@ -18,14 +24,26 @@ export function embeddedDisplayMessages(source, filename) {
       if (!node) return;
       if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) add(node.text, offset + node.getStart(ast));
       else if (ts.isParenthesizedExpression(node)) output(node.expression);
+      else if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'String' && node.arguments.length === 1) output(node.arguments[0]);
       else if (ts.isConditionalExpression(node)) { output(node.whenTrue); output(node.whenFalse); }
       else if (ts.isBinaryExpression(node)) {
         if ([ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken, ts.SyntaxKind.PlusToken].includes(node.operatorToken.kind)) { output(node.left); output(node.right); }
         else if (node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken) output(node.right);
       }
-      else if (ts.isTemplateExpression(node)) add(node.head.text + node.templateSpans.map(span => `{value}${span.literal.text}`).join(''), offset + node.getStart(ast));
+      else if (ts.isTemplateExpression(node)) {
+        add(node.head.text + node.templateSpans.map(span => `{value}${span.literal.text}`).join(''), offset + node.getStart(ast));
+        for (const span of node.templateSpans) output(span.expression);
+      }
     }
     function properties(node) {
+      if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 't') {
+        const values = node.arguments[1];
+        if (values && ts.isObjectLiteralExpression(values)) {
+          for (const property of values.properties) {
+            if (ts.isPropertyAssignment(property)) output(property.initializer);
+          }
+        }
+      }
       if (ts.isPropertyAssignment(node)) {
         const name = node.name.getText(ast).replace(/^['"]|['"]$/g, '');
         if (['classes', 'classNames', 'style', 'styles'].includes(name)) return;

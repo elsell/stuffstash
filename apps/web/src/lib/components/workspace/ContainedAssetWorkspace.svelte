@@ -156,7 +156,7 @@
     </div>
   {/if}
   {#if target.lifecycleState === 'active' && !canAddHere && !saving}
-    <p class="denied-note" role="note">{t('web.ContainedAssetWorkspace.addingItemsIsUnavailableForThisInventoryFull', { value: canEdit ? '' : ' Moving items is also unavailable.' })}</p>
+    <p class="denied-note" role="note">{t(canEdit ? 'containment.addUnavailable' : 'containment.addMoveUnavailable')}</p>
   {/if}
 
   {#if moveHereOpen}

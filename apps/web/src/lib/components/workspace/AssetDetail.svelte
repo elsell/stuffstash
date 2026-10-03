@@ -47,7 +47,7 @@
     UpdateAssetDraft
   } from '$lib/domain/inventory';
   import { applicableCustomFieldDefinitions } from '$lib/domain/inventory';
-import { assetKindLabel } from '$lib/presentation/assetKindLabel';
+import { assetKindLabel, assetLifecycleLabel } from '$lib/presentation/assetKindLabel';
   import AssetDetailActionPanel, { type AssetDetailPanel } from './AssetDetailActionPanel.svelte';
   import AssetDetailHero from './AssetDetailHero.svelte';
   import AssetTagChips from './AssetTagChips.svelte';
@@ -697,7 +697,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
 	            {#if asset.currentCheckout}
 	              <CheckoutBadge checkout={asset.currentCheckout} />
 	            {/if}
-	            <Badge variant={asset.lifecycleState === 'active' ? 'secondary' : 'outline'}>{asset.lifecycleState}</Badge>
+	            <Badge variant={asset.lifecycleState === 'active' ? 'secondary' : 'outline'}>{assetLifecycleLabel(asset.lifecycleState)}</Badge>
 	          </span>
         </div>
         <dl class="detail-list">
