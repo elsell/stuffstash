@@ -21,7 +21,7 @@ func (s Service) withHealth(ctx context.Context, p printing.Printer) (printing.P
 	for _, health := range reports {
 		c, b, r := health.Connector, health.Binding, health.Report
 		authority := printing.ConsumerAuthority{Scope: p.Scope, ConnectorID: c.ID, ServiceAccountID: c.ServiceAccountID, CredentialVersion: c.CredentialVersion, PrinterID: p.ID, BindingGeneration: b.Generation}
-		if !printing.AcceptsAuthority(c, b, authority, now) || c.LastSeenAt == nil || now.Sub(*c.LastSeenAt) > s.ReportMaxAge || now.Sub(r.ReportedAt) > s.ReportMaxAge {
+		if !printing.AcceptsAuthority(c, b, authority, now) || c.LastSeenAt == nil || now.Before(*c.LastSeenAt) || now.Before(r.ReportedAt) || now.Sub(*c.LastSeenAt) > s.ReportMaxAge || now.Sub(r.ReportedAt) > s.ReportMaxAge {
 			continue
 		}
 		if s.PrintingAuthorization.CheckPrintConnector(ctx, c.ServiceAccountID, c.ID) != nil || s.PrintingAuthorization.CheckPrinter(ctx, c.ServiceAccountID, p.ID, ports.PrinterPermissionConsume) != nil {
