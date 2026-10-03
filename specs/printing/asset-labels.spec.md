@@ -529,6 +529,7 @@ locally. Changing copies invalidates the preview, just like changing the templat
 A first definite rejection preserves the draft for correction; any prior ambiguous
 submission keeps its original count, payload and key locked until recovery.
 Quick-default requests, asset creation and diagnostic test requests remain one copy.
+
 ## Web default-print command and label options
 
 The asset menu's Print label command is the explicit authorization to enqueue
