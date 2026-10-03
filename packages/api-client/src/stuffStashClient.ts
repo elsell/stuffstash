@@ -128,6 +128,7 @@ export interface AssetExpiration { date: string; precision: 'day' | 'month'; }
 export type AssetExpirationContext = components["schemas"]["ExpirationContext"];
 
 export interface Asset {
+  printJobId?: string;
   expirationContext?: AssetExpirationContext;
   expiration?: AssetExpiration;
   id: string;
@@ -254,6 +255,7 @@ export interface AssetPhotoReference {
 export type AssetPhotoVariant = 'small' | 'medium' | 'large';
 
 export interface CreateAssetInput {
+  printLabel?: components['schemas']['AssetPrintSelection'];
   expiration?: AssetExpiration;
   kind: AssetKind;
   title: string;
@@ -799,11 +801,11 @@ export class StuffStashClient {
     return mapPage(envelope, mapAsset);
   }
 
-  async createAsset(tenantId: string, inventoryId: string, input: CreateAssetInput): Promise<Asset> {
+  async createAsset(tenantId: string, inventoryId: string, input: CreateAssetInput, idempotencyKey?: string): Promise<Asset> {
     const envelope = await this.unwrap(
       this.client.POST('/tenants/{tenantId}/inventories/{inventoryId}/assets', {
         headers: await this.authHeaders(),
-        params: { path: { tenantId, inventoryId } },
+        params: { path: { tenantId, inventoryId }, header: { 'Idempotency-Key': idempotencyKey } },
         body: { ...input, parentAssetId: input.parentAssetId ?? undefined }
       })
     );
@@ -2100,6 +2102,7 @@ function mapAssetActivity(response: AssetActivityResponse): AssetActivityEntry {
 
 function mapAsset(response: AssetResponse): Asset {
   return {
+    printJobId: response.printJobId,
     expiration: response.expiration ?? undefined,
     ...(response.expirationContext ? { expirationContext: response.expirationContext } : {}),
     id: response.id,
