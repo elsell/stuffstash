@@ -1,3 +1,4 @@
+import { auditVocabularyLabel } from './workspaceAuditVocabulary';
 import { t } from '$lib/presentation/localization';
 import type { AuditRecord, AuditScope } from '$lib/domain/inventory';
 
@@ -101,6 +102,7 @@ export function auditRecordPresentation(record: AuditRecord): AuditRecordPresent
     primaryText: `${title} ${actorLabel} ${sourceLabel} ${targetLabel} ${occurredAtLabel}`,
     technicalDetails: [
       { label: t('web.workspaceAuditPresentation.actionCode'), value: record.action },
+      { label: t('audit.targetType'), value: record.targetType },
       { label: t('web.workspaceAuditPresentation.targetID'), value: record.targetId },
       { label: t('web.workspaceAuditPresentation.principalID'), value: record.principalId },
       { label: t('web.workspaceAuditPresentation.source'), value: record.source },
@@ -111,18 +113,7 @@ export function auditRecordPresentation(record: AuditRecord): AuditRecordPresent
 }
 
 function humanizeAction(value: string): string {
-  const knownActions: Record<string, string> = {
-    'asset.created': t('web.workspaceAuditPresentation.assetCreated'),
-    'asset.updated': t('web.workspaceAuditPresentation.assetUpdated'),
-    'asset.archived': t('web.workspaceAuditPresentation.assetArchived'),
-    'asset.restored': t('web.workspaceAuditPresentation.assetRestored'),
-    'asset.deleted': t('web.workspaceAuditPresentation.assetDeleted'),
-    'attachment.created': t('web.workspaceAuditPresentation.attachmentAdded'),
-    'attachment.deleted': t('web.workspaceAuditPresentation.attachmentRemoved'),
-    'inventory.created': t('web.workspaceAuditPresentation.inventoryCreated'),
-    'tenant.created': t('web.workspaceAuditPresentation.tenantCreated')
-  };
-  return knownActions[value] ?? sentenceCase(value);
+  return auditVocabularyLabel('action', value) ?? t('web.workspaceAuditPresentation.activityRecorded');
 }
 
 function humanizePrincipal(value: string): string {
@@ -159,7 +150,7 @@ function humanizeSource(value: string): string {
     import: t('web.workspaceAuditPresentation.import'),
     local_demo: t('web.workspaceAuditPresentation.localDemo')
   };
-  return knownSources[value] ?? t('web.workspaceAuditPresentation.recordedSource');
+  return auditVocabularyLabel('source', value) ?? (Object.hasOwn(knownSources, value) ? knownSources[value] : undefined) ?? t('web.workspaceAuditPresentation.recordedSource');
 }
 
 function humanizeTarget(value: string): string {
@@ -172,7 +163,7 @@ function humanizeTarget(value: string): string {
     custom_field: t('web.workspaceAuditPresentation.customField'),
     custom_asset_type: t('web.workspaceAuditPresentation.customAssetType')
   };
-  return knownTargets[value] ?? sentenceCase(value);
+  return auditVocabularyLabel('target', value) ?? (Object.hasOwn(knownTargets, value) ? knownTargets[value] : undefined) ?? t('audit.target.unknown');
 }
 
 function humanizeMetadataKey(value: string): string {
@@ -185,17 +176,4 @@ function humanizeDate(value: string): string {
     return value;
   }
   return date.toLocaleString();
-}
-
-function sentenceCase(value: string): string {
-  const words = value
-    .replaceAll('.', ' ')
-    .replaceAll('_', ' ')
-    .replaceAll('-', ' ')
-    .trim()
-    .replace(/\s+/g, ' ');
-  if (!words) {
-    return t('web.workspaceAuditPresentation.activityRecorded');
-  }
-  return words.charAt(0).toUpperCase() + words.slice(1);
 }
