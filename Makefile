@@ -208,6 +208,8 @@ selfhost-happy-path-check:
 	scripts/check-selfhost-happy-path.sh
 
 scripts-test: release-plan-test release-image-signing-test selfhost-happy-path-check
+	python3 scripts/test-release-publication.py
+	python3 scripts/generate-cli-downloads.py --check
 	PATH="$(DOCS_PATH)" node --test scripts/release-notes.test.mjs scripts/play-store-notes.test.mjs scripts/google-play-client.test.mjs scripts/test-testflight-notes.mjs scripts/test-store-notes-wiring.mjs
 	PATH="$(DOCS_PATH)" node --test scripts/test-ios-profile-maintenance.mjs scripts/test-apple-maintenance-client.mjs
 	python3 scripts/test-ios-signing.py
