@@ -686,6 +686,7 @@ scoped unsettled-attempt listing to confirm idle for an uncertain attempt. This
 never reconstructs completion/no-output evidence, writes a replacement claim,
 or submits a label. Claimed or printing attempts remain blocked. The worker
 continues to wait for human resolution before accepting another job.
+
 ### Human health projection
 
 Connector list/detail responses expose server-computed `availability` (`online`,
@@ -707,3 +708,104 @@ renewal does not refresh either health signal. Stale, missing, future-dated, or
 unavailable health rejects a new start without consuming the claim or emitting
 output. An identical already-started retry remains readable/idempotent. Outcome
 reporting and reconciliation remain usable while the printer is unavailable.
+### Browser Pairing Approval
+
+The deep link `/print-connectors/pair/{pairingId}` is a focused web task, using
+an accessible form in the existing authentication-page shell. It retains the
+pairing ID through sign-in without storing codes or credentials in URLs. Users
+choose an inventory they can configure and enter the CLI's short code before
+loading the safe review. A wrong code or unavailable request exposes no details.
+
+The review shows the connector name, public-key fingerprint, and candidate
+printer names. Each device is explicitly skipped, mapped to a compatible active
+registered printer, or registered with a user-entered name and an explicitly
+selected supported label preset. No device or label size is preselected. An
+existing destination shows its configured media. Initial choices remain the
+QL-800 and 29 × 90 mm preset returned by the API catalog.
+
+One explicit Approve command commits selected bindings. Creating a destination
+uses a stable idempotency key across retries; partial setup does not silently
+recreate destinations. Once printer creation starts, its submitted configuration
+is frozen until the outcome is known, including a lost-response retry. Duplicate destination assignments are rejected. Changing
+inventory or code clears the reviewed identity and selections before approval.
+Inputs are disabled during requests, errors retain the draft, and success says
+approval is complete while the CLI finishes activation. Permission changes and
+expiry remain server-enforced. Cancellation returns home without approval.
+
+This is a browser form, not a modal: it arrives from an external device and may
+require sign-in. The existing accessible Select primitive fits bounded inventory/media choices;
+existing Input, Button and Card primitives provide consistent keyboard and focus
+behavior. Status is announced locally, fingerprints and long names wrap, and the
+single completion action stays after the review. Source/fake evidence does not
+claim connected OIDC, real printer, or physical mobile verification.
+
+### Web Printer Settings And Manual Printing
+
+Inventory Settings includes a Printers destination at inventory scope. Every
+viewer can inspect registered destinations, configured label size, current
+readiness, connector state/last heartbeat, and recent jobs. Configure permission
+controls editable defaults and printer settings; asset edit permission controls
+manual print requests. The settings form loads defaults once, retains edits
+through background status refreshes, and submits the revision precondition.
+A conflict requires reloading the settings rather than overwriting another edit.
+Printer availability never prevents selecting an otherwise compatible default.
+
+The asset More menu opens a focused Print label dialog for any active asset kind.
+It selects a registered destination, compatible template/options and copies,
+then requests the actual server-rendered preview. Any selection change discards
+that preview. Queue submission includes its selection/media fingerprints and a
+stable idempotency key; uncertain API delivery freezes that request until retry.
+Preview bytes come through authenticated generated-client content methods and
+local object URLs are released on selection changes and dismissal. No credential
+is attached to arbitrary server-provided content URLs.
+
+The dialog and inventory job list show API-owned job state. A queued job for an
+unavailable printer explains that it waits for printer attention. Uncertain
+output never offers automatic retry or calls it failed. Cancellation is offered
+only before dispatch; reprint is an explicit new request from an asset, with
+current configuration and a fresh preview. Until the API exposes manual outcome
+resolution, show actionable uncertain guidance rather than inventing an endpoint.
+
+Use the existing settings navigation, accessible DropdownMenu, Dialog, Select,
+Checkbox, Input and Button primitives. The Print dialog owns one completion
+command, keyboard cancellation and focus return to its More trigger. Status
+updates are local and do not reset a draft. Narrow layouts wrap names/media and
+keep controls reachable; render both settings and preview/status fixtures in a
+browser. Fixture rendering is separate from connected OIDC and physical-printer
+acceptance.
+
+### Native Printer Settings And Job Tasks
+
+Inventory Settings opens a Printers navigation destination. Viewers see printer
+name, registered media, readiness, connector state and last seen independently.
+Configurators edit inventory defaults as one draft with an explicit Save action;
+short printer/template choices use NativeChoicePicker and automatic printing uses
+the native switch. Back leaves persisted settings unchanged. A stale revision
+retains the draft and offers reload instead of silently overwriting another edit.
+Offline printers remain selectable. Empty, denied and unavailable reads do not
+expose retained inventory data. Scope changes remount the task.
+
+Asset More exposes Print label for editable active assets, beside the existing
+viewer-accessible Label options download task. The print task selects a registered
+printer and independent template, previews the API-rendered PNG for that media,
+and submits one copy with an explicit command. Selection changes invalidate the
+preview. Once submission begins, retain its immutable payload and idempotency key
+across a lost-response retry; never make a replacement request implicitly.
+Submission means queued, never physically completed. Job detail shows server
+status and completed-copy evidence, permits cancellation only before output,
+and explains uncertain output without automatically reprinting. All reads and
+commands stay behind a mobile printing port and the generated API client adapter.
+
+The Add item switch initializes once from inventory defaults per new draft;
+background refresh never changes an explicit user choice. Printing is opt-in on
+the atomic create command, with a stable request identity across retries. Parent
+creation remains a separate explicit action and never inherits item printing.
+Critical checks use stateful printer/job/settings fakes for lost responses,
+revision conflict, permission loss and scope/route cancellation. Actual native
+layout, accessibility and USB operation remain device checklist follow-ups.
+
+A first definitive validation/conflict rejection of a manual print request unlocks
+its selection for correction and discards that unused request key. Network errors,
+server failures and any other ambiguous outcome retain the immutable intent. Once
+any attempt was ambiguous, a later rejection cannot prove that an earlier attempt
+did not enqueue: keep the original key and payload until success is recovered.

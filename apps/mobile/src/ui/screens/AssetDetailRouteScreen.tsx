@@ -460,6 +460,7 @@ export function AssetDetailRouteScreen({
   const headerOverflow = screenState.status === 'ready' ? {
     asset: screenState.asset,
     disabled: pendingAction !== undefined,
+    onPrintLabel: screenState.asset.canEdit ? () => router.push(`/assets/${screenState.asset.id}/print`) : undefined,
     onLabel: () => router.push(`/assets/${screenState.asset.id}/label`),
     onMove: screenState.asset.canMove ? () => router.push(`/assets/${screenState.asset.id}/move`) : undefined,
     onAddPhotos: screenState.asset.canAddPhotos ? () => choosePhotos(screenState.asset.photos.length) : undefined,
