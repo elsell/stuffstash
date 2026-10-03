@@ -504,3 +504,13 @@ target and source codes in technical details. Existing web/mobile/local-demo and
 legacy invitation/custom-field aliases remain supported. A vocabulary coverage
 check compares presentation support with the domain's supported audit vocabulary;
 representative rows must render through expanded messages without altering codes.
+
+### Workspace mutation recovery boundary
+
+Web workspace creation, asset editing, and shared workspace commands must present
+unknown exceptions through the existing safe-error presenter with cataloged
+recovery copy. Never display raw Error.message merely because the value is an
+Error. Preserve specific adapter messages explicitly marked safe for users; generic
+validation messages use the catalog fallback. Existing session-expiry handling
+runs first and retains its sign-in behavior. Failed editing retains drafts and
+confirmed tag creations, so retry cannot duplicate successful side effects.
