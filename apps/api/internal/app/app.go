@@ -20,7 +20,9 @@ import (
 )
 
 type App struct {
-	printSettingsRepository      ports.PrintSettingsRepository
+	printSettingsRepository ports.PrintSettingsRepository
+
+	assetPrintUnitOfWork         ports.AssetPrintUnitOfWork
 	printJobs                    *printingapp.JobService
 	labels                       *printingapp.LabelService
 	printerRepository            ports.PrinterRepository

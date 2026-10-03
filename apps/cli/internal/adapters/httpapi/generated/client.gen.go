@@ -1576,6 +1576,21 @@ type AssetPrimaryPhoto struct {
 	Thumbnails  AssetPhotoThumbnails `json:"thumbnails"`
 }
 
+// AssetPrintSelection defines model for AssetPrintSelection.
+type AssetPrintSelection struct {
+	Copies                   int64                     `json:"copies"`
+	ExpectedMediaFingerprint string                    `json:"expectedMediaFingerprint"`
+	PrinterId                string                    `json:"printerId"`
+	TemplateId               string                    `json:"templateId"`
+	TemplateOptions          AssetPrintTemplateOptions `json:"templateOptions"`
+	TemplateVersion          int32                     `json:"templateVersion"`
+}
+
+// AssetPrintTemplateOptions defines model for AssetPrintTemplateOptions.
+type AssetPrintTemplateOptions struct {
+	ShowReference bool `json:"showReference"`
+}
+
 // AssetResponse defines model for AssetResponse.
 type AssetResponse struct {
 	CreatedAt           string                          `json:"createdAt"`
@@ -1591,6 +1606,7 @@ type AssetResponse struct {
 	LifecycleState      string                          `json:"lifecycleState"`
 	ParentAssetId       *string                         `json:"parentAssetId,omitempty"`
 	PrimaryPhoto        *AssetPrimaryPhoto              `json:"primaryPhoto,omitempty"`
+	PrintJobId          *string                         `json:"printJobId,omitempty"`
 	Tags                nullable.Nullable[[]CompactTag] `json:"tags"`
 	TenantId            string                          `json:"tenantId"`
 	Title               string                          `json:"title"`
@@ -1784,7 +1800,8 @@ type CreateAssetBody struct {
 	Kind CreateAssetBodyKind `json:"kind"`
 
 	// ParentAssetId Parent asset ID
-	ParentAssetId *string `json:"parentAssetId,omitempty"`
+	ParentAssetId *string              `json:"parentAssetId,omitempty"`
+	PrintLabel    *AssetPrintSelection `json:"printLabel,omitempty"`
 
 	// TagIds Complete assigned tag ID list
 	TagIds nullable.Nullable[[]string] `json:"tagIds,omitempty"`
@@ -2298,6 +2315,7 @@ type ExpirationWorkspaceAsset struct {
 	LifecycleState      string                                           `json:"lifecycleState"`
 	ParentAssetId       *string                                          `json:"parentAssetId,omitempty"`
 	PrimaryPhoto        *AssetPrimaryPhoto                               `json:"primaryPhoto,omitempty"`
+	PrintJobId          *string                                          `json:"printJobId,omitempty"`
 	Tags                nullable.Nullable[[]CompactTag]                  `json:"tags"`
 	TenantId            string                                           `json:"tenantId"`
 	Title               string                                           `json:"title"`
@@ -5153,6 +5171,8 @@ type GetTenantsByTenantIdInventoriesByInventoryIdAssetsParamsSort string
 
 // PostTenantsByTenantIdInventoriesByInventoryIdAssetsParams defines parameters for PostTenantsByTenantIdInventoriesByInventoryIdAssets.
 type PostTenantsByTenantIdInventoriesByInventoryIdAssetsParams struct {
+	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
+
 	// Authorization Bearer dev:<principal-id>
 	Authorization *string `json:"Authorization,omitempty"`
 
@@ -18552,26 +18572,37 @@ func NewPostTenantsByTenantIdInventoriesByInventoryIdAssetsRequestWithBody(serve
 
 	if params != nil {
 
-		if params.Authorization != nil {
+		if params.IdempotencyKey != nil {
 			var headerParam0 string
 
-			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", *params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
 			if err != nil {
 				return nil, err
 			}
 
-			req.Header.Set("Authorization", headerParam0)
+			req.Header.Set("Idempotency-Key", headerParam0)
+		}
+
+		if params.Authorization != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam1)
 		}
 
 		if params.XRequestID != nil {
-			var headerParam1 string
+			var headerParam2 string
 
-			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			headerParam2, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
 			if err != nil {
 				return nil, err
 			}
 
-			req.Header.Set("X-Request-ID", headerParam1)
+			req.Header.Set("X-Request-ID", headerParam2)
 		}
 
 	}
@@ -33210,20 +33241,20 @@ func (r GetTenantsByTenantIdInventoriesByInventoryIdAssetsResponse) ContentType(
 type PostTenantsByTenantIdInventoriesByInventoryIdAssetsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeAssetResponse
 	// JSON201 the response for an HTTP 201 `application/json` response
 	JSON201 *SuccessEnvelopeAssetResponse
-	// JSONDefault the response for an HTTP default `application/json` response
-	JSONDefault *ErrorEnvelope
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsResponse) GetJSON200() *SuccessEnvelopeAssetResponse {
+	return r.JSON200
 }
 
 // GetJSON201 returns the response for an HTTP 201 `application/json` response
 func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsResponse) GetJSON201() *SuccessEnvelopeAssetResponse {
 	return r.JSON201
-}
-
-// GetJSONDefault returns the response for an HTTP default `application/json` response
-func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsResponse) GetJSONDefault() *ErrorEnvelope {
-	return r.JSONDefault
 }
 
 // GetBody returns the raw response body bytes
@@ -44657,19 +44688,19 @@ func ParsePostTenantsByTenantIdInventoriesByInventoryIdAssetsResponse(rsp *http.
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeAssetResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
 		var dest SuccessEnvelopeAssetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON201 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ErrorEnvelope
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
 
 	}
 

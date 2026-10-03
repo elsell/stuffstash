@@ -37,10 +37,14 @@ verifies exclusive claims and uncertain reservations. Connector pairing, credent
 APIs pass critical HTTP checks. PostgreSQL verifies recovery enumeration stays
 inside connector, tenant, and inventory boundaries. The consumer API and SDK are
 integrated with the CLI worker. Scheduled lease reconciliation and terminal-only
-retention pass critical tests and are under review in PR #357. CLI registration
+retention shipped in PR #357. CLI registration
 and foreground operation now pass stateful protocol, recovery, credential-isolation,
-and revoked-credential tests; web approval, inventory defaults, atomic create-and-print,
-and client job controls remain open.
+and revoked-credential tests and shipped in PR #358. Inventory defaults are under
+review in PR #360. Atomic create-and-print now passes HTTP scope/replay checks,
+late-write rollback, and concurrent PostgreSQL creation with exactly one asset
+and job; generated clients share the explicit print selection. Web approval and
+client job controls remain in progress. Safe manual uncertain resolution, linked
+reprints, test labels, and human CLI print commands remain required.
 No physical output has been verified. See
 [asset labels](../printing/asset-labels.spec.md),
 [printer integration](../printing/printer-integration.spec.md), and [CLI](cli.spec.md).
@@ -58,7 +62,7 @@ templates produce immutable API-rendered artifacts for that registered size,
 consumed through a versioned contract rather than adapter-owned layouts.
 [Generated printing docs](printing-catalog-docs.spec.md) adds registry-derived
 printer/template/size catalogs and production-rendered PNG examples, automatically
-regenerated and checked in PR CI. The catalog implementation is under review in PR #352. CLI release publication
+regenerated and checked in PR CI. The catalog implementation shipped in PR #352. CLI release publication
 has merged in PR #350; an actual published release remains to be verified. Each project release must publish
 version-stamped CLI binaries and checksums; verified release metadata refreshes
 concrete download commands in the docs. Implementation is now authorized as an

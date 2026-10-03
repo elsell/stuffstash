@@ -387,3 +387,21 @@ in the same PR and must pass generation/drift checks.
 - A dedicated inventory print-settings repository owns persistence; this is not
   mutable state inside the printer aggregate. Safe read history uses
   `print_settings.viewed`; successful replacement uses `print_settings.updated`.
+
+### Atomic Create-And-Print Boundary
+
+The existing asset-create endpoint accepts an optional explicit print selection
+and a scoped idempotency key. A coordinator prepares asset validation, optional
+parent promotion and tags, label identity, immutable rendered content, and their
+audit records before invoking a dedicated unit-of-work port. Neither rendering
+nor preparation writes the new asset, label, or job.
+
+The persistence adapter locks the selected registered printer, rechecks the
+registration revision/media and scoped request key, and commits the prepared
+asset, parent promotion, tag assignments, label, job, undo operation, and audit
+records together. A failure rolls back every change. Concurrent equivalent
+requests return the original asset/job; changed payloads conflict. The stored
+job retains the asset-creation operation reference for equivalent response
+recovery. Request fingerprints cover the full asset draft and print selection,
+not generated identifiers or request-correlation IDs. A retry remains subject
+to current inventory authorization and cannot recreate a deleted result.

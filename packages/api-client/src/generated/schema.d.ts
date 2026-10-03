@@ -2601,6 +2601,19 @@ export interface components {
             sizeBytes: number;
             thumbnails: components["schemas"]["AssetPhotoThumbnails"];
         };
+        AssetPrintSelection: {
+            /** Format: int64 */
+            copies: number;
+            expectedMediaFingerprint: string;
+            printerId: string;
+            templateId: string;
+            templateOptions: components["schemas"]["AssetPrintTemplateOptions"];
+            /** Format: int32 */
+            templateVersion: number;
+        };
+        AssetPrintTemplateOptions: {
+            showReference: boolean;
+        };
         AssetResponse: {
             createdAt: string;
             currentCheckout?: components["schemas"]["CurrentCheckout"];
@@ -2617,6 +2630,7 @@ export interface components {
             lifecycleState: string;
             parentAssetId?: string;
             primaryPhoto?: components["schemas"]["AssetPrimaryPhoto"];
+            printJobId?: string;
             tags: components["schemas"]["CompactTag"][] | null;
             tenantId: string;
             title: string;
@@ -2794,6 +2808,7 @@ export interface components {
             kind: "item" | "container" | "location";
             /** @description Parent asset ID */
             parentAssetId?: string;
+            printLabel?: components["schemas"]["AssetPrintSelection"];
             /** @description Complete assigned tag ID list */
             tagIds?: string[] | null;
             /** @description Asset title */
@@ -3244,6 +3259,7 @@ export interface components {
             lifecycleState: string;
             parentAssetId?: string;
             primaryPhoto?: components["schemas"]["AssetPrimaryPhoto"];
+            printJobId?: string;
             tags: components["schemas"]["CompactTag"][] | null;
             tenantId: string;
             title: string;
@@ -8800,6 +8816,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                "Idempotency-Key"?: string;
                 /** @description Bearer dev:<principal-id> */
                 Authorization?: string;
                 /** @description Optional request correlation ID */
@@ -8819,8 +8836,8 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Created */
-            201: {
+            /** @description Existing asset and print job returned for an identical idempotent retry */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -8828,13 +8845,13 @@ export interface operations {
                     "application/json": components["schemas"]["SuccessEnvelopeAssetResponse"];
                 };
             };
-            /** @description Error */
-            default: {
+            /** @description Created */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SuccessEnvelopeAssetResponse"];
                 };
             };
         };

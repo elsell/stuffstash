@@ -27,7 +27,7 @@ func (s *Store) CreateAssetWithParentPromotion(_ context.Context, promotedParent
 
 func (s *Store) createAssetWithParentPromotionLocked(promotedParent asset.Asset, parentAuditRecord audit.Record, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	existingParent, ok := s.assets[promotedParent.ID]
-	if !ok || existingParent.TenantID != promotedParent.TenantID || existingParent.InventoryID != promotedParent.InventoryID || existingParent.Kind != asset.KindItem || promotedParent.Kind != asset.KindContainer || promotedParent.LifecycleState != asset.LifecycleStateActive {
+	if !ok || existingParent.TenantID != promotedParent.TenantID || existingParent.InventoryID != promotedParent.InventoryID || existingParent.Kind != asset.KindItem || existingParent.LifecycleState != asset.LifecycleStateActive || promotedParent.Kind != asset.KindContainer || promotedParent.LifecycleState != asset.LifecycleStateActive {
 		return ports.ErrForbidden
 	}
 	s.assets[promotedParent.ID] = promotedParent
