@@ -14,6 +14,7 @@ export function useAssetHeaderOverflowOptions(props: AssetHeaderOverflowProps | 
   const canArchive = props?.asset.canArchive;
   const canRestore = props?.asset.canRestore;
   const canDeletePermanently = props?.asset.canDeletePermanently;
+  const hasLabel = Boolean(props?.onLabel);
   const hasEdit = Boolean(props?.onEdit);
   const hasMove = Boolean(props?.onMove);
   const hasPhotos = Boolean(props?.onAddPhotos);
@@ -26,6 +27,7 @@ export function useAssetHeaderOverflowOptions(props: AssetHeaderOverflowProps | 
     return assetHeaderOverflowScreenOptions({
       asset: { title, canArchive: !!canArchive, canRestore: !!canRestore, canDeletePermanently: !!canDeletePermanently },
       disabled, photosDisabled,
+      onLabel: hasLabel ? () => owner()?.onLabel?.() : undefined,
       onMove: hasMove ? () => owner()?.onMove?.() : undefined,
       onAddPhotos: hasPhotos ? () => { const value = owner(); if (value && !value.photosDisabled) value.onAddPhotos?.(); } : undefined,
       onCheckout: hasCheckout ? () => owner()?.onCheckout?.() : undefined,
@@ -40,5 +42,5 @@ export function useAssetHeaderOverflowOptions(props: AssetHeaderOverflowProps | 
         if (permitted) value.onLifecycleAction(action);
       }
     });
-  }, [title, canArchive, canRestore, canDeletePermanently, disabled, hasEdit, hasMove, hasPhotos, hasCheckout, photosDisabled, current]);
+  }, [title, canArchive, canRestore, canDeletePermanently, disabled, hasLabel, hasEdit, hasMove, hasPhotos, hasCheckout, photosDisabled, current]);
 }

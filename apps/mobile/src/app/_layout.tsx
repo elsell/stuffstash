@@ -1,3 +1,5 @@
+import { LabelLinkProvider } from '../ui/labels/LabelLinkContext';
+import { PendingLabelNavigation } from '../ui/labels/PendingLabelNavigation';
 import { t } from '../presentation/localization';
 import { AddDestinationTaskProvider } from '../ui/navigation/AddDestinationTask';
 import { AssetTagSelectionTaskProvider } from '../ui/navigation/AssetTagSelectionTask';
@@ -45,7 +47,7 @@ function ThemedApp() {
   }
 
   return (
-    <InventoryInvitationLinkProvider>
+    <LabelLinkProvider><InventoryInvitationLinkProvider>
     <AppServicesProvider><HomeReturnTaskProvider><AssetTagSelectionTaskProvider><AddDestinationTaskProvider>
       <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack
@@ -70,6 +72,8 @@ function ThemedApp() {
           name="voice"
           options={voiceNativeSheetOptions(palette)}
         />
+        <Stack.Screen name="scan-label" options={{ ...sheetOptions.selection, title: t('labels.mobile.scan') }} />
+        <Stack.Screen name="assets/[assetId]/label" options={{ ...sheetOptions.add, title: t('labels.mobile.title') }} />
         <Stack.Screen name="invitations/accept" options={{ title: t('mobile.layout.invitation') }} />
         <Stack.Screen name="add" options={sheetOptions.add} />
         <Stack.Screen name="provider-profiles" options={{ headerShown: false }} />
@@ -95,10 +99,10 @@ function ThemedApp() {
         <Stack.Screen name="inventory-archive" options={inventorySwitcherNativeOptions(palette)} />
         <Stack.Screen name="tenant-switcher" options={inventorySwitcherNativeOptions(palette)} />
       </Stack>
-      <PushNotificationNavigation />
+      <PushNotificationNavigation /><PendingLabelNavigation />
       <VoiceConversationReturn />
       <AppKeyboardAccessory />
     </AddDestinationTaskProvider></AssetTagSelectionTaskProvider></HomeReturnTaskProvider></AppServicesProvider>
-    </InventoryInvitationLinkProvider>
+    </InventoryInvitationLinkProvider></LabelLinkProvider>
   );
 }

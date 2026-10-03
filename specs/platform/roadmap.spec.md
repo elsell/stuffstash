@@ -553,6 +553,17 @@ queue. Current inventory:147 surfaces,24 axes,3,528 cells. Historical evidence
 must retain its revision/date and may not override later acceptance or this
 current sequencing. Old roadmap checkpoint narratives remain in Git history.
 
+## Label client delivery evidence
+
+The independent label download/scanning slice adds all-kind asset label options,
+server-rendered PNG/PDF delivery, Browse camera/paste scanning, and retained
+label navigation through authentication/server changes. Critical parser,
+transport, cancellation, permission, and native action tests are required with
+client checks. Native ExpoCamera/ExpoPrint pod lock regeneration uses CI's actual
+macOS resolver. Physical QL-800 printing and named-device camera/share/print
+acceptance remain unverified in the consolidated user checklist. Registered
+printer job/settings UI remains a subsequent integrated slice.
+
 ## Maintenance
 
 Update this file when batch scope, status, acceptance or material blockers change.

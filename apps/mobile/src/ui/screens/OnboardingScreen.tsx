@@ -21,12 +21,13 @@ type OnboardingScreenProps = {
   readonly initialApiBaseUrl?: string;
   readonly initialState: OnboardingStartState;
   readonly invitationPending?: boolean;
+  readonly labelPending?: boolean;
   readonly onStateChange: (state: OnboardingStartState) => void;
   readonly onComplete: (profile: ConnectionProfile) => void;
   readonly onStartOver?: () => void;
 };
 
-export function OnboardingScreen({ command, initialApiBaseUrl, initialState, invitationPending = false,
+export function OnboardingScreen({ command, initialApiBaseUrl, initialState, invitationPending = false, labelPending = false,
   onStateChange, onComplete, onStartOver }: OnboardingScreenProps) {
   const colors = useAppearanceAwarePalette();
   const styles = onboardingStyles(colors);
@@ -127,6 +128,7 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
         <View style={styles.form}>
           <View style={styles.brand}><BrandMark showWordmark /></View>
           <Text ref={heading} accessibilityRole="header" style={styles.heading}>{title}</Text>
+          {labelPending ? <View style={styles.notice}><Text style={styles.body}>{t('labels.mobile.pending')}</Text></View> : null}
           {invitationPending ? <View style={styles.notice}><Text style={styles.body}>{t('mobile.OnboardingScreen.yourInvitationIsWaitingSignInToReviewIt')}</Text></View> : null}
           {connection ? <>
             {input(t('mobile.OnboardingScreen.serverAddress'), apiBaseUrl, setApiBaseUrl, 'https://stash.example.com', true)}
