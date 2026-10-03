@@ -3,26 +3,29 @@ package dto
 import "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 
 type CreateAssetInput struct {
-	Authorization string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
-	RequestID     string `header:"X-Request-ID" doc:"Optional request correlation ID"`
-	TenantID      string `path:"tenantId" doc:"Tenant ID"`
-	InventoryID   string `path:"inventoryId" doc:"Inventory ID"`
-	Body          CreateAssetBody
+	IdempotencyKey string `header:"Idempotency-Key" maxLength:"180"`
+	Authorization  string `header:"Authorization" doc:"Bearer dev:<principal-id>"`
+	RequestID      string `header:"X-Request-ID" doc:"Optional request correlation ID"`
+	TenantID       string `path:"tenantId" doc:"Tenant ID"`
+	InventoryID    string `path:"inventoryId" doc:"Inventory ID"`
+	Body           CreateAssetBody
 }
 
 type CreateAssetBody struct {
-	Expiration        *Expiration    `json:"expiration,omitempty"`
-	Kind              string         `json:"kind" enum:"item,container,location" doc:"Asset kind"`
-	Title             string         `json:"title" maxLength:"160" doc:"Asset title"`
-	Description       string         `json:"description,omitempty" doc:"Asset description"`
-	ParentAssetID     string         `json:"parentAssetId,omitempty" doc:"Parent asset ID"`
-	CustomAssetTypeID string         `json:"customAssetTypeId,omitempty" doc:"Custom asset type ID"`
-	CustomFields      map[string]any `json:"customFields,omitempty" doc:"Custom field values"`
-	TagIDs            []string       `json:"tagIds,omitempty" doc:"Complete assigned tag ID list"`
+	PrintLabel        *AssetPrintSelection `json:"printLabel,omitempty"`
+	Expiration        *Expiration          `json:"expiration,omitempty"`
+	Kind              string               `json:"kind" enum:"item,container,location" doc:"Asset kind"`
+	Title             string               `json:"title" maxLength:"160" doc:"Asset title"`
+	Description       string               `json:"description,omitempty" doc:"Asset description"`
+	ParentAssetID     string               `json:"parentAssetId,omitempty" doc:"Parent asset ID"`
+	CustomAssetTypeID string               `json:"customAssetTypeId,omitempty" doc:"Custom asset type ID"`
+	CustomFields      map[string]any       `json:"customFields,omitempty" doc:"Custom field values"`
+	TagIDs            []string             `json:"tagIds,omitempty" doc:"Complete assigned tag ID list"`
 }
 
 type CreateAssetOutput struct {
-	Body shared.SuccessEnvelope[AssetResponse]
+	Status int `status:""`
+	Body   shared.SuccessEnvelope[AssetResponse]
 }
 
 type UpdateAssetInput struct {
@@ -169,6 +172,7 @@ type ListAssetsOutput struct {
 }
 
 type AssetResponse struct {
+	PrintJobID          string             `json:"printJobId,omitempty"`
 	ExpirationContext   *ExpirationContext `json:"expirationContext,omitempty"`
 	Expiration          *Expiration        `json:"expiration"`
 	ID                  string             `json:"id"`
@@ -232,4 +236,16 @@ type AssetCheckoutResponse struct {
 type CheckedOutAssetResponse struct {
 	Asset    AssetResponse   `json:"asset"`
 	Checkout CurrentCheckout `json:"checkout"`
+}
+
+type AssetPrintTemplateOptions struct {
+	ShowReference bool `json:"showReference"`
+}
+type AssetPrintSelection struct {
+	PrinterID                string                    `json:"printerId" minLength:"1"`
+	ExpectedMediaFingerprint string                    `json:"expectedMediaFingerprint" minLength:"1"`
+	TemplateID               string                    `json:"templateId"`
+	TemplateVersion          uint32                    `json:"templateVersion" minimum:"1"`
+	TemplateOptions          AssetPrintTemplateOptions `json:"templateOptions"`
+	Copies                   int                       `json:"copies" minimum:"1"`
 }

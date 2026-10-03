@@ -10,6 +10,8 @@ import (
 )
 
 type PreparedCreateAsset struct {
+	TagIDs                []assettag.ID
+	TagAudit              *audit.Record
 	Asset                 asset.Asset
 	AuditRecord           audit.Record
 	PromotedParent        *asset.Asset
