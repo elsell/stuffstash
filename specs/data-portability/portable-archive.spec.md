@@ -458,3 +458,22 @@ and never reach approval or destination publication. Existing valid round trips
 and authorization/isolation checks must remain passing. This documents the
 existing no-extraction design; passing tests are scoped evidence, not a claim
 that all possible malicious archives have been proven safe.
+
+### Android archive fixture artifact
+
+A manual hosted Android archive build may produce a self-contained, debug-signed
+x86_64 release-mode APK with bundled JavaScript and the existing isolated archive
+fixtures. Its generated Android network policy permits cleartext only to
+127.0.0.1 for the synthetic peer; public cleartext remains disabled. This generated
+fixture-only policy must not enter production configuration.
+This is a test artifact, never a store or TestFlight release. Use the
+pinned Android workflow toolchains and a fresh hosted runner, not the failed local
+Gradle cache. Retain its source revision and SHA-256 checksum for one day.
+
+Runtime acceptance remains three separate checks: real native upload integrity;
+redirect/oversize rejection and cancellation recovery; and staged restore review,
+close, reopen, approval and destination opening. Build success alone closes none
+of them. The fixture uses synthetic data and a loopback transfer peer, so even a
+runtime pass does not establish authenticated production restore, physical file
+providers or assistive acceptance. Allow one bounded hosted build attempt before
+deciding from its terminal evidence; do not start unchanged retries.

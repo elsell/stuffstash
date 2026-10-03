@@ -38,6 +38,7 @@ on:
           - inventory-export
           - inventory-archive
           - android-build
+          - android-archive
           - image-telemetry
           - localization
           - release-corrections
@@ -99,7 +100,7 @@ env:
 
 jobs:
   ios:
-    if: inputs.test_case != 'android-build'
+    if: inputs.test_case != 'android-build' && inputs.test_case != 'android-archive'
     name: iOS ${{ matrix.suite }} (${{ matrix.device }})${{ inputs.test_case && inputs.test_case != 'all' && format(' [{0}]', inputs.test_case) || '' }}
     runs-on: macos-26
     timeout-minutes: 120
@@ -771,7 +772,7 @@ jobs:
           if-no-files-found: warn
 
   android:
-    if: inputs.test_case == 'android-build'
+    if: inputs.test_case == 'android-build' || inputs.test_case == 'android-archive'
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
@@ -788,10 +789,60 @@ jobs:
           corepack enable
           corepack prepare pnpm@${PNPM_VERSION} --activate
           pnpm install --frozen-lockfile
+      - name: Install isolated archive fixture routes
+        if: inputs.test_case == 'android-archive'
+        env:
+          AUDIT_SUITE: fixtures
+          AUDIT_TEST_CASE: archives
+        run: python3 scripts/prepare-mobile-audit-fixtures.py
       - name: Generate Android project from pinned Expo SDK
         working-directory: apps/mobile
         run: pnpm exec expo prebuild --platform android --no-install
       - name: Compile native modules and application
+        if: inputs.test_case == 'android-build'
         working-directory: apps/mobile/android
         run: |
           ./gradlew :app:assembleDebug --no-daemon --console=plain
+      - name: Permit only the fixture loopback peer
+        if: inputs.test_case == 'android-archive'
+        run: |
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          root = Path('apps/mobile/android/app/src/main')
+          namespace = 'http://schemas.android.com/apk/res/android'
+          ET.register_namespace('android', namespace)
+          path = root / 'AndroidManifest.xml'
+          manifest = ET.parse(path)
+          application = manifest.getroot().find('application')
+          if application is None:
+              raise SystemExit('Generated application manifest missing')
+          application.set('{' + namespace + '}networkSecurityConfig', '@xml/archive_audit_network_security')
+          application.set('{' + namespace + '}usesCleartextTraffic', 'false')
+          policy = root / 'res/xml/archive_audit_network_security.xml'
+          policy.parent.mkdir(parents=True, exist_ok=True)
+          policy.write_text('<network-security-config><base-config cleartextTrafficPermitted="false"/><domain-config cleartextTrafficPermitted="true"><domain includeSubdomains="false">127.0.0.1</domain></domain-config></network-security-config>')
+          manifest.write(path, encoding='utf-8', xml_declaration=True)
+          PYTHON
+      - name: Bundle installable archive fixture APK
+        if: inputs.test_case == 'android-archive'
+        working-directory: apps/mobile/android
+        env:
+          EXPO_PUBLIC_STUFF_STASH_ARCHIVE_AUDIT_URL: http://127.0.0.1:18889
+        run: ./gradlew :app:assembleRelease --no-daemon --console=plain -PreactNativeArchitectures=x86_64 -Dorg.gradle.workers.max=2
+      - name: Record fixture source and checksum
+        if: inputs.test_case == 'android-archive'
+        run: |
+          mkdir -p android-archive-artifact
+          cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk android-archive-artifact/
+          git rev-parse HEAD > android-archive-artifact/source-revision.txt
+          cd android-archive-artifact
+          sha256sum app-release.apk > SHA256SUMS
+      - name: Retain installable archive fixture
+        if: inputs.test_case == 'android-archive'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: android-archive-fixture
+          path: android-archive-artifact/
+          if-no-files-found: error
+          retention-days: 1
