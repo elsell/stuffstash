@@ -9,8 +9,9 @@ inventory public.
 
 ## What is available
 
-The source build includes label rendering and the Brother QL-800 USB adapter.
-Registered-printer job delivery is still being integrated. This catalog describes
+The source build includes label rendering, connector registration, and a foreground
+CLI worker for registered printer queues. Client setup and print controls are still
+being integrated. See [connector setup](../../cli/#register-a-printer-connector). This catalog describes
 the candidate source, and must not be read as a promise that an older downloadable
 CLI has the same features. See [CLI installation](../../cli/) for current downloads.
 
