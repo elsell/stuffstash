@@ -15,8 +15,9 @@ func TestPrintJobsEnforceRolesScopeImmutableRetriesAndCancellation(t *testing.T)
 }
 
 func coverPrintJobScenarios(t *testing.T, coverage executedScenarioCoverage, adversarial bool) {
-	application, store, az := labelTestApplication(t)
-	application = application.WithPrinterRegistry(store, printingprofiles.Catalog{}).WithPrintJobs(store, printingapp.JobConfig{MaxCopies: 20, MaxArtifactBytes: 1000000, ArtifactTTL: time.Hour})
+	clock := &labelTestClock{now: time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC)}
+	application, store, az := labelTestApplication(t, clock)
+	application = application.WithPrinterRegistry(store, printingprofiles.Catalog{}).WithPrintJobs(store, printingapp.JobConfig{MaxCopies: 20, MaxArtifactBytes: 1000000, ArtifactTTL: 24 * time.Hour, TerminalTTL: time.Hour})
 	server := NewServer(":0", application)
 	if err := az.GrantInventoryViewer(context.Background(), identity.Principal{ID: "viewer"}, labelTenant, labelInventory); err != nil {
 		t.Fatal(err)
@@ -81,4 +82,68 @@ func coverPrintJobScenarios(t *testing.T, coverage executedScenarioCoverage, adv
 			t.Fatalf("cancel: %d %s", r.Code, r.Body.String())
 		}
 	}
+	clock.now = clock.now.Add(2 * time.Hour)
+	testPath := labelPrefix + "/printers/" + p["id"].(string) + "/test-jobs"
+	reprintPath := detail + "/reprints"
+	body["copies"] = 1
+	for _, endpoint := range []struct{ route, operation string }{{testPath, template + "/printers/{printerId}/test-jobs"}, {reprintPath, template + "/print-jobs/{jobId}/reprints"}} {
+		for _, denied := range []struct {
+			token  string
+			status int
+		}{{"", 401}, {"Bearer malformed", 401}, {"Bearer dev:viewer", 403}, {"Bearer dev:other", 403}} {
+			response := performRequestWithHeaders(server, "POST", endpoint.route, denied.token, map[string]string{"Idempotency-Key": "explicit-new-job"}, body)
+			if response.Code != denied.status {
+				t.Fatalf("new command denied: %d %s", response.Code, response.Body.String())
+			}
+		}
+		coverage.operation["POST "+endpoint.operation] = struct{}{}
+	}
+	testHeaders := map[string]string{"Idempotency-Key": "diagnostic"}
+	diagnostic := performRequestWithHeaders(server, "POST", testPath, "Bearer dev:owner", testHeaders, body)
+	if diagnostic.Code != 201 {
+		t.Fatalf("diagnostic: %d %s", diagnostic.Code, diagnostic.Body.String())
+	}
+	diagnosticJob := labelResponseData(t, diagnostic.Body.Bytes())
+	if diagnosticJob["kind"] != "printer_test" || diagnosticJob["assetId"] != nil {
+		t.Fatal(diagnosticJob)
+	}
+	repeatDiagnostic := performRequestWithHeaders(server, "POST", testPath, "Bearer dev:owner", testHeaders, body)
+	if repeatDiagnostic.Code != 200 || labelResponseData(t, repeatDiagnostic.Body.Bytes())["id"] != diagnosticJob["id"] {
+		t.Fatal(repeatDiagnostic.Body.String())
+	}
+	body["copies"] = 2
+	invalidDiagnostic := performRequestWithHeaders(server, "POST", testPath, "Bearer dev:owner", map[string]string{"Idempotency-Key": "invalid-test"}, body)
+	if invalidDiagnostic.Code != 400 {
+		t.Fatalf("multiple diagnostic copies: %d", invalidDiagnostic.Code)
+	}
+	body["copies"] = 1
+	reprintHeaders := map[string]string{"Idempotency-Key": "explicit-reprint"}
+	reprint := performRequestWithHeaders(server, "POST", reprintPath, "Bearer dev:owner", reprintHeaders, body)
+	if reprint.Code != 201 {
+		t.Fatalf("reprint: %d %s", reprint.Code, reprint.Body.String())
+	}
+	reprintJob := labelResponseData(t, reprint.Body.Bytes())
+	if reprintJob["predecessor"] != job["id"] || reprintJob["id"] == job["id"] {
+		t.Fatal(reprintJob)
+	}
+	if _, err := application.PrintJobs().Maintain(context.Background(), ""); err != nil {
+		t.Fatal(err)
+	}
+	retiredPredecessor := performRequest(server, "GET", detail, "Bearer dev:owner", nil)
+	if retiredPredecessor.Code != 404 {
+		t.Fatalf("predecessor retention did not run: %d", retiredPredecessor.Code)
+	}
+	repeatReprint := performRequestWithHeaders(server, "POST", reprintPath, "Bearer dev:owner", reprintHeaders, body)
+	if repeatReprint.Code != 200 || labelResponseData(t, repeatReprint.Body.Bytes())["id"] != reprintJob["id"] {
+		t.Fatal(repeatReprint.Body.String())
+	}
+	activeReprint := performRequestWithHeaders(server, "POST", labelPrefix+"/print-jobs/"+reprintJob["id"].(string)+"/reprints", "Bearer dev:owner", map[string]string{"Idempotency-Key": "active-reprint"}, body)
+	if activeReprint.Code != 409 {
+		t.Fatalf("active reprint: %d", activeReprint.Code)
+	}
+	crossScope := performRequestWithHeaders(server, "POST", "/tenants/"+labelTenant+"/inventories/"+labelOtherInventory+"/print-jobs/"+job["id"].(string)+"/reprints", "Bearer dev:other", reprintHeaders, body)
+	if crossScope.Code != 404 {
+		t.Fatalf("cross-scope predecessor: %d", crossScope.Code)
+	}
+
 }

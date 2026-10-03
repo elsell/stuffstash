@@ -630,6 +630,28 @@ measured from its last state transition; audit history remains. The request
 idempotency window ends when that terminal job is removed. Cleanup uses the same
 printer lock as claims and state changes and rechecks eligibility under the lock.
 
+### Explicit diagnostic and reprint commands
+
+Printer test jobs take an idempotency key and an explicit current media/template
+selection. Copies is fixed to one. Their immutable content is the title
+`Stuff Stash printer test`, reference `PRINTER TEST`, and diagnostic QR
+`https://example.invalid/stuff-stash-printer-test`; that reserved example address
+is deliberately not an asset identity or an instance route. No asset or label
+is provisioned. Registration and heartbeat never invoke this command.
+
+A reprint requires a new idempotency key and explicit current printer, media,
+template, and copies selection. It records its predecessor and renders current
+asset content into a new immutable job; the previous job is never changed.
+Only completed, failed, or canceled predecessors are eligible. Uncertain work
+must first be safely resolved, and queued/claimed/printing work cannot be
+reprinted. Retrying the same reprint key returns the same new job. Changed
+predecessor or selection with that key conflicts. Persistence verifies predecessor
+scope and terminal eligibility in the job-creation transaction.
+
+Reprint idempotency outlives predecessor retention: while the new job is retained,
+an identical authorized request returns it even when its predecessor has expired.
+Diagnostic and reprint OpenAPI contracts expose both 201 creation and 200 replay.
+
 ### Human health projection
 
 Connector list/detail responses expose server-computed `availability` (`online`,
