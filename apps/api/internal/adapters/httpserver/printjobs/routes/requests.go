@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/app"
 	printingapp "github.com/stuffstash/stuff-stash/internal/app/printing"
 	p "github.com/stuffstash/stuff-stash/internal/domain/printing"
+	"reflect"
 )
 
 func selection(in dto.PrintJobSelection) printingapp.JobSelection {
@@ -25,7 +26,9 @@ func registerJobRequests(api huma.API, a app.App) {
 			status = 201
 		}
 		return output(j, status, err)
-	}, huma.OperationTags("printing"), shared.SecuredOperation)
+	}, huma.OperationTags("printing"), shared.SecuredOperation, func(op *huma.Operation) {
+		op.Responses = map[string]*huma.Response{"200": {Description: "Existing print job returned for an identical idempotent retry", Content: map[string]*huma.MediaType{"application/json": {Schema: api.OpenAPI().Components.Schemas.Schema(reflect.TypeFor[shared.SuccessEnvelope[dto.PrintJob]](), true, "PrintJobEnvelope")}}}}
+	})
 	huma.Post(api, path+"/printers/{printerId}/test-jobs", func(ctx context.Context, in *dto.TestJobInput) (*dto.Output, error) {
 		scope, err := authenticate(ctx, a, in.Scope)
 		if err != nil {
@@ -40,5 +43,7 @@ func registerJobRequests(api huma.API, a app.App) {
 			status = 201
 		}
 		return output(j, status, err)
-	}, huma.OperationTags("printing"), shared.SecuredOperation)
+	}, huma.OperationTags("printing"), shared.SecuredOperation, func(op *huma.Operation) {
+		op.Responses = map[string]*huma.Response{"200": {Description: "Existing print job returned for an identical idempotent retry", Content: map[string]*huma.MediaType{"application/json": {Schema: api.OpenAPI().Components.Schemas.Schema(reflect.TypeFor[shared.SuccessEnvelope[dto.PrintJob]](), true, "PrintJobEnvelope")}}}}
+	})
 }

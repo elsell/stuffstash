@@ -15,8 +15,9 @@ func TestPrintJobsEnforceRolesScopeImmutableRetriesAndCancellation(t *testing.T)
 }
 
 func coverPrintJobScenarios(t *testing.T, coverage executedScenarioCoverage, adversarial bool) {
-	application, store, az := labelTestApplication(t)
-	application = application.WithPrinterRegistry(store, printingprofiles.Catalog{}).WithPrintJobs(store, printingapp.JobConfig{MaxCopies: 20, MaxArtifactBytes: 1000000, ArtifactTTL: time.Hour})
+	clock := &labelTestClock{now: time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC)}
+	application, store, az := labelTestApplication(t, clock)
+	application = application.WithPrinterRegistry(store, printingprofiles.Catalog{}).WithPrintJobs(store, printingapp.JobConfig{MaxCopies: 20, MaxArtifactBytes: 1000000, ArtifactTTL: 24 * time.Hour, TerminalTTL: time.Hour})
 	server := NewServer(":0", application)
 	if err := az.GrantInventoryViewer(context.Background(), identity.Principal{ID: "viewer"}, labelTenant, labelInventory); err != nil {
 		t.Fatal(err)
@@ -81,6 +82,7 @@ func coverPrintJobScenarios(t *testing.T, coverage executedScenarioCoverage, adv
 			t.Fatalf("cancel: %d %s", r.Code, r.Body.String())
 		}
 	}
+	clock.now = clock.now.Add(2 * time.Hour)
 	testPath := labelPrefix + "/printers/" + p["id"].(string) + "/test-jobs"
 	reprintPath := detail + "/reprints"
 	body["copies"] = 1
@@ -123,6 +125,13 @@ func coverPrintJobScenarios(t *testing.T, coverage executedScenarioCoverage, adv
 	reprintJob := labelResponseData(t, reprint.Body.Bytes())
 	if reprintJob["predecessor"] != job["id"] || reprintJob["id"] == job["id"] {
 		t.Fatal(reprintJob)
+	}
+	if _, err := application.PrintJobs().Maintain(context.Background(), ""); err != nil {
+		t.Fatal(err)
+	}
+	retiredPredecessor := performRequest(server, "GET", detail, "Bearer dev:owner", nil)
+	if retiredPredecessor.Code != 404 {
+		t.Fatalf("predecessor retention did not run: %d", retiredPredecessor.Code)
 	}
 	repeatReprint := performRequestWithHeaders(server, "POST", reprintPath, "Bearer dev:owner", reprintHeaders, body)
 	if repeatReprint.Code != 200 || labelResponseData(t, repeatReprint.Body.Bytes())["id"] != reprintJob["id"] {

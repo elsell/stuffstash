@@ -647,3 +647,7 @@ must first be safely resolved, and queued/claimed/printing work cannot be
 reprinted. Retrying the same reprint key returns the same new job. Changed
 predecessor or selection with that key conflicts. Persistence verifies predecessor
 scope and terminal eligibility in the job-creation transaction.
+
+Reprint idempotency outlives predecessor retention: while the new job is retained,
+an identical authorized request returns it even when its predecessor has expired.
+Diagnostic and reprint OpenAPI contracts expose both 201 creation and 200 replay.
