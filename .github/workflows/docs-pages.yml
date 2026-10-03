@@ -39,6 +39,9 @@ jobs:
         with:
           ref: ${{ github.event_name == 'pull_request' && github.sha || 'main' }}
 
+      - name: Verify concurrent Pages publication
+        run: python3 scripts/test-pages-push.py
+
       - name: Setup Go for runtime catalog export
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
         with:
@@ -111,6 +114,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout Pages publication helper
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' && github.sha || 'main' }}
+          path: tooling
+          persist-credentials: false
+          sparse-checkout: scripts/push-pages.sh
+          sparse-checkout-cone-mode: false
+
       - name: Checkout Pages branch
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
@@ -152,7 +164,6 @@ jobs:
           rm -rf "$preview_dir"
           mkdir -p "$preview_dir"
           cp -R built-docs/. "$preview_dir/"
-          rm -f pages/CNAME
           touch pages/.nojekyll
 
       - name: Commit and push Pages branch
@@ -166,7 +177,7 @@ jobs:
             exit 0
           fi
           git commit -m "Deploy documentation site"
-          git push origin HEAD:gh-pages
+          bash ../tooling/scripts/push-pages.sh
 
       - name: Report preview URL
         if: github.event_name == 'pull_request'
@@ -180,6 +191,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout Pages publication helper
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' && github.sha || 'main' }}
+          path: tooling
+          persist-credentials: false
+          sparse-checkout: scripts/push-pages.sh
+          sparse-checkout-cone-mode: false
+
       - name: Checkout Pages branch
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
@@ -199,4 +219,4 @@ jobs:
             exit 0
           fi
           git commit -m "Remove documentation preview for PR ${{ github.event.pull_request.number }}"
-          git push origin HEAD:gh-pages
+          bash ../tooling/scripts/push-pages.sh
