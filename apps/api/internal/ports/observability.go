@@ -18,6 +18,7 @@ const (
 	EventLabelProvisioned                          EventName = "label.provisioned"
 	EventLabelCleanupFailed                        EventName = "label.cleanup_failed"
 	EventPrintConnectorSyncFailed                  EventName = "print_connector.sync_failed"
+	EventPrintSettingsUpdated                      EventName = "print_settings.updated"
 	EventPrinterRegistered                         EventName = "printer.registered"
 	EventPrinterUpdated                            EventName = "printer.updated"
 	EventArchiveWorkerFailed                       EventName = "archive_worker.failed"

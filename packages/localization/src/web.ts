@@ -1,5 +1,7 @@
 /** web presentation messages. */
 export const webMessages = {
+  "audit.action.print_settings.viewed": "Print settings viewed",
+  "audit.action.print_settings.updated": "Print settings updated",
   "audit.action.print_job.claimed": "Print job claimed",
   "audit.action.print_job.started": "Printing started",
   "audit.action.print_job.completed": "Printing completed",
