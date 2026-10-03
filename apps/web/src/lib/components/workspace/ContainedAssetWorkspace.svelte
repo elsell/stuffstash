@@ -19,6 +19,7 @@
 </script>
 
 <script lang="ts">
+  import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import AssetExpirationLabel from './AssetExpirationLabel.svelte';
   import { tick } from 'svelte';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -119,7 +120,7 @@
     try {
       await onMoveHere(selectedCandidate);
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : t("move.failed", { title: selectedCandidate.title });
+      saveError = safeWorkspaceErrorMessage(caught, t("move.failed", { title: selectedCandidate.title }));
     }
   }
 

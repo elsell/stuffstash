@@ -218,6 +218,38 @@ describe('WorkspaceContextSwitcher', () => {
     expect(submissions).toEqual([{ tenantName: 'Cabin', inventoryName: 'Workshop' }]);
   });
 
+  it('retains workspace creation drafts and safe guidance without leaking diagnostics', async () => {
+    let attempts = 0;
+    component = mount(WorkspaceContextSwitcher, {
+      target: document.body,
+      props: contextProps({ onCreateTenantWithInventory: async () => {
+        attempts += 1;
+        throw attempts === 1 ? new Error('PRIVATE_WORKSPACE_DIAGNOSTIC')
+          : Object.assign(new Error('Choose a different household name.'), { safeForUser: true });
+      } })
+    });
+    buttonContaining('Garage').click();
+    await tick();
+    buttonContaining('Switch tenant').click();
+    await tick();
+    buttonContaining('New tenant').click();
+    await tick();
+    inputWithLabel('Tenant name').value = 'Cabin';
+    inputWithLabel('Tenant name').dispatchEvent(new Event('input', { bubbles: true }));
+    inputWithLabel('Inventory name').value = 'Workshop';
+    inputWithLabel('Inventory name').dispatchEvent(new Event('input', { bubbles: true }));
+    buttonContaining('Create workspace').click();
+    await tick();
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Could not create workspace.'));
+    expect(document.body.textContent).not.toContain('PRIVATE_WORKSPACE_DIAGNOSTIC');
+    expect(inputWithLabel('Tenant name').value).toBe('Cabin');
+    expect(inputWithLabel('Inventory name').value).toBe('Workshop');
+    buttonContaining('Create workspace').click();
+    await tick();
+    expect(attempts).toBe(2);
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Choose a different household name.'));
+  });
+
   it('does not show inventory creation when the selected tenant cannot create inventories', async () => {
     component = mount(WorkspaceContextSwitcher, {
       target: document.body,

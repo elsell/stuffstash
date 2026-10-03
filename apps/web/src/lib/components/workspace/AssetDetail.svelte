@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import { t } from '$lib/presentation/localization';
   import {formatAssetExpiration, expirationStatusLabel} from '$lib/application/expirationPresentation';
   import { tick } from 'svelte';
@@ -368,7 +369,7 @@ import { assetKindLabel, assetLifecycleLabel } from '$lib/presentation/assetKind
       });
       closePanel();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : t('web.AssetDetail.unableToSaveAsset');
+      saveError = safeWorkspaceErrorMessage(caught, t('web.AssetDetail.unableToSaveAsset'));
     }
   }
 
@@ -426,7 +427,7 @@ import { assetKindLabel, assetLifecycleLabel } from '$lib/presentation/assetKind
     try {
       await onArchive();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : t('web.AssetDetail.unableToArchiveAsset');
+      saveError = safeWorkspaceErrorMessage(caught, t('web.AssetDetail.unableToArchiveAsset'));
     }
   }
 
@@ -435,7 +436,7 @@ import { assetKindLabel, assetLifecycleLabel } from '$lib/presentation/assetKind
     try {
       await onRestore();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : t('web.AssetDetail.unableToRestoreAsset');
+      saveError = safeWorkspaceErrorMessage(caught, t('web.AssetDetail.unableToRestoreAsset'));
     }
   }
 
@@ -444,7 +445,7 @@ import { assetKindLabel, assetLifecycleLabel } from '$lib/presentation/assetKind
     try {
       await onDelete();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : t('web.AssetDetail.unableToDeleteAsset');
+      saveError = safeWorkspaceErrorMessage(caught, t('web.AssetDetail.unableToDeleteAsset'));
     }
   }
 
@@ -454,7 +455,7 @@ import { assetKindLabel, assetLifecycleLabel } from '$lib/presentation/assetKind
       await onCheckout(checkoutDetails.trim());
       closePanel();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : t('web.AssetDetail.unableToCheckoutAsset');
+      saveError = safeWorkspaceErrorMessage(caught, t('web.AssetDetail.unableToCheckoutAsset'));
     }
   }
 
@@ -464,7 +465,7 @@ import { assetKindLabel, assetLifecycleLabel } from '$lib/presentation/assetKind
       await onReturn(checkoutDetails.trim());
       closePanel();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : t('web.AssetDetail.unableToReturnAsset');
+      saveError = safeWorkspaceErrorMessage(caught, t('web.AssetDetail.unableToReturnAsset'));
     }
   }
 
