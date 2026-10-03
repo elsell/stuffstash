@@ -72,9 +72,6 @@ output. Lists include a continuation cursor when more results are available;
 pass it with `--cursor`. Flags can also set `--server`, `--tenant`, and
 `--inventory` for one command.
 
-Printer registration and background printing are being implemented separately.
-They are not available in this CLI slice yet.
-
 ## Release operations
 
 The normal Release workflow attaches five portable CLI archives, individual
@@ -95,3 +92,33 @@ self-host image digests. The docs deploy after that PR merges. If its checks or
 merge require attention, fix the PR; then run **Docs Pages** on **main** to refresh
 the site. A draft, failed publication, or older repaired release cannot replace
 newer stable download instructions.
+
+## Register a printer connector
+
+Connect the Brother QL-800 to a Linux computer by USB, then discover it:
+
+```sh
+./stuffstash printers discover
+./stuffstash connectors print register --name 'Garage computer'
+```
+
+Open the displayed approval address on your phone or computer and enter the
+short code. Confirm the inventory, printer, and **29 × 90 mm** label size. The
+CLI waits for approval and saves a separate, restricted connector credential.
+Keep the connector ID printed when registration completes.
+
+The connector uses its own keyring entry. For a headless computer, explicitly
+choose a different credential file from your human login session:
+
+```sh
+mkdir -m 700 -p "$HOME/.config/stuffstash"
+export STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE="$HOME/.config/stuffstash/garage-connector.json"
+```
+
+Set this before registering. Keep the file private and persistent across restarts.
+Use a separate file for each connector. Registration never prints the connector
+credential. If approval expires or an exchange response is lost, register again.
+If activation fails after saving, retain the saved credential; the print worker
+can retry activation.
+
+The foreground print worker is delivered separately from registration.

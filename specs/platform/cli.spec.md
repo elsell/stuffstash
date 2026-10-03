@@ -473,3 +473,25 @@ copy. An API start acknowledgement and current lease are additional gates before
 submission. Recovery inspects API state before new claims; an earlier process's
 submission intent can produce uncertainty/reconciliation, never an automatic
 physical replay. Journal or lock failures are fail-closed printer conditions.
+
+### Local Connector Registration State
+
+- `connectors print register --name NAME` discovers candidate devices without
+  opening them, starts key-bound browser pairing, and displays the short code
+  and approval URL. The approving user selects the inventory, printer, and
+  explicit media profile in the browser. The CLI never borrows a human token.
+- Save the exchanged connector credential, canonical API server, tenant,
+  inventory, connector ID, and expiry before sending the activation heartbeat.
+  A failed save must not activate the credential. A lost activation response can
+  be retried with the saved credential. Pairing private keys and poll secrets
+  remain temporary process state and never appear in output.
+- Connector credentials use a separate OS-keyring namespace. Headless operators
+  may explicitly set `STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE` to an owner-only
+  file. This file stores one connector; replacing a different registration needs
+  an explicit separate path. It must never overwrite human login credentials. Cross-process locking
+  serializes identity checks and atomic file replacement so competing
+  registrations cannot both activate after overwriting each other.
+- `--connector ID` or `STUFF_STASH_CLI_CONNECTOR_ID` selects the saved connector
+  for foreground operation. Live authorized device bindings and media come from
+  the API. `STUFF_STASH_CLI_PRINT_STATE_DIRECTORY` or `--journal-dir` selects
+  persistent recovery state separately from credential storage.

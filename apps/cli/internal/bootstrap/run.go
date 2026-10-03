@@ -39,6 +39,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		return exit(output, err)
 	}
 	options.Server = oidcauth.CanonicalServer(options.Server)
+	if len(options.Command) == 3 && options.Command[0] == "connectors" && options.Command[1] == "print" && options.Command[2] == "register" {
+		return exit(output, registerPrintConnector(ctx, options, getenv, output))
+	}
 	var store ports.Credentials = credentials.Keyring{}
 	if options.CredentialFile != "" {
 		store = credentials.File{Path: options.CredentialFile}
@@ -82,11 +85,14 @@ const Help = `Stuff Stash CLI
   stuffstash version
   stuffstash printers discover
   stuffstash printers catalog [--json]
+  stuffstash connectors print register --name NAME
 
 Context: --server, --tenant, --inventory or STUFF_STASH_CLI_SERVER,
 STUFF_STASH_CLI_TENANT, STUFF_STASH_CLI_INVENTORY. No implicit inventory selection.
 Finite commands accept --json. Mutations accept --idempotency-key.
 Headless credential storage: explicitly set STUFF_STASH_CLI_CREDENTIAL_FILE.
 Local printer discovery and catalog export do not need login.
-Queued printing commands are not available in this build.
+Connector secrets: use the OS store or explicitly set
+STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE for headless hosts.
+Registration prints a browser approval URL and short code.
 `

@@ -10,16 +10,17 @@ import (
 )
 
 type Options struct {
-	Command                                             []string
-	Server                                              string
-	Scope                                               ports.Scope
-	Page                                                ports.Page
-	Title, Kind, Parent, IdempotencyKey, CredentialFile string
-	JSON, DeviceCode, AllowLoopbackHTTP, Help           bool
+	Command                                                               []string
+	ConnectorID, ConnectorName, ConnectorCredentialFile, JournalDirectory string
+	Server                                                                string
+	Scope                                                                 ports.Scope
+	Page                                                                  ports.Page
+	Title, Kind, Parent, IdempotencyKey, CredentialFile                   string
+	JSON, DeviceCode, AllowLoopbackHTTP, Help                             bool
 }
 
 func Parse(args []string, getenv func(string) string) (Options, error) {
-	o := Options{Server: getenv("STUFF_STASH_CLI_SERVER"), Scope: ports.Scope{Tenant: getenv("STUFF_STASH_CLI_TENANT"), Inventory: getenv("STUFF_STASH_CLI_INVENTORY")}, CredentialFile: getenv("STUFF_STASH_CLI_CREDENTIAL_FILE")}
+	o := Options{ConnectorID: getenv("STUFF_STASH_CLI_CONNECTOR_ID"), ConnectorCredentialFile: getenv("STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE"), JournalDirectory: getenv("STUFF_STASH_CLI_PRINT_STATE_DIRECTORY"), Server: getenv("STUFF_STASH_CLI_SERVER"), Scope: ports.Scope{Tenant: getenv("STUFF_STASH_CLI_TENANT"), Inventory: getenv("STUFF_STASH_CLI_INVENTORY")}, CredentialFile: getenv("STUFF_STASH_CLI_CREDENTIAL_FILE")}
 	if raw := getenv("STUFF_STASH_CLI_ALLOW_LOOPBACK_HTTP"); raw != "" {
 		v, err := strconv.ParseBool(raw)
 		if err != nil {
@@ -29,6 +30,9 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	}
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
+	flags.StringVar(&o.ConnectorID, "connector", o.ConnectorID, "registered connector ID")
+	flags.StringVar(&o.ConnectorName, "name", "", "connector name")
+	flags.StringVar(&o.JournalDirectory, "journal-dir", o.JournalDirectory, "persistent print recovery directory")
 	flags.StringVar(&o.Server, "server", o.Server, "Stuff Stash API URL")
 	flags.StringVar(&o.Scope.Tenant, "tenant", o.Scope.Tenant, "tenant ID")
 	flags.StringVar(&o.Scope.Inventory, "inventory", o.Scope.Inventory, "inventory ID")
