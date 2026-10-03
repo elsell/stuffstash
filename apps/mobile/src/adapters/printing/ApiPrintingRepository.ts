@@ -15,11 +15,11 @@ export class ApiPrintingRepository implements PrintingRepository {
       this.client.templates(scope), this.client.settings(scope)
     ]);
     assertReadActive(signal);
-    return { printers: printers.map(printer => ({ id: printer.id, name: printer.name, retired: printer.retired, readiness: printer.readiness, revision: printer.revision,
+    return { printers: printers.map(printer => ({ id: printer.id, name: printer.name, retired: printer.retired, readiness: printer.readiness, readinessReason: printer.readinessReason, reportedAt: printer.reportedAt, revision: printer.revision,
       mediaFingerprint: printer.mediaFingerprint, mediaName: printer.media.name, media: { presetId: printer.media.presetId, version: printer.media.version, widthMicrometers: printer.media.widthMicrometers,
         heightMicrometers: printer.media.heightMicrometers, margins: printer.media.marginsMicrometers, resolutionDPI: printer.media.resolutionDpi, rasterWidth: printer.media.rasterWidth,
         rasterHeight: printer.media.rasterHeight, orientation: printer.media.orientation, colorMode: printer.media.colorMode, cutPolicy: printer.media.cutPolicy, displayRotation: printer.media.displayRotation } })),
-      connectors: connectors.map(connector => ({ id: connector.id, name: connector.name, state: connector.state, lastSeenAt: connector.lastSeenAt, printerIds: connector.printerIds ?? [] })),
+      connectors: connectors.map(connector => ({ id: connector.id, name: connector.name, state: connector.state, availability: connector.availability, lastSeenAt: connector.lastSeenAt, printerIds: connector.printerIds ?? [] })),
       templates: templates.map(template => ({ id: template.id, version: template.version, name: template.name, showReference: template.defaults.show_reference, supportsReference: (template.options ?? []).includes('show_reference') })), settings: mapSettings(settings) };
   }
   async saveSettings(scope: PrintScope, settings: PrintSettings) {

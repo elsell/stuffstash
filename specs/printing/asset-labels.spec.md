@@ -440,3 +440,31 @@ to current inventory authorization and cannot recreate a deleted result.
   change. Add adversarial parser/transport and navigation-race tests; runtime camera,
   native sharing/printing, and physical QR checks remain explicit device checklist
   items until actually observed.
+
+### Native Atomic Creation Delivery
+
+The Add item draft initializes its print switch once from scoped inventory defaults
+and persists the user's choice through navigation and metadata refresh. Loading
+label settings does not overwrite an explicit choice. If loading fails, show Retry
+and an explicit Add without a label choice; never silently drop a requested label.
+
+When enabled, creation captures the destination's media fingerprint, independent
+template, one copy, current inventory and a random request key. The mobile draft
+retains that complete create input before submission and freezes edits while its
+outcome is ambiguous. Retry Save sends that same intent, including previously
+prepared tag IDs, rather than creating tags/assets/jobs again. An initial definite
+rejection unlocks correction; a definite rejection after any ambiguous attempt
+does not erase the original intent. Scope changes cannot submit the captured
+request against a different selected inventory. Success clears the request and
+exposes View print job; parent creation never inherits the item print switch.
+
+The API client accepts `createAsset(tenantId, inventoryId, input, idempotencyKey?)`;
+`input.printLabel` comes from the generated atomic selection contract and the
+mapped result retains optional `printJobId`. No extra enqueue call is made.
+
+Every pending-tag write that prepares a create-and-print request carries its
+captured tenant/inventory scope. The mobile adapter checks that scope against the
+current selection before each write and uses the captured IDs in the API request.
+Changing inventory while an earlier tag write is in flight may finish that write
+in its original inventory, but no later tag or asset may target the replacement
+inventory. The final atomic create retains its own scope fence.

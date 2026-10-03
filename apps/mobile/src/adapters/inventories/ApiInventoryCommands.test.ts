@@ -1,3 +1,5 @@
+import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
+import { inventoryId } from '../../domain/inventories/InventorySummary';
 import { expect, it } from 'vitest';
 import { assetId } from '../../domain/assets/AssetSummary';
 import { createMobileQueryClient, mobileQueryKeys } from '../serverState/MobileQueryClient';
@@ -290,4 +292,32 @@ it('preserves expiration precision and supports clearing without changing ordina
   expect(client.updatedAssetInput?.expiration).toBeNull();
   await repository.updateAsset({ assetId: assetId('asset-filters'), title: 'Renamed' });
   expect(client.updatedAssetInput?.expiration).toBeUndefined();
+});
+
+it('rejects a print intent captured in a different selected inventory before submitting an asset', async () => {
+  const client = new FakeInventoryApiClient(); const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+  await expect(repository.createAsset({ kind: 'item', title: 'Lamp', description: '', printRequest: { key: 'request', scope: { tenantId: 'tenant-other', inventoryId: 'inventory-other' },
+    selection: { printerId: 'printer', mediaFingerprint: 'media', copies: 1, template: { id: 'qr-title', version: 1, showReference: true } } } })).rejects.toThrow();
+  expect(client.createdAssetInput).toBeUndefined();
+});
+
+it('fences every pending tag write when inventory changes during print preparation', async () => {
+  const client = new FakeInventoryApiClient(); const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+  const command = new CreateAssetCommand(repository);
+  const persisted: Array<{ tenantId: string; inventoryId: string; displayName: string }> = [];
+  let release!: () => void; const delayed = new Promise<void>(resolve => { release = resolve; });
+  let entered!: () => void; const firstWrite = new Promise<void>(resolve => { entered = resolve; });
+  const createTag = client.createAssetTag.bind(client);
+  client.createAssetTag = async (tenantId, inventoryId, input) => {
+    const value = await createTag(tenantId, inventoryId, input); persisted.push({ tenantId, inventoryId, displayName: input.displayName });
+    if (persisted.length === 1) { entered(); await delayed; }
+    return value;
+  };
+  const pending = command.execute({ title: 'Lamp', description: '', newTags: [{ displayName: 'Office' }, { displayName: 'Lighting' }], printRequest: { key: 'request', scope: { tenantId: 'tenant-home', inventoryId: 'inventory-home' },
+    selection: { printerId: 'printer', mediaFingerprint: 'media', copies: 1, template: { id: 'qr-title', version: 1, showReference: true } } } });
+  await firstWrite;
+  await repository.selectInventory(inventoryId('inventory-cabin')); release();
+  await expect(pending).rejects.toThrow();
+  expect(persisted).toEqual([{ tenantId: 'tenant-home', inventoryId: 'inventory-home', displayName: 'Office' }]);
+  expect(client.createdAssetInput).toBeUndefined();
 });
