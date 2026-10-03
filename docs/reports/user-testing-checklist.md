@@ -120,3 +120,17 @@ These are decisions, not failed tests, and do not block other work.
 
 Local-model acceptance needs a new model/host decision after its bounded failed
 comparison. It is an engineering follow-up, not a device test for this checklist.
+
+## Brother QL-800 labels — pending hardware verification
+
+Implementation tests use a stateful USB protocol fake. Read-only inspection of
+Paul found no connected Brother printer; no physical print was performed.
+Verify once the connector worker is integrated:
+
+- Linux `usblp` binding and device permissions permit the registered QL-800 to open.
+- The 29 × 90 mm roll produces a readable title and scannable QR in the intended orientation.
+- Completion and waiting status frames match actual output; submission alone never appears as completed.
+- Power-off, USB disconnect, empty roll, and cutter errors show useful status.
+- Disconnect or restart during output produces uncertainty without duplicate labels.
+
+These checks do not block independent software delivery.
