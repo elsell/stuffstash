@@ -394,6 +394,12 @@ message broker, public webhook receiver, or persistent event stream is required.
 
 ## Required Tests And Acceptance Evidence
 
+- Use faithful, stateful printer fakes behind the production ports, never mocks
+  or scripted method-call expectations. Model readiness, accepted output,
+  completion evidence, partial output, disconnects, and reconnect/restart state.
+  Drive real application and worker transitions with those fakes. Hardware and
+  production-database acceptance evidence remain separate requirements.
+
 - Real-SpiceDB tests must prove grant/revoke, wrong-service-principal denial,
   no human-role inheritance, cross-inventory edge rejection, permission loss
   between claim and start, credential rotation without privilege change,
