@@ -141,6 +141,13 @@ function activityTitle(entry: AssetActivityEntry): string {
   if (fields.size === 1 && fields.has('tags')) return t('history.activity.changedTags');
   if (fields.size === 1 && fields.has('parent')) return t('history.activity.movedItem');
   switch (entry.action) {
+    case 'label.provisioned': return t('audit.action.label.provisioned');
+    case 'label.viewed': return t('audit.action.label.viewed');
+    case 'label.resolved': return t('audit.action.label.resolved');
+    case 'label.rendered': return t('audit.action.label.rendered');
+    case 'label.content_downloaded': return t('audit.action.label.content_downloaded');
+    case 'label.templates_listed': return t('audit.action.label.templates_listed');
+
     case 'asset.created': return t('history.activity.addedItem');
     case 'asset.archived': return t('history.activity.archivedItem');
     case 'asset.restored': return t('history.activity.restoredItem');
