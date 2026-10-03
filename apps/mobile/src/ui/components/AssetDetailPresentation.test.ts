@@ -135,7 +135,7 @@ describe('AssetDetailPresentation', () => {
         { id: 'camp-bin', title: 'Camp bin', isImmediateParent: true }
       ]
     })).toEqual({
-      accessibilityLabel: 'Location Garage / workshop, Camp bin',
+      accessibilityLabel: 'Location Garage / workshop and Camp bin',
       crumbs: [
         { id: 'garage', title: 'Garage / workshop', isImmediateParent: false },
         { id: 'camp-bin', title: 'Camp bin', isImmediateParent: true }

@@ -465,3 +465,19 @@ locale list formatter. Search-match captions are a complete catalog template,
 not a translated prefix concatenated with labels. Web supported-photo-format
 guidance uses locale disjunction formatting for two or more formats, preserving
 protocol MIME values and format names. Empty-state guidance stays cataloged.
+
+### Context and result list migration
+
+Spoken breadcrumb summaries and selected-tag summaries use locale-aware list
+formatting while retaining authored labels and breadcrumb order. Visual path
+separators retain their containment meaning. Conversation evaluation results
+render referenced assets through a complete message and format referenced assets
+and executed-operation lists with the locale formatter. Empty summaries retain
+existing translated guidance. These changes do not alter selection, navigation,
+fixture identity, or operation wire values.
+
+Conversation-result presentation also maps supported verdict failure codes to
+catalog labels, with cataloged guidance for unknown codes rather than treating
+wire identifiers as prose. Result summaries pluralize model-call counts and use
+locale number formatting for seconds. Raw verdict codes and measured durations
+remain unchanged in the result model.

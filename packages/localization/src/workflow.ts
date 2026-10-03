@@ -288,5 +288,19 @@ export const workflowMessages = {
   "customization.fieldType.enum": "Enum",
   "invitation.title.revoked": "Invitation revoked",
   "invitation.title.cancelled": "Invitation cancelled",
-  "search.matchedFields": "Matched {fields}"
+  "search.matchedFields": "Matched {fields}",
+  "evaluation.referencedItems": "Referenced items: {items}",
+  "evaluation.resultSummary": {
+    one: "{verdict} · {count} model call · {seconds} seconds",
+    other: "{verdict} · {count} model calls · {seconds} seconds"
+  },
+  "evaluation.failure.invalid_observation": "Invalid observation",
+  "evaluation.failure.unexpected_outcome": "Unexpected outcome",
+  "evaluation.failure.missing_reference": "Missing reference",
+  "evaluation.failure.missing_location": "Missing location",
+  "evaluation.failure.missing_proposal": "Missing proposal",
+  "evaluation.failure.forbidden_operation": "Forbidden operation",
+  "evaluation.failure.unexpected_mutation": "Unexpected change",
+  "evaluation.failure.unexpected_proposal": "Unexpected proposal",
+  "evaluation.failure.unknown": "Unexpected result"
 } as const;
