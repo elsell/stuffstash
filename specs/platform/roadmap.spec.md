@@ -1,5 +1,15 @@
 # Roadmap Spec
 
+## Printing catalog delivery candidate
+
+The printer catalog now comes from the executable CLI adapter registration and
+shared first-party media profile; previews use the production API renderer.
+Candidate pages, PNG/PDF originals and an owned-output manifest are generated
+offline and checked in PR/production documentation builds. QR decoding, dimensions,
+deterministic bytes and narrow output ownership are verified. Desktop light and
+phone dark browser checks cover responsive examples and original downloads;
+these do not establish physical printing or native camera behavior.
+
 ## CLI release delivery slice
 
 The publication candidate stages exact five-platform CLI archives alongside the
@@ -7,7 +17,7 @@ self-host bundle, verifies bytes before stable publication, and supports origina
 run repair. Verified metadata generates pinned downloads through a maintenance PR;
 docs dispatch follows its actual merge. Local fake-remote integrity checks are
 separate from the first live GitHub publication, which remains unverified until a
-release is cut. Registry-rendered catalog pages remain independent follow-up work.
+release is cut. Registry-rendered catalog delivery is tracked separately above.
 
 ## In Progress: Labels, Printers, And CLI — October 3, 2026
 

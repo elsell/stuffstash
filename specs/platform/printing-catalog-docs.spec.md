@@ -2,7 +2,9 @@
 
 ## Status And Scope
 
-Specified October 3, 2026; not implemented. The Astro/Starlight documentation site
+Implementation candidate October 3, 2026. Offline executable registry export,
+production-rendered examples, owned-output drift checks, and docs build wiring
+are implemented in the candidate; physical printing remains unverified. The Astro/Starlight documentation site
 must have a Printing section showing first-party printers, supported label sizes,
 and templates with generated PNG examples. The initial supported hardware/media
 scope is exactly Brother QL-800 over USB on Linux with 29 x 90 mm labels; no
@@ -152,3 +154,28 @@ That section renders a pinned `curl` command for the newest successfully publish
 stable CLI release from verified release metadata, including checksum steps.
 Catalog generation remains offline; release publication owns metadata refresh.
 Do not advertise a future adapter as supported by an older downloadable binary.
+
+## Delivery tooling
+
+`stuffstash printers catalog --json` exports the same constructed adapter set used
+by CLI runtime bootstrap. The built-in Brother adapter and API catalog map the
+same project-owned `printingprofiles` media values; protocol print-head offsets
+remain private to the adapter. The docs command deduplicates these exported media
+snapshots and passes them to the existing offline `label-catalog` production
+renderer exporter. No source-text scanning or copied physical presets are used.
+
+The generator owns only its three catalog pages, manifest and generated binary
+asset directory. A read-only check renders into a temporary tree, reports added,
+changed, missing and obsolete owned paths, and can retain the candidate output
+for PR artifacts. Rendering and registration errors fail the check. Curated setup
+instructions and other docs are never removed by regeneration.
+
+CLI release provenance includes the first-party profile module as a source input.
+The archive preserves existing project licensing: include a root LICENSE if one
+exists and identify the first-party source without inventing a license grant. The
+license collector may recognize only that exact checked-in first-party module path,
+not skip arbitrary replacement modules. A dirty profile prevents a release build.
+
+CI provisions the exact exporter build dependency graph into a job-local module
+cache and verifies downloaded module contents before offline rendering. A restored
+compiled/package cache does not substitute for module integrity verification.
