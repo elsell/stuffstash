@@ -1,5 +1,9 @@
 /** web presentation messages. */
 export const webMessages = {
+  "web.PrintRotation.title": "Replace connector credential",
+  "web.PrintRotation.help": "Approve a replacement credential for this computer. Its registered printers and label sizes stay the same. Restart the worker after the CLI confirms replacement.",
+  "web.PrintRotation.approve": "Replace credential",
+  "web.PrintRotation.success": "Credential replacement approved. Return to the CLI to finish.",
   "audit.action.print_job.reprinted": "Label reprint requested",
   "audit.action.print_job.idle_confirmed": "Printer idle confirmed",
   "audit.action.print_job.resolved": "Uncertain print job resolved",

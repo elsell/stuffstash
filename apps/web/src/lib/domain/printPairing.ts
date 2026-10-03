@@ -10,6 +10,7 @@ export interface PairingCandidate {
     adapterId: string;
 }
 export interface PairingReview {
+    rotation?: boolean;
     id: string;
     name: string;
     fingerprint: string;
