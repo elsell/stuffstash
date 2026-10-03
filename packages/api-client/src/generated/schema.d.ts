@@ -106,6 +106,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/print-connector-pairings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post print connector pairings */
+        post: operations["post-print-connector-pairings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-connector-pairings/{pairingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get print connector pairings by pairing ID */
+        get: operations["get-print-connector-pairings-by-pairing-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-connector-pairings/{pairingId}/approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post print connector pairings by pairing ID approval */
+        post: operations["post-print-connector-pairings-by-pairing-id-approval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-connector-pairings/{pairingId}/credential": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post print connector pairings by pairing ID credential */
+        post: operations["post-print-connector-pairings-by-pairing-id-credential"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-connector-pairings/{pairingId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post print connector pairings by pairing ID review */
+        post: operations["post-print-connector-pairings-by-pairing-id-review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-consumer/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post print consumer heartbeat */
+        post: operations["post-print-consumer-heartbeat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-consumer/printer-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post print consumer printer reports */
+        post: operations["post-print-consumer-printer-reports"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/print-consumer/printers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get print consumer printers */
+        get: operations["get-print-consumer-printers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants": {
         parameters: {
             query?: never;
@@ -1740,6 +1876,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/print-connectors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID print connectors */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID print connectors by connector ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID print connectors by connector ID */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id"];
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/print-jobs": {
         parameters: {
             query?: never;
@@ -2146,6 +2317,18 @@ export interface components {
             readonly $schema?: string;
             name: string;
         };
+        ApprovePairingInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ApprovePairingInputBody.json
+             */
+            readonly $schema?: string;
+            bindings: components["schemas"]["PairingBinding"][] | null;
+            inventoryId: string;
+            tenantId: string;
+            userCode: string;
+        };
         ArchiveJob: {
             /** Format: date-time */
             createdAt: string;
@@ -2336,6 +2519,17 @@ export interface components {
             email?: string;
             id: string;
         };
+        BeginPairingInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/BeginPairingInputBody.json
+             */
+            readonly $schema?: string;
+            candidates: components["schemas"]["PairingCandidate"][] | null;
+            name: string;
+            publicKey: string;
+        };
         Budget: {
             /** Format: int64 */
             elapsedSeconds: number;
@@ -2377,6 +2571,23 @@ export interface components {
             displayName: string;
             id: string;
             key: string;
+        };
+        Connector: {
+            authorizationPending: boolean;
+            /** Format: int64 */
+            generation: number;
+            id: string;
+            /** Format: date-time */
+            lastSeenAt?: string;
+            name: string;
+            printerIds: string[] | null;
+            state: string;
+        };
+        ConsumerPrinter: {
+            /** Format: int64 */
+            bindingGeneration: number;
+            deviceId: string;
+            printer: components["schemas"]["Printer"];
         };
         CreateArchiveInputBody: {
             /**
@@ -2811,6 +3022,15 @@ export interface components {
             failures: components["schemas"]["EvaluationRunFailure"][] | null;
             passed: boolean;
         };
+        ExchangePairingInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ExchangePairingInputBody.json
+             */
+            readonly $schema?: string;
+            signature: string;
+        };
         Expiration: {
             /** @description Calendar date as YYYY-MM-DD or YYYY-MM */
             date: string;
@@ -2892,6 +3112,15 @@ export interface components {
             principalId: string;
             relationship: string;
             tenantId: string;
+        };
+        HeartbeatInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/HeartbeatInputBody.json
+             */
+            readonly $schema?: string;
+            sessionId: string;
         };
         ImportJobActorResponse: {
             email?: string;
@@ -3306,6 +3535,46 @@ export interface components {
             limit: number;
             nextCursor: string | null;
         };
+        PairingBinding: {
+            candidateId: string;
+            printerId: string;
+        };
+        PairingCandidate: {
+            adapterId: string;
+            deviceId: string;
+            id: string;
+            name: string;
+        };
+        PairingCredential: {
+            /** Format: date-time */
+            activationDeadline: string;
+            connectorId: string;
+            credential: string;
+            /** Format: date-time */
+            expiresAt: string;
+            inventoryId: string;
+            tenantId: string;
+        };
+        PairingReview: {
+            candidates: components["schemas"]["PublicPairingCandidate"][] | null;
+            id: string;
+            name: string;
+            publicKeyFingerprint: string;
+        };
+        PairingStarted: {
+            /** Format: date-time */
+            expiresAt: string;
+            id: string;
+            pollToken: string;
+            userCode: string;
+            verificationUrl: string;
+        };
+        PairingStatus: {
+            /** Format: date-time */
+            expiresAt: string;
+            id: string;
+            state: string;
+        };
         PreferencesResponse: {
             defaults: components["schemas"]["ExpirationPolicy"];
             overrides: components["schemas"]["TypeOverrideResponse"][] | null;
@@ -3402,6 +3671,19 @@ export interface components {
             supportedPlatforms: string[] | null;
             transport: string;
         };
+        PrinterReportInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/PrinterReportInputBody.json
+             */
+            readonly $schema?: string;
+            printerId: string;
+            /** @enum {string} */
+            reason?: "" | "device_unavailable" | "device_busy" | "paper_empty" | "cover_open" | "hardware_error" | "unknown";
+            /** @enum {string} */
+            state: "ready" | "unavailable" | "error" | "unknown";
+        };
         ProviderProfileResponse: {
             capability: string;
             capabilityMetadata: {
@@ -3433,6 +3715,11 @@ export interface components {
             lifecycleState: string;
             modelName: string;
             providerKind: string;
+        };
+        PublicPairingCandidate: {
+            adapterId: string;
+            id: string;
+            name: string;
         };
         RecordInputBody: {
             /**
@@ -3535,6 +3822,17 @@ export interface components {
             readonly $schema?: string;
             /** @description Optional return details */
             details?: string;
+        };
+        ReviewPairingInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ReviewPairingInputBody.json
+             */
+            readonly $schema?: string;
+            inventoryId: string;
+            tenantId: string;
+            userCode: string;
         };
         Revision: {
             authorId: string;
@@ -3654,6 +3952,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["CLIAuthMetadata"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeConnector: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeConnector.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["Connector"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeCreatedInvitationResponse: {
@@ -3916,6 +4224,26 @@ export interface components {
             data: components["schemas"]["CheckedOutAssetResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListConnector: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListConnector.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["Connector"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeListConsumerPrinter: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListConsumerPrinter.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["ConsumerPrinter"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeListDefinitionResponse: {
             /**
              * Format: uri
@@ -4106,6 +4434,46 @@ export interface components {
             data: components["schemas"]["NotificationResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopePairingCredential: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopePairingCredential.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["PairingCredential"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopePairingReview: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopePairingReview.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["PairingReview"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopePairingStarted: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopePairingStarted.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["PairingStarted"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopePairingStatus: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopePairingStatus.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["PairingStatus"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopePreferencesResponse: {
             /**
              * Format: uri
@@ -4176,6 +4544,17 @@ export interface components {
             data: components["schemas"]["Revision"];
             meta: components["schemas"]["Meta"];
         };
+        "SuccessEnvelopeStruct {}": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeStruct {}.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["SuccessEnvelopeStruct {}DataStruct"];
+            meta: components["schemas"]["Meta"];
+        };
+        "SuccessEnvelopeStruct {}DataStruct": Record<string, never>;
         SuccessEnvelopeTenantResponse: {
             /**
              * Format: uri
@@ -4336,6 +4715,19 @@ export interface components {
             /** Format: int64 */
             revision: number;
             timezone: string;
+        };
+        UpdateConnectorInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/UpdateConnectorInputBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            generation: number;
+            name?: string;
+            printerIds?: string[];
+            revoked?: boolean;
         };
         UpdateDefinitionBody: {
             /**
@@ -4709,6 +5101,294 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeListMyTenantResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-print-connector-pairings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BeginPairingInputBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePairingStarted"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-print-connector-pairings-by-pairing-id": {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Pairing-Token": string;
+            };
+            path: {
+                pairingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePairingStatus"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-print-connector-pairings-by-pairing-id-approval": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                pairingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApprovePairingInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeConnector"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-print-connector-pairings-by-pairing-id-credential": {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Pairing-Token": string;
+            };
+            path: {
+                pairingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExchangePairingInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePairingCredential"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-print-connector-pairings-by-pairing-id-review": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                pairingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewPairingInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePairingReview"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-print-consumer-heartbeat": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeartbeatInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeConnector"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-print-consumer-printer-reports": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrinterReportInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeStruct {}"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-print-consumer-printers": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListConsumerPrinter"];
                 };
             };
             /** @description Error */
@@ -10179,6 +10859,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeNotificationReadResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListConnector"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                connectorId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeConnector"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                connectorId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateConnectorInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeConnector"];
                 };
             };
             /** @description Error */

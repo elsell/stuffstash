@@ -1,5 +1,11 @@
 /** web presentation messages. */
 export const webMessages = {
+  "audit.action.print_connector.pairing_reviewed": "Printer connection reviewed",
+  "audit.action.print_connector.viewed": "Print connector viewed",
+  "audit.action.print_connector.listed": "Print connectors viewed",
+  "audit.action.print_connector.updated": "Print connector updated",
+  "audit.action.print_connector.approved": "Print connector approved",
+
  "audit.action.print_job.queued": "Label queued",
  "audit.action.print_job.viewed": "Print job viewed",
  "audit.action.print_job.listed": "Print jobs viewed",

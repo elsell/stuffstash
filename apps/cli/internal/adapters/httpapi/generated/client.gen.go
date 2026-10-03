@@ -730,6 +730,63 @@ func (e NotificationResponseMilestone) Valid() bool {
 	}
 }
 
+// Defines values for PrinterReportInputBodyReason.
+const (
+	PrinterReportInputBodyReasonCoverOpen         PrinterReportInputBodyReason = "cover_open"
+	PrinterReportInputBodyReasonDeviceBusy        PrinterReportInputBodyReason = "device_busy"
+	PrinterReportInputBodyReasonDeviceUnavailable PrinterReportInputBodyReason = "device_unavailable"
+	PrinterReportInputBodyReasonEmpty             PrinterReportInputBodyReason = ""
+	PrinterReportInputBodyReasonHardwareError     PrinterReportInputBodyReason = "hardware_error"
+	PrinterReportInputBodyReasonPaperEmpty        PrinterReportInputBodyReason = "paper_empty"
+	PrinterReportInputBodyReasonUnknown           PrinterReportInputBodyReason = "unknown"
+)
+
+// Valid indicates whether the value is a known member of the PrinterReportInputBodyReason enum.
+func (e PrinterReportInputBodyReason) Valid() bool {
+	switch e {
+	case PrinterReportInputBodyReasonCoverOpen:
+		return true
+	case PrinterReportInputBodyReasonDeviceBusy:
+		return true
+	case PrinterReportInputBodyReasonDeviceUnavailable:
+		return true
+	case PrinterReportInputBodyReasonEmpty:
+		return true
+	case PrinterReportInputBodyReasonHardwareError:
+		return true
+	case PrinterReportInputBodyReasonPaperEmpty:
+		return true
+	case PrinterReportInputBodyReasonUnknown:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PrinterReportInputBodyState.
+const (
+	PrinterReportInputBodyStateError       PrinterReportInputBodyState = "error"
+	PrinterReportInputBodyStateReady       PrinterReportInputBodyState = "ready"
+	PrinterReportInputBodyStateUnavailable PrinterReportInputBodyState = "unavailable"
+	PrinterReportInputBodyStateUnknown     PrinterReportInputBodyState = "unknown"
+)
+
+// Valid indicates whether the value is a known member of the PrinterReportInputBodyState enum.
+func (e PrinterReportInputBodyState) Valid() bool {
+	switch e {
+	case PrinterReportInputBodyStateError:
+		return true
+	case PrinterReportInputBodyStateReady:
+		return true
+	case PrinterReportInputBodyStateUnavailable:
+		return true
+	case PrinterReportInputBodyStateUnknown:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RegisterDeviceBodyTransport.
 const (
 	Apns RegisterDeviceBodyTransport = "apns"
@@ -1317,6 +1374,18 @@ type ApproveArchiveInputBody struct {
 	Name   string  `json:"name"`
 }
 
+// ApprovePairingInputBody defines model for ApprovePairingInputBody.
+type ApprovePairingInputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/ApprovePairingInputBody.json
+	Schema      *string                             `json:"$schema,omitempty"`
+	Bindings    nullable.Nullable[[]PairingBinding] `json:"bindings"`
+	InventoryId string                              `json:"inventoryId"`
+	TenantId    string                              `json:"tenantId"`
+	UserCode    string                              `json:"userCode"`
+}
+
 // ArchiveJob defines model for ArchiveJob.
 type ArchiveJob struct {
 	CreatedAt              time.Time `json:"createdAt"`
@@ -1533,6 +1602,17 @@ type AuditPrincipalResponse struct {
 	Id    string  `json:"id"`
 }
 
+// BeginPairingInputBody defines model for BeginPairingInputBody.
+type BeginPairingInputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/BeginPairingInputBody.json
+	Schema     *string                               `json:"$schema,omitempty"`
+	Candidates nullable.Nullable[[]PairingCandidate] `json:"candidates"`
+	Name       string                                `json:"name"`
+	PublicKey  []byte                                `json:"publicKey"`
+}
+
 // Budget defines model for Budget.
 type Budget struct {
 	ElapsedSeconds int64 `json:"elapsedSeconds"`
@@ -1580,6 +1660,24 @@ type CompactTag struct {
 	DisplayName string  `json:"displayName"`
 	Id          string  `json:"id"`
 	Key         string  `json:"key"`
+}
+
+// Connector defines model for Connector.
+type Connector struct {
+	AuthorizationPending bool                        `json:"authorizationPending"`
+	Generation           int64                       `json:"generation"`
+	Id                   string                      `json:"id"`
+	LastSeenAt           *time.Time                  `json:"lastSeenAt,omitempty"`
+	Name                 string                      `json:"name"`
+	PrinterIds           nullable.Nullable[[]string] `json:"printerIds"`
+	State                string                      `json:"state"`
+}
+
+// ConsumerPrinter defines model for ConsumerPrinter.
+type ConsumerPrinter struct {
+	BindingGeneration int64   `json:"bindingGeneration"`
+	DeviceId          string  `json:"deviceId"`
+	Printer           Printer `json:"printer"`
 }
 
 // CreateArchiveInputBody defines model for CreateArchiveInputBody.
@@ -2068,6 +2166,15 @@ type EvaluationRunVerdict struct {
 	Passed   bool                                      `json:"passed"`
 }
 
+// ExchangePairingInputBody defines model for ExchangePairingInputBody.
+type ExchangePairingInputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/ExchangePairingInputBody.json
+	Schema    *string `json:"$schema,omitempty"`
+	Signature []byte  `json:"signature"`
+}
+
 // Expiration defines model for Expiration.
 type Expiration struct {
 	// Date Calendar date as YYYY-MM-DD or YYYY-MM
@@ -2163,6 +2270,15 @@ type GrantResponse struct {
 	PrincipalId  string `json:"principalId"`
 	Relationship string `json:"relationship"`
 	TenantId     string `json:"tenantId"`
+}
+
+// HeartbeatInputBody defines model for HeartbeatInputBody.
+type HeartbeatInputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/HeartbeatInputBody.json
+	Schema    *string `json:"$schema,omitempty"`
+	SessionId string  `json:"sessionId"`
 }
 
 // ImportJobActorResponse defines model for ImportJobActorResponse.
@@ -2630,6 +2746,54 @@ type PaginationMeta struct {
 	NextCursor nullable.Nullable[string] `json:"nextCursor"`
 }
 
+// PairingBinding defines model for PairingBinding.
+type PairingBinding struct {
+	CandidateId string `json:"candidateId"`
+	PrinterId   string `json:"printerId"`
+}
+
+// PairingCandidate defines model for PairingCandidate.
+type PairingCandidate struct {
+	AdapterId string `json:"adapterId"`
+	DeviceId  string `json:"deviceId"`
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+}
+
+// PairingCredential defines model for PairingCredential.
+type PairingCredential struct {
+	ActivationDeadline time.Time `json:"activationDeadline"`
+	ConnectorId        string    `json:"connectorId"`
+	Credential         string    `json:"credential"`
+	ExpiresAt          time.Time `json:"expiresAt"`
+	InventoryId        string    `json:"inventoryId"`
+	TenantId           string    `json:"tenantId"`
+}
+
+// PairingReview defines model for PairingReview.
+type PairingReview struct {
+	Candidates           nullable.Nullable[[]PublicPairingCandidate] `json:"candidates"`
+	Id                   string                                      `json:"id"`
+	Name                 string                                      `json:"name"`
+	PublicKeyFingerprint string                                      `json:"publicKeyFingerprint"`
+}
+
+// PairingStarted defines model for PairingStarted.
+type PairingStarted struct {
+	ExpiresAt       time.Time `json:"expiresAt"`
+	Id              string    `json:"id"`
+	PollToken       string    `json:"pollToken"`
+	UserCode        string    `json:"userCode"`
+	VerificationUrl string    `json:"verificationUrl"`
+}
+
+// PairingStatus defines model for PairingStatus.
+type PairingStatus struct {
+	ExpiresAt time.Time `json:"expiresAt"`
+	Id        string    `json:"id"`
+	State     string    `json:"state"`
+}
+
 // PreferencesResponse defines model for PreferencesResponse.
 type PreferencesResponse struct {
 	Defaults    ExpirationPolicy                          `json:"defaults"`
@@ -2726,6 +2890,23 @@ type PrinterProfile struct {
 	Transport          string                            `json:"transport"`
 }
 
+// PrinterReportInputBody defines model for PrinterReportInputBody.
+type PrinterReportInputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/PrinterReportInputBody.json
+	Schema    *string                       `json:"$schema,omitempty"`
+	PrinterId string                        `json:"printerId"`
+	Reason    *PrinterReportInputBodyReason `json:"reason,omitempty"`
+	State     PrinterReportInputBodyState   `json:"state"`
+}
+
+// PrinterReportInputBodyReason defines model for PrinterReportInputBody.Reason.
+type PrinterReportInputBodyReason string
+
+// PrinterReportInputBodyState defines model for PrinterReportInputBody.State.
+type PrinterReportInputBodyState string
+
 // ProviderProfileResponse defines model for ProviderProfileResponse.
 type ProviderProfileResponse struct {
 	Capability         string                 `json:"capability"`
@@ -2756,6 +2937,13 @@ type ProviderProfileSummaryResponse struct {
 	LifecycleState    string  `json:"lifecycleState"`
 	ModelName         string  `json:"modelName"`
 	ProviderKind      string  `json:"providerKind"`
+}
+
+// PublicPairingCandidate defines model for PublicPairingCandidate.
+type PublicPairingCandidate struct {
+	AdapterId string `json:"adapterId"`
+	Id        string `json:"id"`
+	Name      string `json:"name"`
 }
 
 // RecordInputBody defines model for RecordInputBody.
@@ -2861,6 +3049,17 @@ type ReturnAssetBody struct {
 
 	// Details Optional return details
 	Details *string `json:"details,omitempty"`
+}
+
+// ReviewPairingInputBody defines model for ReviewPairingInputBody.
+type ReviewPairingInputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/ReviewPairingInputBody.json
+	Schema      *string `json:"$schema,omitempty"`
+	InventoryId string  `json:"inventoryId"`
+	TenantId    string  `json:"tenantId"`
+	UserCode    string  `json:"userCode"`
 }
 
 // Revision defines model for Revision.
@@ -2989,6 +3188,16 @@ type SuccessEnvelopeCLIAuthMetadata struct {
 	Schema *string         `json:"$schema,omitempty"`
 	Data   CLIAuthMetadata `json:"data"`
 	Meta   Meta            `json:"meta"`
+}
+
+// SuccessEnvelopeConnector defines model for SuccessEnvelopeConnector.
+type SuccessEnvelopeConnector struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopeConnector.json
+	Schema *string   `json:"$schema,omitempty"`
+	Data   Connector `json:"data"`
+	Meta   Meta      `json:"meta"`
 }
 
 // SuccessEnvelopeCreatedInvitationResponse defines model for SuccessEnvelopeCreatedInvitationResponse.
@@ -3251,6 +3460,26 @@ type SuccessEnvelopeListCheckedOutAssetResponse struct {
 	Meta   Meta                                         `json:"meta"`
 }
 
+// SuccessEnvelopeListConnector defines model for SuccessEnvelopeListConnector.
+type SuccessEnvelopeListConnector struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopeListConnector.json
+	Schema *string                        `json:"$schema,omitempty"`
+	Data   nullable.Nullable[[]Connector] `json:"data"`
+	Meta   Meta                           `json:"meta"`
+}
+
+// SuccessEnvelopeListConsumerPrinter defines model for SuccessEnvelopeListConsumerPrinter.
+type SuccessEnvelopeListConsumerPrinter struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopeListConsumerPrinter.json
+	Schema *string                              `json:"$schema,omitempty"`
+	Data   nullable.Nullable[[]ConsumerPrinter] `json:"data"`
+	Meta   Meta                                 `json:"meta"`
+}
+
 // SuccessEnvelopeListDefinitionResponse defines model for SuccessEnvelopeListDefinitionResponse.
 type SuccessEnvelopeListDefinitionResponse struct {
 	// Schema A URL to the JSON Schema for this object.
@@ -3441,6 +3670,46 @@ type SuccessEnvelopeNotificationResponse struct {
 	Meta   Meta                 `json:"meta"`
 }
 
+// SuccessEnvelopePairingCredential defines model for SuccessEnvelopePairingCredential.
+type SuccessEnvelopePairingCredential struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopePairingCredential.json
+	Schema *string           `json:"$schema,omitempty"`
+	Data   PairingCredential `json:"data"`
+	Meta   Meta              `json:"meta"`
+}
+
+// SuccessEnvelopePairingReview defines model for SuccessEnvelopePairingReview.
+type SuccessEnvelopePairingReview struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopePairingReview.json
+	Schema *string       `json:"$schema,omitempty"`
+	Data   PairingReview `json:"data"`
+	Meta   Meta          `json:"meta"`
+}
+
+// SuccessEnvelopePairingStarted defines model for SuccessEnvelopePairingStarted.
+type SuccessEnvelopePairingStarted struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopePairingStarted.json
+	Schema *string        `json:"$schema,omitempty"`
+	Data   PairingStarted `json:"data"`
+	Meta   Meta           `json:"meta"`
+}
+
+// SuccessEnvelopePairingStatus defines model for SuccessEnvelopePairingStatus.
+type SuccessEnvelopePairingStatus struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopePairingStatus.json
+	Schema *string       `json:"$schema,omitempty"`
+	Data   PairingStatus `json:"data"`
+	Meta   Meta          `json:"meta"`
+}
+
 // SuccessEnvelopePreferencesResponse defines model for SuccessEnvelopePreferencesResponse.
 type SuccessEnvelopePreferencesResponse struct {
 	// Schema A URL to the JSON Schema for this object.
@@ -3510,6 +3779,19 @@ type SuccessEnvelopeRevision struct {
 	Data   Revision `json:"data"`
 	Meta   Meta     `json:"meta"`
 }
+
+// SuccessEnvelopeStruct defines model for SuccessEnvelopeStruct {}.
+type SuccessEnvelopeStruct struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopeStruct {}.json
+	Schema *string                         `json:"$schema,omitempty"`
+	Data   SuccessEnvelopeStructDataStruct `json:"data"`
+	Meta   Meta                            `json:"meta"`
+}
+
+// SuccessEnvelopeStructDataStruct defines model for SuccessEnvelopeStruct {}DataStruct.
+type SuccessEnvelopeStructDataStruct = map[string]interface{}
 
 // SuccessEnvelopeTenantResponse defines model for SuccessEnvelopeTenantResponse.
 type SuccessEnvelopeTenantResponse struct {
@@ -3689,6 +3971,18 @@ type UpdateBody struct {
 	PushEnabled bool             `json:"pushEnabled"`
 	Revision    int64            `json:"revision"`
 	Timezone    string           `json:"timezone"`
+}
+
+// UpdateConnectorInputBody defines model for UpdateConnectorInputBody.
+type UpdateConnectorInputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/UpdateConnectorInputBody.json
+	Schema     *string   `json:"$schema,omitempty"`
+	Generation int64     `json:"generation"`
+	Name       *string   `json:"name,omitempty"`
+	PrinterIds *[]string `json:"printerIds,omitempty"`
+	Revoked    *bool     `json:"revoked,omitempty"`
 }
 
 // UpdateDefinitionBody defines model for UpdateDefinitionBody.
@@ -3920,6 +4214,43 @@ type GetMeTenantsParams struct {
 
 	// XRequestID Optional request correlation ID
 	XRequestID *string `json:"X-Request-ID,omitempty"`
+}
+
+// GetPrintConnectorPairingsByPairingIdParams defines parameters for GetPrintConnectorPairingsByPairingId.
+type GetPrintConnectorPairingsByPairingIdParams struct {
+	XPairingToken string `json:"X-Pairing-Token"`
+}
+
+// PostPrintConnectorPairingsByPairingIdApprovalParams defines parameters for PostPrintConnectorPairingsByPairingIdApproval.
+type PostPrintConnectorPairingsByPairingIdApprovalParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
+// PostPrintConnectorPairingsByPairingIdCredentialParams defines parameters for PostPrintConnectorPairingsByPairingIdCredential.
+type PostPrintConnectorPairingsByPairingIdCredentialParams struct {
+	XPairingToken string `json:"X-Pairing-Token"`
+}
+
+// PostPrintConnectorPairingsByPairingIdReviewParams defines parameters for PostPrintConnectorPairingsByPairingIdReview.
+type PostPrintConnectorPairingsByPairingIdReviewParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
+// PostPrintConsumerHeartbeatParams defines parameters for PostPrintConsumerHeartbeat.
+type PostPrintConsumerHeartbeatParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+}
+
+// PostPrintConsumerPrinterReportsParams defines parameters for PostPrintConsumerPrinterReports.
+type PostPrintConsumerPrinterReportsParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+}
+
+// GetPrintConsumerPrintersParams defines parameters for GetPrintConsumerPrinters.
+type GetPrintConsumerPrintersParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
 }
 
 // PostTenantsParams defines parameters for PostTenants.
@@ -5136,6 +5467,26 @@ type PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdRe
 	XRequestID    *string `json:"X-Request-ID,omitempty"`
 }
 
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsParams defines parameters for GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectors.
+type GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsParams struct {
+	Limit         *int64  `form:"limit,omitempty" json:"limit,omitempty"`
+	Cursor        *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams defines parameters for GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId.
+type GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams defines parameters for PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId.
+type PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
 // GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsParams defines parameters for GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs.
 type GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsParams struct {
 	PrinterId     *string `form:"printerId,omitempty" json:"printerId,omitempty"`
@@ -5414,6 +5765,24 @@ type PutTenantsByTenantIdVoiceProviderConfigurationParams struct {
 // PostClientTelemetryJSONRequestBody defines body for PostClientTelemetry for application/json ContentType.
 type PostClientTelemetryJSONRequestBody = RecordInputBody
 
+// PostPrintConnectorPairingsJSONRequestBody defines body for PostPrintConnectorPairings for application/json ContentType.
+type PostPrintConnectorPairingsJSONRequestBody = BeginPairingInputBody
+
+// PostPrintConnectorPairingsByPairingIdApprovalJSONRequestBody defines body for PostPrintConnectorPairingsByPairingIdApproval for application/json ContentType.
+type PostPrintConnectorPairingsByPairingIdApprovalJSONRequestBody = ApprovePairingInputBody
+
+// PostPrintConnectorPairingsByPairingIdCredentialJSONRequestBody defines body for PostPrintConnectorPairingsByPairingIdCredential for application/json ContentType.
+type PostPrintConnectorPairingsByPairingIdCredentialJSONRequestBody = ExchangePairingInputBody
+
+// PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody defines body for PostPrintConnectorPairingsByPairingIdReview for application/json ContentType.
+type PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody = ReviewPairingInputBody
+
+// PostPrintConsumerHeartbeatJSONRequestBody defines body for PostPrintConsumerHeartbeat for application/json ContentType.
+type PostPrintConsumerHeartbeatJSONRequestBody = HeartbeatInputBody
+
+// PostPrintConsumerPrinterReportsJSONRequestBody defines body for PostPrintConsumerPrinterReports for application/json ContentType.
+type PostPrintConsumerPrinterReportsJSONRequestBody = PrinterReportInputBody
+
 // PostTenantsJSONRequestBody defines body for PostTenants for application/json ContentType.
 type PostTenantsJSONRequestBody = CreateTenantBody
 
@@ -5539,6 +5908,9 @@ type PostTenantsByTenantIdInventoriesByInventoryIdNotificationPreferencesInitial
 
 // PutTenantsByTenantIdInventoriesByInventoryIdNotificationPreferencesTypesByCustomAssetTypeIdJSONRequestBody defines body for PutTenantsByTenantIdInventoriesByInventoryIdNotificationPreferencesTypesByCustomAssetTypeId for application/json ContentType.
 type PutTenantsByTenantIdInventoriesByInventoryIdNotificationPreferencesTypesByCustomAssetTypeIdJSONRequestBody = TypeOverrideBody
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdJSONRequestBody defines body for PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId for application/json ContentType.
+type PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdJSONRequestBody = UpdateConnectorInputBody
 
 // PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdCancellationJSONRequestBody defines body for PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdCancellation for application/json ContentType.
 type PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdCancellationJSONRequestBody = PrintJobRevision
@@ -5679,6 +6051,100 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /me/tenants (the `GetMeTenants` operationId).
 	GetMeTenants(ctx context.Context, params *GetMeTenantsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConnectorPairingsWithBody Post print connector pairings
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /print-connector-pairings (the `PostPrintConnectorPairings` operationId).
+	PostPrintConnectorPairingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConnectorPairings Post print connector pairings
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /print-connector-pairings (the `PostPrintConnectorPairings` operationId).
+	PostPrintConnectorPairings(ctx context.Context, body PostPrintConnectorPairingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPrintConnectorPairingsByPairingId Get print connector pairings by pairing ID
+	//
+	// Corresponds with GET /print-connector-pairings/{pairingId} (the `GetPrintConnectorPairingsByPairingId` operationId).
+	GetPrintConnectorPairingsByPairingId(ctx context.Context, pairingId string, params *GetPrintConnectorPairingsByPairingIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConnectorPairingsByPairingIdApprovalWithBody Post print connector pairings by pairing ID approval
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /print-connector-pairings/{pairingId}/approval (the `PostPrintConnectorPairingsByPairingIdApproval` operationId).
+	PostPrintConnectorPairingsByPairingIdApprovalWithBody(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdApprovalParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConnectorPairingsByPairingIdApproval Post print connector pairings by pairing ID approval
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /print-connector-pairings/{pairingId}/approval (the `PostPrintConnectorPairingsByPairingIdApproval` operationId).
+	PostPrintConnectorPairingsByPairingIdApproval(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdApprovalParams, body PostPrintConnectorPairingsByPairingIdApprovalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConnectorPairingsByPairingIdCredentialWithBody Post print connector pairings by pairing ID credential
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /print-connector-pairings/{pairingId}/credential (the `PostPrintConnectorPairingsByPairingIdCredential` operationId).
+	PostPrintConnectorPairingsByPairingIdCredentialWithBody(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdCredentialParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConnectorPairingsByPairingIdCredential Post print connector pairings by pairing ID credential
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /print-connector-pairings/{pairingId}/credential (the `PostPrintConnectorPairingsByPairingIdCredential` operationId).
+	PostPrintConnectorPairingsByPairingIdCredential(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdCredentialParams, body PostPrintConnectorPairingsByPairingIdCredentialJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConnectorPairingsByPairingIdReviewWithBody Post print connector pairings by pairing ID review
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /print-connector-pairings/{pairingId}/review (the `PostPrintConnectorPairingsByPairingIdReview` operationId).
+	PostPrintConnectorPairingsByPairingIdReviewWithBody(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConnectorPairingsByPairingIdReview Post print connector pairings by pairing ID review
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /print-connector-pairings/{pairingId}/review (the `PostPrintConnectorPairingsByPairingIdReview` operationId).
+	PostPrintConnectorPairingsByPairingIdReview(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, body PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerHeartbeatWithBody Post print consumer heartbeat
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /print-consumer/heartbeat (the `PostPrintConsumerHeartbeat` operationId).
+	PostPrintConsumerHeartbeatWithBody(ctx context.Context, params *PostPrintConsumerHeartbeatParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerHeartbeat Post print consumer heartbeat
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /print-consumer/heartbeat (the `PostPrintConsumerHeartbeat` operationId).
+	PostPrintConsumerHeartbeat(ctx context.Context, params *PostPrintConsumerHeartbeatParams, body PostPrintConsumerHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerPrinterReportsWithBody Post print consumer printer reports
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /print-consumer/printer-reports (the `PostPrintConsumerPrinterReports` operationId).
+	PostPrintConsumerPrinterReportsWithBody(ctx context.Context, params *PostPrintConsumerPrinterReportsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerPrinterReports Post print consumer printer reports
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /print-consumer/printer-reports (the `PostPrintConsumerPrinterReports` operationId).
+	PostPrintConsumerPrinterReports(ctx context.Context, params *PostPrintConsumerPrinterReportsParams, body PostPrintConsumerPrinterReportsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPrintConsumerPrinters Get print consumer printers
+	//
+	// Corresponds with GET /print-consumer/printers (the `GetPrintConsumerPrinters` operationId).
+	GetPrintConsumerPrinters(ctx context.Context, params *GetPrintConsumerPrintersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostTenantsWithBody Post tenants
 	//
@@ -6715,6 +7181,30 @@ type ClientInterface interface {
 	// Corresponds with PUT /tenants/{tenantId}/inventories/{inventoryId}/notifications/{notificationId}/read (the `PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdRead` operationId).
 	PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdRead(ctx context.Context, tenantId string, inventoryId string, notificationId string, params *PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectors Get tenants by tenant ID inventories by inventory ID print connectors
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-connectors (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectors` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectors(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId Get tenants by tenant ID inventories by inventory ID print connectors by connector ID
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithBody Patch tenants by tenant ID inventories by inventory ID print connectors by connector ID
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
+	PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithBody(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId Patch tenants by tenant ID inventories by inventory ID print connectors by connector ID
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
+	PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, body PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs Get tenants by tenant ID inventories by inventory ID print jobs
 	//
 	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-jobs (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs` operationId).
@@ -7036,6 +7526,240 @@ func (c *Client) GetMe(ctx context.Context, params *GetMeParams, reqEditors ...R
 // Corresponds with GET /me/tenants (the `GetMeTenants` operationId).
 func (c *Client) GetMeTenants(ctx context.Context, params *GetMeTenantsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetMeTenantsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConnectorPairingsWithBody Post print connector pairings
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /print-connector-pairings (the `PostPrintConnectorPairings` operationId).
+func (c *Client) PostPrintConnectorPairingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConnectorPairingsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConnectorPairings Post print connector pairings
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /print-connector-pairings (the `PostPrintConnectorPairings` operationId).
+func (c *Client) PostPrintConnectorPairings(ctx context.Context, body PostPrintConnectorPairingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConnectorPairingsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPrintConnectorPairingsByPairingId Get print connector pairings by pairing ID
+//
+// Corresponds with GET /print-connector-pairings/{pairingId} (the `GetPrintConnectorPairingsByPairingId` operationId).
+func (c *Client) GetPrintConnectorPairingsByPairingId(ctx context.Context, pairingId string, params *GetPrintConnectorPairingsByPairingIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPrintConnectorPairingsByPairingIdRequest(c.Server, pairingId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConnectorPairingsByPairingIdApprovalWithBody Post print connector pairings by pairing ID approval
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /print-connector-pairings/{pairingId}/approval (the `PostPrintConnectorPairingsByPairingIdApproval` operationId).
+func (c *Client) PostPrintConnectorPairingsByPairingIdApprovalWithBody(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdApprovalParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConnectorPairingsByPairingIdApprovalRequestWithBody(c.Server, pairingId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConnectorPairingsByPairingIdApproval Post print connector pairings by pairing ID approval
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /print-connector-pairings/{pairingId}/approval (the `PostPrintConnectorPairingsByPairingIdApproval` operationId).
+func (c *Client) PostPrintConnectorPairingsByPairingIdApproval(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdApprovalParams, body PostPrintConnectorPairingsByPairingIdApprovalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConnectorPairingsByPairingIdApprovalRequest(c.Server, pairingId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConnectorPairingsByPairingIdCredentialWithBody Post print connector pairings by pairing ID credential
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /print-connector-pairings/{pairingId}/credential (the `PostPrintConnectorPairingsByPairingIdCredential` operationId).
+func (c *Client) PostPrintConnectorPairingsByPairingIdCredentialWithBody(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdCredentialParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConnectorPairingsByPairingIdCredentialRequestWithBody(c.Server, pairingId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConnectorPairingsByPairingIdCredential Post print connector pairings by pairing ID credential
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /print-connector-pairings/{pairingId}/credential (the `PostPrintConnectorPairingsByPairingIdCredential` operationId).
+func (c *Client) PostPrintConnectorPairingsByPairingIdCredential(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdCredentialParams, body PostPrintConnectorPairingsByPairingIdCredentialJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConnectorPairingsByPairingIdCredentialRequest(c.Server, pairingId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConnectorPairingsByPairingIdReviewWithBody Post print connector pairings by pairing ID review
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /print-connector-pairings/{pairingId}/review (the `PostPrintConnectorPairingsByPairingIdReview` operationId).
+func (c *Client) PostPrintConnectorPairingsByPairingIdReviewWithBody(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConnectorPairingsByPairingIdReviewRequestWithBody(c.Server, pairingId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConnectorPairingsByPairingIdReview Post print connector pairings by pairing ID review
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /print-connector-pairings/{pairingId}/review (the `PostPrintConnectorPairingsByPairingIdReview` operationId).
+func (c *Client) PostPrintConnectorPairingsByPairingIdReview(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, body PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConnectorPairingsByPairingIdReviewRequest(c.Server, pairingId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerHeartbeatWithBody Post print consumer heartbeat
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /print-consumer/heartbeat (the `PostPrintConsumerHeartbeat` operationId).
+func (c *Client) PostPrintConsumerHeartbeatWithBody(ctx context.Context, params *PostPrintConsumerHeartbeatParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerHeartbeatRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerHeartbeat Post print consumer heartbeat
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /print-consumer/heartbeat (the `PostPrintConsumerHeartbeat` operationId).
+func (c *Client) PostPrintConsumerHeartbeat(ctx context.Context, params *PostPrintConsumerHeartbeatParams, body PostPrintConsumerHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerHeartbeatRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerPrinterReportsWithBody Post print consumer printer reports
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /print-consumer/printer-reports (the `PostPrintConsumerPrinterReports` operationId).
+func (c *Client) PostPrintConsumerPrinterReportsWithBody(ctx context.Context, params *PostPrintConsumerPrinterReportsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerPrinterReportsRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerPrinterReports Post print consumer printer reports
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /print-consumer/printer-reports (the `PostPrintConsumerPrinterReports` operationId).
+func (c *Client) PostPrintConsumerPrinterReports(ctx context.Context, params *PostPrintConsumerPrinterReportsParams, body PostPrintConsumerPrinterReportsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerPrinterReportsRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPrintConsumerPrinters Get print consumer printers
+//
+// Corresponds with GET /print-consumer/printers (the `GetPrintConsumerPrinters` operationId).
+func (c *Client) GetPrintConsumerPrinters(ctx context.Context, params *GetPrintConsumerPrintersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPrintConsumerPrintersRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -9821,6 +10545,70 @@ func (c *Client) PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNoti
 	return c.Client.Do(req)
 }
 
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectors Get tenants by tenant ID inventories by inventory ID print connectors
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-connectors (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectors` operationId).
+func (c *Client) GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectors(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsRequest(c.Server, tenantId, inventoryId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId Get tenants by tenant ID inventories by inventory ID print connectors by connector ID
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
+func (c *Client) GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdRequest(c.Server, tenantId, inventoryId, connectorId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithBody Patch tenants by tenant ID inventories by inventory ID print connectors by connector ID
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
+func (c *Client) PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithBody(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdRequestWithBody(c.Server, tenantId, inventoryId, connectorId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId Patch tenants by tenant ID inventories by inventory ID print connectors by connector ID
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
+func (c *Client) PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, body PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdRequest(c.Server, tenantId, inventoryId, connectorId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs Get tenants by tenant ID inventories by inventory ID print jobs
 //
 // Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-jobs (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs` operationId).
@@ -10715,6 +11503,451 @@ func NewGetMeTenantsRequest(server string, params *GetMeTenantsParams) (*http.Re
 			}
 
 			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPostPrintConnectorPairingsRequest calls the generic PostPrintConnectorPairings builder with application/json body
+func NewPostPrintConnectorPairingsRequest(server string, body PostPrintConnectorPairingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrintConnectorPairingsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostPrintConnectorPairingsRequestWithBody constructs an http.Request for the PostPrintConnectorPairings method, with any body, and a specified content type
+func NewPostPrintConnectorPairingsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-connector-pairings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetPrintConnectorPairingsByPairingIdRequest constructs an http.Request for the GetPrintConnectorPairingsByPairingId method
+func NewGetPrintConnectorPairingsByPairingIdRequest(server string, pairingId string, params *GetPrintConnectorPairingsByPairingIdParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "pairingId", pairingId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-connector-pairings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "X-Pairing-Token", params.XPairingToken, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("X-Pairing-Token", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewPostPrintConnectorPairingsByPairingIdApprovalRequest calls the generic PostPrintConnectorPairingsByPairingIdApproval builder with application/json body
+func NewPostPrintConnectorPairingsByPairingIdApprovalRequest(server string, pairingId string, params *PostPrintConnectorPairingsByPairingIdApprovalParams, body PostPrintConnectorPairingsByPairingIdApprovalJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrintConnectorPairingsByPairingIdApprovalRequestWithBody(server, pairingId, params, "application/json", bodyReader)
+}
+
+// NewPostPrintConnectorPairingsByPairingIdApprovalRequestWithBody constructs an http.Request for the PostPrintConnectorPairingsByPairingIdApproval method, with any body, and a specified content type
+func NewPostPrintConnectorPairingsByPairingIdApprovalRequestWithBody(server string, pairingId string, params *PostPrintConnectorPairingsByPairingIdApprovalParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "pairingId", pairingId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-connector-pairings/%s/approval", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPostPrintConnectorPairingsByPairingIdCredentialRequest calls the generic PostPrintConnectorPairingsByPairingIdCredential builder with application/json body
+func NewPostPrintConnectorPairingsByPairingIdCredentialRequest(server string, pairingId string, params *PostPrintConnectorPairingsByPairingIdCredentialParams, body PostPrintConnectorPairingsByPairingIdCredentialJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrintConnectorPairingsByPairingIdCredentialRequestWithBody(server, pairingId, params, "application/json", bodyReader)
+}
+
+// NewPostPrintConnectorPairingsByPairingIdCredentialRequestWithBody constructs an http.Request for the PostPrintConnectorPairingsByPairingIdCredential method, with any body, and a specified content type
+func NewPostPrintConnectorPairingsByPairingIdCredentialRequestWithBody(server string, pairingId string, params *PostPrintConnectorPairingsByPairingIdCredentialParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "pairingId", pairingId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-connector-pairings/%s/credential", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "X-Pairing-Token", params.XPairingToken, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("X-Pairing-Token", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewPostPrintConnectorPairingsByPairingIdReviewRequest calls the generic PostPrintConnectorPairingsByPairingIdReview builder with application/json body
+func NewPostPrintConnectorPairingsByPairingIdReviewRequest(server string, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, body PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrintConnectorPairingsByPairingIdReviewRequestWithBody(server, pairingId, params, "application/json", bodyReader)
+}
+
+// NewPostPrintConnectorPairingsByPairingIdReviewRequestWithBody constructs an http.Request for the PostPrintConnectorPairingsByPairingIdReview method, with any body, and a specified content type
+func NewPostPrintConnectorPairingsByPairingIdReviewRequestWithBody(server string, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "pairingId", pairingId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-connector-pairings/%s/review", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPostPrintConsumerHeartbeatRequest calls the generic PostPrintConsumerHeartbeat builder with application/json body
+func NewPostPrintConsumerHeartbeatRequest(server string, params *PostPrintConsumerHeartbeatParams, body PostPrintConsumerHeartbeatJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrintConsumerHeartbeatRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewPostPrintConsumerHeartbeatRequestWithBody constructs an http.Request for the PostPrintConsumerHeartbeat method, with any body, and a specified content type
+func NewPostPrintConsumerHeartbeatRequestWithBody(server string, params *PostPrintConsumerHeartbeatParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-consumer/heartbeat")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPostPrintConsumerPrinterReportsRequest calls the generic PostPrintConsumerPrinterReports builder with application/json body
+func NewPostPrintConsumerPrinterReportsRequest(server string, params *PostPrintConsumerPrinterReportsParams, body PostPrintConsumerPrinterReportsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrintConsumerPrinterReportsRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewPostPrintConsumerPrinterReportsRequestWithBody constructs an http.Request for the PostPrintConsumerPrinterReports method, with any body, and a specified content type
+func NewPostPrintConsumerPrinterReportsRequestWithBody(server string, params *PostPrintConsumerPrinterReportsParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-consumer/printer-reports")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewGetPrintConsumerPrintersRequest constructs an http.Request for the GetPrintConsumerPrinters method
+func NewGetPrintConsumerPrintersRequest(server string, params *GetPrintConsumerPrintersParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-consumer/printers")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
 		}
 
 	}
@@ -21687,6 +22920,273 @@ func NewPutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationI
 	return req, nil
 }
 
+// NewGetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsRequest constructs an http.Request for the GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectors method
+func NewGetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsRequest(server string, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/print-connectors", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int64"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewGetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdRequest constructs an http.Request for the GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId method
+func NewGetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdRequest(server string, tenantId string, inventoryId string, connectorId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "connectorId", connectorId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/print-connectors/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdRequest calls the generic PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId builder with application/json body
+func NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdRequest(server string, tenantId string, inventoryId string, connectorId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, body PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdRequestWithBody(server, tenantId, inventoryId, connectorId, params, "application/json", bodyReader)
+}
+
+// NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdRequestWithBody constructs an http.Request for the PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId method, with any body, and a specified content type
+func NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdRequestWithBody(server string, tenantId string, inventoryId string, connectorId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "connectorId", connectorId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/print-connectors/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
 // NewGetTenantsByTenantIdInventoriesByInventoryIdPrintJobsRequest constructs an http.Request for the GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs method
 func NewGetTenantsByTenantIdInventoriesByInventoryIdPrintJobsRequest(server string, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsParams) (*http.Request, error) {
 	var err error
@@ -24037,6 +25537,104 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /me/tenants (the `GetMeTenants` operationId).
 	GetMeTenantsWithResponse(ctx context.Context, params *GetMeTenantsParams, reqEditors ...RequestEditorFn) (*GetMeTenantsResponse, error)
 
+	// PostPrintConnectorPairingsWithBodyWithResponse Post print connector pairings
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-connector-pairings (the `PostPrintConnectorPairings` operationId).
+	PostPrintConnectorPairingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsResponse, error)
+
+	// PostPrintConnectorPairingsWithResponse Post print connector pairings
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-connector-pairings (the `PostPrintConnectorPairings` operationId).
+	PostPrintConnectorPairingsWithResponse(ctx context.Context, body PostPrintConnectorPairingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsResponse, error)
+
+	// GetPrintConnectorPairingsByPairingIdWithResponse Get print connector pairings by pairing ID
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /print-connector-pairings/{pairingId} (the `GetPrintConnectorPairingsByPairingId` operationId).
+	GetPrintConnectorPairingsByPairingIdWithResponse(ctx context.Context, pairingId string, params *GetPrintConnectorPairingsByPairingIdParams, reqEditors ...RequestEditorFn) (*GetPrintConnectorPairingsByPairingIdResponse, error)
+
+	// PostPrintConnectorPairingsByPairingIdApprovalWithBodyWithResponse Post print connector pairings by pairing ID approval
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-connector-pairings/{pairingId}/approval (the `PostPrintConnectorPairingsByPairingIdApproval` operationId).
+	PostPrintConnectorPairingsByPairingIdApprovalWithBodyWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdApprovalParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdApprovalResponse, error)
+
+	// PostPrintConnectorPairingsByPairingIdApprovalWithResponse Post print connector pairings by pairing ID approval
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-connector-pairings/{pairingId}/approval (the `PostPrintConnectorPairingsByPairingIdApproval` operationId).
+	PostPrintConnectorPairingsByPairingIdApprovalWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdApprovalParams, body PostPrintConnectorPairingsByPairingIdApprovalJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdApprovalResponse, error)
+
+	// PostPrintConnectorPairingsByPairingIdCredentialWithBodyWithResponse Post print connector pairings by pairing ID credential
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-connector-pairings/{pairingId}/credential (the `PostPrintConnectorPairingsByPairingIdCredential` operationId).
+	PostPrintConnectorPairingsByPairingIdCredentialWithBodyWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdCredentialParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdCredentialResponse, error)
+
+	// PostPrintConnectorPairingsByPairingIdCredentialWithResponse Post print connector pairings by pairing ID credential
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-connector-pairings/{pairingId}/credential (the `PostPrintConnectorPairingsByPairingIdCredential` operationId).
+	PostPrintConnectorPairingsByPairingIdCredentialWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdCredentialParams, body PostPrintConnectorPairingsByPairingIdCredentialJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdCredentialResponse, error)
+
+	// PostPrintConnectorPairingsByPairingIdReviewWithBodyWithResponse Post print connector pairings by pairing ID review
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-connector-pairings/{pairingId}/review (the `PostPrintConnectorPairingsByPairingIdReview` operationId).
+	PostPrintConnectorPairingsByPairingIdReviewWithBodyWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdReviewResponse, error)
+
+	// PostPrintConnectorPairingsByPairingIdReviewWithResponse Post print connector pairings by pairing ID review
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-connector-pairings/{pairingId}/review (the `PostPrintConnectorPairingsByPairingIdReview` operationId).
+	PostPrintConnectorPairingsByPairingIdReviewWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, body PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdReviewResponse, error)
+
+	// PostPrintConsumerHeartbeatWithBodyWithResponse Post print consumer heartbeat
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/heartbeat (the `PostPrintConsumerHeartbeat` operationId).
+	PostPrintConsumerHeartbeatWithBodyWithResponse(ctx context.Context, params *PostPrintConsumerHeartbeatParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerHeartbeatResponse, error)
+
+	// PostPrintConsumerHeartbeatWithResponse Post print consumer heartbeat
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/heartbeat (the `PostPrintConsumerHeartbeat` operationId).
+	PostPrintConsumerHeartbeatWithResponse(ctx context.Context, params *PostPrintConsumerHeartbeatParams, body PostPrintConsumerHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerHeartbeatResponse, error)
+
+	// PostPrintConsumerPrinterReportsWithBodyWithResponse Post print consumer printer reports
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/printer-reports (the `PostPrintConsumerPrinterReports` operationId).
+	PostPrintConsumerPrinterReportsWithBodyWithResponse(ctx context.Context, params *PostPrintConsumerPrinterReportsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerPrinterReportsResponse, error)
+
+	// PostPrintConsumerPrinterReportsWithResponse Post print consumer printer reports
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/printer-reports (the `PostPrintConsumerPrinterReports` operationId).
+	PostPrintConsumerPrinterReportsWithResponse(ctx context.Context, params *PostPrintConsumerPrinterReportsParams, body PostPrintConsumerPrinterReportsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerPrinterReportsResponse, error)
+
+	// GetPrintConsumerPrintersWithResponse Get print consumer printers
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /print-consumer/printers (the `GetPrintConsumerPrinters` operationId).
+	GetPrintConsumerPrintersWithResponse(ctx context.Context, params *GetPrintConsumerPrintersParams, reqEditors ...RequestEditorFn) (*GetPrintConsumerPrintersResponse, error)
+
 	// PostTenantsWithBodyWithResponse Post tenants
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -25252,6 +26850,34 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /tenants/{tenantId}/inventories/{inventoryId}/notifications/{notificationId}/read (the `PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdRead` operationId).
 	PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadWithResponse(ctx context.Context, tenantId string, inventoryId string, notificationId string, params *PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadParams, reqEditors ...RequestEditorFn) (*PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadResponse, error)
 
+	// GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsWithResponse Get tenants by tenant ID inventories by inventory ID print connectors
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-connectors (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectors` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsWithResponse(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse, error)
+
+	// GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithResponse Get tenants by tenant ID inventories by inventory ID print connectors by connector ID
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithResponse(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse, error)
+
+	// PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithBodyWithResponse Patch tenants by tenant ID inventories by inventory ID print connectors by connector ID
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
+	PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithBodyWithResponse(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse, error)
+
+	// PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithResponse Patch tenants by tenant ID inventories by inventory ID print connectors by connector ID
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
+	PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithResponse(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, body PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse, error)
+
 	// GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsWithResponse Get tenants by tenant ID inventories by inventory ID print jobs
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -25815,6 +27441,446 @@ func (r GetMeTenantsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetMeTenantsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostPrintConnectorPairingsResponse201Headers the declared response headers of an HTTP 201 response for PostPrintConnectorPairings
+type PostPrintConnectorPairingsResponse201Headers struct {
+	CacheControl *string
+}
+
+type PostPrintConnectorPairingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *SuccessEnvelopePairingStarted
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers201 the parsed response headers for an HTTP 201 response
+	Headers201 *PostPrintConnectorPairingsResponse201Headers
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r PostPrintConnectorPairingsResponse) GetJSON201() *SuccessEnvelopePairingStarted {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostPrintConnectorPairingsResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostPrintConnectorPairingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrintConnectorPairingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrintConnectorPairingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostPrintConnectorPairingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetPrintConnectorPairingsByPairingIdResponse200Headers the declared response headers of an HTTP 200 response for GetPrintConnectorPairingsByPairingId
+type GetPrintConnectorPairingsByPairingIdResponse200Headers struct {
+	CacheControl *string
+}
+
+type GetPrintConnectorPairingsByPairingIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePairingStatus
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetPrintConnectorPairingsByPairingIdResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPrintConnectorPairingsByPairingIdResponse) GetJSON200() *SuccessEnvelopePairingStatus {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetPrintConnectorPairingsByPairingIdResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPrintConnectorPairingsByPairingIdResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPrintConnectorPairingsByPairingIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPrintConnectorPairingsByPairingIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPrintConnectorPairingsByPairingIdResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostPrintConnectorPairingsByPairingIdApprovalResponse200Headers the declared response headers of an HTTP 200 response for PostPrintConnectorPairingsByPairingIdApproval
+type PostPrintConnectorPairingsByPairingIdApprovalResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostPrintConnectorPairingsByPairingIdApprovalResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeConnector
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostPrintConnectorPairingsByPairingIdApprovalResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostPrintConnectorPairingsByPairingIdApprovalResponse) GetJSON200() *SuccessEnvelopeConnector {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostPrintConnectorPairingsByPairingIdApprovalResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostPrintConnectorPairingsByPairingIdApprovalResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrintConnectorPairingsByPairingIdApprovalResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrintConnectorPairingsByPairingIdApprovalResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostPrintConnectorPairingsByPairingIdApprovalResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostPrintConnectorPairingsByPairingIdCredentialResponse200Headers the declared response headers of an HTTP 200 response for PostPrintConnectorPairingsByPairingIdCredential
+type PostPrintConnectorPairingsByPairingIdCredentialResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostPrintConnectorPairingsByPairingIdCredentialResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePairingCredential
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostPrintConnectorPairingsByPairingIdCredentialResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostPrintConnectorPairingsByPairingIdCredentialResponse) GetJSON200() *SuccessEnvelopePairingCredential {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostPrintConnectorPairingsByPairingIdCredentialResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostPrintConnectorPairingsByPairingIdCredentialResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrintConnectorPairingsByPairingIdCredentialResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrintConnectorPairingsByPairingIdCredentialResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostPrintConnectorPairingsByPairingIdCredentialResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostPrintConnectorPairingsByPairingIdReviewResponse200Headers the declared response headers of an HTTP 200 response for PostPrintConnectorPairingsByPairingIdReview
+type PostPrintConnectorPairingsByPairingIdReviewResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostPrintConnectorPairingsByPairingIdReviewResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePairingReview
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostPrintConnectorPairingsByPairingIdReviewResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostPrintConnectorPairingsByPairingIdReviewResponse) GetJSON200() *SuccessEnvelopePairingReview {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostPrintConnectorPairingsByPairingIdReviewResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostPrintConnectorPairingsByPairingIdReviewResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrintConnectorPairingsByPairingIdReviewResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrintConnectorPairingsByPairingIdReviewResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostPrintConnectorPairingsByPairingIdReviewResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostPrintConsumerHeartbeatResponse200Headers the declared response headers of an HTTP 200 response for PostPrintConsumerHeartbeat
+type PostPrintConsumerHeartbeatResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostPrintConsumerHeartbeatResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeConnector
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostPrintConsumerHeartbeatResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostPrintConsumerHeartbeatResponse) GetJSON200() *SuccessEnvelopeConnector {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostPrintConsumerHeartbeatResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostPrintConsumerHeartbeatResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrintConsumerHeartbeatResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrintConsumerHeartbeatResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostPrintConsumerHeartbeatResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostPrintConsumerPrinterReportsResponse200Headers the declared response headers of an HTTP 200 response for PostPrintConsumerPrinterReports
+type PostPrintConsumerPrinterReportsResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostPrintConsumerPrinterReportsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeStruct
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostPrintConsumerPrinterReportsResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostPrintConsumerPrinterReportsResponse) GetJSON200() *SuccessEnvelopeStruct {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostPrintConsumerPrinterReportsResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostPrintConsumerPrinterReportsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrintConsumerPrinterReportsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrintConsumerPrinterReportsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostPrintConsumerPrinterReportsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetPrintConsumerPrintersResponse200Headers the declared response headers of an HTTP 200 response for GetPrintConsumerPrinters
+type GetPrintConsumerPrintersResponse200Headers struct {
+	CacheControl *string
+}
+
+type GetPrintConsumerPrintersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeListConsumerPrinter
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetPrintConsumerPrintersResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPrintConsumerPrintersResponse) GetJSON200() *SuccessEnvelopeListConsumerPrinter {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetPrintConsumerPrintersResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPrintConsumerPrintersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPrintConsumerPrintersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPrintConsumerPrintersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPrintConsumerPrintersResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -32246,6 +34312,171 @@ func (r PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationI
 	return ""
 }
 
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse200Headers the declared response headers of an HTTP 200 response for GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectors
+type GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse200Headers struct {
+	CacheControl *string
+}
+
+type GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeListConnector
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse) GetJSON200() *SuccessEnvelopeListConnector {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse200Headers the declared response headers of an HTTP 200 response for GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId
+type GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse200Headers struct {
+	CacheControl *string
+}
+
+type GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeConnector
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse) GetJSON200() *SuccessEnvelopeConnector {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse200Headers the declared response headers of an HTTP 200 response for PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId
+type PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse200Headers struct {
+	CacheControl *string
+}
+
+type PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeConnector
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse) GetJSON200() *SuccessEnvelopeConnector {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsResponse200Headers the declared response headers of an HTTP 200 response for GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs
 type GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsResponse200Headers struct {
 	CacheControl *string
@@ -33700,6 +35931,188 @@ func (c *ClientWithResponses) GetMeTenantsWithResponse(ctx context.Context, para
 		return nil, err
 	}
 	return ParseGetMeTenantsResponse(rsp)
+}
+
+// PostPrintConnectorPairingsWithBodyWithResponse Post print connector pairings
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-connector-pairings (the `PostPrintConnectorPairings` operationId).
+func (c *ClientWithResponses) PostPrintConnectorPairingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsResponse, error) {
+	rsp, err := c.PostPrintConnectorPairingsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConnectorPairingsResponse(rsp)
+}
+
+// PostPrintConnectorPairingsWithResponse Post print connector pairings
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-connector-pairings (the `PostPrintConnectorPairings` operationId).
+func (c *ClientWithResponses) PostPrintConnectorPairingsWithResponse(ctx context.Context, body PostPrintConnectorPairingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsResponse, error) {
+	rsp, err := c.PostPrintConnectorPairings(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConnectorPairingsResponse(rsp)
+}
+
+// GetPrintConnectorPairingsByPairingIdWithResponse Get print connector pairings by pairing ID
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /print-connector-pairings/{pairingId} (the `GetPrintConnectorPairingsByPairingId` operationId).
+func (c *ClientWithResponses) GetPrintConnectorPairingsByPairingIdWithResponse(ctx context.Context, pairingId string, params *GetPrintConnectorPairingsByPairingIdParams, reqEditors ...RequestEditorFn) (*GetPrintConnectorPairingsByPairingIdResponse, error) {
+	rsp, err := c.GetPrintConnectorPairingsByPairingId(ctx, pairingId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPrintConnectorPairingsByPairingIdResponse(rsp)
+}
+
+// PostPrintConnectorPairingsByPairingIdApprovalWithBodyWithResponse Post print connector pairings by pairing ID approval
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-connector-pairings/{pairingId}/approval (the `PostPrintConnectorPairingsByPairingIdApproval` operationId).
+func (c *ClientWithResponses) PostPrintConnectorPairingsByPairingIdApprovalWithBodyWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdApprovalParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdApprovalResponse, error) {
+	rsp, err := c.PostPrintConnectorPairingsByPairingIdApprovalWithBody(ctx, pairingId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConnectorPairingsByPairingIdApprovalResponse(rsp)
+}
+
+// PostPrintConnectorPairingsByPairingIdApprovalWithResponse Post print connector pairings by pairing ID approval
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-connector-pairings/{pairingId}/approval (the `PostPrintConnectorPairingsByPairingIdApproval` operationId).
+func (c *ClientWithResponses) PostPrintConnectorPairingsByPairingIdApprovalWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdApprovalParams, body PostPrintConnectorPairingsByPairingIdApprovalJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdApprovalResponse, error) {
+	rsp, err := c.PostPrintConnectorPairingsByPairingIdApproval(ctx, pairingId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConnectorPairingsByPairingIdApprovalResponse(rsp)
+}
+
+// PostPrintConnectorPairingsByPairingIdCredentialWithBodyWithResponse Post print connector pairings by pairing ID credential
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-connector-pairings/{pairingId}/credential (the `PostPrintConnectorPairingsByPairingIdCredential` operationId).
+func (c *ClientWithResponses) PostPrintConnectorPairingsByPairingIdCredentialWithBodyWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdCredentialParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdCredentialResponse, error) {
+	rsp, err := c.PostPrintConnectorPairingsByPairingIdCredentialWithBody(ctx, pairingId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConnectorPairingsByPairingIdCredentialResponse(rsp)
+}
+
+// PostPrintConnectorPairingsByPairingIdCredentialWithResponse Post print connector pairings by pairing ID credential
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-connector-pairings/{pairingId}/credential (the `PostPrintConnectorPairingsByPairingIdCredential` operationId).
+func (c *ClientWithResponses) PostPrintConnectorPairingsByPairingIdCredentialWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdCredentialParams, body PostPrintConnectorPairingsByPairingIdCredentialJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdCredentialResponse, error) {
+	rsp, err := c.PostPrintConnectorPairingsByPairingIdCredential(ctx, pairingId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConnectorPairingsByPairingIdCredentialResponse(rsp)
+}
+
+// PostPrintConnectorPairingsByPairingIdReviewWithBodyWithResponse Post print connector pairings by pairing ID review
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-connector-pairings/{pairingId}/review (the `PostPrintConnectorPairingsByPairingIdReview` operationId).
+func (c *ClientWithResponses) PostPrintConnectorPairingsByPairingIdReviewWithBodyWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdReviewResponse, error) {
+	rsp, err := c.PostPrintConnectorPairingsByPairingIdReviewWithBody(ctx, pairingId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConnectorPairingsByPairingIdReviewResponse(rsp)
+}
+
+// PostPrintConnectorPairingsByPairingIdReviewWithResponse Post print connector pairings by pairing ID review
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-connector-pairings/{pairingId}/review (the `PostPrintConnectorPairingsByPairingIdReview` operationId).
+func (c *ClientWithResponses) PostPrintConnectorPairingsByPairingIdReviewWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, body PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdReviewResponse, error) {
+	rsp, err := c.PostPrintConnectorPairingsByPairingIdReview(ctx, pairingId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConnectorPairingsByPairingIdReviewResponse(rsp)
+}
+
+// PostPrintConsumerHeartbeatWithBodyWithResponse Post print consumer heartbeat
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/heartbeat (the `PostPrintConsumerHeartbeat` operationId).
+func (c *ClientWithResponses) PostPrintConsumerHeartbeatWithBodyWithResponse(ctx context.Context, params *PostPrintConsumerHeartbeatParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerHeartbeatResponse, error) {
+	rsp, err := c.PostPrintConsumerHeartbeatWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerHeartbeatResponse(rsp)
+}
+
+// PostPrintConsumerHeartbeatWithResponse Post print consumer heartbeat
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/heartbeat (the `PostPrintConsumerHeartbeat` operationId).
+func (c *ClientWithResponses) PostPrintConsumerHeartbeatWithResponse(ctx context.Context, params *PostPrintConsumerHeartbeatParams, body PostPrintConsumerHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerHeartbeatResponse, error) {
+	rsp, err := c.PostPrintConsumerHeartbeat(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerHeartbeatResponse(rsp)
+}
+
+// PostPrintConsumerPrinterReportsWithBodyWithResponse Post print consumer printer reports
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/printer-reports (the `PostPrintConsumerPrinterReports` operationId).
+func (c *ClientWithResponses) PostPrintConsumerPrinterReportsWithBodyWithResponse(ctx context.Context, params *PostPrintConsumerPrinterReportsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerPrinterReportsResponse, error) {
+	rsp, err := c.PostPrintConsumerPrinterReportsWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerPrinterReportsResponse(rsp)
+}
+
+// PostPrintConsumerPrinterReportsWithResponse Post print consumer printer reports
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/printer-reports (the `PostPrintConsumerPrinterReports` operationId).
+func (c *ClientWithResponses) PostPrintConsumerPrinterReportsWithResponse(ctx context.Context, params *PostPrintConsumerPrinterReportsParams, body PostPrintConsumerPrinterReportsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerPrinterReportsResponse, error) {
+	rsp, err := c.PostPrintConsumerPrinterReports(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerPrinterReportsResponse(rsp)
+}
+
+// GetPrintConsumerPrintersWithResponse Get print consumer printers
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /print-consumer/printers (the `GetPrintConsumerPrinters` operationId).
+func (c *ClientWithResponses) GetPrintConsumerPrintersWithResponse(ctx context.Context, params *GetPrintConsumerPrintersParams, reqEditors ...RequestEditorFn) (*GetPrintConsumerPrintersResponse, error) {
+	rsp, err := c.GetPrintConsumerPrinters(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPrintConsumerPrintersResponse(rsp)
 }
 
 // PostTenantsWithBodyWithResponse Post tenants
@@ -35961,6 +38374,58 @@ func (c *ClientWithResponses) PutTenantsByTenantIdInventoriesByInventoryIdNotifi
 	return ParsePutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadResponse(rsp)
 }
 
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsWithResponse Get tenants by tenant ID inventories by inventory ID print connectors
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-connectors (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectors` operationId).
+func (c *ClientWithResponses) GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsWithResponse(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse, error) {
+	rsp, err := c.GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectors(ctx, tenantId, inventoryId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse(rsp)
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithResponse Get tenants by tenant ID inventories by inventory ID print connectors by connector ID
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
+func (c *ClientWithResponses) GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithResponse(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse, error) {
+	rsp, err := c.GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId(ctx, tenantId, inventoryId, connectorId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse(rsp)
+}
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithBodyWithResponse Patch tenants by tenant ID inventories by inventory ID print connectors by connector ID
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
+func (c *ClientWithResponses) PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithBodyWithResponse(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse, error) {
+	rsp, err := c.PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithBody(ctx, tenantId, inventoryId, connectorId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse(rsp)
+}
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithResponse Patch tenants by tenant ID inventories by inventory ID print connectors by connector ID
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
+func (c *ClientWithResponses) PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithResponse(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, body PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse, error) {
+	rsp, err := c.PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId(ctx, tenantId, inventoryId, connectorId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse(rsp)
+}
+
 // GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsWithResponse Get tenants by tenant ID inventories by inventory ID print jobs
 //
 // Returns a wrapper object for the known response body format(s).
@@ -36674,6 +39139,374 @@ func ParseGetMeTenantsResponse(rsp *http.Response) (*GetMeTenantsResponse, error
 		}
 		response.JSONDefault = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParsePostPrintConnectorPairingsResponse parses an HTTP response from a PostPrintConnectorPairingsWithResponse call
+func ParsePostPrintConnectorPairingsResponse(rsp *http.Response) (*PostPrintConnectorPairingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrintConnectorPairingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest SuccessEnvelopePairingStarted
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 201:
+		var headers PostPrintConnectorPairingsResponse201Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers201 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetPrintConnectorPairingsByPairingIdResponse parses an HTTP response from a GetPrintConnectorPairingsByPairingIdWithResponse call
+func ParseGetPrintConnectorPairingsByPairingIdResponse(rsp *http.Response) (*GetPrintConnectorPairingsByPairingIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPrintConnectorPairingsByPairingIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePairingStatus
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetPrintConnectorPairingsByPairingIdResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostPrintConnectorPairingsByPairingIdApprovalResponse parses an HTTP response from a PostPrintConnectorPairingsByPairingIdApprovalWithResponse call
+func ParsePostPrintConnectorPairingsByPairingIdApprovalResponse(rsp *http.Response) (*PostPrintConnectorPairingsByPairingIdApprovalResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrintConnectorPairingsByPairingIdApprovalResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeConnector
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostPrintConnectorPairingsByPairingIdApprovalResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostPrintConnectorPairingsByPairingIdCredentialResponse parses an HTTP response from a PostPrintConnectorPairingsByPairingIdCredentialWithResponse call
+func ParsePostPrintConnectorPairingsByPairingIdCredentialResponse(rsp *http.Response) (*PostPrintConnectorPairingsByPairingIdCredentialResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrintConnectorPairingsByPairingIdCredentialResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePairingCredential
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostPrintConnectorPairingsByPairingIdCredentialResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostPrintConnectorPairingsByPairingIdReviewResponse parses an HTTP response from a PostPrintConnectorPairingsByPairingIdReviewWithResponse call
+func ParsePostPrintConnectorPairingsByPairingIdReviewResponse(rsp *http.Response) (*PostPrintConnectorPairingsByPairingIdReviewResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrintConnectorPairingsByPairingIdReviewResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePairingReview
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostPrintConnectorPairingsByPairingIdReviewResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostPrintConsumerHeartbeatResponse parses an HTTP response from a PostPrintConsumerHeartbeatWithResponse call
+func ParsePostPrintConsumerHeartbeatResponse(rsp *http.Response) (*PostPrintConsumerHeartbeatResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrintConsumerHeartbeatResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeConnector
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostPrintConsumerHeartbeatResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostPrintConsumerPrinterReportsResponse parses an HTTP response from a PostPrintConsumerPrinterReportsWithResponse call
+func ParsePostPrintConsumerPrinterReportsResponse(rsp *http.Response) (*PostPrintConsumerPrinterReportsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrintConsumerPrinterReportsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeStruct
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostPrintConsumerPrinterReportsResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetPrintConsumerPrintersResponse parses an HTTP response from a GetPrintConsumerPrintersWithResponse call
+func ParseGetPrintConsumerPrintersResponse(rsp *http.Response) (*GetPrintConsumerPrintersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPrintConsumerPrintersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeListConsumerPrinter
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetPrintConsumerPrintersResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
 	}
 
 	return response, nil
@@ -41239,6 +44072,144 @@ func ParsePutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificatio
 		}
 		response.JSONDefault = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParseGetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse parses an HTTP response from a GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsWithResponse call
+func ParseGetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse(rsp *http.Response) (*GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeListConnector
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse parses an HTTP response from a GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithResponse call
+func ParseGetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse(rsp *http.Response) (*GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeConnector
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse parses an HTTP response from a PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithResponse call
+func ParsePatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse(rsp *http.Response) (*PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeConnector
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
 	}
 
 	return response, nil
