@@ -387,3 +387,38 @@ in the same PR and must pass generation/drift checks.
 - A dedicated inventory print-settings repository owns persistence; this is not
   mutable state inside the printer aggregate. Safe read history uses
   `print_settings.viewed`; successful replacement uses `print_settings.updated`.
+## Client Download And Scan Delivery Slice
+
+- Before printer-job UI ships, asset overflow exposes Label options for authorized
+  viewers on all three asset kinds. The bounded web task sheet and native task
+  route show the current API-rendered PNG, built-in template choice, reference
+  toggle, configured catalog size, PNG/PDF export, and system printing. No
+  physical completion is inferred from downloading or presenting a print dialog.
+- Standalone download media comes from the authenticated printer-profile catalog,
+  never a second hard-coded client copy of physical profile values. The initial
+  single 29 x 90 mm option is displayed read-only. Templates remain independent.
+- Preview requests are cancelled/superseded when selection or asset scope changes;
+  stale responses cannot enable export. Binary content uses generated authenticated
+  transport with redirect rejection and an explicitly scoped render identifier.
+- Web scanning uses HTTPS camera capture with a pinned `jsqr` 1.4.0 decoding
+  adapter, with manual pasted-link fallback when camera access fails. Decode is
+  local, bounded to camera frames, and never downloads scanned origins.
+- Native camera scanning and system printing use Expo SDK 55 bundled versions
+  `expo-camera` 55.0.18 and `expo-print` 55.0.15 behind adapters. Reuse existing
+  file-system/sharing for temporary label documents. Camera permission is requested
+  when entering scanning; denial retains the paste fallback.
+- A shared project-owned label protocol parser validates HTTPS/custom-scheme URLs
+  locally, supports deployment path prefixes, rejects escaped/ambiguous paths,
+  credentials/query/fragment, and extracts only opaque instance and label IDs.
+  The generated API client always resolves against its configured API destination.
+- Keep the pending label reference outside native authentication/server composition;
+  re-check instance identity and authorization after either changes. Web sign-in
+  retains the local label landing route through the existing validated return path.
+  Existing invitation and OIDC links remain independent.
+- Browse/search owns the scan entry, without another primary tab. A successful
+  scan closes its bounded task before navigating to existing scoped asset detail;
+  archived detail navigation uses the resolver state instead of active-list lookup.
+  Extend native retained-action callback tests only where shared header semantics
+  change. Add adversarial parser/transport and navigation-race tests; runtime camera,
+  native sharing/printing, and physical QR checks remain explicit device checklist
+  items until actually observed.

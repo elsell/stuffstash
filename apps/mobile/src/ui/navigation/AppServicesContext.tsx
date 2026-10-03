@@ -1,3 +1,4 @@
+import { usePendingLabel } from '../labels/LabelLinkContext';
 import {ImagePerformanceProvider} from '../components/ImagePerformanceContext';
 import { t } from '../../presentation/localization';
 import { PushRegistrationLifecycle } from './PushRegistrationLifecycle';
@@ -53,6 +54,7 @@ function AppServicesContent({ children, controller, onboardingCommand }: AppServ
   readonly onboardingCommand: ReturnType<typeof createOnboardingCommand>;
 }) {
   const invitationLink = useInventoryInvitationLink();
+  const labelLink = usePendingLabel();
   const router = useRouter();
   const { state, signOut, changeServer } = controller;
   if (state.status === 'loading') {
@@ -66,7 +68,8 @@ function AppServicesContent({ children, controller, onboardingCommand }: AppServ
         initialApiBaseUrl={createSeedConnectionProfile()?.apiBaseUrl}
         initialState={state.onboardingState}
         invitationPending={Boolean(invitationLink.reference)}
-        onStartOver={() => { invitationLink.clear(); router.replace('/'); }}
+        labelPending={Boolean(labelLink.reference)}
+        onStartOver={() => { invitationLink.clear(); labelLink.clear(); router.replace('/'); }}
         onComplete={controller.complete}
         onStateChange={controller.setOnboardingState}
       />

@@ -547,7 +547,7 @@ export function InventoryMapScreen({
 
   return (
     <View style={styles.shell}>
-      <BrowseAddHeader canAdd={canAdd} onAdd={() => { cancelMapSearch(); onAdd(); }} />
+      <BrowseAddHeader onScan={() => router.push('/scan-label')} canAdd={canAdd} onAdd={() => { cancelMapSearch(); onAdd(); }} />
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
           <View style={styles.titleBlock}>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BrowseLabelAction from '../labels/BrowseLabelAction.svelte';
   import { t } from '$lib/presentation/localization';
   import type { Snippet } from 'svelte';
   import AssetExpirationLabel from './AssetExpirationLabel.svelte';
@@ -300,6 +301,7 @@
 <section class="workspace-main browse-workspace" aria-labelledby="browse-title">
   <header class="browse-heading">
     <div><h1 id="browse-title">{t('web.BrowsePanel.browse')}</h1><p>{inventoryName}</p></div>
+    <BrowseLabelAction />
     <div class="browse-surface-tabs" role="tablist" aria-label={t('web.BrowsePanel.browseSurface')}>
       {#each [{ value: 'list', label: t('browse.list') }, { value: 'map', label: t('browse.map') }] as option}
         <Button.Root href={browseHref({ surface: option.value as BrowseSurface })} id={`browse-surface-${option.value}-tab`} role="tab" tabindex={surface === option.value ? 0 : -1} aria-controls={`browse-${option.value}-panel`} aria-selected={surface === option.value} variant={surface === option.value ? 'secondary' : 'ghost'} onkeydown={(event) => tabKeydown(event, ['list', 'map'], surface, (value) => onStateChange({ surface: value }))} onclick={(event) => changeBrowseState(event, { surface: option.value as BrowseSurface })}>{option.label}</Button.Root>

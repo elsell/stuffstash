@@ -54,3 +54,5 @@ export const ArrowUp = 'ArrowUpIcon';
 export const Square = 'SquareIcon';
 export const SendHorizontal = 'SendHorizontalIcon';
 export const ListFilter = 'ListFilterIcon';
+
+export const ScanLine = 'ScanLineIcon';
