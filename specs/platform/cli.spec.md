@@ -445,3 +445,8 @@ cannot replace a newer stable download. Production docs are dispatched against
 main after that PR is observed merged; requesting auto-merge alone is insufficient.
 A failed docs refresh is reported separately and can be retried by dispatching
 Docs Pages against main. Failed Release runs never trigger a production docs build.
+
+Release publication retains the release ID returned by draft creation and refreshes
+that resource directly while uploading and verifying assets. It does not depend
+on a newly created draft immediately appearing in the release collection. Remote
+read failures still fail closed; no unverified asset or release is advertised.

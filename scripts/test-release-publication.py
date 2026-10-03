@@ -28,15 +28,21 @@ class ReleaseStore:
         self.bytes = {}
         self.disconnect_after_upload = False
         self.has_newer_stable = False
+        self.hide_new_draft = False
 
     def tag_commit(self, _tag):
         return self.commit
 
     def find(self, _tag):
-        return copy.deepcopy(self.release)
+        return None if self.hide_new_draft else copy.deepcopy(self.release)
 
     def create(self, plan, _root):
-        self.release = dict(tag_name=plan['tag'], draft=True, prerelease=False, assets=[], published_at=None)
+        self.release = dict(id=123, tag_name=plan['tag'], draft=True, prerelease=False, assets=[], published_at=None)
+        return copy.deepcopy(self.release)
+
+    def refresh(self, release):
+        if release['id'] != self.release['id']: raise ValueError('Unknown release')
+        return copy.deepcopy(self.release)
 
     def upload(self, _tag, path):
         if path.name in self.bytes:
@@ -77,6 +83,15 @@ def fixture(root):
 
 
 class PublicationTests(unittest.TestCase):
+    def test_new_draft_need_not_be_immediately_visible_in_collection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); plan = fixture(root); remote = ReleaseStore(plan['commit'])
+            remote.hide_new_draft = True
+            metadata = publication.publish(root, remote)
+            self.assertEqual(metadata['version'], plan['tag'])
+            self.assertFalse(remote.release['draft'])
+            self.assertEqual(len(remote.bytes), len(plan['assets']))
+
     def test_lost_upload_response_recovers_original_bytes_before_stable_docs(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); plan = fixture(root); remote = ReleaseStore(plan['commit'])
