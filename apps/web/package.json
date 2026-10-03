@@ -31,7 +31,8 @@
     "tailwind-merge": "3.6.0",
     "tailwind-variants": "3.2.2",
     "vite": "8.0.16",
-    "@stuff-stash/localization": "workspace:*"
+    "@stuff-stash/localization": "workspace:*",
+    "jsqr": "1.4.0"
   },
   "devDependencies": {
     "@playwright/test": "1.60.0",

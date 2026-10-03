@@ -64,6 +64,7 @@ module.exports = {
     userInterfaceStyle: 'automatic',
     plugins: [
       'expo-router',
+      ['expo-camera', { cameraPermission: 'Stuff Stash uses your camera to scan labels and attach item photos.', recordAudioAndroid: false }],
       'expo-secure-store',
       ['expo-notifications', { mode: productionBuild ? 'production' : 'development', defaultChannel: 'expiration', enableBackgroundRemoteNotifications: false }],
       'expo-web-browser',
@@ -71,7 +72,7 @@ module.exports = {
         'expo-image-picker',
         {
           photosPermission: 'Stuff Stash uses your photo library so you can attach household item photos.',
-          cameraPermission: 'Stuff Stash uses your camera so you can attach household item photos.',
+          cameraPermission: 'Stuff Stash uses your camera to scan labels and attach item photos.',
           microphonePermission: 'Stuff Stash uses the microphone when you start a voice interaction.'
         }
       ]
@@ -95,7 +96,7 @@ module.exports = {
         ITSAppUsesNonExemptEncryption: false,
         NSPhotoLibraryUsageDescription:
           'Stuff Stash uses your photo library so you can attach household item photos.',
-        NSCameraUsageDescription: 'Stuff Stash uses your camera so you can attach household item photos.',
+        NSCameraUsageDescription: 'Stuff Stash uses your camera to scan labels and attach item photos.',
         NSMicrophoneUsageDescription:
           'Stuff Stash uses the microphone when you start a voice interaction.'
       }
@@ -107,7 +108,7 @@ module.exports = {
             {
               action: 'VIEW',
               autoVerify: true,
-              data: [{ scheme: 'https', host: invitationHost, path: '/invitations/accept' }],
+              data: [{ scheme: 'https', host: invitationHost, path: '/invitations/accept' }, { scheme: 'https', host: invitationHost, pathPrefix: '/l/v1/' }],
               category: ['BROWSABLE', 'DEFAULT']
             }
           ]
