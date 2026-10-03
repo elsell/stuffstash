@@ -1,6 +1,9 @@
 package dto
 
-import "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
+import (
+	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
+	"time"
+)
 
 type PrinterScope struct {
 	Authorization string `header:"Authorization"`
@@ -47,6 +50,8 @@ type PrintersOutput struct {
 	Body shared.SuccessEnvelope[[]Printer]
 }
 type Printer struct {
+	ReadinessReason  string       `json:"readinessReason,omitempty"`
+	ReportedAt       *time.Time   `json:"reportedAt,omitempty"`
 	ID               string       `json:"id"`
 	Name             string       `json:"name"`
 	AdapterID        string       `json:"adapterId"`
