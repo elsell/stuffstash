@@ -15,7 +15,10 @@ connectors never publish status directly to other clients. See
 ## Resource Model
 
 - A registered printer is an inventory-owned logical destination with immutable
-  ID, display name, enabled/retired state, compatible profiles, and queue.
+  ID, display name, enabled/retired state, one user-configured label size with
+  adapter-supplied technical media settings, and queue. Registration requires the
+  size; editing it later keeps the same printer identity. Templates are independent
+  catalog entries; see [label rendering](asset-labels.spec.md#templates-registered-label-size-and-rendering-ownership).
   Its identity survives connector restart/replacement and must not be a USB path.
 - First release registers a physical printer in one inventory. Cross-inventory
   physical-printer sharing and scheduling are deferred. Reject known duplicate
@@ -43,12 +46,90 @@ connectors never publish status directly to other clients. See
   asset/label reference; test jobs use fixed diagnostic content with no asset QR
   and are explicitly requested by an editor. Tests consume media and are never
   emitted by discovery, registration, or heartbeat.
-- A print job captures tenant/inventory/printer, asset/label reference when applicable, immutable
-  rendered content or verified render snapshot, profile, copies, requesting user,
-  timestamps, idempotency key, status, and attempts. Never silently rerender an
+- A print job captures tenant/inventory/printer, asset/label reference when
+  applicable, immutable API-rendered artifact and content snapshot,
+  template ID/version/options,
+  effective registered-media snapshot/fingerprint and preset version, copies,
+  requesting user, timestamps, idempotency key, status, and attempts. Never silently rerender an
   existing job with later asset edits or changed printer defaults.
 - Represent identities, profiles, statuses, outcomes, and reasons as typed domain
   concepts. Repository reads carry explicit tenant/inventory scope.
+
+## Print Job And Device Interface
+
+The consumer receives an immutable rendering, not a template to execute. The
+API creates a raster suitable for the selected media/device profile; the CLI
+converts it to the device protocol without changing composition. PDF download
+is a client/system-print output; the initial QL-800 consumer accepts PNG only.
+
+Human job requests contain `printerId`, `expectedMediaFingerprint`, `templateId`,
+`templateVersion`, validated `templateOptions`, `copies`, and an idempotency key.
+The API resolves media settings from that printer's registration, rejecting a
+stale expected fingerprint; requests cannot override a registered printer's size.
+The asset ID is the scoped route target. An optional preview
+fingerprint must match the current render inputs; a mismatch returns a conflict
+and requires a refreshed preview. Create-with-print carries the same selection.
+
+A successful claim returns this versioned contract through the generated SDK:
+
+| Field | Meaning |
+| --- | --- |
+| contractVersion | Consumer protocol version; initially 1 |
+| jobId, attemptId, printerId | Scoped identities; no local USB path |
+| claimToken, revision, leaseExpiresAt | Attempt control, separate from identity and SpiceDB authorization |
+| template | Immutable ID/version/options, informational for the consumer |
+| media | Immutable configured-media snapshot/fingerprint and preset ID/version, with physical micrometers, printable rectangle, raster dimensions, DPI, orientation, and color mode |
+| artifact | API-relative authenticated content path, MIME type, byte length, SHA-256 digest |
+| output | Positive bounded copies and typed cut policy compatible with the profile |
+
+- Profile integer physical dimensions and printable bounds are distinct from
+  raster dimensions. The payload specifies whether the raster is already in
+  device-feed orientation; initial QL-800 output is. The adapter must not rotate
+  twice or infer scale from PNG display metadata. Capabilities explicitly name
+  supported contract versions, profile versions, format/color mode, and cut
+  policies; unknown required values are rejected before any device output.
+- Claim eligibility requires the job media fingerprint to match the printer's
+  effective configured settings. Recheck atomically at start, and require the
+  worker to apply that configured snapshot locally before output. Configuration
+  changes before start release a mismatching claim to waiting without output.
+  Reject media edits while printing or uncertain; physical roll changes cannot
+  be locked by software, and remain the operator's responsibility.
+- The server validates and renders before a job becomes claimable. Persist an
+  immutable artifact reference/digest with the job; a staged blob is not exposed
+  until the asset/label/job transaction commits. Clean up abandoned staging
+  through existing blob lifecycle ports. Render failure before creation commit
+  preserves the draft and returns a recoverable error; it is not a printer error.
+- Expired/missing/corrupt artifacts detected before any possible device
+  submission fail with definite no-output status. Artifact loss during recovery
+  cannot prove nothing printed: preserve confirmed completion evidence or mark
+  uncertainty, and never replay. Do not rerender from live asset/template data
+  or keep reclaiming a broken job.
+  Retention must not evict queued, active, or unresolved-attempt content; explicit
+  cancellation/resolution makes it eligible for terminal retention policy.
+- Template metadata is for diagnostics. The consumer does not need the template
+  implementation or fonts. It verifies artifact digest, type, dimensions,
+  decoded-pixel limits, and device compatibility before requesting start.
+- API start acknowledgment precedes device submission. Pass only validated local
+  content and typed device instructions to the printer port, never claim tokens,
+  API credentials, template code, or arbitrary command strings.
+
+The project-owned printer port has these conceptual operations (exact Go types
+are finalized in implementation without changing the behavior):
+
+| Operation | Input | Result |
+| --- | --- | --- |
+| Discover | Local discovery context | Device references and model information |
+| Capabilities | Selected local device | Supported media/profile/format/protocol versions and status/wake capabilities |
+| Readiness | Selected local device | Typed readiness, observed media if known, and safe reason |
+| Submit | Locked device, attempt ID, validated artifact, media profile, copies/cut policy | Submission reference or definite no-output/uncertain error |
+| Observe | Device and submission reference | Pending, confirmed completion, definite no-output failure, or uncertain/partial result |
+
+The worker owns API claims, local journaling, locks, retries, and reporting. The
+adapter owns protocol conversion, device communication, and hardware evidence.
+Submission success is not completion. An adapter incapable of observing completion
+must report that capability honestly. Optional wake remains outside the initial
+QL-800 implementation. Third-party connectors can consume the same versioned
+contract; none may substitute their own layout for a job's immutable artifact.
 
 ## Registration And Credentials
 
@@ -225,7 +306,10 @@ OpenAPI contracts. Mutations require idempotency or revision preconditions as
 appropriate; conflicts distinguish stale state without leaking other scopes.
 
 - `GET/POST /printers`, `GET/PATCH /printers/{printerId}`: list/register/read,
-  rename, profile configuration, or retirement with a revision precondition.
+  rename, configured label size/media settings, or retirement with a revision
+  precondition. POST requires a user-selected size or supported preset; the server
+  validates adapter-supplied technical values. PATCH size changes preserve printer
+  identity and follow queued-job/start race rules. No separate media CRUD exists.
 - `POST /printers/{printerId}/test-jobs`: explicit one-copy diagnostic job.
 - `GET /print-connectors`, `GET /print-connectors/{connectorId}` and
   `PATCH /print-connectors/{connectorId}`: safe lists/detail, approved binding
@@ -234,11 +318,18 @@ appropriate; conflicts distinguish stale state without leaking other scopes.
   initiates fresh key-bound pairing for the same connector; activating the new
   credential atomically invalidates the old version. Return a pairing reference,
   never expose the credential through the human endpoint.
+- `GET /label-templates`: inventory-view-authorized versioned built-in templates
+  with supported options and compatibility constraints. Printer setup displays
+  supported adapter presets for selection, without a separate media management
+  destination. Consumers obtain current configured media and its fingerprint for
+  SpiceDB-authorized printers through `GET /print-consumer/printers`; this grants
+  no access to human inventory/catalog endpoints. Observed roll metadata is
+  optional telemetry, not the source of configuration or a requirement to claim.
 - `GET/PATCH /label-settings`: inventory defaults and revision-based updates.
 - `POST /assets/{assetId}/label`: idempotently provision the canonical label.
 - `GET /assets/{assetId}/label`: existing label identity and link metadata.
-- `POST /assets/{assetId}/label-renders`: validate render options and return an
-  authenticated artifact reference; `GET /label-renders/{renderId}/content`
+- `POST /assets/{assetId}/label-renders`: validate template/media/content selection and return an
+  authenticated artifact reference plus the selection/content fingerprint; `GET /label-renders/{renderId}/content`
   streams the PNG/PDF with private/no-store caching and scoped authorization.
   Artifact lifetime is bounded and cannot become a public bearer link.
 - `POST /assets/{assetId}/print-jobs`, `GET /print-jobs`,
@@ -315,6 +406,11 @@ message broker, public webhook receiver, or persistent event stream is required.
   stale claim/session/version, privilege escalation, and artifact leakage.
 - Authorized viewer discovery, editor submit/cancel/reprint, administrator
   registration/defaults/revocation, and restricted connector work must succeed.
+- Verify immutable API rendering and template/media version selection, stale
+  preview rejection, required manual size registration/editing, waiting jobs after
+  size changes and recovery when switching back, no mandatory roll detection,
+  artifact loss both before submission and during recovery, content-size/digest/decoded-pixel
+  bounds, unsupported protocol/profile rejection, and no adapter layout changes.
 - Concurrent consumers against production PostgreSQL prove one claim per job
   and one active reservation per printer. Fakes must model these guarantees;
   SQLite-only/unit tests do not establish production concurrency correctness.

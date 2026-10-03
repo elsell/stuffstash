@@ -13,7 +13,11 @@ separate connector/printer health, and safe uncertain-outcome recovery together.
 Connector credentials authenticate service accounts; SpiceDB relationships scope
 printer access, and claim tokens separately fence print attempts. The CLI requires
 a generated Go SDK from the shared OpenAPI artifact and supports browser PKCE
-and provider-enabled device-code human login.
+and provider-enabled device-code human login. Register each printer with one
+user-selected label size; trust that setting without mandatory roll detection.
+Size remains editable; mismatching queued jobs wait without resizing. Independent
+templates produce immutable API-rendered artifacts for that registered size,
+consumed through a versioned contract rather than adapter-owned layouts.
 Initial media profile derives from the user's old script: 29 x 90 mm, 306 x 991
 raster. Actual USB completion reporting, media/scan behavior, and packaging remain
 unverified. Remote wake/smart outlets and a shared hosted QR resolver are outside

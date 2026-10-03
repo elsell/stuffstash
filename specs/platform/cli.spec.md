@@ -51,7 +51,7 @@ stuffstash print-jobs reprint <job-id>
 - Every scoped command has explicit server, tenant, and inventory context from
   flags or environment-backed configuration. Reject ambiguity; do not silently
   select the first inventory/printer or infer a target from a display name.
-- Creation supports explicit `--print-label` and destination/profile overrides.
+- Creation supports explicit `--print-label` and destination/template overrides.
   Omission does not apply the UI's inventory default invisibly to scripts.
 - Asset list/search and mutation flags must map to the generated contract. Only
   the commands above are the first supported inventory surface; further REST
@@ -59,6 +59,13 @@ stuffstash print-jobs reprint <job-id>
 - `printers list` queries registered inventory destinations, including offline
   ones. `printers discover` examines the local machine without registration or
   printing. Make this distinction clear in help and structured output.
+- `labels render`, `labels print`, and creation with `--print-label` accept
+  `--template`, `--template-version`, and validated options such as
+  `--show-reference`. Resolve omitted templates from inventory defaults. Add
+  `stuffstash labels templates` to inspect the authorized versioned catalog.
+  Queued printing always uses the destination's registered size; no per-job
+  media-size flag or separate media-catalog command is required. Standalone
+  download rendering can specify output dimensions without registering a printer.
 - `labels print` enqueues an API job and returns its ID; it does not synchronously
   talk to a USB device. `printers test` is an explicit, authorized test-label job
   with the same queue/status semantics; discovery and heartbeat never print.
@@ -144,9 +151,11 @@ stuffstash print-jobs reprint <job-id>
   No separate user-installed Stuff Stash plugin or Python/uv setup is part of
   the intended experience. OS USB permissions or a packaged native USB runtime
   may require documented installation setup.
-- Keep command parsing, consumer orchestration, rendering, credential storage,
-  device discovery, local locking/journaling, and printer I/O separate. Thin Go
-  entrypoints assemble injected ports in focused bootstrap packages.
+- Keep command parsing, consumer orchestration, credential storage,
+  device discovery, local locking/journaling, and printer I/O separate. Label
+  composition runs in the API-side renderer. The CLI submits template selections
+  and consumes immutable artifacts; it does not bundle a second layout engine.
+  Thin Go entrypoints assemble injected ports in focused bootstrap packages.
 - The printer port supports discovery, capabilities, readiness, submit, and
   completion observation, with typed outcomes distinguishing definite no-output
   failure from uncertain/partial output. Wake is optional and unsupported until
@@ -159,7 +168,7 @@ stuffstash print-jobs reprint <job-id>
   versions in the tooling spec. Do not adopt floating brother_ql dependencies
   or assume the historical Python package is the chosen production dependency.
 - Hardware spike must determine status/finish reporting, device identity,
-  installed media detection, USB claim behavior, and physical rendering. If a
+  optional media detection, USB claim behavior, and physical rendering. If a
   packaged helper proves necessary, specify its pinned version, packaging, and
   license first; preserve the one-install user experience.
 - Acquire an OS-level lock by physical device identity. A second worker reports
@@ -172,12 +181,28 @@ stuffstash print-jobs reprint <job-id>
 
 ## Consumer Runtime
 
-- Registration discovers/selects device and profile, initiates pairing, and
-  persists the approved connector/printer mapping and restricted credential.
-  Approval is required for new bindings; a restart reuses existing registration.
+- Registration selects device and label size together, for example QL-800 with
+  29 x 90 mm stock. The built-in preset supplies margins/resolution/orientation;
+  size selection is an explicit user action, not inferred from USB availability.
+  Registration pairs and persists the approved printer/media settings and
+  connector credential with the server. A restart reuses this registration.
+- Add `stuffstash printers configure <printer-id> --label-size <supported-size>`
+  as a human-authorized, revision-checked update of the same registration.
+  Web/mobile printer settings expose the same edit. Worker credentials cannot
+  change media settings; they retrieve and apply the server's configured snapshot.
+  No automatic roll detection, multiple saved-roll UI, or recurrent confirmation
+  is required. Trust the configured size; report actual hardware errors normally.
+- Changing size never resizes a queued artifact. Only claim jobs compatible with
+  current configuration, and refresh/recheck it before start. A different size
+  leaves the original job waiting; changing back makes matching jobs eligible.
 - `connectors print run` stays in the foreground and uses outbound HTTPS to
   heartbeat, report printer state, claim work, renew leases, fetch authorized
   artifacts, and report outcomes. It opens no network listener.
+- Consume the versioned job/device interface in
+  [printer integration](../printing/printer-integration.spec.md#print-job-and-device-interface).
+  Multiple templates may target one printer. Printer adapters preserve the
+  API-rendered composition, including orientation, instead of interpreting a
+  template or silently fitting the image to different stock.
 - Fetch artifacts only from the configured authenticated API path. Validate
   content type, digest, size, and profile. Never execute a job-supplied command,
   fetch arbitrary URLs, or render arbitrary HTML on the printer computer.

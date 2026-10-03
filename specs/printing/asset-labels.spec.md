@@ -78,11 +78,78 @@ shared hosted link resolution, and automatic smart-outlet control are deferred.
 - Pending navigation is reauthorized after authentication and server changes.
   Custom-scheme handlers apply the same identity and permission checks as scans.
 
+## Templates, Registered Label Size, And Rendering Ownership
+
+- Register the physical printer and its current label size in one task. Each
+  registered destination has exactly one configured media setting in the first
+  release, for example Garage Brother — 29 x 90 mm. The user selects that size;
+  automatic roll detection is not required and never substitutes another size.
+- Internally, typed media settings contain physical width/height, printable
+  margins, resolution, raster dimensions/orientation, color mode, and cut policy.
+  A built-in adapter preset supplies technical values where known. For the first
+  QL-800 adapter the user selects 29 x 90 mm; unknown/unsupported media is rejected
+  with setup guidance, not silently treated as compatible. Other sizes can be
+  supported by adding validated presets without changing the registration model.
+- Media settings belong to the printer registration, not an independently managed
+  inventory media catalog. Do not require users to create separate size resources,
+  assign a list of rolls, or select a size again for each queued print request.
+- Users with `inventory.configure` can edit the registered size when changing
+  rolls; the printer ID and queue remain stable. Each job captures the original
+  effective media values and their fingerprint. Compare effective values rather
+  than only revision numbers, so changing back to a previous size permits its
+  waiting jobs to print without regenerating them.
+- New jobs use the current registered size. Existing jobs with different media
+  remain queued with Label size changed; restore the configured size or cancel
+  the job. Never resize their images, silently reassign media, or consume failure
+  retries. Later compatible jobs may proceed; do not block the entire queue on
+  the oldest incompatible job. Configuration edits while printing are rejected
+  until the attempt settles or uncertainty is resolved. Start/configuration
+  changes race atomically; the worker revalidates before sending device data.
+- The configured size is the user's assertion about the loaded roll. When the
+  printer cannot identify its stock, trust that assertion; no recurring media
+  confirmation or detected-media requirement is part of printing. Explain this
+  once at setup and when editing size. Actual hardware-reported errors still
+  stop printing normally; never claim to have verified an unobservable roll.
+- A template defines appearance: arrangement of QR/title/reference, typography,
+  wrapping, and constrained display options. It is independent of the printer's
+  registered size. One printer supports multiple compatible templates; the same
+  layout rules can render different images for different registered sizes.
+- Stuff Stash's API-side rendering service owns composition through a rendering
+  port. Its output is used for client previews, downloads, and queued printing.
+  The printer adapter owns USB/protocol encoding and status; it cannot redesign
+  the label, substitute text/QR content, crop, or scale-to-fit silently.
+- Rendering inputs are a typed content snapshot (canonical QR URL, title,
+  human-readable reference), template ID/version/options, and the destination's
+  configured media snapshot. Never supply arbitrary HTML, scripts, fonts,
+  external URLs, or executable printer commands as template options.
+- First release ships versioned built-in templates `qr-title` (default, QR beside
+  title) and `qr-only` (QR with optional human-readable reference). Both support
+  `showReference`, initially true. Layout adapts to the printable bounds rather
+  than stretching a fixed image. Arbitrary fonts, colors, coordinates, and a
+  visual template editor are deferred.
+- Users can select template/options per print/download. Inventory defaults keep
+  template/version/options separate from the default printer; selecting a new
+  template never requires a new registration or connector restart. No custom
+  template CRUD or uploaded template execution is part of the first release.
+- Compatibility uses template/options, actual content, configured media, and
+  adapter capabilities. Reject a too-dense QR or insufficient printable area with
+  guidance to choose a simpler template or configure different supported media;
+  do not silently change the destination, template, size, or content.
+- Defaults affect new requests only. Jobs pin normalized options, template
+  version, media snapshot, and immutable rendered artifact. Disabled catalog
+  versions cannot be selected for new jobs; existing compatible jobs keep their
+  artifacts. Unsupported consumers must reject before output, not regenerate.
+- Reprint deliberately uses current asset content and the selected printer's
+  current settings, creates a new job, and links its predecessor. Show a new
+  preview when content/layout/size differs; exact historic reprint is deferred.
+- A download/system-print request may specify standalone output dimensions when
+  no registered printer is used. This does not create a printer or media catalog
+  and does not allow per-job overrides of a registered printer's configured size.
+
 ## Label Rendering
 
-- Use a project-owned label rendering port with typed label content and profile:
-  stable QR URL, title, human-readable reference, physical dimensions, printable
-  bounds, resolution, and orientation. Vendor commands do not enter this model.
+- Use a project-owned label rendering port with typed content, template selection,
+  and media profile. Vendor commands do not enter its public input model.
 - Default layout is black on white, QR beside the asset title. QR identity stays
   fixed; each new job captures the current title and selected layout.
 - Render QR modules at integer pixel sizes without interpolation, preserve a
@@ -109,17 +176,19 @@ shared hosted link resolution, and automatic smart-outlet control are deferred.
 ## Inventory Settings And Creation
 
 - Persist inventory label settings: default registered printer (optional),
-  default compatible label profile, and `printOnCreateDefault` (initially false).
-  Changes require `inventory.configure`; reads require `inventory.view`.
-- Enabling the default requires an active configured destination and profile,
-  but does not require the printer to be currently online.
+  independent template/version/options, and `printOnCreateDefault` (initially
+  false). Changes require `inventory.configure`; reads require `inventory.view`.
+- Enabling the default requires an active configured destination and compatible
+  template/media combination, but does not require the printer to be currently online.
 - Add forms for every asset kind expose Print label after saving. Use a web
   checkbox and native mobile switch, initialized once from the inventory default
   for each new draft. Refetching settings must not overwrite a user's choice.
 - Show destination and any current readiness warning inline. With no configured
   destination, explain setup; allow normal creation with printing off. Do not
   silently turn an explicit print request into an ordinary create.
-- The create command carries explicit print intent and destination/profile IDs.
+- The create command carries explicit print intent, destination, expected media
+  fingerprint, template/version, normalized options, and copies (one by default). The API resolves media from
+  the printer registration; a stale expected fingerprint returns a conflict.
   Persist asset creation, label identity, print job, and audit atomically through
   an application unit-of-work port. A lost response/retry must not create another
   asset or job; use a scoped idempotency key and reject changed-payload reuse.
@@ -139,9 +208,15 @@ shared hosted link resolution, and automatic smart-outlet control are deferred.
 - Reuse the asset overflow menu for Print label on item, container, and location
   detail. With a compatible default, this issues one command with one copy and
   shows its job status without a mandatory confirmation step.
-- Label options is a bounded task with preview, destination, compatible profile,
-  copy count, download/system print, and explicit Print/Cancel. Use native task
-  presentation on mobile and accessible web controls. No nested modal stacks.
+- Label options is a bounded task with preview, destination with configured size
+  displayed read-only, template/options, copy count, download/system print, and
+  explicit Print/Cancel. Use native task presentation on mobile and accessible web controls. No nested modal stacks.
+- Changing the template, options, content, or media invalidates the prior preview.
+  Show the API-rendered preview of the selected combination; submit its selection
+  revision/content fingerprint so a stale preview cannot silently print changed
+  asset data. A one-tap default print renders current data without requiring a
+  preview step. Browser/system printing uses the same composition, with a
+  physically sized PDF wrapper where needed.
 - Bound copy count and payload sizes through validated server configuration;
   disclose copy count and keep one copy as the default.
 - Printers in inventory settings is a normal navigation destination. Users with
@@ -195,6 +270,10 @@ the existing localization infrastructure rather than hard-coded English.
   administrator configuration through real HTTP and client boundaries.
 - Verify print default initialization/override, offline queueing, missing/default
   printer changes, draft preservation, duplicate submissions, and photo failure.
+- Test one printer with both built-in templates, one template across compatible
+  registered sizes, independent defaults, version pinning, stale-preview rejection,
+  manual media setup without detection, size-change/start races, switching back
+  to an old size, queued mismatch recovery, and adapter preservation of layout.
 - Test QR decoding of rendered artifacts, long Unicode titles, physical sizing,
   orientation, and profile limits. These do not replace physical print/scan tests.
 - Verify web camera and paste fallback; named iOS/Android builds on native

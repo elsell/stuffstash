@@ -56,8 +56,13 @@ The product must not assume that every tenant has only one inventory.
 
 ## Planned Label Settings
 
-Inventory-owned default printer, compatible label profile, and print-on-create
+Inventory-owned default printer, independent versioned label template/options,
+and print-on-create
 default (initially false) are defined in [asset labels](../printing/asset-labels.spec.md).
 Printer/connector discovery is visible to inventory viewers; configuration requires
 `inventory.configure`. Registration and job ownership remain inventory-scoped.
 These settings are specified, not yet implemented.
+
+A printer is registered together with one user-selected label size. Media settings
+are edited on that registration, not managed as a separate inventory catalog.
+Printing uses that registered size; templates remain independently selectable.
