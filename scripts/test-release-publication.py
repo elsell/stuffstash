@@ -4,6 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+import subprocess
 import unittest
 
 
@@ -27,6 +28,7 @@ class ReleaseStore:
         self.release = None
         self.bytes = {}
         self.disconnect_after_upload = False
+        self.disconnect_after_create = False
         self.has_newer_stable = False
         self.hide_new_draft = False
 
@@ -37,7 +39,12 @@ class ReleaseStore:
         return None if self.hide_new_draft else copy.deepcopy(self.release)
 
     def create(self, plan, _root):
+        if self.release is not None:
+            raise ValueError('Release already exists')
         self.release = dict(id=123, tag_name=plan['tag'], draft=True, prerelease=False, assets=[], published_at=None)
+        if self.disconnect_after_create:
+            self.disconnect_after_create = False
+            raise ConnectionError('Draft created but response lost')
         return copy.deepcopy(self.release)
 
     def refresh(self, release):
@@ -82,7 +89,51 @@ def fixture(root):
     return plan
 
 
+class ReleaseCLIStore:
+    """GitHub create semantics: persist a draft once and reject duplicate tags."""
+    def __init__(self):
+        self.releases = {}
+
+    def run(self, command, *, input, text, capture_output, check, env):
+        if command[:4] != ['gh', 'api', '--method', 'POST']:
+            raise ValueError('Unsupported GitHub operation')
+        body = json.loads(input)
+        if not body.get('tag_name') or not body.get('draft'):
+            raise ValueError('Invalid creation request')
+        if body['tag_name'] not in self.releases:
+            self.releases[body['tag_name']] = dict(id=123, **body)
+            return subprocess.CompletedProcess(command, 0, stdout=json.dumps(self.releases[body['tag_name']]), stderr='')
+        return subprocess.CompletedProcess(command, 1,
+            stdout=json.dumps({'message': 'Validation Failed', 'errors': [{'code': 'already_exists', 'field': 'tag_name'}]}),
+            stderr='gh: Validation Failed (HTTP 422)')
+
+
 class PublicationTests(unittest.TestCase):
+    def test_lost_creation_response_repairs_without_another_draft(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); plan = fixture(root); remote = ReleaseStore(plan['commit'])
+            remote.disconnect_after_create = True
+            with self.assertRaises(ConnectionError):
+                publication.publish(root, remote)
+            self.assertTrue(remote.release['draft'])
+            self.assertFalse(remote.bytes)
+            original = remote.release['id']
+            metadata = publication.publish(root, remote)
+            self.assertEqual(remote.release['id'], original)
+            self.assertEqual(metadata['version'], plan['tag'])
+            self.assertEqual(len(remote.bytes), len(plan['assets']))
+
+    def test_creation_failure_explains_github_status_without_request_body(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); plan = fixture(root)
+            peer = ReleaseCLIStore()
+            remote = publication.GitHub('example/stuffstash', process=peer.run)
+            first = remote.create(plan, root)
+            with self.assertRaisesRegex(RuntimeError, r'HTTP 422.*already_exists') as failure:
+                remote.create(plan, root)
+            self.assertEqual(list(peer.releases.values()), [first])
+            self.assertNotIn('Exact release notes', str(failure.exception))
+
     def test_new_draft_need_not_be_immediately_visible_in_collection(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); plan = fixture(root); remote = ReleaseStore(plan['commit'])

@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -53,11 +54,33 @@ def validate_plan(root):
     return plan
 
 
+def create_failure(tag, result):
+    # Never include stdin/release notes. API errors carry useful validation
+    # codes on stdout, while gh's stderr normally supplies the HTTP status.
+    details = result.stderr or ''
+    try:
+        response = json.loads(result.stdout or '{}')
+        errors = response.get('errors', [])
+        selected = {key: response[key] for key in ('message',) if key in response}
+        selected['errors'] = [{key: error[key] for key in ('code', 'field', 'resource') if key in error}
+                              for error in errors if isinstance(error, dict)]
+        details += ' ' + json.dumps(selected)
+    except (ValueError, AttributeError, TypeError):
+        pass
+    for name in ('GH_TOKEN', 'GITHUB_TOKEN', 'GH_ENTERPRISE_TOKEN', 'GITHUB_ENTERPRISE_TOKEN'):
+        token = os.environ.get(name)
+        if token:
+            details = details.replace(token, '[redacted]')
+    details = ''.join(character for character in details if character.isprintable() or character in '\n\t')
+    return f'Creating draft release {tag} failed (exit {result.returncode}): {details[:4096]}'
+
+
 class GitHub:
-    def __init__(self, repo):
+    def __init__(self, repo, process=subprocess.run):
         if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repo):
             raise ValueError('Invalid repository')
         self.repo = repo
+        self.process = process
 
     def run(self, *args):
         return subprocess.check_output(['gh', *args], text=True)
@@ -83,9 +106,12 @@ class GitHub:
     def create(self, plan, root):
         body = dict(tag_name=plan['tag'], target_commitish=plan['commit'],
                     name=plan['tag'], body=(root / 'release-notes.md').read_text(), draft=True)
-        result = subprocess.run(['gh', 'api', '--method', 'POST',
+        result = self.process(['gh', 'api', '--method', 'POST',
                                  f'repos/{self.repo}/releases', '--input', '-'],
-                                input=json.dumps(body), text=True, capture_output=True, check=True)
+                                input=json.dumps(body), text=True, capture_output=True, check=False,
+                                env={**os.environ, 'GH_DEBUG': ''})
+        if result.returncode:
+            raise RuntimeError(create_failure(plan['tag'], result))
         return json.loads(result.stdout)
 
     def refresh(self, release):
