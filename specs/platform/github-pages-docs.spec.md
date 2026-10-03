@@ -68,3 +68,25 @@ a Printing section generated from executable printer/template/media registries,
 including PNG examples from the production renderer. PR generation and drift
 checks, preview builds, and production publishing must include these outputs
 without exposing deployment credentials to untrusted PR code. Not yet implemented.
+
+## Concurrent Pages publication
+
+Production, preview publication, and preview cleanup share the Pages branch but
+retain their existing per-preview workflow concurrency groups. Do not globally
+serialize these workflows: GitHub concurrency can replace pending runs.
+
+After creating its scoped content commit, each publisher attempts a normal push.
+A non-fast-forward rejection fetches the latest Pages tip and rebases the local
+commit before retrying, with at most five push attempts. The same helper is used
+for deployment and cleanup. It never force-pushes or resolves conflicts by choosing
+one side. A genuine content conflict fails visibly and aborts the rebase; other
+push failures fail immediately with Git's diagnostics. Repeated contention fails
+after the bounded attempts so the workflow can be rerun deliberately.
+
+Disjoint preview/root updates must survive a retry. Preview publication must not
+remove root files such as CNAME. Cleanup removes only its own preview. An identical
+concurrent update may make the local commit redundant and still counts as success.
+The first Pages-branch publication must also preserve a concurrently initialized
+branch. Verify these cases using real temporary clones and a local bare Git remote,
+including conflicting same-path writes and a rejecting receive hook. Tests must
+not fake Git commands or use a network service.
