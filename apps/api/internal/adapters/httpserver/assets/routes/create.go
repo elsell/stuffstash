@@ -2,6 +2,10 @@ package routes
 
 import (
 	"context"
+	printingapp "github.com/stuffstash/stuff-stash/internal/app/printing"
+	"github.com/stuffstash/stuff-stash/internal/domain/printing"
+	"net/http"
+	"reflect"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/assets/dto"
@@ -20,7 +24,7 @@ func RegisterCreate(api huma.API, application app.App) {
 			return nil, err
 		}
 
-		result, err := application.CreateAssetWithOperation(ctx, app.CreateAssetInput{
+		command := app.CreateAssetInput{
 			Expiration:        expirationInput(input.Body.Expiration),
 			Principal:         principal,
 			Source:            audit.SourceAPI,
@@ -34,7 +38,21 @@ func RegisterCreate(api huma.API, application app.App) {
 			CustomAssetTypeID: input.Body.CustomAssetTypeID,
 			CustomFields:      input.Body.CustomFields,
 			TagIDs:            input.Body.TagIDs,
-		})
+		}
+		var result app.AssetMutationResult
+		status := http.StatusCreated
+		printJobID := ""
+		if selection := input.Body.PrintLabel; selection != nil {
+			created, createErr := application.CreateAssetAndPrint(ctx, command, printingapp.JobSelection{PrinterID: printing.PrinterID(selection.PrinterID), ExpectedMediaFingerprint: selection.ExpectedMediaFingerprint, Template: printing.TemplateSelection{ID: printing.TemplateID(selection.TemplateID), Version: selection.TemplateVersion, Options: printing.TemplateOptions{ShowReference: selection.TemplateOptions.ShowReference}}, Copies: selection.Copies}, input.IdempotencyKey)
+			err = createErr
+			result = app.AssetMutationResult{Asset: created.Asset, UndoableOperationID: created.Job.AssetCreationOperationID}
+			printJobID = string(created.Job.ID)
+			if !created.Created {
+				status = http.StatusOK
+			}
+		} else {
+			result, err = application.CreateAssetWithOperation(ctx, command)
+		}
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
@@ -51,11 +69,14 @@ func RegisterCreate(api huma.API, application app.App) {
 
 		response := mapper.AssetToResponseWithTags(item, tags, nil, nil, nil)
 		response.UndoableOperationID = result.UndoableOperationID
-		return &dto.CreateAssetOutput{
+		response.PrintJobID = printJobID
+		return &dto.CreateAssetOutput{Status: status,
 			Body: shared.SuccessEnvelope[dto.AssetResponse]{
 				Data: response,
 				Meta: shared.Meta{TenantID: input.TenantID},
 			},
 		}, nil
-	}, huma.OperationTags("assets"), shared.CreatedOperation, shared.SecuredOperation)
+	}, huma.OperationTags("assets"), shared.CreatedOperation, shared.SecuredOperation, func(op *huma.Operation) {
+		op.Responses = map[string]*huma.Response{"200": {Description: "Existing asset and print job returned for an identical idempotent retry", Content: map[string]*huma.MediaType{"application/json": {Schema: api.OpenAPI().Components.Schemas.Schema(reflect.TypeFor[shared.SuccessEnvelope[dto.AssetResponse]](), true, "AssetResponseEnvelope")}}}}
+	})
 }

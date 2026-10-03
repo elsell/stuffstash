@@ -203,12 +203,9 @@ func (s *JobService) Create(ctx context.Context, input CreateJobInput) (label.Jo
 	if input.Selection.PreviewFingerprint != "" && input.Selection.PreviewFingerprint != hex.EncodeToString(selectionHash[:]) {
 		return label.Job{}, false, apperrors.ErrConflict
 	}
-	rendered, err := s.labels.deps.Renderer.Render(ctx, request)
+	job, content, err := s.prepareJob(ctx, input.Scope, printer, input.Selection, request, string(input.AssetID), string(view.Label.ID), input.IdempotencyKey)
 	if err != nil {
-		return label.Job{}, false, apperrors.ErrInvalidInput
-	}
-	if len(rendered.Content) == 0 || len(rendered.Content) > s.config.MaxArtifactBytes {
-		return label.Job{}, false, apperrors.ErrInvalidInput
+		return label.Job{}, false, err
 	}
 	if err = s.access(ctx, input.Scope, true); err != nil {
 		return label.Job{}, false, err
@@ -220,14 +217,11 @@ func (s *JobService) Create(ctx context.Context, input CreateJobInput) (label.Jo
 	if current.LifecycleState != asset.LifecycleStateActive || current.Title != item.Title {
 		return label.Job{}, false, apperrors.ErrConflict
 	}
-	now := s.labels.deps.Clock.Now()
-	id := label.JobID(s.labels.deps.IDs.NewID())
-	job := label.Job{ID: id, Scope: jobScope(input.Scope), PrinterID: printer.ID, Kind: label.JobAssetLabel, AssetID: string(input.AssetID), LabelReference: string(view.Label.ID), RequestedBy: string(input.Scope.Principal.ID), IdempotencyKey: input.IdempotencyKey, Media: printer.Media, MediaFingerprint: printer.MediaFingerprint, Template: request.Template, Content: request.Content, Copies: input.Selection.Copies, Status: label.JobQueued, Revision: 1, CreatedAt: now, UpdatedAt: now, Artifact: label.Artifact{Key: string(id), SHA256: rendered.SHA256, ContentType: rendered.ContentType, ByteLength: int64(len(rendered.Content)), WidthPixels: rendered.WidthPixels, HeightPixels: rendered.HeightPixels, ExpiresAt: now.Add(s.config.ArtifactTTL)}}
-	record, err := s.audit(input.Scope, audit.ActionPrintJobQueued, id)
+	record, err := s.audit(input.Scope, audit.ActionPrintJobQueued, job.ID)
 	if err != nil {
 		return label.Job{}, false, err
 	}
-	result, created, err := s.jobs.CreatePrintJob(ctx, ports.PrintJobCreate{Job: job, Content: rendered.Content, PrinterRevision: printer.Revision, RequestFingerprint: fingerprint, Audit: record})
+	result, created, err := s.jobs.CreatePrintJob(ctx, ports.PrintJobCreate{Job: job, Content: content, PrinterRevision: printer.Revision, RequestFingerprint: fingerprint, Audit: record})
 	if err == nil && created && s.labels.deps.Observer != nil {
 		s.labels.deps.Observer.Record(ctx, ports.Event{Name: ports.EventPrintJobQueued})
 	}
