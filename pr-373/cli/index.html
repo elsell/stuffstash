@@ -85,7 +85,9 @@ pass it with <code dir="auto">--cursor</code>. Flags can also set <code dir="aut
 <p>The normal Release workflow attaches five portable CLI archives, individual
 SHA-256 files, and <code dir="auto">stuffstash-cli-release.json</code> to the project tag. The archive
 includes third-party notices; <code dir="auto">stuffstash version</code> reports its tag and source
-commit. USB printer support remains limited to Linux and the supported Brother
+commit. <code dir="auto">version --json</code> reports whether that build includes a USB printer adapter;
+this is separate from whether a printer is connected or ready. USB printer support
+remains limited to Linux and the supported Brother
 profile, even when ordinary inventory commands run on another platform.</p>
 <p>If publication stops after staging its assets, run <strong>Release → Run workflow</strong>
 on <strong>main</strong>, with <code dir="auto">repair_run_id</code> set to the original Release workflow run ID.
