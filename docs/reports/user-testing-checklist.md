@@ -75,8 +75,8 @@ retest below remains unverified. No new iPhone build is required.
 
 ## 5. Invitation cancellation after the direct-command update
 
-Status: candidate under review, not yet confirmed released. Wait for a release
-containing the direct Cancel invitation command before trying this check.
+Status: the direct Cancel invitation command shipped in v0.28.29.
+Use that version or newer for this check.
 Known issue [#239](https://github.com/elsell/stuffstash/issues/239) remains open.
 
 - [ ] In a test inventory's Sharing page, enter an email, then cancel a pending
@@ -89,6 +89,16 @@ Known issue [#239](https://github.com/elsell/stuffstash/issues/239) remains open
   There is no need to deliberately break connectivity.
 
 Evidence: [bounded native results](spec-gap-evidence-2026-10-01/sharing-direct-confirmation/README.md).
+
+## 6. Voice after the origin configuration correction
+
+Status: the reported voice request was rejected with HTTP403 before session
+creation. Infra commit 07396de adds the exact public API origin behind TLS
+termination. No app update is required. Authenticated speech remains unverified.
+
+- [ ] Reopen Conversation and speak a short inventory question.
+  **Expected:** it connects and responds without the connection-interrupted error.
+  If it fails, note the time so the server request can be correlated.
 
 ## Judgments awaiting your preference
 
@@ -106,7 +116,7 @@ These are decisions, not failed tests, and do not block other work.
 - Photo swiping briefly closing the viewer: user confirmed fixed.
 - iOS sharing actions obscured by the keyboard: known release follow-up
   [#239](https://github.com/elsell/stuffstash/issues/239), not an unverified test.
-  The targeted candidate check is listed above.
+  The targeted post-release check is listed above.
 
 Local-model acceptance needs a new model/host decision after its bounded failed
 comparison. It is an engineering follow-up, not a device test for this checklist.

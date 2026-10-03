@@ -1,0 +1,132 @@
+[
+  {
+    "pr": 326,
+    "tag": "v0.28.27",
+    "source": "1a9e983b00fc5cda0b9f7355c77221de8efdaec2",
+    "url": "https://github.com/elsell/stuffstash/releases/tag/v0.28.27",
+    "checks": {
+      "CI": {
+        "conclusion": "success",
+        "headSha": "88597b9428b8622b59700985458414247a2b6435",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37127230518"
+      },
+      "Docs Pages": {
+        "conclusion": "success",
+        "headSha": "88597b9428b8622b59700985458414247a2b6435",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37127230507"
+      }
+    },
+    "release": {
+      "conclusion": "success",
+      "headSha": "1a9e983b00fc5cda0b9f7355c77221de8efdaec2",
+      "status": "completed",
+      "url": "https://github.com/elsell/stuffstash/actions/runs/37127684025"
+    }
+  },
+  {
+    "pr": 328,
+    "tag": "v0.28.28",
+    "source": "74a2429e8448f51b8ccbad1e6a0a142a1899529d",
+    "url": "https://github.com/elsell/stuffstash/releases/tag/v0.28.28",
+    "checks": {
+      "CI": {
+        "conclusion": "success",
+        "headSha": "fa2e89a8d333d90712f525479934108e4b263fd3",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37130033254"
+      },
+      "Docs Pages": {
+        "conclusion": "success",
+        "headSha": "fa2e89a8d333d90712f525479934108e4b263fd3",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37130033253"
+      }
+    },
+    "release": {
+      "conclusion": "success",
+      "headSha": "74a2429e8448f51b8ccbad1e6a0a142a1899529d",
+      "status": "completed",
+      "url": "https://github.com/elsell/stuffstash/actions/runs/37130530600"
+    }
+  },
+  {
+    "pr": 330,
+    "tag": "v0.28.29",
+    "source": "9941d1078e999c6178c680e290caa14b17426ce9",
+    "url": "https://github.com/elsell/stuffstash/releases/tag/v0.28.29",
+    "checks": {
+      "Docs Pages": {
+        "conclusion": "success",
+        "headSha": "68d6f14884711c26a77d1b992fdf887189e8e6ae",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37131802273"
+      },
+      "CI": {
+        "conclusion": "success",
+        "headSha": "68d6f14884711c26a77d1b992fdf887189e8e6ae",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37131802233"
+      }
+    },
+    "release": {
+      "conclusion": "success",
+      "headSha": "9941d1078e999c6178c680e290caa14b17426ce9",
+      "status": "completed",
+      "url": "https://github.com/elsell/stuffstash/actions/runs/37132262297"
+    }
+  },
+  {
+    "pr": 331,
+    "tag": "v0.28.30",
+    "source": "6f78bf728a541fc12161eaf594874cdf8c5be4cb",
+    "url": "https://github.com/elsell/stuffstash/releases/tag/v0.28.30",
+    "checks": {
+      "CI": {
+        "conclusion": "success",
+        "headSha": "bc81cabf31b6e9f0d8f39ad5cfe7b9e4bf74a71b",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37132095384"
+      },
+      "Docs Pages": {
+        "conclusion": "success",
+        "headSha": "bc81cabf31b6e9f0d8f39ad5cfe7b9e4bf74a71b",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37132095074"
+      }
+    },
+    "release": {
+      "conclusion": "success",
+      "headSha": "6f78bf728a541fc12161eaf594874cdf8c5be4cb",
+      "status": "completed",
+      "url": "https://github.com/elsell/stuffstash/actions/runs/37134080292"
+    }
+  },
+  {
+    "pr": 332,
+    "tag": "v0.28.31",
+    "source": "ed6d4863708e7898b851a59baca8d83c87b43dcf",
+    "url": "https://github.com/elsell/stuffstash/releases/tag/v0.28.31",
+    "checks": {
+      "Docs Pages": {
+        "conclusion": "success",
+        "headSha": "0a80c9069f7084008cf6140b16842d46dbd9bba1",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37135153855"
+      },
+      "CI": {
+        "conclusion": "success",
+        "headSha": "0a80c9069f7084008cf6140b16842d46dbd9bba1",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37135153853"
+      }
+    },
+    "release": {
+      "conclusion": "success",
+      "headSha": "ed6d4863708e7898b851a59baca8d83c87b43dcf",
+      "status": "completed",
+      "url": "https://github.com/elsell/stuffstash/actions/runs/37135785065"
+    }
+  }
+]

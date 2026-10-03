@@ -1,0 +1,50 @@
+[
+  {
+    "case": "native_api_origin",
+    "status": 403,
+    "expected": 401,
+    "passed": false
+  },
+  {
+    "case": "web_origin",
+    "status": 401,
+    "expected": 401,
+    "passed": true
+  },
+  {
+    "case": "native_no_origin",
+    "status": 401,
+    "expected": 401,
+    "passed": true
+  },
+  {
+    "case": "untrusted_origin",
+    "status": 403,
+    "expected": 403,
+    "passed": true
+  },
+  {
+    "case": "untrusted_with_forged_bearer",
+    "status": 403,
+    "expected": 403,
+    "passed": true
+  },
+  {
+    "case": "api_with_forged_bearer",
+    "status": 403,
+    "expected": 401,
+    "passed": false
+  },
+  {
+    "case": "duplicate_origin",
+    "status": 403,
+    "expected": 403,
+    "passed": true
+  },
+  {
+    "case": "null_origin",
+    "status": 403,
+    "expected": 403,
+    "passed": true
+  }
+]

@@ -32,7 +32,7 @@ and invalid enabled provider settings also fail startup.
 | `STUFF_STASH_HTTP_WRITE_TIMEOUT` | `30s` | Maximum time to write a response. |
 | `STUFF_STASH_HTTP_IDLE_TIMEOUT` | `60s` | Keep-alive idle timeout. |
 | `STUFF_STASH_HTTP_MAX_JSON_BODY_BYTES` | `1048576` | Maximum JSON request body size. |
-| `STUFF_STASH_CORS_ALLOWED_ORIGINS` | empty | Comma-separated browser origins allowed to call the API. |
+| `STUFF_STASH_CORS_ALLOWED_ORIGINS` | empty | Comma-separated allowed browser and WebSocket origins. Behind TLS termination, include both the frontend origin and the public HTTPS API origin used by native voice clients. |
 
 ## API: Rate Limiting
 
