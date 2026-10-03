@@ -1889,3 +1889,10 @@ current catalog recovery message. Assert that safe message for cancellation, cop
 and share failures, and explicitly reject the synthetic raw exception strings.
 Preserve complete typing, confirmation, retry and return checks. This permits one
 corrected acceptance run; it does not establish the unexecuted remainder passed.
+
+The corrected run37129618289 did not complete: iPhone's confirmation hittability
+assertion failed despite a visible unobscured alert; iPad stopped before typing
+with no interactive keyboard. Retain both runs' scoped evidence, stop native
+retries at this investigation budget, and deliver the source-reviewed candidate
+after required checks. Keep #239 open until complete native recovery acceptance;
+do not count the unexecuted retry/copy/share stages as passing.

@@ -73,6 +73,23 @@ retest below remains unverified. No new iPhone build is required.
   **Expected:** the sheet closes and the same item is checked out again; no
   “Could not cancel return” message appears. Reopen Details to confirm its state.
 
+## 5. Invitation cancellation after the direct-command update
+
+Status: candidate under review, not yet confirmed released. Wait for a release
+containing the direct Cancel invitation command before trying this check.
+Known issue [#239](https://github.com/elsell/stuffstash/issues/239) remains open.
+
+- [ ] In a test inventory's Sharing page, enter an email, then cancel a pending
+  test invitation using its Cancel invitation command. First choose Keep
+  invitation, then reopen the confirmation and cancel.
+  **Expected:** confirmation remains reachable without keyboard obstruction;
+  keeping preserves the invitation and cancelling updates its status.
+- [ ] If a request fails naturally, retry and then navigate away and back.
+  **Expected:** a readable error, usable actions and no stuck keyboard or spinner.
+  There is no need to deliberately break connectivity.
+
+Evidence: [bounded native results](spec-gap-evidence-2026-10-01/sharing-direct-confirmation/README.md).
+
 ## Judgments awaiting your preference
 
 These are decisions, not failed tests, and do not block other work.
@@ -89,7 +106,7 @@ These are decisions, not failed tests, and do not block other work.
 - Photo swiping briefly closing the viewer: user confirmed fixed.
 - iOS sharing actions obscured by the keyboard: known release follow-up
   [#239](https://github.com/elsell/stuffstash/issues/239), not an unverified test.
-  Request a targeted retest after a relevant fix.
+  The targeted candidate check is listed above.
 
 Local-model acceptance needs a new model/host decision after its bounded failed
 comparison. It is an engineering follow-up, not a device test for this checklist.

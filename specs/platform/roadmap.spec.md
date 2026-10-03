@@ -8,6 +8,12 @@ archive and restore flow remains the immediate delivery priority.
 
 ## Current delivery and remaining acceptance — October 3
 
+Sharing issue #239 now has a reviewed direct-confirmation candidate. Two bounded
+native runs support initial presentation but did not complete recovery acceptance.
+Deliver after required checks while retaining the open follow-up and the
+[precise native limits](../../docs/reports/spec-gap-evidence-2026-10-01/sharing-direct-confirmation/README.md).
+Do not spend another unchanged native run on the remaining native-test failures.
+
 User-device checks are tracked in the [testing checklist](../../docs/reports/user-testing-checklist.md).
 Per the user's October 3 instruction, pending user testing is not a delivery or
 goal blocker. Continue independent work and keep missing acceptance explicitly
