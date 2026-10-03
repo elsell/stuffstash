@@ -7,7 +7,7 @@ export STUFF_STASH_AUTH_MODE=oidc STUFF_STASH_AUTHZ_MODE=spicedb
 export STUFF_STASH_SPICEDB_TLS_ENABLED=false STUFF_STASH_SPICEDB_BOOTSTRAP_SCHEMA=true
 export STUFF_STASH_SPICEDB_SCHEMA_PATH=/deploy/spicedb/schema.zed
 export STUFF_STASH_CORS_ALLOWED_ORIGINS=http://localhost:5173
-compose=(docker compose -p "$project" -f compose.yaml -f compose.oidc.yaml)
+compose=(docker compose -p "$project" -f compose.yaml -f compose.oidc.yaml -f compose.connected.yaml)
 cleanup() { "${compose[@]}" down -v --remove-orphans >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 "${compose[@]}" up -d --build postgres spicedb dex migration app
@@ -17,4 +17,5 @@ for _ in $(seq 1 90); do
   sleep 2
 done
 if [ "$ready" != true ]; then echo 'Connected API did not become ready.' >&2; exit 1; fi
+"${compose[@]}" exec -T app /app/stuff-stash labels bootstrap-instance
 pnpm --dir apps/web exec playwright test --config playwright.connected.config.ts
