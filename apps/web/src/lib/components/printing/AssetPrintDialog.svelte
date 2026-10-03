@@ -8,16 +8,20 @@ import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 import { t } from '$lib/presentation/localization';
 import { labelMediaName, printingFailureMessage } from '$lib/presentation/printing';
 import type { PrintingRepository, PrintIntents } from '$lib/ports/printingRepository';
-import type { ReportedPrintOutcome, PrintScope, RegisteredPrinter, LabelTemplate, PrintJob } from '$lib/domain/printing';
+import { PrintingFailure, type ReportedPrintOutcome, type PrintScope, type RegisteredPrinter, type LabelTemplate, type PrintJob } from '$lib/domain/printing';
 import PairingChoice from './PairingChoice.svelte';
+import PrintStatusPolling from './PrintStatusPolling.svelte';
+import {printJobNeedsPolling} from '$lib/application/printing/polling';
+import type {PrintPollingRuntime} from '$lib/ports/printPolling';
 import PrintJobList from './PrintJobList.svelte';
-let { scope, assetId, repository, intents, initialJobId, predecessor, onClose, onRestoreFocus }: {
+let { scope, assetId, repository, intents, initialJobId, predecessor, pollingRuntime, onClose, onRestoreFocus }: {
     scope: PrintScope;
     assetId: string;
     repository: PrintingRepository;
     intents: PrintIntents;
     initialJobId?:string;
     predecessor?:string;
+    pollingRuntime?:PrintPollingRuntime;
     onClose: () => void;
     onRestoreFocus?: () => void;
 } = $props();
@@ -82,8 +86,7 @@ finally {
 async function submit() { if (busy)
     return; busy = true; error = ''; try {
     const result = await request.submit();
-    if (alive)
-        job = result;
+    if (alive) { job = result; pollError=false; }
 }
 catch (caught) {
     if (alive)
@@ -106,8 +109,7 @@ function another() {
 async function refresh() { if (!job || busy)
     return; busy = true; error = ''; try {
     const result = await repository.job(scope, job.id);
-    if (alive)
-        job = result;
+    if (alive) { job = result; pollError=false; }
 }
 catch (caught) {
     if (alive)
@@ -120,8 +122,7 @@ finally {
 async function cancel(current: PrintJob) { if (busy)
     return; busy = true; error = ''; try {
     const result = await repository.cancel(scope, current);
-    if (alive)
-        job = result;
+    if (alive) { job = result; pollError=false; }
 }
 catch (caught) {
     if (alive)
@@ -132,10 +133,20 @@ finally {
         busy = false;
 } }
 async function resolve(current:PrintJob,outcome:ReportedPrintOutcome){if(busy)return;busy=true;error='';try{const updated=await repository.resolve(scope,current,outcome);if(alive)job=updated;}catch(caught){if(alive)error=printingFailureMessage(caught);}finally{if(alive)busy=false;}}
+let pollError=$state(false);
+async function pollJob(signal:AbortSignal){
+    if(!job)throw new PrintingFailure('invalid');
+    return repository.job(scope,job.id,signal);
+}
+function receiveJob(updated:PrintJob){
+    if(!busy&&job?.id===updated.id&&updated.revision>=job.revision){job=updated;pollError=false;}
+}
 </script>
+<PrintStatusPolling identity={JSON.stringify([scope.tenantId,scope.inventoryId,job?.id])} enabled={!busy&&printJobNeedsPolling(job)} read={pollJob} publish={receiveJob} failed={()=>{if(!busy)pollError=true;}} runtime={pollingRuntime}/>
 <Dialog.Root open onOpenChange={open=>{if(!open)onClose();}}>
  <Dialog.Content onCloseAutoFocus={event=>{if(onRestoreFocus){event.preventDefault();onRestoreFocus();}}}><Dialog.Header><Dialog.Title>{t('web.Printing.printLabel')}</Dialog.Title><Dialog.Description>{t('web.Printing.description')}</Dialog.Description></Dialog.Header>
  {#if error}<p role="alert">{error}</p>{/if}
+ {#if pollError}<p role="status">{t('web.Printing.statusRefreshFailed')}</p>{/if}
  {#if job}{#if job.status==='queued'}<p role="status">{t('web.Printing.requestQueued')}</p>{/if}<PrintJobList jobs={[job]} {printers} {scope} canPrint={true} {busy} onCancel={cancel} onResolve={resolve}/><Button variant="outline" disabled={busy} onclick={()=>void refresh()}>{t('web.Printing.refresh')}</Button>{#if ['completed','failed','canceled'].includes(job.status)}<Button onclick={another}>{t('web.Printing.printAgain')}</Button>{/if}
  {:else}
  <PairingChoice id="label-printer" label={t('web.Printing.printer')} value={printerId} options={printers.map(p=>({value:p.id,label:`${p.name} — ${labelMediaName(p.media)}`}))} disabled={busy||locked} onChange={value=>{printerId=value;changed();}}/>
