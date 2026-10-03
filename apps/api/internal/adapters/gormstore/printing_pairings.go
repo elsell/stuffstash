@@ -54,6 +54,9 @@ func lockPrintPairing(tx *gorm.DB, id printing.PairingID) (printing.Pairing, err
 func (s Store) ApprovePrintPairing(ctx context.Context, input ports.PairingApproval) (ports.ConnectorRegistration, error) {
 	var result ports.ConnectorRegistration
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := lockPrintingInventory(tx, input.Registration.Connector.Scope); err != nil {
+			return err
+		}
 		p, err := lockPrintPairing(tx, input.PairingID)
 		if err != nil {
 			return err

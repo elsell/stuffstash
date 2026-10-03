@@ -6,6 +6,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"sort"
@@ -66,7 +67,7 @@ func (s *Store) UpdateInventoryLifecycle(_ context.Context, item inventory.Inven
 	return nil
 }
 
-func (s *Store) DeleteInventory(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, auditRecord audit.Record) error {
+func (s *Store) DeleteInventory(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, auditRecord audit.Record, effects *ports.InventoryDeletionEffects) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -82,7 +83,9 @@ func (s *Store) DeleteInventory(_ context.Context, tenantID tenant.ID, inventory
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {
 		return ports.ErrConflict
 	}
-	s.auditRecords[auditRecord.ID] = auditRecord
+	if err := s.deleteInventoryPrintingLocked(printing.Scope{TenantID: tenantID.String(), InventoryID: inventoryID.String()}, auditRecord, effects); err != nil {
+		return err
+	}
 	delete(s.inventories, inventoryID)
 	return nil
 }

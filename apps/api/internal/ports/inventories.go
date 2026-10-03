@@ -14,11 +14,17 @@ type InventoryRepository interface {
 	ListInventoriesByTenant(ctx context.Context, tenantID inventory.TenantID, page InventoryListPageRequest) ([]inventory.Inventory, error)
 }
 
+// InventoryDeletionEffects supplies application-owned history for printing
+// tombstones committed in the inventory deletion transaction.
+type InventoryDeletionEffects struct {
+	Audit func(audit.Action, audit.TargetType, string) (audit.Record, error)
+}
+
 type InventoryUnitOfWork interface {
 	SaveInventory(ctx context.Context, inventory inventory.Inventory) error
 	UpdateInventory(ctx context.Context, inventory inventory.Inventory, auditRecord audit.Record) error
 	UpdateInventoryLifecycle(ctx context.Context, inventory inventory.Inventory, auditRecord audit.Record) error
-	DeleteInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, auditRecord audit.Record) error
+	DeleteInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, auditRecord audit.Record, effects *InventoryDeletionEffects) error
 }
 
 type InventoryListPageRequest struct {

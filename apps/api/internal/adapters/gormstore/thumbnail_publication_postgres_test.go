@@ -101,7 +101,7 @@ func testPostgresThumbnailCancellation(t *testing.T, parent bool) {
 	case <-ctx.Done():
 		t.Fatal("publisher did not enter")
 	}
-	if err := store.DeleteInventory(ctx, tenantID, inventoryID, postgresAuditRecord(t, "thumbnail-inventory-audit", tenantID, inventoryID, audit.ActionInventoryDeleted)); !errors.Is(err, ports.ErrForbidden) {
+	if err := store.DeleteInventory(ctx, tenantID, inventoryID, postgresAuditRecord(t, "thumbnail-inventory-audit", tenantID, inventoryID, audit.ActionInventoryDeleted), nil); !errors.Is(err, ports.ErrForbidden) {
 		t.Fatal("nonempty inventory deleted during publication", err)
 	}
 	cancel()

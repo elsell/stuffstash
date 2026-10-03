@@ -18,6 +18,9 @@ func (s Store) CreatePrinter(ctx context.Context, p printing.Printer, record aud
 	var result printing.Printer
 	created := false
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := lockPrintingInventory(tx, p.Scope); err != nil {
+			return err
+		}
 		insert := tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "tenant_id"}, {Name: "inventory_id"}, {Name: "request_key"}}, DoNothing: true}).Create(&model)
 		if insert.Error != nil {
 			return insert.Error
@@ -85,6 +88,9 @@ func (s Store) ListPrinters(ctx context.Context, scope printing.Scope, limit int
 func (s Store) UpdatePrinter(ctx context.Context, scope printing.Scope, id printing.PrinterID, revision uint64, change ports.PrinterMutation, makeAudit ports.PrinterAudit, retirement *ports.PrinterRetirement) (printing.Printer, error) {
 	var result printing.Printer
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := lockPrintingInventory(tx, scope); err != nil {
+			return err
+		}
 		model, err := printerByScope(tx, scope, id)
 		if err != nil {
 			return err
