@@ -177,15 +177,18 @@ type printer struct {
 	submissions int
 	uncertainAt int
 	active      *printing.Submission
+	ready       bool
 }
 
 func (p *printer) Readiness(context.Context) (printing.Readiness, error) {
+	p.ready = true
 	return printing.Readiness{State: printing.Ready}, nil
 }
 func (p *printer) Submit(_ context.Context, label printing.Label) (printing.Submission, error) {
-	if p.api.status.Phase != printing.RemotePrinting || p.journal.record == nil || p.journal.record.Phase != printing.JournalSubmitting || p.journal.record.Copy != label.Copy {
+	if !p.ready || p.api.status.Phase != printing.RemotePrinting || p.journal.record == nil || p.journal.record.Phase != printing.JournalSubmitting || p.journal.record.Copy != label.Copy {
 		return printing.Submission{}, errors.New("output bypassed durable intent or API start")
 	}
+	p.ready = false
 	p.submissions++
 	if p.submissions == p.uncertainAt {
 		return printing.Submission{}, &printing.SubmissionError{Outcome: printing.Uncertain, Reason: printing.Disconnected}
@@ -217,7 +220,7 @@ func fixture(t *testing.T) (*printworker.Worker, *api, *journal, *printer) {
 	media := printing.Media{PresetID: "test-media", Version: 1, RasterWidth: 3, RasterHeight: 3}
 	a := &api{clock: c, bytes: body.Bytes(), claim: printing.Claim{JobID: "job", PrinterID: "printer", ContractVersion: 1, Copies: 2, Media: media, Artifact: printing.Artifact{SHA256: hex.EncodeToString(sum[:]), ContentType: "image/png", ByteLength: int64(body.Len()), Width: 3, Height: 3}}}
 	p := &printer{api: a, journal: j}
-	w := &printworker.Worker{Jobs: a, Clock: c, Waiter: waiter{}, Identity: &identities{}, Observer: observer{}, Config: printworker.Config{Binding: "binding", PrinterID: "printer", SessionID: "process", Media: media, MaxArtifactBytes: 1 << 20, LeaseSafety: time.Second, ObserveInterval: time.Millisecond}}
+	w := &printworker.Worker{Jobs: a, Clock: c, Waiter: waiter{}, Identity: &identities{}, Observer: observer{}, Config: printworker.Config{Binding: "binding", PrinterID: "printer", SessionID: "process", Media: media, MaxArtifactBytes: 1 << 20, LeaseSafety: time.Second, ObserveInterval: time.Millisecond, ReadinessTimeout: time.Second}}
 	return w, a, j, p
 }
 

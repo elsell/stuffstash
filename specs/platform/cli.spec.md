@@ -495,3 +495,28 @@ physical replay. Journal or lock failures are fail-closed printer conditions.
   for foreground operation. Live authorized device bindings and media come from
   the API. `STUFF_STASH_CLI_PRINT_STATE_DIRECTORY` or `--journal-dir` selects
   persistent recovery state separately from credential storage.
+
+The foreground worker consumes all assigned printers by default. One connector
+heartbeat loop refreshes assignments; each distinct physical device has its own
+serial worker holding its device connection and journal reservation. An offline
+printer does not block another printer. Removed or changed physical/media assignments cancel and join their old worker
+before a replacement can open that device. Retirement stops new claims while
+allowing an already-started attempt to finish and durable evidence to reconcile;
+recovery for a retired printer does not require the hardware to be online.
+Duplicate physical bindings fail closed instead of racing two queues. Terminal
+credential failures cancel all workers and return re-pair guidance; transient
+failures use bounded jittered backoff. Runtime timing and backoff are injected
+through ports, with environment-backed defaults selected in bootstrap.
+
+Foreground runtime defaults are a 5-second connector heartbeat/assignment refresh,
+2-second idle job poll, 5-second readiness probe, 1-second completion observation
+interval, 5-second lease safety margin, and 16 MiB artifact limit. Operators may
+set `STUFF_STASH_CLI_PRINT_HEARTBEAT_INTERVAL`, `STUFF_STASH_CLI_PRINT_POLL_INTERVAL`,
+`STUFF_STASH_CLI_PRINT_READINESS_TIMEOUT`, `STUFF_STASH_CLI_PRINT_OBSERVE_INTERVAL`,
+`STUFF_STASH_CLI_PRINT_LEASE_SAFETY`, and `STUFF_STASH_CLI_PRINT_MAX_ARTIFACT_BYTES`.
+Reconnect backoff uses equal jitter from 1 to 30 seconds, configurable through
+`STUFF_STASH_CLI_PRINT_BACKOFF_MIN` and `STUFF_STASH_CLI_PRINT_BACKOFF_MAX`.
+Durations and limits are validated before device access. The default persistent
+journal directory is `stuffstash/print-state` under the OS user configuration
+directory, with owner-only permissions; `--journal-dir` overrides it. Recovery
+runs before hardware access, including when an active printer is powered off.

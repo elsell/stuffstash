@@ -42,6 +42,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 	if len(options.Command) == 3 && options.Command[0] == "connectors" && options.Command[1] == "print" && options.Command[2] == "register" {
 		return exit(output, registerPrintConnector(ctx, options, getenv, output))
 	}
+	if len(options.Command) == 3 && options.Command[0] == "connectors" && options.Command[1] == "print" && options.Command[2] == "run" {
+		return exit(output, runPrintConnector(ctx, options, getenv, output))
+	}
 	var store ports.Credentials = credentials.Keyring{}
 	if options.CredentialFile != "" {
 		store = credentials.File{Path: options.CredentialFile}
@@ -86,6 +89,7 @@ const Help = `Stuff Stash CLI
   stuffstash printers discover
   stuffstash printers catalog [--json]
   stuffstash connectors print register --name NAME
+  stuffstash connectors print run --connector ID [--journal-dir PATH]
 
 Context: --server, --tenant, --inventory or STUFF_STASH_CLI_SERVER,
 STUFF_STASH_CLI_TENANT, STUFF_STASH_CLI_INVENTORY. No implicit inventory selection.
@@ -95,4 +99,5 @@ Local printer discovery and catalog export do not need login.
 Connector secrets: use the OS store or explicitly set
 STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE for headless hosts.
 Registration prints a browser approval URL and short code.
+The Linux USB worker consumes all assigned printers. Keep its journal directory persistent.
 `

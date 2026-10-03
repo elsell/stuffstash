@@ -45,6 +45,23 @@ func (w *Worker) print(ctx context.Context, journal ports.LockedPrintState, prin
 		if err = w.renew(ctx, &claim, printing.RemotePrinting); err != nil {
 			return err
 		}
+		request, cancel, err = w.callContext(ctx, claim.LeaseExpiresAt)
+		if err != nil {
+			return err
+		}
+		readiness, readyErr := printer.Readiness(request)
+		cancel()
+		if readyErr != nil || readiness.State != printing.Ready {
+			outcome := printing.NoOutput
+			if record.CompletedCopies > 0 {
+				outcome = printing.Uncertain
+			}
+			reason := readiness.Reason
+			if reason == printing.NoReason {
+				reason = printing.Disconnected
+			}
+			return w.finish(ctx, journal, &claim, record, printing.Evidence{Outcome: outcome, CompletedCopies: record.CompletedCopies, Reason: reason})
+		}
 		record.Phase = printing.JournalSubmitting
 		record.Copy = record.CompletedCopies + 1
 		record.Revision = claim.Control.Revision

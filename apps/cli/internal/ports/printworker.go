@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/stuffstash/stuff-stash/cli/internal/domain/printing"
-	"time"
 )
 
 var ErrAttemptNotFound = errors.New("print attempt not found")
@@ -21,9 +20,6 @@ type PrintJobs interface {
 	Outcome(context.Context, printing.AttemptControl, printing.Evidence) error
 	Attempt(context.Context, string) (printing.AttemptStatus, error)
 	Reconcile(context.Context, string, uint64, printing.Evidence) error
-}
-type Waiter interface {
-	Wait(context.Context, time.Duration) error
 }
 type PrintIdentity interface {
 	Attempt() (string, error)

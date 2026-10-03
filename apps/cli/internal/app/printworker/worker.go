@@ -10,10 +10,11 @@ import (
 )
 
 type Config struct {
-	Binding, PrinterID, SessionID string
-	Media                         printing.Media
-	MaxArtifactBytes              int64
-	LeaseSafety, ObserveInterval  time.Duration
+	RecoveryOnly                                   bool
+	Binding, PrinterID, SessionID                  string
+	Media                                          printing.Media
+	MaxArtifactBytes                               int64
+	LeaseSafety, ObserveInterval, ReadinessTimeout time.Duration
 }
 type Worker struct {
 	Jobs     ports.PrintJobs
@@ -24,11 +25,12 @@ type Worker struct {
 	Config   Config
 }
 
-// Step owns at most one new attempt. The caller holds both the physical printer
-// connection's OS lock and the journal reservation for the entire invocation.
+// Step owns at most one new attempt. The caller always holds the journal
+// reservation; output-capable calls also hold the physical connection OS lock.
+// RecoveryOnly deliberately needs no hardware connection.
 // Recovery always returns before a subsequent claim can be considered.
 func (w *Worker) Step(ctx context.Context, journal ports.LockedPrintState, printer ports.PrinterConnection) error {
-	if w.Config.Binding == "" || w.Config.PrinterID == "" || w.Config.SessionID == "" || w.Config.MaxArtifactBytes <= 0 || w.Config.LeaseSafety <= 0 || w.Config.ObserveInterval <= 0 {
+	if w.Config.Binding == "" || w.Config.PrinterID == "" || w.Config.SessionID == "" || w.Config.MaxArtifactBytes <= 0 || w.Config.LeaseSafety <= 0 || w.Config.ObserveInterval <= 0 || w.Config.ReadinessTimeout <= 0 {
 		return errors.New("invalid print worker configuration")
 	}
 	record, err := journal.Load(ctx)
@@ -36,7 +38,11 @@ func (w *Worker) Step(ctx context.Context, journal ports.LockedPrintState, print
 		return err
 	}
 	if record != nil {
-		return w.recover(ctx, journal, *record)
+		err = w.recover(ctx, journal, *record)
+		if err == nil {
+			w.Observer.Event(ctx, "cli.print.recovered")
+		}
+		return err
 	}
 	unsettled, err := w.Jobs.Unsettled(ctx, w.Config.PrinterID)
 	if err != nil {
@@ -45,7 +51,12 @@ func (w *Worker) Step(ctx context.Context, journal ports.LockedPrintState, print
 	if len(unsettled) > 0 {
 		return ports.ErrRecoveryRequired
 	}
-	readiness, err := printer.Readiness(ctx)
+	if w.Config.RecoveryOnly {
+		return nil
+	}
+	readContext, readCancel := context.WithTimeout(ctx, w.Config.ReadinessTimeout)
+	readiness, err := printer.Readiness(readContext)
+	readCancel()
 	if err != nil {
 		return err
 	}

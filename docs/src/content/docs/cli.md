@@ -121,4 +121,96 @@ credential. If approval expires or an exchange response is lost, register again.
 If activation fails after saving, retain the saved credential; the print worker
 can retry activation.
 
-The foreground print worker is delivered separately from registration.
+## Run the print worker
+
+Use the same Linux account and connector credential store used during registration:
+
+```sh
+export STUFF_STASH_CLI_CONNECTOR_ID=YOUR_CONNECTOR_ID
+export STUFF_STASH_CLI_PRINT_STATE_DIRECTORY="$HOME/.config/stuffstash/print-state"
+./stuffstash connectors print run
+```
+
+Leave this command running. It handles every printer assigned to the connector;
+one disconnected printer does not stop the others. Each device has one active
+worker, even if another process uses a different journal directory.
+
+Only the **Brother QL-800 over USB on Linux with 29 × 90 mm stock** is supported
+initially. Keep Editor Lite off. The Linux `usblp` driver must expose a writable
+bidirectional device, usually `/dev/usb/lp0`. Your administrator can grant a
+printer group access using a persistent udev rule; run the worker as a regular
+user with that group, not as root. Discovery reads device information but does
+not prove that the account can print.
+
+If your distribution uses the `lp` group, this is an example rule for
+`/etc/udev/rules.d/70-stuffstash-ql800.rules`:
+
+```text
+SUBSYSTEM=="usb", KERNEL=="lp[0-9]*", ATTRS{idVendor}=="04f9", ATTRS{idProduct}=="209b", GROUP="lp", MODE="0660"
+```
+
+An administrator must load `usblp` if necessary, install the rule, and add the
+worker account to the selected printer group. Reconnect the printer and start a
+new login session after permission changes. Group names and driver packaging
+vary by distribution.
+
+### Check status and recover
+
+Stuff Stash shows connector availability separately from printer readiness. A
+powered-off printer needs attention even while the connector is online. Wake it
+or resolve the paper/cover error, then leave the worker running. The first adapter
+does not provide remote wake or change the printer's power settings.
+
+Keep the private journal directory across restarts. The worker records output
+before sending it and reconciles API status before taking another job, even if
+the printer is now unplugged. A lost USB or API response may leave an **uncertain**
+job. Check the physical label before explicitly resolving or reprinting it;
+restarting the worker never automatically repeats uncertain output. Retiring a
+printer stops new claims while an already-started attempt can finish.
+
+Ctrl-C stops the worker and preserves recovery evidence. Invalid or revoked
+connector credentials stop it with re-pair guidance. Revoke the old connector
+before pairing a replacement, use a separate credential file, and retain the old
+journal until its attempts are settled.
+
+### Run as a service
+
+A user service can run the same foreground command. Put the binary at
+`~/.local/bin/stuffstash`, then create
+`~/.config/systemd/user/stuffstash-print.service`:
+
+```ini
+[Unit]
+Description=Stuff Stash print connector
+
+[Service]
+Type=simple
+Environment=STUFF_STASH_CLI_SERVER=https://api.example.com
+Environment=STUFF_STASH_CLI_CONNECTOR_ID=YOUR_CONNECTOR_ID
+Environment=STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE=%h/.config/stuffstash/garage-connector.json
+Environment=STUFF_STASH_CLI_PRINT_STATE_DIRECTORY=%h/.config/stuffstash/print-state
+ExecStart=%h/.local/bin/stuffstash connectors print run
+Restart=on-abnormal
+
+[Install]
+WantedBy=default.target
+```
+
+Replace the server and connector ID, then run:
+
+```sh
+systemctl --user daemon-reload
+systemctl --user enable --now stuffstash-print.service
+systemctl --user status stuffstash-print.service
+journalctl --user -u stuffstash-print.service
+```
+
+A dedicated service account needs persistent configuration and USB group access.
+An administrator can enable user lingering when the worker must survive logout.
+To uninstall, stop and disable the service, remove its unit and binary, and revoke
+the connector in Stuff Stash. Retain journal and credential files until pending
+attempts have been reconciled.
+
+The worker and recovery flows are verified with stateful API and USB protocol
+fakes. Physical printing, the example udev rule, and service operation still need
+verification on your host; no attached QL-800 was available during development.
