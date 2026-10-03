@@ -545,3 +545,19 @@ all-date modes, including when labels are supplied by an inline each-block array
 The rendered-copy guard must inspect inline each-block array values; protocol
 mode IDs remain unchanged. Verify the three rendered links under the expanded
 pseudolocale and preserve their mode/query/scope navigation targets.
+
+## Sharing presentation completion
+
+The Sharing screen must translate every invitation role and lifecycle status
+through explicit catalog mappings; wire values remain unchanged. The heading,
+created-link metadata and invitation-list metadata use whole messages with named
+placeholders so translations can reorder inventory names, email, access, status
+and expiry. User names and addresses remain verbatim. Dates use the injected
+client translator's date formatter, including explicit verification locales;
+invalid dates preserve the existing raw-value fallback. Expired invitations keep
+the existing expired-status precedence. This batch changes copy only, not menu
+presentation, permissions, cancellation or keyboard behavior.
+
+Verify all supported roles/statuses, reordered translated metadata with intact
+user values, and locale-specific expiry dates through the production presenter.
+The known sharing-menu keyboard obstruction remains issue #239.
