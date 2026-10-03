@@ -25,6 +25,12 @@ export default defineConfig({
       customCss: ['./src/styles/brand.css'],
       plugins: [lucode()],
       sidebar: [
+        { label: 'Printing', items: [
+          { label: 'Printing labels', slug: 'printing/setup' },
+          { label: 'Supported printers', slug: 'printing/supported-printers' },
+          { label: 'Label sizes', slug: 'printing/label-sizes' },
+          { label: 'Templates', slug: 'printing/templates' },
+        ] },
         {
           label: 'Evaluate',
           items: [
