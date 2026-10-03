@@ -1,6 +1,6 @@
 import { PrintingClient, StuffStashAPIError, type TokenProvider } from '@stuff-stash/api-client';
 import type { PrintingRepository } from '$lib/ports/printingRepository';
-import { PrintingFailure, type PrintScope, type PrintDefaults, type RegisteredPrinter, type PrintConnector, type PrintJob, type LabelSelection, type LabelMedia, type LabelPreview } from '$lib/domain/printing';
+import { PrintingFailure, type PrintScope, type ReportedPrintOutcome, type PrintDefaults, type RegisteredPrinter, type PrintConnector, type PrintJob, type LabelSelection, type LabelMedia, type LabelPreview } from '$lib/domain/printing';
 export class ApiPrintingRepository implements PrintingRepository {
     private readonly client: PrintingClient;
     constructor(baseUrl: string, tokenProvider: TokenProvider, fetchImpl?: typeof fetch) { this.client = new PrintingClient({ baseUrl, tokenProvider, fetch: fetchImpl }); }
@@ -22,6 +22,7 @@ export class ApiPrintingRepository implements PrintingRepository {
     async createJob(scope: PrintScope, assetId: string, s: LabelSelection, previewFingerprint: string, key: string) { return guarded(async () => mapJob(await this.client.createJob(scope, assetId, { printerId: s.printerId, expectedMediaFingerprint: s.expectedMediaFingerprint, templateId: s.templateId, templateVersion: s.templateVersion, templateOptions: { showReference: s.showReference }, copies: s.copies, previewFingerprint }, key))); }
     async job(scope: PrintScope, id: string) { return guarded(async () => mapJob(await this.client.job(scope, id))); }
     async jobs(scope: PrintScope, cursor?: string) { return guarded(async () => { const page = await this.client.jobs(scope, cursor); return { items: page.items.map(mapJob), nextCursor: page.nextCursor }; }); }
+    async resolve(scope:PrintScope,job:PrintJob,outcome:ReportedPrintOutcome){return guarded(async()=>mapJob(await this.client.resolve(scope,job.id,{revision:job.revision,acknowledgeUncertainty:true,reportedOutcome:outcome})));}
     async cancel(scope: PrintScope, job: PrintJob) { return guarded(async () => mapJob(await this.client.cancel(scope, job.id, job.revision))); }
 }
 function mapPrinter(p: Awaited<ReturnType<PrintingClient['printers']>>['items'][number]): RegisteredPrinter {
@@ -34,7 +35,8 @@ function mapJob(j: Awaited<ReturnType<PrintingClient['job']>>): PrintJob {
     if (!['queued', 'claimed', 'printing', 'completed', 'failed', 'uncertain', 'canceled'].includes(j.status))
         throw new PrintingFailure('unavailable');
     const last = j.attempts?.at(-1);
-    return { id: j.id, printerId: j.printerId, assetId: j.assetId, status: j.status as PrintJob['status'], revision: j.revision, copies: j.copies, completedCopies: last?.completedCopies ?? 0, reason: last?.reason ?? '', createdAt: j.createdAt };
+    if(j.resolution&&!['printed','not_printed','unknown'].includes(j.resolution.reportedOutcome))throw new PrintingFailure('unavailable');
+    return { predecessor:j.predecessor,attemptOutcome:last?.outcome,idleConfirmedAt:last?.idleConfirmedAt,resolution:j.resolution?{...j.resolution,reportedOutcome:j.resolution.reportedOutcome as ReportedPrintOutcome}:undefined,id: j.id, printerId: j.printerId, assetId: j.assetId, status: j.status as PrintJob['status'], revision: j.revision, copies: j.copies, completedCopies: last?.completedCopies ?? 0, reason: last?.reason ?? '', createdAt: j.createdAt };
 }
 async function collect<T>(next: (cursor?: string) => Promise<{
     items: T[];

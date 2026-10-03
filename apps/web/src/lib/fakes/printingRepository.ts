@@ -1,5 +1,5 @@
 import type { PrintingRepository } from '$lib/ports/printingRepository';
-import { PrintingFailure, type PrintScope, type PrintDefaults, type RegisteredPrinter, type PrintConnector, type PrintJob, type LabelMedia, type LabelSelection } from '$lib/domain/printing';
+import { PrintingFailure, type PrintScope, type ReportedPrintOutcome, type PrintDefaults, type RegisteredPrinter, type PrintConnector, type PrintJob, type LabelMedia, type LabelSelection } from '$lib/domain/printing';
 export const fakePrintMedia: LabelMedia = { name: '29 × 90 mm', presetId: 'brother-ql800-29x90', version: 1, widthMicrometers: 29000, heightMicrometers: 90000, marginsMicrometers: { left: 1546, right: 1546, top: 3047, bottom: 3048 }, resolutionDpi: 300, rasterWidth: 306, rasterHeight: 991, orientation: 'feed', colorMode: 'monochrome', cutPolicy: 'after_label', displayRotation: 270 };
 export class FakePrintingRepository implements PrintingRepository {
     readonly scope: PrintScope = { tenantId: 'tenant', inventoryId: 'inventory' };
@@ -7,6 +7,7 @@ export class FakePrintingRepository implements PrintingRepository {
     canPrint = true;
     authenticated = true;
     loseNextJobResponse = false;
+    loseNextResolutionResponse=false;
     previewBytes = new Blob(['controlled-label'], { type: 'image/png' });
     defaults: PrintDefaults = { revision: 0, defaultPrinterId: 'printer', templateId: 'qr-title', templateVersion: 1, showReference: true, printOnCreateDefault: false };
     destinations: RegisteredPrinter[] = [{ id: 'printer', name: 'Garage Brother', adapterId: 'brother-ql800', revision: 1, retired: false, media: fakePrintMedia, mediaFingerprint: 'media-v1', readiness: 'unavailable' }];
@@ -62,6 +63,15 @@ export class FakePrintingRepository implements PrintingRepository {
     async job(scope: PrintScope, id: string) { this.check(scope); const job = this.queued.get(id); if (!job)
         throw new PrintingFailure('invalid'); return structuredClone(job); }
     async jobs(scope: PrintScope) { this.check(scope); return { items: structuredClone([...this.queued.values()].reverse()) }; }
+    async resolve(scope:PrintScope,current:PrintJob,outcome:ReportedPrintOutcome){
+      this.check(scope);if(!this.canPrint)throw new PrintingFailure('denied');
+      const job=this.queued.get(current.id);if(!job)throw new PrintingFailure('invalid');
+      if(job.resolution){if(job.resolution.reportedOutcome!==outcome||job.resolution.resolvedBy!=='editor')throw new PrintingFailure('conflict');return structuredClone(job);}
+      if(job.status!=='uncertain'||job.revision!==current.revision||!job.idleConfirmedAt)throw new PrintingFailure('conflict');
+      Object.assign(job,{status:'failed',revision:job.revision+1,resolution:{reportedOutcome:outcome,resolvedBy:'editor',resolvedAt:'2026-10-03T12:01:00Z'}});
+      if(this.loseNextResolutionResponse){this.loseNextResolutionResponse=false;throw new PrintingFailure('unavailable');}
+      return structuredClone(job);
+    }
     async cancel(scope: PrintScope, current: PrintJob) { this.check(scope); if (!this.canPrint)
         throw new PrintingFailure('denied'); const job = this.queued.get(current.id); if (!job || job.revision !== current.revision || !['queued', 'claimed'].includes(job.status))
         throw new PrintingFailure('conflict'); Object.assign(job, { status: 'canceled', revision: job.revision + 1 }); return structuredClone(job); }
