@@ -175,6 +175,27 @@ func (e AssetActivityUndoResponseStatus) Valid() bool {
 	}
 }
 
+// Defines values for ConnectorAvailability.
+const (
+	ConnectorAvailabilityOffline ConnectorAvailability = "offline"
+	ConnectorAvailabilityOnline  ConnectorAvailability = "online"
+	ConnectorAvailabilityUnknown ConnectorAvailability = "unknown"
+)
+
+// Valid indicates whether the value is a known member of the ConnectorAvailability enum.
+func (e ConnectorAvailability) Valid() bool {
+	switch e {
+	case ConnectorAvailabilityOffline:
+		return true
+	case ConnectorAvailabilityOnline:
+		return true
+	case ConnectorAvailabilityUnknown:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CreateAssetBodyKind.
 const (
 	CreateAssetBodyKindContainer CreateAssetBodyKind = "container"
@@ -1774,6 +1795,7 @@ type CompactTag struct {
 // Connector defines model for Connector.
 type Connector struct {
 	AuthorizationPending bool                        `json:"authorizationPending"`
+	Availability         ConnectorAvailability       `json:"availability"`
 	Generation           int64                       `json:"generation"`
 	Id                   string                      `json:"id"`
 	LastSeenAt           *time.Time                  `json:"lastSeenAt,omitempty"`
@@ -1781,6 +1803,9 @@ type Connector struct {
 	PrinterIds           nullable.Nullable[[]string] `json:"printerIds"`
 	State                string                      `json:"state"`
 }
+
+// ConnectorAvailability defines model for Connector.Availability.
+type ConnectorAvailability string
 
 // ConsumerPrinter defines model for ConsumerPrinter.
 type ConsumerPrinter struct {
@@ -3149,6 +3174,8 @@ type Printer struct {
 	MediaFingerprint string       `json:"mediaFingerprint"`
 	Name             string       `json:"name"`
 	Readiness        string       `json:"readiness"`
+	ReadinessReason  *string      `json:"readinessReason,omitempty"`
+	ReportedAt       *time.Time   `json:"reportedAt,omitempty"`
 	Retired          bool         `json:"retired"`
 	Revision         int64        `json:"revision"`
 }
