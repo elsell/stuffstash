@@ -200,7 +200,12 @@ Retain reviewed classifications alongside generated candidates, identifying exac
 strings when only part of a file was reviewed and caller evidence where errors
 are replaced with localized guidance. Keep protocol diagnostics and test/benchmark
 fixtures separate from product copy. A classification does not suppress the
-rendered-copy gate or establish that unreviewed strings are acceptable.
+rendered-copy gate or establish that unreviewed strings are acceptable. Reviewed onboarding/authentication diagnostics map through
+`onboardingError`; archive task/transfer diagnostics map through the mobile
+archive report function or web archive failure function; ordinary voice transport
+and session errors map through `buildFailedVoiceRealtimeState`. Retain those
+caller mappings in the inventory instead of translating internal exceptions.
+This source review does not establish native recovery or assistive acceptance.
 
 Step-progress navigation accessibility labels use complete catalog sentences for
 current, completed and upcoming steps, with step names/descriptions interpolated.
