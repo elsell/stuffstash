@@ -6,10 +6,12 @@ description: Sign in and work with your inventory from a terminal.
 The Stuff Stash CLI uses the same permissions as the web and mobile apps. You can
 list inventories, find assets, and create, move, archive, or restore them.
 
+See [versioned downloads](../cli-downloads/) for published binaries and checksum
+verification.
+
 ## Install from source
 
-Published CLI downloads are not available yet. With Go 1.25.8 installed, build
-from the repository root:
+With Go 1.25.8 installed, build from the repository root:
 
 ```sh
 go build -buildvcs=false -o ./stuffstash ./apps/cli/cmd/stuffstash
@@ -72,3 +74,24 @@ pass it with `--cursor`. Flags can also set `--server`, `--tenant`, and
 
 Printer registration and background printing are being implemented separately.
 They are not available in this CLI slice yet.
+
+## Release operations
+
+The normal Release workflow attaches five portable CLI archives, individual
+SHA-256 files, and `stuffstash-cli-release.json` to the project tag. The archive
+includes third-party notices; `stuffstash version` reports its tag and source
+commit. USB printer support remains limited to Linux and the supported Brother
+profile, even when ordinary inventory commands run on another platform.
+
+If publication stops after staging its assets, run **Release → Run workflow**
+on **main**, with `repair_run_id` set to the original Release workflow run ID.
+Repair uses its retained `release-publication` artifact and exact tag/commit.
+It uploads missing assets and verifies existing bytes; it never overwrites a
+mismatch. Investigate a mismatch or an expired artifact rather than rebuilding
+an old tag with new source or dependencies.
+
+Verified stable publication opens a maintenance PR for download links and
+self-host image digests. The docs deploy after that PR merges. If its checks or
+merge require attention, fix the PR; then run **Docs Pages** on **main** to refresh
+the site. A draft, failed publication, or older repaired release cannot replace
+newer stable download instructions.
