@@ -3,6 +3,7 @@ module github.com/stuffstash/stuff-stash/cli
 go 1.25.8
 
 require (
+	github.com/stuffstash/stuff-stash/printingprofiles v0.0.0
 	github.com/coreos/go-oidc/v3 v3.18.0
 	github.com/oapi-codegen/nullable v1.2.0
 	github.com/oapi-codegen/runtime v1.7.0
@@ -18,3 +19,5 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	golang.org/x/sys v0.39.0
 )
+
+replace github.com/stuffstash/stuff-stash/printingprofiles => ../../packages/printingprofiles
