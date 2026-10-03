@@ -216,3 +216,40 @@ attempts have been reconciled.
 The worker and recovery flows are verified with stateful API and USB protocol
 fakes. Physical printing, the example udev rule, and service operation still need
 verification on your host; no attached QL-800 was available during development.
+
+## Request and inspect labels
+
+Set your server, tenant, and inventory context, then use your human login:
+
+```sh
+stuffstash printers list
+stuffstash labels print ASSET_ID --printer PRINTER_ID
+stuffstash printers test PRINTER_ID
+stuffstash print-jobs list --printer PRINTER_ID
+stuffstash print-jobs show JOB_ID
+stuffstash print-jobs cancel JOB_ID
+stuffstash print-jobs reprint JOB_ID --printer PRINTER_ID
+```
+
+These commands enqueue work for the connector; they do not send USB output from
+the computer running the command. A test prints one diagnostic label. A reprint
+creates a new job linked to the original; unresolved uncertain jobs require
+explicit resolution first.
+
+Omit `--printer` to use the inventory's configured default. Template selection
+also uses inventory defaults; override it with `--template qr-title
+--template-version 1 --show-reference=true`. The destination determines the size.
+Offline destinations still accept queued work.
+
+Scripts create assets without printing unless requested:
+
+```sh
+stuffstash assets create --kind item --title "Spare batteries" \
+  --print-label --printer PRINTER_ID --idempotency-key batteries-label-1
+```
+
+A failed label validation leaves no new asset behind. The response includes the
+label job ID. Each print request writes its request key to stderr before sending.
+If the response is lost, retry the same command with that key using
+`--idempotency-key`; keep its arguments unchanged. A changed request conflicts
+instead of silently printing another label. Use `--json` for structured output.
