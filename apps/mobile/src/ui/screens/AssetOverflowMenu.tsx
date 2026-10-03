@@ -14,6 +14,7 @@ export type AssetOverflowMenuProps = {
   >;
   readonly disabled?: boolean;
   readonly onLabel?: () => void;
+  readonly onPrintLabel?: () => void;
   readonly onMove?: () => void;
   readonly onAddPhotos?: () => void;
   readonly onCheckout?: () => void;
@@ -28,9 +29,9 @@ export function AssetOverflowMenu({
   disabled = false,
   onCheckoutHistory,
   onHistory,
-  onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled, onLabel
+  onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled, onLabel, onPrintLabel
 }: AssetOverflowMenuProps) {
-  const groups = assetOverflowMenuGroups({ asset, onCheckoutHistory, onHistory, onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled, onLabel });
+  const groups = assetOverflowMenuGroups({ asset, onCheckoutHistory, onHistory, onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled, onLabel, onPrintLabel });
 
   return (
     <NativeActionMenu
@@ -46,11 +47,12 @@ export function assetOverflowMenuGroups({
   asset,
   onCheckoutHistory,
   onHistory,
-  onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled, onLabel
+  onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled, onLabel, onPrintLabel
 }: Omit<AssetOverflowMenuProps, 'disabled'>): readonly NativeActionMenuGroup[] {
   const callbacks = { onCheckoutHistory, onHistory, onLifecycleAction };
   const actions = assetOverflowMenuActions(asset);
   const commands: NativeActionMenuGroup = { id: 'commands', items: [
+    ...(onPrintLabel ? [{ id: 'print-label', label: t('printing.mobile.print'), systemImage: 'printer', onPress: onPrintLabel }] : []),
     ...(onLabel ? [{ id: 'label', label: t('labels.mobile.title'), systemImage: 'qrcode', onPress: onLabel }] : []),
     ...(onAddPhotos ? [{ id: 'add_photos', label: t('mobile.AssetOverflowMenu.addPhotos'), systemImage: 'photo.badge.plus', disabled: photosDisabled, onPress: () => { if (!photosDisabled) onAddPhotos(); } }] : []),
     ...(onMove ? [{ id: 'move', label: t('mobile.AssetOverflowMenu.move'), systemImage: 'folder', onPress: onMove }] : []),

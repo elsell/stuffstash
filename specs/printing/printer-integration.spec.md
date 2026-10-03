@@ -773,3 +773,33 @@ updates are local and do not reset a draft. Narrow layouts wrap names/media and
 keep controls reachable; render both settings and preview/status fixtures in a
 browser. Fixture rendering is separate from connected OIDC and physical-printer
 acceptance.
+
+### Native Printer Settings And Job Tasks
+
+Inventory Settings opens a Printers navigation destination. Viewers see printer
+name, registered media, readiness, connector state and last seen independently.
+Configurators edit inventory defaults as one draft with an explicit Save action;
+short printer/template choices use NativeChoicePicker and automatic printing uses
+the native switch. Back leaves persisted settings unchanged. A stale revision
+retains the draft and offers reload instead of silently overwriting another edit.
+Offline printers remain selectable. Empty, denied and unavailable reads do not
+expose retained inventory data. Scope changes remount the task.
+
+Asset More exposes Print label for editable active assets, beside the existing
+viewer-accessible Label options download task. The print task selects a registered
+printer and independent template, previews the API-rendered PNG for that media,
+and submits one copy with an explicit command. Selection changes invalidate the
+preview. Once submission begins, retain its immutable payload and idempotency key
+across a lost-response retry; never make a replacement request implicitly.
+Submission means queued, never physically completed. Job detail shows server
+status and completed-copy evidence, permits cancellation only before output,
+and explains uncertain output without automatically reprinting. All reads and
+commands stay behind a mobile printing port and the generated API client adapter.
+
+The Add item switch initializes once from inventory defaults per new draft;
+background refresh never changes an explicit user choice. Printing is opt-in on
+the atomic create command, with a stable request identity across retries. Parent
+creation remains a separate explicit action and never inherits item printing.
+Critical checks use stateful printer/job/settings fakes for lost responses,
+revision conflict, permission loss and scope/route cancellation. Actual native
+layout, accessibility and USB operation remain device checklist follow-ups.

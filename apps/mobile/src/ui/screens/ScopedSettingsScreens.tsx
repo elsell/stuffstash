@@ -11,7 +11,7 @@ import type { SettingsQuery } from '../../application/settings/SettingsQuery';
 import { SettingsLoadingRow, SettingsNavigationRow, SettingsSection, SettingsSeparator, useSettingsListStyles } from './SettingsList';
 import { useSettingsModel } from './SettingsScreenState';
 
-type ScopedDestination = 'sharing' | 'tags' | 'fields' | 'asset-types' | 'voice' | 'notifications';
+type ScopedDestination = 'printers' | 'sharing' | 'tags' | 'fields' | 'asset-types' | 'voice' | 'notifications';
 
 export function InventorySettingsScreen({ onNavigate, settingsQuery, exportCommand, onArchive }: { readonly onArchive?: (scope: ArchiveScope) => void; readonly exportCommand?: ExportInventoryCommand; readonly onNavigate: (destination: ScopedDestination) => void; readonly settingsQuery: SettingsQuery }) {
   const model = useSettingsModel(settingsQuery);
@@ -38,6 +38,7 @@ function ScopeScreen({ model, onNavigate, scope, exportCommand, onArchive }: { r
       ] : []
     : [
         ...(settings.selectedInventory.permissions.includes('share') ? [{ id: 'sharing' as const, label: t('mobile.ScopedSettingsScreens.sharing') }] : []),
+        { id: 'printers', label: t('printing.mobile.title') },
         { id: 'notifications', label: t('mobile.ScopedSettingsScreens.notifications'), context: t('mobile.ScopedSettingsScreens.yourReminders') },
         { id: 'tags', label: t('mobile.ScopedSettingsScreens.tags') },
         { id: 'fields', label: t('mobile.ScopedSettingsScreens.customFields') },
