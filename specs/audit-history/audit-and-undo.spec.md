@@ -403,3 +403,5 @@ Label identity provisioning and authorized label reads/renders/downloads use
 localized action labels in web activity and mobile asset history. In particular,
 `label.provisioned` reads Label created and `label.rendered` reads Label prepared;
 neither rendering nor downloading is described as a physically completed print.
+Printer registration, viewing, listing, and configuration updates likewise use
+localized activity titles; these inventory events do not imply printing a label.
