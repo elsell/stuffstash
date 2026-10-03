@@ -1,0 +1,103 @@
+{
+  "scope": "Exact merge and release evidence; runtime acceptance is recorded separately.",
+  "batches": [
+    {
+      "pr": 309,
+      "tag": "v0.28.20",
+      "releaseURL": "https://github.com/elsell/stuffstash/releases/tag/v0.28.20",
+      "verifiedHead": "9ff720d05a39c8e389eefbbffbd28960c1b8c492",
+      "checks": {
+        "Docs Pages": {
+          "conclusion": "success",
+          "headSha": "9ff720d05a39c8e389eefbbffbd28960c1b8c492",
+          "status": "completed",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37110283650"
+        },
+        "CI": {
+          "conclusion": "success",
+          "headSha": "9ff720d05a39c8e389eefbbffbd28960c1b8c492",
+          "status": "completed",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37110283663"
+        }
+      },
+      "merge": "c1c1184b6a628bdc2bfce7ba65357fc1c999a6f5",
+      "release": {
+        "status": "completed",
+        "conclusion": "success",
+        "headSha": "c1c1184b6a628bdc2bfce7ba65357fc1c999a6f5",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37110696922"
+      },
+      "jobs": [
+        {
+          "name": "Validate release inputs",
+          "conclusion": "success",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37110696922/job/111167869304"
+        },
+        {
+          "name": "Publish release images and attestations",
+          "conclusion": "success",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37110696922/job/111168766875"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Build and upload tagged iOS release",
+          "conclusion": "success",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37110696922/job/111169269924"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Publish build changelog / publish",
+          "conclusion": "success",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37110696922/job/111171307381"
+        }
+      ]
+    },
+    {
+      "pr": 311,
+      "tag": "v0.28.21",
+      "releaseURL": "https://github.com/elsell/stuffstash/releases/tag/v0.28.21",
+      "verifiedHead": "5d7d46680dc1cadaf5ebd090bbb64146fb082d4c",
+      "checks": {
+        "Docs Pages": {
+          "conclusion": "success",
+          "headSha": "5d7d46680dc1cadaf5ebd090bbb64146fb082d4c",
+          "status": "completed",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37111160802"
+        },
+        "CI": {
+          "conclusion": "success",
+          "headSha": "5d7d46680dc1cadaf5ebd090bbb64146fb082d4c",
+          "status": "completed",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37111160754"
+        }
+      },
+      "merge": "42ae0fe31d83a3aba31da476896e4c9e8fb5a608",
+      "release": {
+        "status": "completed",
+        "conclusion": "success",
+        "headSha": "42ae0fe31d83a3aba31da476896e4c9e8fb5a608",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37112043474"
+      },
+      "jobs": [
+        {
+          "name": "Validate release inputs",
+          "conclusion": "success",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37112043474/job/111171679159"
+        },
+        {
+          "name": "Publish release images and attestations",
+          "conclusion": "success",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37112043474/job/111172793750"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Build and upload tagged iOS release",
+          "conclusion": "success",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37112043474/job/111173212825"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Publish build changelog / publish",
+          "conclusion": "success",
+          "url": "https://github.com/elsell/stuffstash/actions/runs/37112043474/job/111176015662"
+        }
+      ]
+    }
+  ]
+}

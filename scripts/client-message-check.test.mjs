@@ -89,3 +89,55 @@ test('rejects ordinary error text in rendered recovery and returned helpers', ()
   assert.deepEqual(embeddedDisplayMessages('const diagnostic = error instanceof Error ? error.message : fallback; classify(diagnostic);', 'Recovery.tsx'), []);
   assert.deepEqual(embeddedDisplayMessages('function recovery(error, fallback) { return catalogRecoveryMessage(error, fallback); }', 'Recovery.tsx'), []);
 });
+
+test('rejects raw error state used in rendered copy while allowing private diagnostics', () => {
+  const failure = 'caught instanceof Error ? caught.message : fallback';
+  const svelte = `<script>let saveError = ''; async function save() { try { await submit(); } catch (caught) { saveError = (${failure}); } }</script><p role="alert">{saveError}</p>`;
+  const jsx = `const message = ${failure}; const view = <Text>{message}</Text>;`;
+  for (const [source, file] of [[svelte, 'Recovery.svelte'], [jsx, 'Recovery.tsx']]) {
+    const issues = embeddedDisplayMessages(source, file);
+    assert.deepEqual(issues.map(x => x.text), ['ordinary Error.message requires catalog recovery']);
+    assert.match(source.slice(issues[0].offset), /^caught instanceof Error/);
+  }
+  const privateDiagnostic = `<script>let note = ''; const diagnostic = ${failure}; classify(diagnostic);</script><p>{note}</p>`;
+  assert.deepEqual(embeddedDisplayMessages(privateDiagnostic, 'Recovery.svelte'), []);
+  assert.deepEqual(embeddedDisplayMessages(svelte.replace(`(${failure})`, 'safeWorkspaceErrorMessage(caught, fallback)'), 'Recovery.svelte'), []);
+});
+
+test('does not confuse private diagnostic bindings with same-named rendered props', () => {
+  const source = `function classifyFailure(caught, fallback) {
+    const message = caught instanceof Error ? caught.message : fallback;
+    classify(message);
+  }
+  function Notice({message}) { return <Text>{message}</Text>; }`;
+  assert.deepEqual(embeddedDisplayMessages(source, 'Recovery.tsx'), []);
+  const svelte = `<script>let message = ''; function classifyFailure(caught, fallback) {
+    const message = caught instanceof Error ? caught.message : fallback; classify(message);
+  }</script><p>{message}</p>`;
+  assert.deepEqual(embeddedDisplayMessages(svelte, 'Recovery.svelte'), []);
+});
+
+test('does not confuse Svelte each values with diagnostic state', () => {
+  const source = `<script>const message = caught instanceof Error ? caught.message : fallback;</script>
+    {#each notes as message}<p>{message}</p>{/each}`;
+  assert.deepEqual(embeddedDisplayMessages(source, 'Recovery.svelte'), []);
+});
+
+test('does not confuse Svelte await and snippet bindings with diagnostic state', () => {
+  const prefix = `<script>const message = caught instanceof Error ? caught.message : fallback;</script>`;
+  for (const template of [
+    '{#await task then message}<p>{message}</p>{/await}',
+    '{#await task}<p>{pending}</p>{:catch message}<p>{message}</p>{/await}',
+    '{#snippet notice(message)}<p>{message}</p>{/snippet}',
+  ]) assert.deepEqual(embeddedDisplayMessages(prefix + template, 'Recovery.svelte'), []);
+});
+
+test('leaves ambiguous Svelte bindings to caller review without disabling direct checks', () => {
+  const prefix = `<script>const message = caught instanceof Error ? caught.message : fallback;</script>`;
+  for (const template of [
+    '{#if visible}{@const message = note}<p>{message}</p>{/if}',
+    '<Widget let:message><p>{message}</p></Widget>',
+  ]) assert.deepEqual(embeddedDisplayMessages(prefix + template, 'Recovery.svelte'), []);
+  assert.deepEqual(embeddedDisplayMessages(`<script module>const message = caught instanceof Error ? caught.message : fallback;</script><script>const message = value;</script><p>{message}</p>`, 'Recovery.svelte'), []);
+  assert.equal(embeddedDisplayMessages(prefix + '<Widget let:message><p>{caught instanceof Error ? caught.message : fallback}</p></Widget>', 'Recovery.svelte').length, 1);
+});
