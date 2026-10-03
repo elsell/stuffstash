@@ -523,3 +523,17 @@ drafts or selection for retry and explicitly safe adapter validation guidance.
 Parent handlers that rethrow to these dialogs must preserve the original typed
 error and its safe-for-user marker, rather than wrapping sanitized text in an
 unmarked Error and losing actionable validation details.
+
+### Recovery assignments in rendered state
+
+The rendered-copy check must reject an ordinary Error.message conditional when
+assigned to a named state value that is then rendered or passed to a display
+property. Cover Svelte script assignments and JSX initializers, including
+parenthesized conditionals. Diagnostic values used only for classification remain
+allowed; typed/catalog recovery calls remain allowed. This targeted check does
+not claim full interprocedural data-flow analysis.
+
+Binding checks distinguish lexical declarations and Svelte each/await/snippet
+values. Ambiguous Svelte const/legacy slot or module-script names are left to
+caller review; direct rendered-expression checks still apply. This conservative
+limit avoids rejecting unrelated diagnostics because of same-named values.

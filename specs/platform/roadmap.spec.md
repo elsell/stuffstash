@@ -32,14 +32,17 @@ The full audit remains incomplete. Release success does not close these gaps:
   diagnostics but failed the required lookup; answer replay was not reached.
   The fixed investigation budget is exhausted; no unchanged retry.
 - Localization: the reviewed labels, interpolation and recovery fixes shipped.
-  Remaining inventory candidates still require caller review; candidate counts
-  are not defect counts or proof of complete migration.
+  The residual TypeScript snapshot at `a93b524a` has a scoped caller review of
+  31 files, retained as exact-string classifications. This is not a refreshed
+  whole-client scan or complete derived/template-copy acceptance; candidate
+  counts are not defect counts or proof of complete migration.
 - Connected native acceptance: system-auth-browser discovery stopped the iPhone
   investigation before sign-in and isolation checks; no unchanged retry.
 - Android connected acceptance verifies real browser sign-in return, persisted
   session, native sign-out and second-principal asset isolation. PR #309 merged
   at `c1c1184b` and release37110696922 succeeded.
-- The next frozen batch's three gaps are post-setup root navigation, authenticated
+- PR #310 merged at `849c26f1`; release confirmation remains pending. Its
+  three gaps are post-setup root navigation, authenticated
   Android archive acceptance and a representative TalkBack journey. The normal
   APK at `a93b524a` verifies fresh household creation returns to Home and an
   authenticated archive export/upload/review/restore opens a restored photo.
@@ -50,7 +53,10 @@ The full audit remains incomplete. Release success does not close these gaps:
   Home/Browse refresh errors are recorded without an unproven diagnosis.
   Ship the verified navigation fix; these limits remain audit follow-ups.
 - Web workspace creation, editing and shared action recovery now use the existing
-  safe localized presenter. PR #311 merged at `42ae0fe3`; release is pending.
+  safe localized presenter. PR #311 merged at `42ae0fe3` and shipped as v0.28.21, including TestFlight
+  and changelog publication. The [delivery record](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/delivery-v0.28.20-v0.28.21.json)
+  also records #309/v0.28.20. Child-dialog recovery and typed-error propagation
+  are reviewed in PR #314; integration and release remain pending.
 - Physical file-provider/recipient and assistive acceptance remain unverified.
   Existing user-confirmed notification delivery is preserved, not reopened.
 - The previously recorded iOS sharing-menu keyboard overlap and proposed web
