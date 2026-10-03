@@ -10,6 +10,15 @@ deterministic bytes and narrow output ownership are verified. Desktop light and
 phone dark browser checks cover responsive examples and original downloads;
 these do not establish physical printing or native camera behavior.
 
+## CLI release delivery slice
+
+The publication candidate stages exact five-platform CLI archives alongside the
+self-host bundle, verifies bytes before stable publication, and supports original
+run repair. Verified metadata generates pinned downloads through a maintenance PR;
+docs dispatch follows its actual merge. Local fake-remote integrity checks are
+separate from the first live GitHub publication, which remains unverified until a
+release is cut. Registry-rendered catalog delivery is tracked separately above.
+
 ## In Progress: Labels, Printers, And CLI — October 3, 2026
 
 Delivered foundations now include human CLI authentication/inventory commands,

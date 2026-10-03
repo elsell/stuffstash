@@ -53,6 +53,7 @@ export default defineConfig({
             { label: 'Architecture', slug: 'architecture' },
             { label: 'Development Setup', slug: 'local-development' },
             { label: 'Use the CLI', slug: 'cli' },
+            { label: 'Download the CLI', slug: 'cli-downloads' },
             { label: 'Connect An Inventory Agent', slug: 'mcp' },
             { label: 'Compatible Language Providers', slug: 'compatible-providers' },
             { label: 'Release To TestFlight', slug: 'testflight' },

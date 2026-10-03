@@ -275,7 +275,8 @@ grep -q -- '--api-image' .github/workflows/ci.yml &&
   fail "CI must build the self-host bundle with immutable image references"
 
 grep -q 'scripts/build-selfhost-release.sh' .github/workflows/release.yml &&
-  grep -q 'stuffstash-selfhost.tar.gz.sha256' .github/workflows/release.yml ||
+  grep -q 'scripts/publish-release-assets.py' .github/workflows/release.yml &&
+  grep -q 'stuffstash-selfhost.tar.gz.sha256' scripts/publish-release-assets.py ||
   fail "releases must attach a checksummed self-host bundle"
 
 grep -q 'workflow_run:' .github/workflows/docs-pages.yml &&
