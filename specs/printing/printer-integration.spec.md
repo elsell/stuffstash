@@ -467,3 +467,35 @@ keep hardware acceptance explicitly unverified and do not represent it as passin
   audit history because it reads static shipped capability metadata, not stored
   inventory content. Profile responses identify supported platforms and whether
   the profile has been physically verified.
+
+## Queue Implementation Contract
+
+The queue aggregate owns transitions and attempt history. It receives time from
+its caller (the application injects its clock) and never reads wall time itself.
+An attempt records a connector, process session, constant-time-verifiable claim
+secret digest, lease expiry, start time, and outcome evidence. Mutations compare
+an expected monotonic job revision as well as ownership and lease. Repeating an
+already recorded identical outcome is safe without changing revision/history.
+An expired pre-start attempt requeues; an expired started attempt becomes uncertain
+and retains the printer reservation. Reconciliation may resolve only the owning
+connector's original uncertain attempt, after current authorization, without
+resuming device output. Explicit no-output evidence may requeue a transient
+failure; partial output or ambiguous evidence never does. Physical evidence is monotonic:
+a known completed copy or partial output cannot later become zero output.
+Repeating an identical recorded uncertain report is also an idempotent readback,
+including after lease expiry; it cannot resume output or change history.
+
+A mutex-backed repository fake must reproduce atomic printer reservation, job
+selection and compare-and-set transitions, not scripted responses. Production
+PostgreSQL transactions lock the printer row before selecting or mutating its
+active job. All repositories require tenant and inventory scope. The application
+rechecks current permission, binding lifecycle, media and asset state before start.
+
+Durable storage keeps indexed scope, printer, queue state and idempotency columns
+alongside the versioned rendering snapshot and attempt evidence. A unique scoped
+actor/request key prevents duplicate jobs even when concurrent requests select
+different printers. An attempt index retains its connector and job association
+for authenticated lost-response recovery, including after settlement. Job state,
+printer reservation, attempt index and audit writes commit or roll back together.
+Registration denial fences use connector → binding → printer → job lock order;
+no caller treats a reservation or database registration as an authorization grant.
