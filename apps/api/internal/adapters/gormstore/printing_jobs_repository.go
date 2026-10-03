@@ -89,6 +89,19 @@ func (s Store) CreatePrintJob(ctx context.Context, input ports.PrintJobCreate) (
 		if p.Retired || p.Revision != input.PrinterRevision || p.MediaFingerprint != j.MediaFingerprint || j.ID == "" || j.Status != printing.JobQueued || j.Revision != 1 || len(j.Attempts) != 0 {
 			return ports.ErrConflict
 		}
+		if j.Predecessor != "" {
+			prior, e := printJobByID(tx, j.Scope, j.Predecessor)
+			if e != nil {
+				return e
+			}
+			previous, e := prior.domain()
+			if e != nil {
+				return e
+			}
+			if !previous.Terminal() || previous.Kind != j.Kind || previous.AssetID != j.AssetID || previous.IdempotencyKey == j.IdempotencyKey {
+				return ports.ErrConflict
+			}
+		}
 		if input.Audit.ID == "" || string(input.Audit.TenantID) != j.Scope.TenantID || string(input.Audit.InventoryID) != j.Scope.InventoryID || input.Audit.TargetID != string(j.ID) {
 			return ports.ErrConflict
 		}
