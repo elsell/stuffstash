@@ -20,6 +20,8 @@ const (
 	EventPrintJobCanceled                          EventName = "print_job.canceled"
 	EventLabelProvisioned                          EventName = "label.provisioned"
 	EventLabelCleanupFailed                        EventName = "label.cleanup_failed"
+	EventPrintPairingCleanupFailed                 EventName = "print_pairing.cleanup_failed"
+	EventPrintPairingsExpired                      EventName = "print_pairing.expired"
 	EventPrintConnectorSyncFailed                  EventName = "print_connector.sync_failed"
 	EventPrintSettingsUpdated                      EventName = "print_settings.updated"
 	EventPrinterRegistered                         EventName = "printer.registered"

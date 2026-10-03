@@ -870,3 +870,14 @@ inventory authorization. Changed report content is audited; identical periodic
 telemetry only refreshes its server receipt time. The CLI builds the report from
 its baked-in version and actual registered adapters and includes it in each
 worker heartbeat, independently of individual printer availability.
+
+### Expired pairing cleanup
+
+Each connector-maintenance tick removes at most the configured connector batch
+size of expired pairing handshakes, including consumed and approved requests.
+Expiry uses the injected server clock and an indexed, bounded repository scan.
+The worker runs cleanup independently of authorization reconciliation failures.
+Cleanup removes handshake hashes, public keys, and discovered candidate snapshots;
+it never deletes connector registrations, credentials, bindings, jobs, or audit
+history. Unexpired pairings remain usable. No additional retention interval is
+needed because expired handshake credentials are already unusable.

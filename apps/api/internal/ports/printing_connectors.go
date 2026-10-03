@@ -65,6 +65,8 @@ type PairingExchange struct {
 type ConnectorActivationAudit func(printing.Connector, bool) (audit.Record, error)
 
 type ConnectorRepository interface {
+	// Operational expiry scan; never used to discover tenant resources.
+	CleanupExpiredPrintPairings(context.Context, time.Time, int) (int, error)
 	ApprovePrintCredentialRotation(context.Context, RotationApproval) (printing.Pairing, error)
 	ListPrintPrinterHealth(context.Context, printing.Scope, printing.PrinterID) ([]PrinterHealthReport, error)
 	UpdatePrintConnector(context.Context, printing.Scope, printing.ConnectorID, uint64, ConnectorMutation, ConnectorAudit) (ConnectorRegistration, error)

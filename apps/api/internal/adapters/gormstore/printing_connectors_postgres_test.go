@@ -99,9 +99,13 @@ func TestPostgresPrintConnectorApprovalRollbackAndSingleCredentialExchange(t *te
 	activationAudit := func(printing.Connector, bool) (audit.Record, error) {
 		return auditRecord(t, "pg-activated", tenant.ID(tid), inventory.InventoryID(iid), audit.ActionPrintConnectorActivated), nil
 	}
-	active, err := store.HeartbeatPrintConnector(ctx, issued, now, activationAudit, nil)
+	report := &printing.ConnectorReport{Version: "v1", Commit: "commit", Platform: "linux", Architecture: "amd64", Adapters: []printing.AdapterCapability{}}
+	active, err := store.HeartbeatPrintConnector(ctx, issued, now, activationAudit, report)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if active.Report == nil || active.Report.Version != "v1" || active.ReportReceivedAt == nil {
+		t.Fatal("PostgreSQL lost software report")
 	}
 	for _, suffix := range []string{"rotation", "replacement", "delayed"} {
 		fresh := printing.Pairing{ID: printing.PairingID("pg-" + suffix), PublicKey: make([]byte, 32), PollHash: "poll-" + suffix, CodeHash: "code-" + suffix, State: printing.PairingPending, ExpiresAt: now.Add(time.Hour), CreatedAt: now}
@@ -160,6 +164,24 @@ func TestPostgresPrintConnectorApprovalRollbackAndSingleCredentialExchange(t *te
 	}
 	if _, err := store.ConsumePrintPairing(ctx, ports.PairingExchange{PairingID: "pg-delayed", Now: now, CredentialHash: "pg-stale-hash", CredentialExpiresAt: now.Add(time.Hour), ActivationDeadline: now.Add(time.Minute), Audit: auditRecord(t, "pg-stale-issued", tenant.ID(tid), inventory.InventoryID(iid), audit.ActionPrintConnectorCredentialIssued)}); err == nil {
 		t.Fatal("delayed old approval replaced new credential")
+	}
+
+	live := printing.Pairing{ID: "pg-live-pair", Scope: scope, CodeHash: "pg-live-code", State: printing.PairingPending, ExpiresAt: now.Add(3 * time.Hour), PublicKey: make([]byte, 32), Candidates: []printing.PairingCandidate{}}
+	if err := store.CreatePrintPairing(ctx, live); err != nil {
+		t.Fatal(err)
+	}
+	if count, err := store.CleanupExpiredPrintPairings(ctx, now.Add(2*time.Hour), 1); err != nil || count != 1 {
+		t.Fatal("PostgreSQL expiry batch", count, err)
+	}
+	if _, err := store.GetPrintPairing(ctx, live.ID); err != nil {
+		t.Fatal("cleanup deleted live handshake", err)
+	}
+	retained, err := store.GetPrintConnector(ctx, scope, c.ID)
+	if err != nil || retained.Connector.CredentialVersion != rotated.CredentialVersion || retained.Connector.Report == nil {
+		t.Fatal("pairing cleanup changed registration", err)
+	}
+	if _, err := store.CleanupExpiredPrintPairings(ctx, now.Add(2*time.Hour), 100); err != nil {
+		t.Fatal(err)
 	}
 
 }

@@ -43,7 +43,9 @@ func (p *printPeer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(400)
 			return
 		}
-		p.softwareReport = body.Report
+		if body.Report != nil {
+			p.softwareReport = body.Report
+		}
 		json.NewEncoder(w).Encode(generated.SuccessEnvelopeConnector{Data: generated.Connector{Id: "connector", Report: p.softwareReport}})
 		return
 	}
@@ -214,6 +216,9 @@ func TestWorkerHeartbeatCarriesSoftwareAndAdapterCapabilitiesThroughSDK(t *testi
 	}
 	report := &printing.ConnectorReport{Version: "v1.2.3", Commit: "commit", Platform: "linux", Architecture: "amd64", Adapters: []printing.Descriptor{{ID: "brother-ql800", ContractVersions: []int{1}, Formats: []string{"image/png"}, Media: []printing.Media{{PresetID: "brother-ql800-29x90", Version: 1}}, CompletionEvidence: "physical", Wake: false}}}
 	if err = client.Heartbeat(context.Background(), "session", report); err != nil {
+		t.Fatal(err)
+	}
+	if err = client.Heartbeat(context.Background(), "session", nil); err != nil {
 		t.Fatal(err)
 	}
 	peer.mu.Lock()
