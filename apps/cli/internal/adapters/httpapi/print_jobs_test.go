@@ -21,12 +21,13 @@ import (
 // printPeer is a controlled API implementation with owned claims, revisions,
 // settlement and protected artifact reads; it never asserts a call sequence.
 type printPeer struct {
-	mu       sync.Mutex
-	attempt  generated.PrintConsumerAttempt
-	token    string
-	revoked  bool
-	redirect string
-	bytes    []byte
+	softwareReport *generated.ConnectorReport
+	mu             sync.Mutex
+	attempt        generated.PrintConsumerAttempt
+	token          string
+	revoked        bool
+	redirect       string
+	bytes          []byte
 }
 
 func (p *printPeer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +35,16 @@ func (p *printPeer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer p.mu.Unlock()
 	if p.revoked || r.Header.Get("Authorization") != "Bearer connector-secret" {
 		w.WriteHeader(401)
+		return
+	}
+	if r.URL.Path == "/print-consumer/heartbeat" && r.Method == "POST" {
+		var body generated.HeartbeatInputBody
+		if json.NewDecoder(r.Body).Decode(&body) != nil {
+			w.WriteHeader(400)
+			return
+		}
+		p.softwareReport = body.Report
+		json.NewEncoder(w).Encode(generated.SuccessEnvelopeConnector{Data: generated.Connector{Id: "connector", Report: p.softwareReport}})
 		return
 	}
 	if r.URL.Path == "/print-consumer/claims" && r.Method == "POST" {
@@ -190,5 +201,28 @@ func TestResolvedUncertaintySettlesJournalWithoutFabricatingCompletion(t *testin
 	status, err := client.Attempt(context.Background(), "attempt")
 	if err != nil || status.Phase != printing.RemoteFailed || status.Outcome != printing.Uncertain {
 		t.Fatal("resolved uncertainty remained blocked or fabricated evidence", status, err)
+	}
+}
+
+func TestWorkerHeartbeatCarriesSoftwareAndAdapterCapabilitiesThroughSDK(t *testing.T) {
+	peer := &printPeer{}
+	server := httptest.NewServer(peer)
+	defer server.Close()
+	client, err := httpapi.New(server.URL, "connector-secret", server.Client())
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := &printing.ConnectorReport{Version: "v1.2.3", Commit: "commit", Platform: "linux", Architecture: "amd64", Adapters: []printing.Descriptor{{ID: "brother-ql800", ContractVersions: []int{1}, Formats: []string{"image/png"}, Media: []printing.Media{{PresetID: "brother-ql800-29x90", Version: 1}}, CompletionEvidence: "physical", Wake: false}}}
+	if err = client.Heartbeat(context.Background(), "session", report); err != nil {
+		t.Fatal(err)
+	}
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+	if peer.softwareReport == nil || peer.softwareReport.Version != report.Version {
+		t.Fatal("missing software version")
+	}
+	adapters := peer.softwareReport.Adapters.GetOrEmpty()
+	if len(adapters) != 1 || adapters[0].Media.GetOrEmpty()[0].Id != "brother-ql800-29x90" || adapters[0].ContractVersions.GetOrEmpty()[0] != 1 {
+		t.Fatal("capabilities lost in transport")
 	}
 }

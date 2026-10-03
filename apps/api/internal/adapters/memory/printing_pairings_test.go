@@ -50,7 +50,7 @@ func TestPairingExchangeIsSingleUseAndPendingGrantsDenyIssuance(t *testing.T) {
 	if err != nil || current.State != printing.ConnectorAwaitingActivation {
 		t.Fatalf("credential not awaiting activation: %+v %v", current, err)
 	}
-	if _, err := store.HeartbeatPrintConnector(ctx, current, now.Add(2*time.Minute), nil); err == nil {
+	if _, err := store.HeartbeatPrintConnector(ctx, current, now.Add(2*time.Minute), nil, nil); err == nil {
 		t.Fatal("unconfirmed credential remained valid")
 	}
 }

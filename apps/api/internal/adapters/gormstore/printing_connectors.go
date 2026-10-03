@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"reflect"
 	"time"
 )
 
@@ -137,7 +138,10 @@ func (s Store) PendingPrintConnectorScopes(ctx context.Context, limit int) ([]pr
 	}
 	return out, nil
 }
-func (s Store) HeartbeatPrintConnector(ctx context.Context, authenticated printing.Connector, now time.Time, makeAudit ports.ConnectorActivationAudit) (printing.Connector, error) {
+func (s Store) HeartbeatPrintConnector(ctx context.Context, authenticated printing.Connector, now time.Time, makeAudit ports.ConnectorActivationAudit, report *printing.ConnectorReport) (printing.Connector, error) {
+	if report != nil && !report.Valid() {
+		return printing.Connector{}, ports.ErrPrintConflict
+	}
 	var result printing.Connector
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		model, err := lockPrintConnector(tx, authenticated.Scope, authenticated.ID)
@@ -165,7 +169,7 @@ func (s Store) HeartbeatPrintConnector(ctx context.Context, authenticated printi
 				return ports.ErrPrintDenied
 			}
 		}
-		if pending || activating {
+		if pending || activating || (report != nil && !reflect.DeepEqual(c.Report, report)) {
 			if makeAudit == nil {
 				return ports.ErrPrintConflict
 			}
@@ -176,6 +180,10 @@ func (s Store) HeartbeatPrintConnector(ctx context.Context, authenticated printi
 			if err := createAuditRecord(tx, record); err != nil {
 				return err
 			}
+		}
+		if report != nil {
+			c.Report = report.Clone()
+			c.ReportReceivedAt = &now
 		}
 		c.LastSeenAt = &now
 		c.UpdatedAt = now

@@ -2836,7 +2836,30 @@ export interface components {
             lastSeenAt?: string;
             name: string;
             printerIds: string[] | null;
+            report?: components["schemas"]["ConnectorReport"];
+            /** Format: date-time */
+            reportReceivedAt?: string;
             state: string;
+        };
+        ConnectorAdapterCapability: {
+            completionEvidence: string;
+            contractVersions: number[] | null;
+            formats: string[] | null;
+            id: string;
+            media: components["schemas"]["ConnectorMediaCapability"][] | null;
+            wake: boolean;
+        };
+        ConnectorMediaCapability: {
+            id: string;
+            /** Format: int32 */
+            version: number;
+        };
+        ConnectorReport: {
+            adapters: components["schemas"]["ConnectorAdapterCapability"][] | null;
+            architecture: string;
+            commit: string;
+            platform: string;
+            version: string;
         };
         ConsumerPrinter: {
             /** Format: int64 */
@@ -3377,6 +3400,7 @@ export interface components {
              * @example https://example.com/schemas/HeartbeatInputBody.json
              */
             readonly $schema?: string;
+            report?: components["schemas"]["ConnectorReport"];
             sessionId: string;
         };
         ImportJobActorResponse: {

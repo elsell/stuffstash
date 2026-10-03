@@ -5,6 +5,7 @@ import (
 	"crypto/subtle"
 	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/internal/ports"
+	"reflect"
 	"sort"
 	"time"
 )
@@ -100,7 +101,10 @@ func (s *Store) PendingPrintConnectorScopes(_ context.Context, limit int) ([]pri
 	}
 	return out, nil
 }
-func (s *Store) HeartbeatPrintConnector(_ context.Context, authenticated printing.Connector, now time.Time, makeAudit ports.ConnectorActivationAudit) (printing.Connector, error) {
+func (s *Store) HeartbeatPrintConnector(_ context.Context, authenticated printing.Connector, now time.Time, makeAudit ports.ConnectorActivationAudit, report *printing.ConnectorReport) (printing.Connector, error) {
+	if report != nil && !report.Valid() {
+		return printing.Connector{}, ports.ErrPrintConflict
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	c, ok := s.printingConnectors[authenticated.ID]
@@ -124,7 +128,7 @@ func (s *Store) HeartbeatPrintConnector(_ context.Context, authenticated printin
 			return printing.Connector{}, ports.ErrPrintDenied
 		}
 	}
-	if pending || activating {
+	if pending || activating || (report != nil && !reflect.DeepEqual(c.Report, report)) {
 		if makeAudit == nil {
 			return printing.Connector{}, ports.ErrPrintConflict
 		}
@@ -136,6 +140,10 @@ func (s *Store) HeartbeatPrintConnector(_ context.Context, authenticated printin
 			return printing.Connector{}, ports.ErrPrintConflict
 		}
 		s.auditRecords[record.ID] = record
+	}
+	if report != nil {
+		c.Report = report.Clone()
+		c.ReportReceivedAt = &now
 	}
 	c.LastSeenAt = &now
 	c.UpdatedAt = now

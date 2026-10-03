@@ -99,7 +99,7 @@ func TestPostgresPrintConnectorApprovalRollbackAndSingleCredentialExchange(t *te
 	activationAudit := func(printing.Connector, bool) (audit.Record, error) {
 		return auditRecord(t, "pg-activated", tenant.ID(tid), inventory.InventoryID(iid), audit.ActionPrintConnectorActivated), nil
 	}
-	active, err := store.HeartbeatPrintConnector(ctx, issued, now, activationAudit)
+	active, err := store.HeartbeatPrintConnector(ctx, issued, now, activationAudit, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,11 +129,11 @@ func TestPostgresPrintConnectorApprovalRollbackAndSingleCredentialExchange(t *te
 		t.Fatal("fixture must exercise reused pending version")
 	}
 	next = replacement
-	if _, err := store.HeartbeatPrintConnector(ctx, active, now, nil); err != nil {
+	if _, err := store.HeartbeatPrintConnector(ctx, active, now, nil, nil); err != nil {
 		t.Fatalf("old credential invalid before activation: %v", err)
 	}
 	// A late audit failure must roll back activation and keep the old credential.
-	if _, err := store.HeartbeatPrintConnector(ctx, next, now, activationAudit); err == nil {
+	if _, err := store.HeartbeatPrintConnector(ctx, next, now, activationAudit, nil); err == nil {
 		t.Fatal("activation committed despite duplicate audit")
 	}
 	stillOld, err := store.FindPrintConnectorCredential(ctx, "pg-print-hash")
@@ -142,20 +142,20 @@ func TestPostgresPrintConnectorApprovalRollbackAndSingleCredentialExchange(t *te
 	}
 	rotated, err := store.HeartbeatPrintConnector(ctx, next, now, func(printing.Connector, bool) (audit.Record, error) {
 		return auditRecord(t, "pg-rotated", tenant.ID(tid), inventory.InventoryID(iid), audit.ActionPrintConnectorCredentialRotated), nil
-	})
+	}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if rotated.CredentialVersion != next.CredentialVersion || rotated.PendingCredentialHash != "" {
 		t.Fatal("pending credential not atomically activated")
 	}
-	if _, err := store.HeartbeatPrintConnector(ctx, expiredA, now, nil); err == nil {
+	if _, err := store.HeartbeatPrintConnector(ctx, expiredA, now, nil, nil); err == nil {
 		t.Fatal("expired pending A authenticated as replacement B")
 	}
 	if _, err := store.FindPrintConnectorCredential(ctx, "pg-print-hash"); err == nil {
 		t.Fatal("old credential hash still authenticates")
 	}
-	if _, err := store.HeartbeatPrintConnector(ctx, active, now, nil); err == nil {
+	if _, err := store.HeartbeatPrintConnector(ctx, active, now, nil, nil); err == nil {
 		t.Fatal("old authenticated request bypassed version fence")
 	}
 	if _, err := store.ConsumePrintPairing(ctx, ports.PairingExchange{PairingID: "pg-delayed", Now: now, CredentialHash: "pg-stale-hash", CredentialExpiresAt: now.Add(time.Hour), ActivationDeadline: now.Add(time.Minute), Audit: auditRecord(t, "pg-stale-issued", tenant.ID(tid), inventory.InventoryID(iid), audit.ActionPrintConnectorCredentialIssued)}); err == nil {

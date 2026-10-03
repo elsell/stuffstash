@@ -1801,11 +1801,38 @@ type Connector struct {
 	LastSeenAt           *time.Time                  `json:"lastSeenAt,omitempty"`
 	Name                 string                      `json:"name"`
 	PrinterIds           nullable.Nullable[[]string] `json:"printerIds"`
+	Report               *ConnectorReport            `json:"report,omitempty"`
+	ReportReceivedAt     *time.Time                  `json:"reportReceivedAt,omitempty"`
 	State                string                      `json:"state"`
 }
 
 // ConnectorAvailability defines model for Connector.Availability.
 type ConnectorAvailability string
+
+// ConnectorAdapterCapability defines model for ConnectorAdapterCapability.
+type ConnectorAdapterCapability struct {
+	CompletionEvidence string                                        `json:"completionEvidence"`
+	ContractVersions   nullable.Nullable[[]int32]                    `json:"contractVersions"`
+	Formats            nullable.Nullable[[]string]                   `json:"formats"`
+	Id                 string                                        `json:"id"`
+	Media              nullable.Nullable[[]ConnectorMediaCapability] `json:"media"`
+	Wake               bool                                          `json:"wake"`
+}
+
+// ConnectorMediaCapability defines model for ConnectorMediaCapability.
+type ConnectorMediaCapability struct {
+	Id      string `json:"id"`
+	Version int32  `json:"version"`
+}
+
+// ConnectorReport defines model for ConnectorReport.
+type ConnectorReport struct {
+	Adapters     nullable.Nullable[[]ConnectorAdapterCapability] `json:"adapters"`
+	Architecture string                                          `json:"architecture"`
+	Commit       string                                          `json:"commit"`
+	Platform     string                                          `json:"platform"`
+	Version      string                                          `json:"version"`
+}
 
 // ConsumerPrinter defines model for ConsumerPrinter.
 type ConsumerPrinter struct {
@@ -2413,8 +2440,9 @@ type HeartbeatInputBody struct {
 	// Schema A URL to the JSON Schema for this object.
 	//
 	// Examples: https://example.com/schemas/HeartbeatInputBody.json
-	Schema    *string `json:"$schema,omitempty"`
-	SessionId string  `json:"sessionId"`
+	Schema    *string          `json:"$schema,omitempty"`
+	Report    *ConnectorReport `json:"report,omitempty"`
+	SessionId string           `json:"sessionId"`
 }
 
 // ImportJobActorResponse defines model for ImportJobActorResponse.

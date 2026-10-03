@@ -78,6 +78,6 @@ type ConnectorRepository interface {
 	FindPrintConnectorCredential(context.Context, string) (printing.Connector, error)
 	SynchronizePrintConnector(context.Context, printing.Scope, printing.ConnectorID, ConnectorAuthorizationSync) error
 	PendingPrintConnectorScopes(context.Context, int) ([]printing.Connector, error)
-	HeartbeatPrintConnector(context.Context, printing.Connector, time.Time, ConnectorActivationAudit) (printing.Connector, error)
+	HeartbeatPrintConnector(context.Context, printing.Connector, time.Time, ConnectorActivationAudit, *printing.ConnectorReport) (printing.Connector, error)
 	ReportPrintPrinter(context.Context, printing.ConsumerAuthority, printing.PrinterReport, time.Time) error
 }
