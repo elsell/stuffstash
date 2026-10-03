@@ -52,7 +52,7 @@ func (s ConsumerService) Start(ctx context.Context, token string, proof ClaimPro
 		}
 		return p.Job{}, err
 	}
-	result, err := s.Jobs.jobs.UpdatePrintJob(ctx, ports.PrintJobUpdate{Scope: j.Scope, PrinterID: j.PrinterID, JobID: j.ID, Authority: &authority, Now: now, Change: func(job *p.Job, _ p.Printer) error {
+	result, err := s.Jobs.jobs.UpdatePrintJob(ctx, ports.PrintJobUpdate{Scope: j.Scope, PrinterID: j.PrinterID, JobID: j.ID, Authority: &authority, Now: now, StartReportMaxAge: s.Jobs.config.ReadinessMaxAge, Change: func(job *p.Job, _ p.Printer) error {
 		if !job.Artifact.ExpiresAt.After(now) {
 			return apperrors.ErrConflict
 		}

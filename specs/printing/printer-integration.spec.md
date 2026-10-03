@@ -686,3 +686,24 @@ scoped unsettled-attempt listing to confirm idle for an uncertain attempt. This
 never reconstructs completion/no-output evidence, writes a replacement claim,
 or submits a label. Claimed or printing attempts remain blocked. The worker
 continues to wait for human resolution before accepting another job.
+### Human health projection
+
+Connector list/detail responses expose server-computed `availability` (`online`,
+`offline`, or `unknown`) separately from registration state and authorization
+pending. Availability uses the injected API clock and configured heartbeat age;
+an active connector is online only while its credential and heartbeat are fresh.
+Never-heartbeated registrations are unknown; revoked, expired, future-dated, and
+stale connections are offline. This is connection health, not printer readiness
+or an authorization grant. Printer responses also expose the safe readiness
+reason and report timestamp selected by the existing authorized health projection.
+Unknown/stale printer health has no current reason or timestamp. Clients refresh
+these projections and do not invent their own stale thresholds.
+
+### Dispatch readiness fence
+
+The start transition rechecks the serving connector heartbeat and its readiness
+report under the same transaction and locks as the printer reservation. A lease
+renewal does not refresh either health signal. Stale, missing, future-dated, or
+unavailable health rejects a new start without consuming the claim or emitting
+output. An identical already-started retry remains readable/idempotent. Outcome
+reporting and reconciliation remain usable while the printer is unavailable.
