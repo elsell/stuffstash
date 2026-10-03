@@ -265,3 +265,52 @@ saved. If activation fails after saving, run `connectors print run` with the sam
 connector to retry activation. A rotation does not create a new printer or change
 its label size. Stop the old worker and restart it after rotation so it loads the
 new credential; existing uncertain jobs still require their normal recovery.
+### Save or resolve a label
+
+You can save labels without running a USB connector:
+
+```sh
+stuffstash labels templates
+stuffstash labels render ASSET_ID --printer PRINTER_ID --format png --output label.png
+stuffstash labels render ASSET_ID --media-preset brother-ql800-29x90 --format pdf --output label.pdf
+stuffstash labels resolve 'https://old.example.com/l/v1/INSTANCE_ID/LABEL_ID'
+```
+
+Rendering uses the inventory's template defaults, with the same template options
+as `labels print`. Omit the media selector to use the default printer. Choose a
+catalog media preset to render without registering a printer. Paired `--width-mm`
+and `--height-mm` also select an exact supported profile; the nominal 29 × 90 mm
+Brother preset has a physical profile of 29 × 89.8 mm. Unsupported sizes are
+rejected instead of being resized. See [supported label sizes](./printing/label-sizes/)
+for available templates and stock.
+
+PNG and PDF downloads are checked against the server's checksum before saving.
+The output path must be new: an existing file or symlink is never overwritten.
+Saving label files currently requires Linux or macOS. Windows refuses file output
+until a private Windows file adapter is available; listing templates, resolving
+labels, and requesting prints still work.
+`--json` reports the path, format, and checksum without mixing image bytes into
+terminal output. Saving a label does not enqueue a print job.
+
+Resolution uses your configured server and login, even when the scanned label
+contains an old hostname. It checks the instance identity and access before
+returning the asset, tenant, and inventory IDs. It never sends your credentials
+to the hostname printed in the QR code. Unlike scoped rendering, resolution does
+not require a selected tenant or inventory.
+
+### Update the loaded label size
+
+Use your human login with permission to configure the inventory:
+
+```sh
+stuffstash printers configure PRINTER_ID --label-size brother-ql800-29x90
+```
+
+The command selects a supported preset for the registered printer. Initially,
+only the Brother QL-800's 29 × 90 mm stock is supported. It preserves the printer's
+name and other settings and works while the printer is offline. The connector
+reads the updated setting from the server; its restricted credential cannot edit it.
+
+If another person changes the registration meanwhile, the command reports a
+conflict. Inspect the current printer before trying again. Updating stock never
+resizes labels already queued: jobs keep their original media requirements.

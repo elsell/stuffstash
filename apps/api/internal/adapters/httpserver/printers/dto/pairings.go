@@ -59,6 +59,7 @@ type ApprovePairingInput struct {
 	}
 }
 type Connector struct {
+	Availability         string     `json:"availability" enum:"online,offline,unknown"`
 	Generation           uint64     `json:"generation"`
 	PrinterIDs           []string   `json:"printerIds"`
 	ID                   string     `json:"id"`

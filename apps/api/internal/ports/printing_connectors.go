@@ -18,8 +18,10 @@ type PairingSecrets interface {
 }
 
 type ConnectorRegistration struct {
-	Connector printing.Connector
-	Bindings  []printing.PrinterBinding
+	// Read projection only; not persisted with registration.
+	Availability printing.ConnectorAvailability
+	Connector    printing.Connector
+	Bindings     []printing.PrinterBinding
 }
 
 type PairingApproval struct {

@@ -12,3 +12,5 @@ export { InventoryExportClient, type InventoryExportFormat } from "./inventoryEx
 export { ArchiveClient, type ArchiveJob, type ArchivePreview, type ArchiveScope } from './archiveClient';
 export {LabelsClient, type LabelMedia, type LabelTemplateSelection, type LabelRenderRequest} from './labelsClient';
 export {parseLabelLink, LabelLinkError, type LabelReference} from './labelLink';
+export { PrintingClient } from './printingClient';
+export { PrintPairingClient, type PairingScope } from './printPairingClient';

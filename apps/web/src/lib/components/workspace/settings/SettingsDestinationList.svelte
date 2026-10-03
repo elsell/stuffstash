@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Printer from '@lucide/svelte/icons/printer';
   import Bell from '@lucide/svelte/icons/bell';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
   import CircleUserRound from '@lucide/svelte/icons/circle-user-round';
@@ -17,7 +18,7 @@
   let { label, destinations, onNavigate }: { label: string; destinations: SettingsDestination[]; onNavigate: (href: string) => void } = $props();
   const icons: Record<SettingsDestinationIcon, Component> = {
     account: CircleUserRound, tenant: Building2, inventory: Boxes, access: Users, activity: Activity,
-    fields: ListChecks, 'asset-types': Shapes, tags: Tags, conversations: MessageCircle, notifications: Bell
+    fields: ListChecks, 'asset-types': Shapes, tags: Tags, conversations: MessageCircle, notifications: Bell, printing: Printer
   };
   function navigate(event: MouseEvent, href: string): void {
     if (!shouldHandleWorkspaceLinkClick(event)) return;

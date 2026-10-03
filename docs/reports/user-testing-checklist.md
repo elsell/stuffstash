@@ -168,3 +168,32 @@ the QL-800 without printing another label. The queue must stay paused until an
 editor acknowledges the unknown outcome. That acknowledgement must preserve the
 uncertain attempt and permit a separate, explicit reprint. Idle confirmation is
 covered by protocol-fake tests; its physical-device behavior remains unverified.
+### Mobile label printing and inventory defaults
+
+Status: source and stateful-fake checks only; native device and USB acceptance not
+performed for the mobile printing controls candidate.
+
+- On iPhone/iPad and Android, open Inventory Settings → Printers. Confirm the
+  registered Brother and 29 × 90 mm media appear, and connector registration/last
+  seen remain distinct from printer readiness. Unplug USB and refresh; the screen
+  must not say a label completed. Check narrow layout and enlarged text.
+- Change the default layout and automatic-print switch, Save, leave and return.
+  Confirm saved values. Back before Save must leave stored defaults unchanged.
+  With a viewer account, inspect printers without editable defaults.
+- Open an active item, container and location → More → Print label. Select the
+  printer, preview the QR/title label and print. Follow queued/preparing/printing
+  to the reported result. Confirm physical paper output on the QL-800 separately.
+- Cancel a queued job while the printer is unavailable. For uncertain output,
+  inspect the printer and verify the app explains the paused queue without
+  automatically issuing another label. Background/return and screen-reader
+  traversal must preserve accessible controls and avoid private preview leakage.
+
+For the create-and-print follow-up, open Add item with automatic printing enabled.
+Confirm the native switch starts on, stays off after you turn it off and navigate
+away/back, and resets to the inventory default for a new cleared draft. Enable it,
+save an item and follow View print job. Confirm one item and one physical label.
+When a submission response is lost, Retry Save must retain the original item and
+label request; fields stay locked until its outcome is recovered. Check this on
+iPhone/iPad and Android with the keyboard visible. These device checks remain
+unverified; controlled source tests cover initialization, retained requests,
+prepared tag identity and cross-inventory rejection.

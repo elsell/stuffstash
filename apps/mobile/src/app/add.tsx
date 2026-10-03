@@ -17,6 +17,7 @@ export default function AddRoute() {
     params.parentWillPromoteToContainer
   ]);
   const {
+    printing,
     inventoryAssetTypesQuery,
     addAssetDraftStore,
     addAssetContextQuery,
@@ -28,6 +29,7 @@ export default function AddRoute() {
 
   return (
     <AddAssetScreen
+      printing={printing}
       inventoryAssetTypesQuery={inventoryAssetTypesQuery}
       addAssetDraftStore={addAssetDraftStore}
       addAssetContextQuery={addAssetContextQuery}

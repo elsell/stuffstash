@@ -104,6 +104,7 @@ func (s ConnectorService) Get(ctx context.Context, a Actor, id printing.Connecto
 	if err != nil {
 		return r, err
 	}
+	r.Availability = r.Connector.Availability(s.Registry.Clock.Now(), s.Policy.ReportMaxAge)
 	return r, s.Registry.Audit.SaveAuditRecord(ctx, record)
 }
 
@@ -141,6 +142,9 @@ func (s ConnectorService) List(ctx context.Context, a Actor, limit int, cursor s
 	}
 	if err := s.Registry.Audit.SaveAuditRecord(ctx, record); err != nil {
 		return ConnectorPage{}, err
+	}
+	for i := range result.Items {
+		result.Items[i].Availability = result.Items[i].Connector.Availability(s.Registry.Clock.Now(), s.Policy.ReportMaxAge)
 	}
 	return result, nil
 }

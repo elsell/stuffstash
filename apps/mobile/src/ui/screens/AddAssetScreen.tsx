@@ -1,3 +1,7 @@
+import type { PrintingWorkspace, PrintCatalog } from '../../application/printing/PrintingWorkspace';
+import { PrintRequestRejected } from '../../application/printing/PrintSubmission';
+import type { CreateAssetCommandInput } from '../../application/add/CreateAssetCommand';
+import { AppSwitchField } from '../components/AppSwitchField';
 import { CatalogRecoveryError } from '../../application/shared/CatalogRecoveryError';
 import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import {MeasuredImage as Image} from '../components/MeasuredImage';
@@ -82,6 +86,7 @@ import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 
 type AddAssetScreenProps = {
+  readonly printing?: PrintingWorkspace;
   readonly inventoryAssetTypesQuery: Pick<InventoryAssetTypesQuery, 'execute'>;
   readonly addAssetDraftStore: AddAssetDraftStore;
   readonly addDraftScopeQuery: AddDraftScopeQuery;
@@ -123,7 +128,7 @@ export function AddAssetScreen(props: AddAssetScreenProps) {
 }
 
 function ScopedAddAssetScreen({
-  inventoryAssetTypesQuery, addAssetDraftStore, createAssetCommand, initialParent, onDismiss = () => router.back(), parentLookupQuery, photoSelectionQuery, addContext, principalId, principalError, onRetry
+  printing, inventoryAssetTypesQuery, addAssetDraftStore, createAssetCommand, initialParent, onDismiss = () => router.back(), parentLookupQuery, photoSelectionQuery, addContext, principalId, principalError, onRetry
 }: AddAssetScreenProps & { readonly addContext: ReturnType<typeof useMobileInventoryServerQuery<AddAssetContext>>; readonly principalId?: string; readonly principalError: Error | null; readonly onRetry: () => void }) {
   const types = useMobileInventoryServerQuery({ key: (scope, tenant, inventory) => mobileQueryKeys.customization(scope, tenant, inventory, 'inventory', 'asset-type-choices', 'active'), enabled: !!addContext.data, query: (signal) => inventoryAssetTypesQuery.execute(addContext.data!.tenantId, addContext.data!.inventoryId, { signal }) });
   const colors = useAppearanceAwarePalette();
@@ -136,6 +141,20 @@ function ScopedAddAssetScreen({
   const navigationHeaderHeight = useHeaderHeight();
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' });
   const [draftContext, setDraftContext] = useState<AddAssetDraftContext | undefined>();
+  const [printLabel, setPrintLabel] = useState<boolean | undefined>();
+  const [printCatalog, setPrintCatalog] = useState<PrintCatalog>();
+  const [printLoadFailed, setPrintLoadFailed] = useState(false);
+  const [printLoadRevision, setPrintLoadRevision] = useState(0);
+  const [pendingPrintCreate, setPendingPrintCreate] = useState<CreateAssetCommandInput>();
+  useEffect(() => {
+    if (!printing || !draftContext) return;
+    const controller = new AbortController(); setPrintCatalog(undefined); setPrintLoadFailed(false);
+    void printing.repository.catalog(draftContext, controller.signal).then(value => {
+      if (controller.signal.aborted) return;
+      setPrintCatalog(value); setPrintLabel(current => current ?? value.settings.printOnCreateDefault);
+    }).catch(() => { if (!controller.signal.aborted) setPrintLoadFailed(true); });
+    return () => controller.abort();
+  }, [printing, draftContext?.tenantId, draftContext?.inventoryId, printLoadRevision]);
   const [expiration, setExpiration] = useState<AssetExpiration | undefined>();
   const [customAssetTypeId, setCustomAssetTypeId] = useState<string | undefined>();
   const [expirationValid, setExpirationValid] = useState(true);
@@ -166,7 +185,7 @@ function ScopedAddAssetScreen({
   const [draftBusy, setDraftBusy] = useState(false);
   usePreventRemove(draftBusy, () => {});
   function beginDraftOperation(operation: 'save' | 'parent' | 'photo') {
-    if (draftOperation.current) return false;
+    if (draftOperation.current || (pendingPrintCreate && operation !== 'save')) return false;
     draftOperation.current = operation; setDraftBusy(true); Keyboard.dismiss();
     if (saveState.status === 'error') setSaveState({ status: 'idle' });
     return true;
@@ -177,7 +196,7 @@ function ScopedAddAssetScreen({
     if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(`${title}. ${message}`);
   }
   function editDraft(change: () => void) {
-    if (draftOperation.current) return;
+    if (draftOperation.current || pendingPrintCreate) return;
     if (saveState.status === 'error') setSaveState({ status: 'idle' });
     change();
   }
@@ -232,6 +251,7 @@ function ScopedAddAssetScreen({
     }
 
     addAssetDraftStore.save(draftContext, {
+      printLabel, pendingPrintCreate,
       expiration,
       customAssetTypeId,
       title,
@@ -259,11 +279,11 @@ function ScopedAddAssetScreen({
     newTags,
     inlineTag,
     showDetails,
-    title
+    title, printLabel, pendingPrintCreate
   ]);
 
   async function saveAsset(): Promise<void> {
-    if (hasUnstagedTag || !expirationValid || !beginDraftOperation('save')) return;
+    if ((!pendingPrintCreate && (hasUnstagedTag || !expirationValid || (printing && printLabel === undefined))) || !beginDraftOperation('save')) return;
     setSaveState({ status: 'saving' });
 
     try {
@@ -273,16 +293,21 @@ function ScopedAddAssetScreen({
         parentQuery,
         lastParent
       );
-      if (parentAssetId && !selectedParent) {
+      if (!pendingPrintCreate && parentAssetId && !selectedParent) {
         throw new CatalogRecoveryError('recovery.reselectParent');
       }
-      assertSelectableParent(selectedParent);
+      if (!pendingPrintCreate) assertSelectableParent(selectedParent);
       const resolvedParentAssetId = resolveParentAssetId(
         parentMatches,
         parentQuery,
         parentAssetId
       );
-      const result = await createAssetCommand.execute({
+      const defaultPrinter = printCatalog?.printers.find(printer => printer.id === printCatalog.settings.defaultPrinterId && !printer.retired);
+      if (!pendingPrintCreate && printLabel && (!defaultPrinter || !printCatalog || !printing || !draftContext)) throw new PrintRequestRejected();
+      const request: CreateAssetCommandInput = pendingPrintCreate ?? {
+        ...(printLabel && defaultPrinter && printCatalog && printing && draftContext ? { printRequest: { key: printing.newRequestKey(), scope: { tenantId: draftContext.tenantId, inventoryId: draftContext.inventoryId }, selection: {
+          printerId: defaultPrinter.id, mediaFingerprint: defaultPrinter.mediaFingerprint, template: printCatalog.settings.template, copies: 1
+        } } } : {}),
         expiration,
         customAssetTypeId,
         title,
@@ -298,7 +323,10 @@ function ScopedAddAssetScreen({
           uri: photo.uri,
           sizeBytes: photo.sizeBytes
         }))
-      });
+      };
+      if (request.printRequest) setPendingPrintCreate(request);
+      const result = await createAssetCommand.execute(request);
+      setPendingPrintCreate(undefined); setPrintLabel(printCatalog?.settings.printOnCreateDefault);
       const nextParent = resolveSelectedParent(
         parentMatches,
         resolvedParentAssetId,
@@ -335,12 +363,13 @@ function ScopedAddAssetScreen({
         title: t('mobile.AddAssetScreen.assetSaved'),
         message: result.message,
         action: {
-          label: t('mobile.AddAssetScreen.view'),
-          onPress: () => router.push(assetDetailHref(result.id))
+          label: t(result.printJobId ? 'printing.mobile.viewJob' : 'mobile.AddAssetScreen.view'),
+          onPress: () => result.printJobId ? router.push({ pathname: '/print-jobs/[jobId]', params: { jobId: result.printJobId } } as never) : router.push(assetDetailHref(result.id))
         }
       });
     } catch (error) {
-      const message = readableError(error, t('mobile.AddAssetScreen.couldNotSaveAsset'));
+      if (error instanceof PrintRequestRejected) setPendingPrintCreate(undefined);
+      const message = readableError(error, t(error instanceof PrintRequestRejected ? 'printing.mobile.createRejected' : pendingPrintCreate || printLabel ? 'printing.mobile.createRetry' : 'mobile.AddAssetScreen.couldNotSaveAsset'));
       showDraftError(t('add.error.save'), message);
       await refreshDashboardAfterTagCreation(newTags);
     } finally { endDraftOperation(); }
@@ -441,7 +470,7 @@ function ScopedAddAssetScreen({
   }
 
   function removePhoto(photoId: string): void {
-    if (draftOperation.current) return;
+    if (draftOperation.current || pendingPrintCreate) return;
     setSelectedPhotos((current) => current.filter((photo) => photo.id !== photoId));
     setPreviewPhotoIndex((current) => {
       if (current === undefined) {
@@ -458,7 +487,7 @@ function ScopedAddAssetScreen({
   }
 
   function choosePhotoSource(): void {
-    if (draftOperation.current) return;
+    if (draftOperation.current || pendingPrintCreate) return;
     const canPresent = capturePhotoChooserVisit();
     if (!canPresent()) return;
     showPhotoSourceChooser({
@@ -469,7 +498,7 @@ function ScopedAddAssetScreen({
   }
 
   function movePhoto(photoId: string, direction: number): void {
-    if (draftOperation.current) return;
+    if (draftOperation.current || pendingPrintCreate) return;
     setSelectedPhotos((current) => {
       const index = current.findIndex((photo) => photo.id === photoId);
       const targetIndex = index + direction;
@@ -485,7 +514,7 @@ function ScopedAddAssetScreen({
   }
 
   function clearDraft(): void {
-    if (draftOperation.current) return;
+    if (draftOperation.current || pendingPrintCreate) return;
     const clearedDraft = { ...emptyDraft };
     applyDraft(clearedDraft);
     if (draftContext) {
@@ -495,6 +524,7 @@ function ScopedAddAssetScreen({
   }
 
   function applyDraft(draft: AddAssetDraft): void {
+    setPrintLabel(draft.printLabel ?? printCatalog?.settings.printOnCreateDefault); setPendingPrintCreate(draft.pendingPrintCreate);
     setExpiration(draft.expiration);
     setCustomAssetTypeId(draft.customAssetTypeId);
     setExpirationValid(true);
@@ -536,9 +566,10 @@ function ScopedAddAssetScreen({
       }} />
   } : undefined);
 
-  const closeOptions = useNativeHeaderActionOptions([{ kind: 'close', label: t('mobile.AddAssetScreen.closeAdd'), disabled: draftBusy, onPress: () => editDraft(() => onDismiss?.()) }], 'left');
+  const draftLocked = draftBusy || !!pendingPrintCreate;
+  const closeOptions = useNativeHeaderActionOptions([{ kind: 'close', label: t('mobile.AddAssetScreen.closeAdd'), disabled: draftBusy, onPress: () => { if (!draftBusy) onDismiss?.(); } }], 'left');
   const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: t('mobile.AddAssetScreen.saveItem'),
-    disabled: draftBusy || hasUnstagedTag || !title.trim() || !expirationValid || loadState.status !== 'ready' || !loadState.context.canAdd,
+    disabled: draftBusy || (!pendingPrintCreate && (hasUnstagedTag || !title.trim() || !expirationValid || (printing && printLabel === undefined))) || loadState.status !== 'ready' || !loadState.context.canAdd,
     onPress: () => void saveAsset() }]);
   const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false, gestureEnabled: !draftBusy, title: t('mobile.AddAssetScreen.addItem'),
     ...closeOptions, ...saveOptions }), [draftBusy, closeOptions, saveOptions]);
@@ -601,7 +632,12 @@ function ScopedAddAssetScreen({
               </View>
             ) : (
               <View>
-                <PhotoCapture disabled={draftBusy}
+                {printing ? <View style={{ marginBottom: 16 }}>
+                  <AppSwitchField label={t('printing.mobile.auto')} value={printLabel ?? false} disabled={draftLocked || !printCatalog} onValueChange={value => editDraft(() => setPrintLabel(value))} />
+                  {printLoadFailed ? <><Text accessibilityRole="alert" style={styles.errorText}>{t('printing.mobile.defaultsUnavailable')}</Text><NativeCommandButton label={t('printing.mobile.retry')} disabled={draftLocked} onPress={() => setPrintLoadRevision(value => value + 1)} /><NativeCommandButton label={t('printing.mobile.addWithoutLabel')} disabled={draftLocked} onPress={() => setPrintLabel(false)} /></> : null}
+                  {pendingPrintCreate ? <Text style={styles.errorText}>{t('printing.mobile.createRetry')}</Text> : null}
+                </View> : null}
+                <PhotoCapture disabled={draftLocked}
                   draggingPhotoId={draggingPhotoId}
                   onBeginPhotoDrag={id => editDraft(() => setDraggingPhotoId(id))}
                   onEndPhotoDrag={() => setDraggingPhotoId(undefined)}
@@ -615,7 +651,7 @@ function ScopedAddAssetScreen({
                 <Text style={styles.fieldLabel}>{t('mobile.AddAssetScreen.name')}</Text>
                 <AddDraftNameField key={Platform.OS === 'ios' ? `name-${nameRevision}` : 'name'}
                   accessibilityLabel={t('mobile.AddAssetScreen.assetName')}
-                  editable={!draftBusy}
+                  editable={!draftLocked}
                   onChangeText={value => editDraft(() => setTitle(value))}
                   placeholder={t('mobile.AddAssetScreen.furnaceFilterPassportCampingBin')}
                   placeholderTextColor={colors.textMuted}
@@ -632,8 +668,8 @@ function ScopedAddAssetScreen({
 
                 <Pressable
                   accessibilityRole="button"
-                  disabled={draftBusy}
-                  accessibilityState={{ expanded: showDetails, disabled: draftBusy }}
+                  disabled={draftLocked}
+                  accessibilityState={{ expanded: showDetails, disabled: draftLocked }}
                   onPress={() => editDraft(() => setShowDetails((current) => !current))}
                   style={styles.moreDetailsButton}
                 >
@@ -645,24 +681,24 @@ function ScopedAddAssetScreen({
                   )}
                 </Pressable>
 
-                {types.isError ? <View><Text accessibilityRole="alert" style={{ color: colors.text }}>{t('mobile.AddAssetScreen.assetTypesCouldNotBeLoaded')}</Text><NativeCommandButton label={t('mobile.AddAssetScreen.retryAssetTypes')} disabled={draftBusy} onPress={() => { if (!draftOperation.current) void types.refetch(); }} /></View> : null}
-                {types.data || !types.isError ? <AssetExpirationEditor key={expirationRevision} asset={{ id: 'new-item', title, description }} types={types.data} disabled={draftBusy}
+                {types.isError ? <View><Text accessibilityRole="alert" style={{ color: colors.text }}>{t('mobile.AddAssetScreen.assetTypesCouldNotBeLoaded')}</Text><NativeCommandButton label={t('mobile.AddAssetScreen.retryAssetTypes')} disabled={draftLocked} onPress={() => { if (!draftOperation.current) void types.refetch(); }} /></View> : null}
+                {types.data || !types.isError ? <AssetExpirationEditor key={expirationRevision} asset={{ id: 'new-item', title, description }} types={types.data} disabled={draftLocked}
                   draft={{ title, description, expiration, customAssetTypeId, expirationValid }}
-                  onChange={(draft) => { if (draftOperation.current) return; setCustomAssetTypeId(draft.customAssetTypeId); if (draft.expirationValid !== false) setExpiration(draft.expiration ?? undefined); setExpirationValid(draft.expirationValid !== false); }} /> : null}
+                  onChange={(draft) => { if (draftOperation.current || pendingPrintCreate) return; setCustomAssetTypeId(draft.customAssetTypeId); if (draft.expirationValid !== false) setExpiration(draft.expiration ?? undefined); setExpirationValid(draft.expirationValid !== false); }} /> : null}
                 {hasUnstagedTag && !showDetails ? <Text style={styles.parentPromotionText}>{t('mobile.AddAssetScreen.openMoreDetailsToAddOrClearTheUnfinished')}</Text> : null}
                 {showDetails ? (
                   <View>
                     <AppTextInput
                       accessibilityLabel={t('mobile.AddAssetScreen.assetDescription')}
                       multiline
-                      editable={!draftBusy}
+                      editable={!draftLocked}
                       onChangeText={value => editDraft(() => setDescription(value))}
                       placeholder={t('mobile.AddAssetScreen.description')}
                       placeholderTextColor={colors.textMuted}
                       style={[styles.input, styles.textArea]}
                       value={description}
                     />
-                    <AssetTagPicker key={nameRevision} disabled={draftBusy} scope={JSON.stringify([loadState.context.tenantId, loadState.context.inventoryId, nameRevision])}
+                    <AssetTagPicker key={nameRevision} disabled={draftLocked} scope={JSON.stringify([loadState.context.tenantId, loadState.context.inventoryId, nameRevision])}
                       tags={loadState.context.assetTags}
                       selectedTagIds={selectedTagIds}
                       newTags={newTags}
@@ -670,7 +706,7 @@ function ScopedAddAssetScreen({
                       onChange={(ids, tags, entry) => editDraft(() => { setSelectedTagIds(ids); setNewTags(tags); setInlineTag(entry); })}
                     />
                     <NativeCommandButton label={t('mobile.AddAssetScreen.clearDraft')} role="destructive"
-                      disabled={draftBusy} onPress={clearDraft} />
+                      disabled={draftLocked} onPress={clearDraft} />
                   </View>
                 ) : null}
 
@@ -681,7 +717,7 @@ function ScopedAddAssetScreen({
         ) : null}
       </ScrollView>
       <DraftPhotoPreviewModal
-        disabled={draftBusy}
+        disabled={draftLocked}
         currentIndex={previewPhotoIndex}
         onClose={() => setPreviewPhotoIndex(undefined)}
         onRemovePhoto={removePhoto}

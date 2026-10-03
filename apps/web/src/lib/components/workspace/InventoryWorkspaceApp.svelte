@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { prepareAssetPrintCreation, type AssetPrintCreationAttempt } from "$lib/application/printing/assetCreation";
   import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import { inventoryArchiveContext, type InventoryArchiveWorkspace } from '$lib/ports/inventoryArchive';
   import { t } from '$lib/presentation/localization';
@@ -10,6 +11,7 @@
   import ExpirationRefresh from './ExpirationRefresh.svelte';
   import NotificationBell from './NotificationBell.svelte';
   import { settingsResourceHref } from '$lib/application/settingsManagementNavigation';
+  import { printingWorkspaceContext, type PrintingWorkspace } from '$lib/ports/printingRepository';
   import { notificationWorkspaceContext, type NotificationWorkspace } from '$lib/ports/notificationWorkspace';
   import { conversationWorkspaceContext, type ConversationWorkspaceRepositories } from '$lib/ports/conversationWorkspace';
   import { addReturnFocusTarget } from '$lib/application/workspaceAddFocus';
@@ -111,7 +113,7 @@
   let {
     repository,
     archives, exportCommand, conversations, inventoryConversation,
-    notifications,
+    notifications, printing,
     expiration,
     observer = { record: () => {} },
     initialData,
@@ -124,6 +126,7 @@
     inventoryConversation?: InventoryConversationTransport;
     conversations?: ConversationWorkspaceRepositories;
     notifications?: NotificationWorkspace;
+    printing?: PrintingWorkspace;
     expiration?: ExpirationWorkspace;
     observer?: WorkspaceObserver;
     initialData: WorkspaceData;
@@ -140,6 +143,8 @@
   // svelte-ignore state_referenced_locally -- fixed authenticated-session dependency.
   setContext(expirationWorkspaceContext, expiration ? { ...expiration, observer, positions: new Map(), cache: new Map(), revision: () => data } : undefined);
   // svelte-ignore state_referenced_locally -- dependencies are fixed for the authenticated workspace.
+  setContext(printingWorkspaceContext, printing);
+  // svelte-ignore state_referenced_locally -- workspace adapters are stable for this mounted session.
   setContext(notificationWorkspaceContext, notifications ? { ...notifications, onPreferencesChanged: async () => { await refreshExpirationAssets(); } } : undefined);
 
   // svelte-ignore state_referenced_locally -- the repository is immutable for the mounted workspace session.
@@ -353,6 +358,10 @@
     }
   }
 
+  const pendingPrintCreations = new Map<string, AssetPrintCreationAttempt>();
+  let pendingPrintRevision = $state(0);
+  let pendingPrintDraft = $derived.by(() => { pendingPrintRevision; return selectedInventory ? pendingPrintCreations.get(JSON.stringify([selectedInventory.tenantId, selectedInventory.id]))?.draft : undefined; });
+
   async function createAsset(draft: AddAssetSubmission): Promise<AddAssetSaveResult> {
     if (!selectedInventory) {
       error = t('web.InventoryWorkspaceApp.createAnInventoryBeforeAddingAssets');
@@ -362,12 +371,24 @@
       error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToAddAssetsIn');
       return { saved: false };
     }
+    if (busy) return {saved:false};
+    const scopeKey = JSON.stringify([selectedInventory.tenantId, selectedInventory.id]);
+    let attempt = pendingPrintCreations.get(scopeKey);
+    if (!attempt && draft.printLabel) {
+      attempt = prepareAssetPrintCreation(draft, crypto.randomUUID());
+      pendingPrintCreations.set(scopeKey, attempt);
+      pendingPrintRevision++;
+    }
     busy = true;
     error = '';
     refreshWarning = null;
     notification = null;
     try {
-      const result = await createAssetWorkflow(repository, data, selectedInventory, draft);
+      const result = await createAssetWorkflow(repository, data, selectedInventory, attempt?.draft ?? draft, attempt?.checkpoint);
+      if (attempt && (result.saveResult.saved || !attempt.checkpoint.ambiguous)) {
+        pendingPrintCreations.delete(scopeKey);
+        pendingPrintRevision++;
+      }
       data = result.data;
       if (result.message) {
         setMutationSuccessNotification(result.message, result.selectedAsset, result.selectedAsset ? viewAssetAction(result.selectedAsset) : undefined);
@@ -2066,6 +2087,8 @@
 
   <InventoryWorkspaceOverlays
     {addOpen}
+    {pendingPrintDraft}
+    printScope={selectedInventory ? {tenantId:selectedInventory.tenantId,inventoryId:selectedInventory.id} : undefined}
     {createAssetAllowed}
     {addKind}
     {addParentAssetId}
