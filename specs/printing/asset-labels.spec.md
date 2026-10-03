@@ -87,8 +87,9 @@ shared hosted link resolution, and automatic smart-outlet control are deferred.
 - Internally, typed media settings contain physical width/height, printable
   margins, resolution, raster dimensions/orientation, color mode, and cut policy.
   A built-in adapter preset supplies technical values where known. For the first
-  QL-800 adapter the user selects 29 x 90 mm; unknown/unsupported media is rejected
-  with setup guidance, not silently treated as compatible. Other sizes can be
+  QL-800 adapter the user selects 29 x 90 mm; this is the only required printer
+  and label-size combination in the first release. Unknown/unsupported media is
+  rejected with setup guidance, not silently treated as compatible. Other sizes can be
   supported by adding validated presets without changing the registration model.
 - Media settings belong to the printer registration, not an independently managed
   inventory media catalog. Do not require users to create separate size resources,
@@ -293,3 +294,12 @@ the existing localization infrastructure rather than hard-coded English.
   It uses brother_ql/PyUSB, QL-800, USB vendor/product 04f9:209b, and 29x90 media.
   Script settings are evidence of prior configuration, not current roll detection
   or physical acceptance. Do not copy embedded credentials or disabled TLS checks.
+
+## Generated Template Documentation
+
+Template registrations and rendering behavior feed the public catalog and PNG
+examples defined by [generated printing docs](../platform/printing-catalog-docs.spec.md).
+Use the actual renderer with fixed synthetic fixtures for each supported
+template/media combination; no independent documentation layout implementation.
+Changes to templates, presets, or renderer behavior update generated docs/images
+in the same PR and must pass generation/drift checks.

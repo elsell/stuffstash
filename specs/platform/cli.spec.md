@@ -147,7 +147,8 @@ stuffstash print-jobs reprint <job-id>
 
 ## Built-In Printer Adapter
 
-- Ship the Brother QL-800 adapter and 29 x 90 mm profile with the CLI distribution.
+- Ship only the required Brother QL-800 adapter and 29 x 90 mm profile initially.
+  Bundle them with the CLI distribution; other models/media are future extensions.
   No separate user-installed Stuff Stash plugin or Python/uv setup is part of
   the intended experience. OS USB permissions or a packaged native USB runtime
   may require documented installation setup.
@@ -270,3 +271,11 @@ stuffstash print-jobs reprint <job-id>
   implementation; do not repeatedly request them or block unrelated release work.
 - Current evidence is read-only inspection of the old script on Paul, not a new
   print, current-device discovery, or completed connector implementation.
+
+## Generated First-Party Printer Documentation
+
+Built-in adapter registrations expose offline, deterministic public descriptors
+for [generated printing docs](printing-catalog-docs.spec.md). Registered runtime
+adapters, supported platforms/transports, and media presets drive the website's
+support catalog. Verify export/runtime parity; no docs-only list or USB access is
+required for export. Candidate support and physical verification remain distinct.

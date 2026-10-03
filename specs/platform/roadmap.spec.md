@@ -18,7 +18,11 @@ user-selected label size; trust that setting without mandatory roll detection.
 Size remains editable; mismatching queued jobs wait without resizing. Independent
 templates produce immutable API-rendered artifacts for that registered size,
 consumed through a versioned contract rather than adapter-owned layouts.
-Initial media profile derives from the user's old script: 29 x 90 mm, 306 x 991
+[Generated printing docs](printing-catalog-docs.spec.md) adds registry-derived
+printer/template/size catalogs and production-rendered PNG examples, automatically
+regenerated and checked in PR CI. This automation is specified, not implemented.
+Initial required printer/media support is only the USB QL-800 on Linux. Its
+media profile derives from the user's old script: 29 x 90 mm, 306 x 991
 raster. Actual USB completion reporting, media/scan behavior, and packaging remain
 unverified. Remote wake/smart outlets and a shared hosted QR resolver are outside
 the first release. Pending user-device checks do not block unrelated delivery;
