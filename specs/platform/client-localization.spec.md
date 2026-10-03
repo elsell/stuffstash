@@ -481,3 +481,15 @@ catalog labels, with cataloged guidance for unknown codes rather than treating
 wire identifiers as prose. Result summaries pluralize model-call counts and use
 locale number formatting for seconds. Raw verdict codes and measured durations
 remain unchanged in the result model.
+
+### Photo and evaluation review formatting
+
+Photo metadata byte counts and displayed sizes use runtime-locale numbers while
+preserving the existing binary scaling, precision, unit symbols and authored file
+names. Photo position messages receive numeric values rather than preformatted
+English strings. Saved conversation cases use complete expectation messages and
+locale-formatted lists of references, tags and forbidden operations. Run
+comparisons format totals and durations with the locale formatter and pluralize
+per-case call counts. Measurement values, comparison eligibility and wire data
+remain unchanged. Verify representative photo metadata and rendered case/run
+reviews under a non-English formatting locale and expanded messages.
