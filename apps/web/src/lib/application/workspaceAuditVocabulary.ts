@@ -1,6 +1,8 @@
 import { t } from '$lib/presentation/localization';
 
 const actionMessages = {
+  "print_settings.viewed": "audit.action.print_settings.viewed",
+  "print_settings.updated": "audit.action.print_settings.updated",
   "print_job.claimed": "audit.action.print_job.claimed",
   "print_job.started": "audit.action.print_job.started",
   "print_job.completed": "audit.action.print_job.completed",
