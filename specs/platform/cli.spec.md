@@ -420,3 +420,28 @@ renderer one-dot tolerance. Brother's printhead offsets (6 right, 408 left) are
 transport mechanics, distinct from these physical margins. Sysfs and device-root
 defaults can be configured by `STUFF_STASH_CLI_SYSFS_USB_ROOT` and
 `STUFF_STASH_CLI_USB_DEVICE_ROOT`; job data cannot override local device paths.
+
+### Retryable release publication
+
+The release workflow builds the five portable CLI targets and self-host bundle
+from the validated release commit before creating a tag. It retains those exact
+bytes, release notes, image references, and a SHA-256 publication manifest as a
+GitHub Actions artifact. A release starts as a draft; publication uploads missing
+assets, verifies every downloaded asset against the manifest, and only then makes
+it stable. Existing assets with different bytes are an error, never overwritten.
+
+An explicit `repair_run_id` workflow input resumes the retained artifact of a
+completed Release run in this repository on main. The workflow verifies the
+original workflow identity, run commit, manifest commit, and tag target before
+writing release state. It does not rebuild from a moving branch or guess an old
+release's contents. Missing/expired artifacts require investigation, not silent
+replacement. Ordinary release planning is unchanged and repair does not cut a new
+tag or trigger TestFlight again.
+
+Only a fully verified, published, non-prerelease release can update checked-in CLI
+download metadata. The maintenance PR regenerates exact versioned URLs and hashes;
+its `chore(release)` commit does not manufacture another release. Older repair runs
+cannot replace a newer stable download. Production docs are dispatched against
+main after that PR is observed merged; requesting auto-merge alone is insufficient.
+A failed docs refresh is reported separately and can be retried by dispatching
+Docs Pages against main. Failed Release runs never trigger a production docs build.
