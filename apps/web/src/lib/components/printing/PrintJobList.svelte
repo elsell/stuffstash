@@ -5,13 +5,14 @@ import { jobStatusLabel,reportedPrintOutcomeLabel } from '$lib/presentation/prin
 import type { ReportedPrintOutcome, PrintJob, RegisteredPrinter, PrintScope } from '$lib/domain/printing';
 import * as Button from '$lib/components/ui/button/index.js';
 import PrintJobResolution from './PrintJobResolution.svelte';
-let { jobs, printers, scope, canPrint, busy = false, onCancel, onResolve }: {
+let { jobs, printers, scope, canPrint, busy = false, onCancel, onResolve, onReprint }: {
     jobs: PrintJob[];
     printers: RegisteredPrinter[];
     scope: PrintScope;
     canPrint: boolean;
     busy?: boolean;
     onCancel: (job: PrintJob) => Promise<void>;
+    onReprint?: (job: PrintJob, trigger: HTMLElement) => void;
     onResolve?:(job:PrintJob,outcome:ReportedPrintOutcome)=>Promise<void>;
 } = $props();
 </script>
@@ -30,7 +31,7 @@ let { jobs, printers, scope, canPrint, busy = false, onCancel, onResolve }: {
    {/if}
    {#if job.resolution}<p>{t('web.Printing.reportedOutcome')}: {reportedPrintOutcomeLabel(job.resolution.reportedOutcome)}</p><p>{t('web.Printing.resolutionActorTime',{actor:job.resolution.resolvedBy,time:timestampLabel(job.resolution.resolvedAt)})}</p>{/if}
    {#if canPrint&&(job.status==='queued'||job.status==='claimed')}<Button.Root variant="outline" disabled={busy} onclick={()=>void onCancel(job)}>{t('web.Printing.cancelJob')}</Button.Root>{/if}
-   {#if canPrint&&job.assetId&&['completed','failed','canceled'].includes(job.status)}<Button.Root variant="outline" href={`/tenants/${encodeURIComponent(scope.tenantId)}/inventories/${encodeURIComponent(scope.inventoryId)}/assets/${encodeURIComponent(job.assetId)}`}>{t('web.Printing.openAsset')}</Button.Root>{/if}
+   {#if canPrint&&job.assetId&&['completed','failed','canceled'].includes(job.status)}{#if onReprint}<Button.Root variant="outline" disabled={busy} onclick={event=>onReprint?.(job,event.currentTarget)}>{t('web.Printing.printAgain')}</Button.Root>{:else}<Button.Root variant="outline" href={`/tenants/${encodeURIComponent(scope.tenantId)}/inventories/${encodeURIComponent(scope.inventoryId)}/assets/${encodeURIComponent(job.assetId)}`}>{t('web.Printing.openAsset')}</Button.Root>{/if}{/if}
   </li>
  {/each}
  </ul>

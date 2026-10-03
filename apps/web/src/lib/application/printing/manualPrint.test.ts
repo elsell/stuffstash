@@ -83,3 +83,11 @@ it('does not retain a preview whose dialog was canceled',async()=>{
  const pending=request.preview({printerId:printer.id,expectedMediaFingerprint:printer.mediaFingerprint,templateId:'qr-title',templateVersion:1,showReference:true,copies:1},printer.media,controller.signal);
  const rejected=expect(pending).rejects.toMatchObject({kind:'conflict'});await Promise.resolve();controller.abort();repo.deliveries[0]();await rejected;await expect(request.submit()).rejects.toMatchObject({kind:'invalid'});expect(repo.queued.size).toBe(0);
 });
+it('retains a linked reprint after dismissal and lost response without duplicating output',async()=>{
+ const repo=new FakePrintingRepository();let key=0;const intents=new SessionPrintIntents(repo,()=>`key-${++key}`);const printer=repo.destinations[0];
+ const selection={printerId:printer.id,expectedMediaFingerprint:printer.mediaFingerprint,templateId:'qr-title',templateVersion:1,showReference:true,copies:1};
+ const original=intents.forAsset(repo.scope,'asset');await original.preview(selection,printer.media);const job=await original.submit();repo.queued.get(job.id)!.status='completed';
+ const request=intents.forReprint(repo.scope,'asset',job.id);await request.preview(selection,printer.media);repo.loseNextJobResponse=true;await expect(request.submit()).rejects.toThrow();
+ const reopened=intents.forReprint(repo.scope,'asset',job.id);expect(reopened).toBe(request);expect(reopened.locked).toBe(true);const successor=await reopened.submit();expect(successor.predecessor).toBe(job.id);expect(repo.queued.size).toBe(2);expect(key).toBe(2);
+ repo.canPrint=false;const denied=intents.forReprint(repo.scope,'asset',successor.id);await expect(denied.preview(selection,printer.media)).rejects.toMatchObject({kind:'denied'});
+});
