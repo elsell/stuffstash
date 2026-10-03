@@ -77,3 +77,15 @@ test('checks literals hidden inside interpolation template spans', () => {
   const source = "const label = t('current', { value: `${active ? 'Changes' : 'All events'}` });";
   assert.deepEqual(embeddedDisplayMessages(source, 'Example.ts').map(x => x.text), ['Changes', 'All events']);
 });
+
+test('rejects ordinary error text in rendered recovery and returned helpers', () => {
+  for (const source of [
+    'function recovery(error, fallback) { return error instanceof Error ? error.message : fallback; }',
+    'function recovery(error, fallback) { return (error instanceof Error ? error.message : fallback); }',
+    'const recovery = (error, fallback) => (error instanceof Error ? error.message : fallback);',
+    '<Text>{error instanceof Error ? error.message : fallback}</Text>',
+    'const notice = { message: error instanceof Error ? error.message : fallback };'
+  ]) assert.equal(embeddedDisplayMessages(source, 'Recovery.tsx').length, 1);
+  assert.deepEqual(embeddedDisplayMessages('const diagnostic = error instanceof Error ? error.message : fallback; classify(diagnostic);', 'Recovery.tsx'), []);
+  assert.deepEqual(embeddedDisplayMessages('function recovery(error, fallback) { return catalogRecoveryMessage(error, fallback); }', 'Recovery.tsx'), []);
+});

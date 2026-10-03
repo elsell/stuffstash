@@ -20,8 +20,23 @@ export function embeddedDisplayMessages(source, filename) {
   function script(text, offset = 0, expression = false, rendered = true) {
     if (expression) { text = `(${text})`; offset -= 1; }
     const ast = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true, filename.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+    function rawErrorFallback(node) {
+      if (!node || !ts.isConditionalExpression(node)) return false;
+      const condition = node.condition;
+      const value = node.whenTrue;
+      return ts.isBinaryExpression(condition) && condition.operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword &&
+        ts.isIdentifier(condition.right) && condition.right.text === 'Error' &&
+        ts.isIdentifier(condition.left) && ts.isPropertyAccessExpression(value) && value.name.text === 'message' &&
+        ts.isIdentifier(value.expression) && value.expression.text === condition.left.text;
+    }
+    function rejectRawError(node) {
+      while (node && ts.isParenthesizedExpression(node)) node = node.expression;
+      if (!rawErrorFallback(node)) return false;
+      add('ordinary Error.message requires catalog recovery', offset + node.getStart(ast));
+      return true;
+    }
     function output(node) {
-      if (!node) return;
+      if (!node || rejectRawError(node)) return;
       if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) add(node.text, offset + node.getStart(ast));
       else if (ts.isParenthesizedExpression(node)) output(node.expression);
       else if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'String' && node.arguments.length === 1) output(node.arguments[0]);
@@ -36,6 +51,8 @@ export function embeddedDisplayMessages(source, filename) {
       }
     }
     function properties(node) {
+      if (ts.isReturnStatement(node)) rejectRawError(node.expression);
+      if (ts.isArrowFunction(node) && !ts.isBlock(node.body)) rejectRawError(node.body);
       if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 't') {
         const values = node.arguments[1];
         if (values && ts.isObjectLiteralExpression(values)) {
