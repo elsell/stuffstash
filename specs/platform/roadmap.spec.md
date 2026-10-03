@@ -6,6 +6,18 @@ A first-class CLI takes priority over further MCP work. MCP remains a supported
 secondary integration. This changes future sequencing only; the complete portable
 archive and restore flow remains the immediate delivery priority.
 
+## Current production delivery — October 3
+
+Release37079752434 published v0.28.8 images, TestFlight and its changelog for
+PR #276 at `178d31772e770392161afdcbae7b6951dd2aff99`. Paul GitOps commit
+`db680237edd42e260f42e54e418473c83ee12c3d` deploys that web image. Flux applied
+the revision, the updated replica became available and web/API health returned
+HTTP200. [Exact deployment evidence](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.8.json).
+The API remains on its v0.28.0 digest: the API diff through this release contains
+tests only. This is rollout readiness, not new authenticated production acceptance.
+Later queued PRs are not included in this deployment. The records below retain
+historical delivery and separate outstanding acceptance obligations.
+
 ## Current delivery — portable archive and restore, October 2
 
 PR #244 merged at `514a4f37`. It delivers A1 durable ZIP export with selected
