@@ -1,4 +1,4 @@
-import { t } from '$lib/presentation/localization';
+import { localization, t } from '$lib/presentation/localization';
 import type { AssetKind, MediaUploadPolicy, ParentTargetViewModel, SelectedPhoto } from '$lib/domain/inventory';
 import { assetKinds } from '$lib/domain/inventory';
 import { assetKindLabel } from '$lib/presentation/assetKindLabel';
@@ -143,13 +143,7 @@ export function addPhotoSupportedTypeLabel(types: string[]): string {
     return t('web.workspaceAddPresentation.noImageFormats');
   }
   const labels = types.map(formatImageContentType);
-  if (labels.length === 1) {
-    return labels[0] ?? '';
-  }
-  if (labels.length === 2) {
-    return t('web.workspaceAddPresentation.or', { value: String(labels[0]), value2: String(labels[1]) });
-  }
-  return t('web.workspaceAddPresentation.or2', { value: String(labels.slice(0, -1).join(', ')), value2: String(labels[labels.length - 1]) });
+  return localization.list(labels, { type: 'disjunction' });
 }
 
 export function addPhotoHelpText(supportedTypeLabel: string, maxBytesLabel: string): string {

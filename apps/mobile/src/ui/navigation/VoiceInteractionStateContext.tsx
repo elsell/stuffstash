@@ -1,6 +1,6 @@
 import { formatVoiceProviderCapabilityLabel } from '../../presentation/ProviderCapabilityPresentation';
 import { SelectedInventoryUnavailableError } from '../../application/shared/SelectedInventoryUnavailableError';
-import { t } from '../../presentation/localization';
+import { localization, t } from '../../presentation/localization';
 import { retainFailedConversation } from './VoiceConversationFailure';
 import { appendConversationExchange, canCancelConversation, canSubmitConversation } from './VoiceConversationHistory';
 import type { VoicePlanPhotoDrafts } from '../screens/VoicePlanPhotoDraftState';
@@ -510,7 +510,7 @@ function providerReadinessFailure(error: unknown): { readonly message: string } 
 
   return {
     message: missingCapabilities.length > 0
-      ? t('mobile.VoiceInteractionStateContext.voiceProviderProfilesAreNotReady', { value: String(missingCapabilities.map(formatVoiceProviderCapabilityLabel).join(', ')) })
+      ? t('mobile.VoiceInteractionStateContext.voiceProviderProfilesAreNotReady', { value: String(localization.list(missingCapabilities.map(formatVoiceProviderCapabilityLabel))) })
       : t('mobile.VoiceInteractionStateContext.voiceProviderProfilesAreNotReady2')
   };
 }

@@ -1,3 +1,4 @@
+import { localization } from '$lib/presentation/localization';
 import { describe, expect, it } from 'vitest';
 import type { ParentTargetViewModel } from '$lib/domain/inventory';
 import {
@@ -141,3 +142,8 @@ function parentTarget(id: string, title: string, containmentTrail: string): Pare
     containmentTrail
   };
 }
+
+it('formats supported photo alternatives using the runtime locale', () => {
+  expect(addPhotoSupportedTypeLabel(['image/jpeg', 'image/png', 'image/webp']))
+    .toBe(localization.list(['JPEG', 'PNG', 'WebP'], { type: 'disjunction' }));
+});

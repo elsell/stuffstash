@@ -1,5 +1,5 @@
 import {MeasuredImage as Image} from './MeasuredImage';
-import { t } from '../../presentation/localization';
+import { localization, t } from '../../presentation/localization';
 import { AssetExpirationStatus } from './AssetExpirationStatus';
 import { formatAssetExpiration, expirationStatusLabel } from '../presentation/ExpirationPresentation';
 import { createRef } from 'react';
@@ -148,7 +148,7 @@ export function AssetCard({
               </Text>
             ) : null}
             {asset.searchMatchLabels && asset.searchMatchLabels.length > 0 ? (
-              <Text numberOfLines={1} style={styles.matchMeta}>{t('mobile.AssetCard.matched')}{asset.searchMatchLabels.join(', ')}
+              <Text numberOfLines={1} style={styles.matchMeta}>{t('search.matchedFields', { fields: localization.list(asset.searchMatchLabels) })}
               </Text>
             ) : null}
           </Pressable>

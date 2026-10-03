@@ -287,5 +287,6 @@ export const workflowMessages = {
   "customization.fieldType.url": "Url",
   "customization.fieldType.enum": "Enum",
   "invitation.title.revoked": "Invitation revoked",
-  "invitation.title.cancelled": "Invitation cancelled"
+  "invitation.title.cancelled": "Invitation cancelled",
+  "search.matchedFields": "Matched {fields}"
 } as const;
