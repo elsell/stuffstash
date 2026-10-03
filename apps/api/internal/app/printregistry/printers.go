@@ -15,17 +15,21 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"strings"
+	"time"
 )
 
 type Service struct {
-	Authorizer  ports.Authorizer
-	Inventories ports.InventoryRepository
-	Printers    ports.PrinterRepository
-	Catalog     ports.PrinterCatalog
-	Audit       ports.AuditRepository
-	IDs         ports.IDGenerator
-	Clock       ports.Clock
-	Observer    ports.Observer
+	Health                ports.ConnectorRepository
+	PrintingAuthorization ports.PrintingAuthorization
+	ReportMaxAge          time.Duration
+	Authorizer            ports.Authorizer
+	Inventories           ports.InventoryRepository
+	Printers              ports.PrinterRepository
+	Catalog               ports.PrinterCatalog
+	Audit                 ports.AuditRepository
+	IDs                   ports.IDGenerator
+	Clock                 ports.Clock
+	Observer              ports.Observer
 }
 type Actor struct {
 	Principal identity.Principal
@@ -134,7 +138,7 @@ func (s Service) Get(ctx context.Context, a Actor, id printing.PrinterID) (print
 	if err := s.Audit.SaveAuditRecord(ctx, record); err != nil {
 		return printing.Printer{}, err
 	}
-	return p, nil
+	return s.withHealth(ctx, p)
 }
 
 type PrinterPage struct {
@@ -159,6 +163,13 @@ func (s Service) List(ctx context.Context, a Actor, limit int, cursor string) (P
 	values, err := s.Printers.ListPrinters(ctx, a.Scope, limit+1, after)
 	if err != nil {
 		return PrinterPage{}, registryError(err)
+	}
+	for i := range values {
+		projected, err := s.withHealth(ctx, values[i])
+		if err != nil {
+			return PrinterPage{}, err
+		}
+		values[i] = projected
 	}
 	result := PrinterPage{Items: values, Limit: limit, HasMore: len(values) > limit}
 	if result.HasMore {

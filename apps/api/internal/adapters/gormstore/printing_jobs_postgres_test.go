@@ -108,6 +108,22 @@ func TestPostgresPrintingClaimsSerializeAcrossConnectors(t *testing.T) {
 	}
 	job := <-results
 	owner := job.Attempts[0].Authority
+	for _, a := range authorities {
+		attempts, listErr := s.ListPrintConsumerAttempts(ctx, scope, a.ConnectorID, pid, 10, "")
+		expected := 0
+		if a.ConnectorID == owner.ConnectorID {
+			expected = 1
+		}
+		if listErr != nil || len(attempts) != expected {
+			t.Fatalf("recovery ownership isolation: %d %v", len(attempts), listErr)
+		}
+	}
+	for _, foreign := range []printing.Scope{{TenantID: scope.TenantID, InventoryID: ids.NewID()}, {TenantID: ids.NewID(), InventoryID: scope.InventoryID}} {
+		attempts, listErr := s.ListPrintConsumerAttempts(ctx, foreign, owner.ConnectorID, pid, 10, "")
+		if listErr != nil || len(attempts) != 0 {
+			t.Fatalf("recovery scope isolation: %d %v", len(attempts), listErr)
+		}
+	}
 	var authority printing.ConsumerAuthority
 	for _, a := range authorities {
 		if a.ConnectorID == owner.ConnectorID {
@@ -116,6 +132,9 @@ func TestPostgresPrintingClaimsSerializeAcrossConnectors(t *testing.T) {
 	}
 	if _, err = s.UpdatePrintJob(ctx, ports.PrintJobUpdate{Scope: scope, PrinterID: pid, JobID: job.ID, Authority: &authority, Now: now, Change: func(j *printing.Job, p printing.Printer) error { return j.Start(owner, now, j.Revision) }, Audit: auditFor}); err != nil {
 		t.Fatal(err)
+	}
+	if _, e := s.MaintainPrintJobs(ctx, ports.PrintJobMaintenance{Now: now.Add(time.Minute), TerminalBefore: now.Add(-24 * time.Hour), Limit: 100, Audit: auditFor}); e != nil {
+		t.Fatal(e)
 	}
 	owner.AttemptID = printing.AttemptID(ids.NewID())
 	if _, found, e := s.ClaimPrintJob(ctx, ports.PrintClaim{Authority: authority, Owner: owner, Now: now.Add(time.Minute), Lease: time.Minute, ReportMaxAge: time.Hour, Audit: auditFor}); e != nil || found {

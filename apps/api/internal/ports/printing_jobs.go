@@ -52,7 +52,21 @@ type PrintLeaseRenewal struct {
 	Lease     time.Duration
 }
 
+type PrintJobMaintenance struct {
+	Now            time.Time
+	TerminalBefore time.Time
+	Limit          int
+	After          string
+	Audit          PrintJobAudit
+}
+type PrintMaintenancePage struct {
+	After   string
+	HasMore bool
+}
+
 type PrintJobRepository interface {
+	MaintainPrintJobs(context.Context, PrintJobMaintenance) (PrintMaintenancePage, error)
+	ListPrintConsumerAttempts(context.Context, printing.Scope, printing.ConnectorID, printing.PrinterID, int, string) ([]printing.Job, error)
 	FindPrintJobRequest(context.Context, printing.Scope, string, string) (printing.Job, string, error)
 	GetPrintJobContent(context.Context, printing.Scope, printing.JobID, time.Time) ([]byte, error)
 	RenewPrintJob(context.Context, PrintLeaseRenewal) (printing.Job, error)

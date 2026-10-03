@@ -5,10 +5,19 @@ import "context"
 type EventName string
 
 const (
+	EventPrintJobCleanupFailed EventName = "print_job.cleanup_failed"
+	EventPrintJobClaimed       EventName = "print_job.claimed"
+	EventPrintJobStarted       EventName = "print_job.started"
+	EventPrintJobCompleted     EventName = "print_job.completed"
+	EventPrintJobFailed        EventName = "print_job.failed"
+	EventPrintJobUncertain     EventName = "print_job.uncertain"
+	EventPrintJobReleased      EventName = "print_job.released"
+
 	EventPrintJobQueued                            EventName = "print_job.queued"
 	EventPrintJobCanceled                          EventName = "print_job.canceled"
 	EventLabelProvisioned                          EventName = "label.provisioned"
 	EventLabelCleanupFailed                        EventName = "label.cleanup_failed"
+	EventPrintConnectorSyncFailed                  EventName = "print_connector.sync_failed"
 	EventPrinterRegistered                         EventName = "printer.registered"
 	EventPrinterUpdated                            EventName = "printer.updated"
 	EventArchiveWorkerFailed                       EventName = "archive_worker.failed"
