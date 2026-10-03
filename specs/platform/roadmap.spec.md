@@ -36,8 +36,11 @@ artifact persistence now pass HTTP isolation/retry checks; production PostgreSQL
 verifies exclusive claims and uncertain reservations. Connector pairing, credential rotation, and consumer claim/start/outcome/recovery
 APIs pass critical HTTP checks. PostgreSQL verifies recovery enumeration stays
 inside connector, tenant, and inventory boundaries. The consumer API and SDK are
-being integrated with the CLI worker; retention, inventory defaults, and client
-job controls remain open.
+integrated with the CLI worker. Scheduled lease reconciliation and terminal-only
+retention pass critical tests and are under review in PR #357. CLI registration
+and foreground operation now pass stateful protocol, recovery, credential-isolation,
+and revoked-credential tests; web approval, inventory defaults, atomic create-and-print,
+and client job controls remain open.
 No physical output has been verified. See
 [asset labels](../printing/asset-labels.spec.md),
 [printer integration](../printing/printer-integration.spec.md), and [CLI](cli.spec.md).
