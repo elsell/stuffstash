@@ -133,7 +133,27 @@ func TestPrintingQueueDurableClaimExpiryAndPrinterHold(t *testing.T) {
 	if _, found, err = s.ClaimPrintJob(ctx, input); err != nil || found {
 		t.Fatalf("printer reservation lost: %v %v", found, err)
 	}
-	if _, err = s.UpdatePrintJob(ctx, ports.PrintJobUpdate{Scope: scope, PrinterID: "printer", JobID: job.ID, Authority: &authority, Now: now, Change: func(j *printing.Job, p printing.Printer) error { return j.Start(owner, now, j.Revision) }, Audit: auditFor}); err != nil {
+	start := ports.PrintJobUpdate{Scope: scope, PrinterID: "printer", JobID: job.ID, Authority: &authority, Now: now.Add(2 * time.Second), StartReportMaxAge: time.Second, Change: func(j *printing.Job, p printing.Printer) error {
+		return j.Start(owner, now.Add(2*time.Second), j.Revision)
+	}, Audit: auditFor}
+	if _, err = s.UpdatePrintJob(ctx, start); !errors.Is(err, ports.ErrConflict) {
+		t.Fatalf("stale health started output: %v", err)
+	}
+	start.Now = now
+	if err = s.ReportPrintPrinter(ctx, authority, printing.PrinterReport{Scope: scope, PrinterID: "printer", ConnectorID: "connector", State: printing.PrinterUnavailable}, now); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.UpdatePrintJob(ctx, start); !errors.Is(err, ports.ErrConflict) {
+		t.Fatalf("unavailable device started output: %v", err)
+	}
+	storedClaim, err := s.GetPrintJob(ctx, scope, job.ID)
+	if err != nil || storedClaim.Status != printing.JobClaimed || storedClaim.Revision != renewed.Revision {
+		t.Fatalf("failed start changed claim: %+v %v", storedClaim, err)
+	}
+	if err = s.ReportPrintPrinter(ctx, authority, printing.PrinterReport{Scope: scope, PrinterID: "printer", ConnectorID: "connector", State: printing.PrinterReady}, now); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.UpdatePrintJob(ctx, ports.PrintJobUpdate{Scope: scope, PrinterID: "printer", JobID: job.ID, Authority: &authority, Now: now, StartReportMaxAge: time.Minute, Change: func(j *printing.Job, p printing.Printer) error { return j.Start(owner, now, j.Revision) }, Audit: auditFor}); err != nil {
 		t.Fatal(err)
 	}
 	input.Now = now.Add(2 * time.Minute)

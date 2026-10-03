@@ -32,9 +32,11 @@ type PrintClaim struct {
 	Audit        PrintJobAudit
 }
 type PrintJobUpdate struct {
-	Scope     printing.Scope
-	PrinterID printing.PrinterID
-	JobID     printing.JobID
+	// Required only for a new physical dispatch; recovery remains available offline.
+	StartReportMaxAge time.Duration
+	Scope             printing.Scope
+	PrinterID         printing.PrinterID
+	JobID             printing.JobID
 	// Nil authority denotes an already-authorized human command. Consumer
 	// commands recheck the registration deny fence in the same transaction.
 	Authority *printing.ConsumerAuthority

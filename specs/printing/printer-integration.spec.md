@@ -642,3 +642,12 @@ or an authorization grant. Printer responses also expose the safe readiness
 reason and report timestamp selected by the existing authorized health projection.
 Unknown/stale printer health has no current reason or timestamp. Clients refresh
 these projections and do not invent their own stale thresholds.
+
+### Dispatch readiness fence
+
+The start transition rechecks the serving connector heartbeat and its readiness
+report under the same transaction and locks as the printer reservation. A lease
+renewal does not refresh either health signal. Stale, missing, future-dated, or
+unavailable health rejects a new start without consuming the claim or emitting
+output. An identical already-started retry remains readable/idempotent. Outcome
+reporting and reconciliation remain usable while the printer is unavailable.
