@@ -39,12 +39,14 @@ inside connector, tenant, and inventory boundaries. The consumer API and SDK are
 integrated with the CLI worker. Scheduled lease reconciliation and terminal-only
 retention shipped in PR #357. CLI registration
 and foreground operation now pass stateful protocol, recovery, credential-isolation,
-and revoked-credential tests and shipped in PR #358. Inventory defaults are under
-review in PR #360. Atomic create-and-print now passes HTTP scope/replay checks,
+and revoked-credential tests and shipped in PR #358. Inventory defaults shipped in PR #360. Atomic create-and-print now passes HTTP scope/replay checks,
 late-write rollback, and concurrent PostgreSQL creation with exactly one asset
-and job; generated clients share the explicit print selection. Web approval and
-client job controls remain in progress. Safe manual uncertain resolution, linked
-reprints, test labels, and human CLI print commands remain required.
+and job; generated clients share the explicit print selection. Mobile printer controls and atomic creation now pass integrated source checks and
+critical stateful-fake recovery/scope tests; web approval and client controls are
+in review. Linked reprints/test labels (#366), human CLI queue commands (#368),
+and explicit uncertain resolution with locked device-idle proof (#369) are
+implemented and progressing through the native PR stack. Dispatch readiness
+fencing shipped in #364; connector/device health projection is in #365.
 No physical output has been verified. See
 [asset labels](../printing/asset-labels.spec.md),
 [printer integration](../printing/printer-integration.spec.md), and [CLI](cli.spec.md).
@@ -63,7 +65,11 @@ consumed through a versioned contract rather than adapter-owned layouts.
 [Generated printing docs](printing-catalog-docs.spec.md) adds registry-derived
 printer/template/size catalogs and production-rendered PNG examples, automatically
 regenerated and checked in PR CI. The catalog implementation shipped in PR #352. CLI release publication
-has merged in PR #350; an actual published release remains to be verified. Each project release must publish
+has merged in PR #350. Release v0.38.1 publishes all five CLI targets and
+checksums; the downloaded Linux archive checksum, embedded tag/commit, and
+printer catalog were verified. Its USB capability metadata correction is in #370;
+actual Linux USB discovery remains available. Generated download metadata is in
+#367; physical output and native device flows remain unverified. Each project release must publish
 version-stamped CLI binaries and checksums; verified release metadata refreshes
 concrete download commands in the docs. Implementation is now authorized as an
 active goal: orchestrate parallel agents and ship small coherent functional PRs,
