@@ -57,6 +57,11 @@ The full audit remains incomplete. Release success does not close these gaps:
   and changelog publication. The [delivery record](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/delivery-v0.28.20-v0.28.21.json)
   also records #309/v0.28.20. Child-dialog recovery and typed-error propagation
   are reviewed in PR #314; integration and release remain pending.
+- A connected Android normal-text walkthrough at `a93b524a` now verifies Edit
+  persistence across relaunch, Move cancel/commit and location restoration, search
+  return, and Places-filter return. [Evidence](../../docs/reports/spec-gap-evidence-2026-10-01/core-workflows/android-connected/README.md)
+  records the exact APK and isolated server. List/Map control movement awaits
+  user confirmation; earlier intermittent refresh errors remain undiagnosed.
 - Physical file-provider/recipient and assistive acceptance remain unverified.
   Existing user-confirmed notification delivery is preserved, not reopened.
 - The previously recorded iOS sharing-menu keyboard overlap and proposed web

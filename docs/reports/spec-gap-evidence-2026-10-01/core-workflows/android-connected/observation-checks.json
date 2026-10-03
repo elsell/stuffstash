@@ -1,0 +1,9 @@
+{
+  "scope": "Assertions over recorded native UI observations, not an automated rerun or backend interception.",
+  "searchRetainedOnBack": true,
+  "savedDescriptionVisibleAfterRelaunch": true,
+  "movedRootVisibleAfterRelaunch": true,
+  "originalLocationRestored": true,
+  "placesFilterRetainedOnBack": true,
+  "filterCleared": true
+}
