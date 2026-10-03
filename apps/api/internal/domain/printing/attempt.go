@@ -59,6 +59,7 @@ func (o Outcome) Valid(copies int) bool {
 }
 
 type Attempt struct {
+	IdleConfirmedAt                                 time.Time
 	ID                                              AttemptID
 	Authority                                       AttemptAuthority
 	ClaimedAt, LeaseExpiresAt, StartedAt, SettledAt time.Time

@@ -1,3 +1,4 @@
+import { printingMobileMessages } from './printing-mobile';
 import { labelWebMessages } from './labels-web';
 import { labelMobileMessages } from './labels-mobile';
 import { archiveMessages } from './archive';
@@ -8,6 +9,7 @@ import type { Catalog } from './translator';
 
 /** English source catalog. Keys describe presentation context, never wire values. */
 export const en = {
+  ...printingMobileMessages,
   ...labelWebMessages,
   ...labelMobileMessages,
   ...archiveMessages,

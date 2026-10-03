@@ -162,3 +162,85 @@ Verify once the connector worker is integrated:
 - Disconnect or restart during output produces uncertainty without duplicate labels.
 
 These checks do not block independent software delivery.
+
+After an ambiguous print, verify the connector can read a fresh idle status from
+the QL-800 without printing another label. The queue must stay paused until an
+editor acknowledges the unknown outcome. That acknowledgement must preserve the
+uncertain attempt and permit a separate, explicit reprint. Idle confirmation is
+covered by protocol-fake tests; its physical-device behavior remains unverified.
+### Mobile label printing and inventory defaults
+
+Status: source and stateful-fake checks only; native device and USB acceptance not
+performed for the mobile printing controls candidate.
+
+- On iPhone/iPad and Android, open Inventory Settings → Printers. Confirm the
+  registered Brother and 29 × 90 mm media appear, and connector registration/last
+  seen remain distinct from printer readiness. Unplug USB and refresh; the screen
+  must not say a label completed. Check narrow layout and enlarged text.
+- Change the default layout and automatic-print switch, Save, leave and return.
+  Confirm saved values. Back before Save must leave stored defaults unchanged.
+  With a viewer account, inspect printers without editable defaults.
+- Open an active item, container and location → More → Print label. With a
+  compatible default, this should queue one label without another confirmation.
+  Use Label options → Print options to select a printer and preview before printing. Follow queued/preparing/printing
+  to the reported result. Confirm physical paper output on the QL-800 separately.
+- Cancel a queued job while the printer is unavailable. For uncertain output,
+  inspect the printer and verify the app explains the paused queue without
+  automatically issuing another label. Background/return and screen-reader
+  traversal must preserve accessible controls and avoid private preview leakage.
+
+For the create-and-print follow-up, open Add item with automatic printing enabled.
+Confirm the native switch starts on, stays off after you turn it off and navigate
+away/back, and resets to the inventory default for a new cleared draft. Enable it,
+save an item and follow View print job. Confirm one item and one physical label.
+When a submission response is lost, Retry Save must retain the original item and
+label request; fields stay locked until its outcome is recovered. Check this on
+iPhone/iPad and Android with the keyboard visible. These device checks remain
+unverified; controlled source tests cover initialization, retained requests,
+prepared tag identity and cross-inventory rejection.
+
+For mobile uncertainty recovery, open a job with uncertain output. Before its
+latest attempt reports idle, confirm Resolve job is disabled and the guidance
+asks you to check the printer/connector. Once idle is reported, choose what you
+observed, explicitly acknowledge uncertainty, and resolve. Confirm the screen
+says Uncertainty acknowledged and retains your report without claiming confirmed
+completion or printing again. Lose a response once and retry the same
+acknowledgement. Verify viewer accounts have no recovery controls, and exercise
+the outcome picker and acknowledgement with enlarged text and VoiceOver/TalkBack.
+Status: source/stateful-fake evidence only; native acceptance remains unverified.
+
+For mobile reprints and diagnostics, open a completed/failed/canceled job and
+choose Reprint label. Pick current printer/template settings, preview an asset
+label, and submit. Confirm the new job links to its predecessor and the original
+job is unchanged. Uncertain and active jobs must not offer reprint. Lose a response,
+leave the task, and return: Retry must recover the same job without another label.
+In Inventory Settings → Printers, Print test label must enqueue one diagnostic
+label only when pressed; entry and refresh must do nothing. Diagnostic reprints
+explain fixed test content without pretending to preview an asset. Verify viewer
+accounts cannot issue either command. Check back navigation, narrow/enlarged text,
+and VoiceOver/TalkBack. Status: source and controlled-fake checks only; native
+runtime and physical output remain unverified.
+
+For mobile printer media settings, open Inventory Settings → Printers as a
+configurator. Check the native label-size picker lists only the supported Brother
+29 × 90 mm stock. Save while USB is disconnected; configuration must succeed
+without claiming the printer is ready. Make a concurrent edit in another client,
+then save the stale mobile draft: it must show a failure and require an explicit
+reload instead of overwriting. Change an inventory default without saving, save a
+label size, and confirm that unsaved default remains intact. Viewers must see the
+size without edit controls. Queued labels retain their original media. Check
+picker/back behavior and enlarged text on native devices; status remains
+unverified beyond source and stateful-fake checks.
+
+### Mobile print-status lifecycle
+
+- [ ] On a native build, watch an active print job, background the app, then return.
+  Status should refresh on return. Completed, failed, and canceled jobs should stop
+  automatic reads; Refresh status remains available. With networking unavailable,
+  retries should slow down and recover when networking returns. Source-level
+  clock-controlled tests pass; this native lifecycle check remains unverified.
+
+- [ ] In native Print options or a linked asset reprint, choose several copies.
+  Changing the count must clear the old preview. A rejected server limit leaves
+  the draft editable; a lost submission response keeps the count locked for retry.
+  Quick Print label, create-and-print, and test labels still request one copy.

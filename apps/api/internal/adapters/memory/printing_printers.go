@@ -63,7 +63,7 @@ func (s *Store) ListPrinters(_ context.Context, scope printing.Scope, limit int,
 	}
 	return out, nil
 }
-func (s *Store) UpdatePrinter(_ context.Context, scope printing.Scope, id printing.PrinterID, revision uint64, change ports.PrinterMutation, makeAudit ports.PrinterAudit) (printing.Printer, error) {
+func (s *Store) UpdatePrinter(_ context.Context, scope printing.Scope, id printing.PrinterID, revision uint64, change ports.PrinterMutation, makeAudit ports.PrinterAudit, retirement *ports.PrinterRetirement) (printing.Printer, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	p, ok := s.printingPrinters[id]
@@ -86,6 +86,11 @@ func (s *Store) UpdatePrinter(_ context.Context, scope printing.Scope, id printi
 	}
 	if _, exists := s.auditRecords[record.ID]; exists {
 		return printing.Printer{}, ports.ErrPrintConflict
+	}
+	if next.Retired && !p.Retired {
+		if err := s.retirePrinterWorkLocked(&next, retirement, record); err != nil {
+			return printing.Printer{}, err
+		}
 	}
 	s.printingPrinters[id] = clonePrintingPrinter(next)
 	s.auditRecords[record.ID] = record

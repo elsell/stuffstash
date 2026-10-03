@@ -38,7 +38,7 @@ func (w *Worker) Step(ctx context.Context, journal ports.LockedPrintState, print
 		return err
 	}
 	if record != nil {
-		err = w.recover(ctx, journal, *record)
+		err = w.recover(ctx, journal, *record, printer)
 		if err == nil {
 			w.Observer.Event(ctx, "cli.print.recovered")
 		}
@@ -49,7 +49,7 @@ func (w *Worker) Step(ctx context.Context, journal ports.LockedPrintState, print
 		return err
 	}
 	if len(unsettled) > 0 {
-		return ports.ErrRecoveryRequired
+		return w.recoverMissingJournal(ctx, printer, unsettled)
 	}
 	if w.Config.RecoveryOnly {
 		return nil

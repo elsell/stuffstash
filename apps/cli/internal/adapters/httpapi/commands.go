@@ -9,6 +9,9 @@ import (
 
 func (c *Client) CreateAsset(ctx context.Context, s ports.Scope, in ports.AssetInput, idempotency string) (ports.Result[ports.Asset], error) {
 	body := generated.CreateAssetBody{Title: in.Title, Kind: generated.CreateAssetBodyKind(in.Kind)}
+	if p := in.PrintLabel; p != nil {
+		body.PrintLabel = &generated.AssetPrintSelection{PrinterId: p.PrinterID, ExpectedMediaFingerprint: p.ExpectedMediaFingerprint, TemplateId: p.TemplateID, TemplateVersion: int32(p.TemplateVersion), TemplateOptions: generated.AssetPrintTemplateOptions{ShowReference: p.ShowReference}, Copies: int64(p.Copies)}
+	}
 	if in.Parent != "" {
 		body.ParentAssetId = &in.Parent
 	}

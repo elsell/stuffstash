@@ -26,3 +26,15 @@ type SettingsDestination struct {
 func (s InventoryPrintSettings) ValidReplacement(expected uint64) bool {
 	return s.Scope.TenantID != "" && s.Scope.InventoryID != "" && s.Revision > 0 && s.Revision == expected+1 && s.Template.ID != "" && s.Template.Version > 0 && (!s.PrintOnCreateDefault || s.DefaultPrinterID != "")
 }
+
+// ClearRetiredPrinter changes only defaults referring to the retired destination.
+func (s *InventoryPrintSettings) ClearRetiredPrinter(id PrinterID, now time.Time) bool {
+	if s.DefaultPrinterID != id {
+		return false
+	}
+	s.DefaultPrinterID = ""
+	s.PrintOnCreateDefault = false
+	s.Revision++
+	s.UpdatedAt = now
+	return true
+}

@@ -21,7 +21,7 @@ func registerPairings(api huma.API, application app.App) {
 		for _, c := range input.Body.Candidates {
 			candidates = append(candidates, printing.PairingCandidate{ID: c.ID, Name: c.Name, AdapterID: c.AdapterID, DeviceID: c.DeviceID})
 		}
-		result, err := application.PrintConnectors().Begin(ctx, printregistry.BeginPairing{Name: input.Body.Name, PublicKey: input.Body.PublicKey, Candidates: candidates})
+		result, err := application.PrintConnectors().Begin(ctx, printregistry.BeginPairing{Rotation: input.Body.Rotation, Name: input.Body.Name, PublicKey: input.Body.PublicKey, Candidates: candidates})
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
@@ -79,7 +79,7 @@ func registerPairings(api huma.API, application app.App) {
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-		c, err = service.Heartbeat(ctx, c)
+		c, err = service.HeartbeatWithReport(ctx, c, mapper.ConnectorReportInput(input.Body.Report))
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
@@ -101,7 +101,7 @@ func registerPairings(api huma.API, application app.App) {
 		for _, c := range review.Candidates {
 			candidates = append(candidates, dto.PublicPairingCandidate{ID: c.ID, Name: c.Name, AdapterID: c.AdapterID})
 		}
-		return &dto.PairingReviewOutput{CacheControl: "no-store", Body: shared.SuccessEnvelope[dto.PairingReview]{Data: dto.PairingReview{ID: string(review.ID), Name: review.Name, PublicKeyFingerprint: review.PublicKeyFingerprint, Candidates: candidates}}}, nil
+		return &dto.PairingReviewOutput{CacheControl: "no-store", Body: shared.SuccessEnvelope[dto.PairingReview]{Data: dto.PairingReview{Rotation: review.Rotation, ID: string(review.ID), Name: review.Name, PublicKeyFingerprint: review.PublicKeyFingerprint, Candidates: candidates}}}, nil
 	}, huma.OperationTags("printing"), shared.SecuredOperation)
 
 }

@@ -11,7 +11,10 @@
   } from '$lib/domain/inventory';
   import type { WorkspaceNotification } from '$lib/components/ui/sonner/index.js';
 
+  import type {PrintScope} from '$lib/domain/printing';
   export type InventoryWorkspaceOverlaysProps = {
+    printScope?:PrintScope;
+    pendingPrintDraft?:AddAssetSubmission;
     addOpen: boolean;
     createAssetAllowed: boolean;
     addKind: AssetKind;
@@ -36,7 +39,7 @@
   import AddAssetTray from './AddAssetTray.svelte';
 
   let {
-    addOpen,
+    addOpen, printScope, pendingPrintDraft,
     createAssetAllowed,
     addKind,
     addParentAssetId,
@@ -85,6 +88,8 @@
 </script>
 
 <AddAssetTray
+  {printScope}
+  {pendingPrintDraft}
   open={addOpen && createAssetAllowed}
   initialKind={addKind}
   initialParentAssetId={addParentAssetId}

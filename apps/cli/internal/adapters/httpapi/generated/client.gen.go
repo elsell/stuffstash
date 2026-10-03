@@ -751,6 +751,27 @@ func (e NotificationResponseMilestone) Valid() bool {
 	}
 }
 
+// Defines values for PrintJobResolutionRequestReportedOutcome.
+const (
+	PrintJobResolutionRequestReportedOutcomeNotPrinted PrintJobResolutionRequestReportedOutcome = "not_printed"
+	PrintJobResolutionRequestReportedOutcomePrinted    PrintJobResolutionRequestReportedOutcome = "printed"
+	PrintJobResolutionRequestReportedOutcomeUnknown    PrintJobResolutionRequestReportedOutcome = "unknown"
+)
+
+// Valid indicates whether the value is a known member of the PrintJobResolutionRequestReportedOutcome enum.
+func (e PrintJobResolutionRequestReportedOutcome) Valid() bool {
+	switch e {
+	case PrintJobResolutionRequestReportedOutcomeNotPrinted:
+		return true
+	case PrintJobResolutionRequestReportedOutcomePrinted:
+		return true
+	case PrintJobResolutionRequestReportedOutcomeUnknown:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PrintOutcomeKind.
 const (
 	Completed PrintOutcomeKind = "completed"
@@ -1720,6 +1741,7 @@ type BeginPairingInputBody struct {
 	Candidates nullable.Nullable[[]PairingCandidate] `json:"candidates"`
 	Name       string                                `json:"name"`
 	PublicKey  []byte                                `json:"publicKey"`
+	Rotation   *bool                                 `json:"rotation,omitempty"`
 }
 
 // Budget defines model for Budget.
@@ -1780,11 +1802,38 @@ type Connector struct {
 	LastSeenAt           *time.Time                  `json:"lastSeenAt,omitempty"`
 	Name                 string                      `json:"name"`
 	PrinterIds           nullable.Nullable[[]string] `json:"printerIds"`
+	Report               *ConnectorReport            `json:"report,omitempty"`
+	ReportReceivedAt     *time.Time                  `json:"reportReceivedAt,omitempty"`
 	State                string                      `json:"state"`
 }
 
 // ConnectorAvailability defines model for Connector.Availability.
 type ConnectorAvailability string
+
+// ConnectorAdapterCapability defines model for ConnectorAdapterCapability.
+type ConnectorAdapterCapability struct {
+	CompletionEvidence string                                        `json:"completionEvidence"`
+	ContractVersions   nullable.Nullable[[]int32]                    `json:"contractVersions"`
+	Formats            nullable.Nullable[[]string]                   `json:"formats"`
+	Id                 string                                        `json:"id"`
+	Media              nullable.Nullable[[]ConnectorMediaCapability] `json:"media"`
+	Wake               bool                                          `json:"wake"`
+}
+
+// ConnectorMediaCapability defines model for ConnectorMediaCapability.
+type ConnectorMediaCapability struct {
+	Id      string `json:"id"`
+	Version int32  `json:"version"`
+}
+
+// ConnectorReport defines model for ConnectorReport.
+type ConnectorReport struct {
+	Adapters     nullable.Nullable[[]ConnectorAdapterCapability] `json:"adapters"`
+	Architecture string                                          `json:"architecture"`
+	Commit       string                                          `json:"commit"`
+	Platform     string                                          `json:"platform"`
+	Version      string                                          `json:"version"`
+}
 
 // ConsumerPrinter defines model for ConsumerPrinter.
 type ConsumerPrinter struct {
@@ -2392,8 +2441,9 @@ type HeartbeatInputBody struct {
 	// Schema A URL to the JSON Schema for this object.
 	//
 	// Examples: https://example.com/schemas/HeartbeatInputBody.json
-	Schema    *string `json:"$schema,omitempty"`
-	SessionId string  `json:"sessionId"`
+	Schema    *string          `json:"$schema,omitempty"`
+	Report    *ConnectorReport `json:"report,omitempty"`
+	SessionId string           `json:"sessionId"`
 }
 
 // ImportJobActorResponse defines model for ImportJobActorResponse.
@@ -2903,6 +2953,7 @@ type PairingReview struct {
 	Id                   string                                      `json:"id"`
 	Name                 string                                      `json:"name"`
 	PublicKeyFingerprint string                                      `json:"publicKeyFingerprint"`
+	Rotation             bool                                        `json:"rotation"`
 }
 
 // PairingStarted defines model for PairingStarted.
@@ -2983,6 +3034,7 @@ type PrintConsumerAttempt struct {
 	Outcome          PrintOutcome        `json:"outcome"`
 	PrinterId        string              `json:"printerId"`
 	ProtocolVersion  int64               `json:"protocolVersion"`
+	ResolvedAt       *time.Time          `json:"resolvedAt,omitempty"`
 	Revision         int64               `json:"revision"`
 	SessionId        string              `json:"sessionId"`
 	SettledAt        *time.Time          `json:"settledAt,omitempty"`
@@ -3018,6 +3070,7 @@ type PrintJob struct {
 	Predecessor      *string                              `json:"predecessor,omitempty"`
 	PrinterId        string                               `json:"printerId"`
 	RequestedBy      string                               `json:"requestedBy"`
+	Resolution       *PrintJobResolution                  `json:"resolution,omitempty"`
 	Revision         int64                                `json:"revision"`
 	Status           string                               `json:"status"`
 	UpdatedAt        time.Time                            `json:"updatedAt"`
@@ -3029,12 +3082,34 @@ type PrintJobAttempt struct {
 	CompletedCopies int64      `json:"completedCopies"`
 	ConnectorId     string     `json:"connectorId"`
 	Id              string     `json:"id"`
+	IdleConfirmedAt *time.Time `json:"idleConfirmedAt,omitempty"`
 	LeaseExpiresAt  time.Time  `json:"leaseExpiresAt"`
 	Outcome         string     `json:"outcome"`
 	Reason          string     `json:"reason"`
 	SettledAt       *time.Time `json:"settledAt,omitempty"`
 	StartedAt       *time.Time `json:"startedAt,omitempty"`
 }
+
+// PrintJobResolution defines model for PrintJobResolution.
+type PrintJobResolution struct {
+	ReportedOutcome string    `json:"reportedOutcome"`
+	ResolvedAt      time.Time `json:"resolvedAt"`
+	ResolvedBy      string    `json:"resolvedBy"`
+}
+
+// PrintJobResolutionRequest defines model for PrintJobResolutionRequest.
+type PrintJobResolutionRequest struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/PrintJobResolutionRequest.json
+	Schema                 *string                                  `json:"$schema,omitempty"`
+	AcknowledgeUncertainty bool                                     `json:"acknowledgeUncertainty"`
+	ReportedOutcome        PrintJobResolutionRequestReportedOutcome `json:"reportedOutcome"`
+	Revision               int64                                    `json:"revision"`
+}
+
+// PrintJobResolutionRequestReportedOutcome defines model for PrintJobResolutionRequest.ReportedOutcome.
+type PrintJobResolutionRequestReportedOutcome string
 
 // PrintJobRevision defines model for PrintJobRevision.
 type PrintJobRevision struct {
@@ -4551,6 +4626,11 @@ type GetPrintConsumerAttemptsByAttemptIdParams struct {
 	Authorization *string `json:"Authorization,omitempty"`
 }
 
+// PostPrintConsumerAttemptsByAttemptIdIdleConfirmationParams defines parameters for PostPrintConsumerAttemptsByAttemptIdIdleConfirmation.
+type PostPrintConsumerAttemptsByAttemptIdIdleConfirmationParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+}
+
 // PostPrintConsumerAttemptsByAttemptIdReconciliationParams defines parameters for PostPrintConsumerAttemptsByAttemptIdReconciliation.
 type PostPrintConsumerAttemptsByAttemptIdReconciliationParams struct {
 	Authorization *string `json:"Authorization,omitempty"`
@@ -5869,6 +5949,12 @@ type PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsParams
 	IdempotencyKey string  `json:"Idempotency-Key"`
 }
 
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionParams defines parameters for PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution.
+type PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
 // GetTenantsByTenantIdInventoriesByInventoryIdPrintSettingsParams defines parameters for GetTenantsByTenantIdInventoriesByInventoryIdPrintSettings.
 type GetTenantsByTenantIdInventoriesByInventoryIdPrintSettingsParams struct {
 	Authorization *string `json:"Authorization,omitempty"`
@@ -6157,6 +6243,9 @@ type PostPrintConnectorPairingsByPairingIdCredentialJSONRequestBody = ExchangePa
 // PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody defines body for PostPrintConnectorPairingsByPairingIdReview for application/json ContentType.
 type PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody = ReviewPairingInputBody
 
+// PostPrintConsumerAttemptsByAttemptIdIdleConfirmationJSONRequestBody defines body for PostPrintConsumerAttemptsByAttemptIdIdleConfirmation for application/json ContentType.
+type PostPrintConsumerAttemptsByAttemptIdIdleConfirmationJSONRequestBody = PrintJobRevision
+
 // PostPrintConsumerAttemptsByAttemptIdReconciliationJSONRequestBody defines body for PostPrintConsumerAttemptsByAttemptIdReconciliation for application/json ContentType.
 type PostPrintConsumerAttemptsByAttemptIdReconciliationJSONRequestBody = PrintReconciliation
 
@@ -6315,6 +6404,9 @@ type PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdCancellationJS
 
 // PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsJSONRequestBody defines body for PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprints for application/json ContentType.
 type PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsJSONRequestBody = PrintJobSelection
+
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionJSONRequestBody defines body for PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution for application/json ContentType.
+type PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionJSONRequestBody = PrintJobResolutionRequest
 
 // PutTenantsByTenantIdInventoriesByInventoryIdPrintSettingsJSONRequestBody defines body for PutTenantsByTenantIdInventoriesByInventoryIdPrintSettings for application/json ContentType.
 type PutTenantsByTenantIdInventoriesByInventoryIdPrintSettingsJSONRequestBody = InventoryPrintSettings
@@ -6529,6 +6621,20 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /print-consumer/attempts/{attemptId} (the `GetPrintConsumerAttemptsByAttemptId` operationId).
 	GetPrintConsumerAttemptsByAttemptId(ctx context.Context, attemptId string, params *GetPrintConsumerAttemptsByAttemptIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithBody Post print consumer attempts by attempt ID idle confirmation
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /print-consumer/attempts/{attemptId}/idle-confirmation (the `PostPrintConsumerAttemptsByAttemptIdIdleConfirmation` operationId).
+	PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithBody(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdIdleConfirmationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerAttemptsByAttemptIdIdleConfirmation Post print consumer attempts by attempt ID idle confirmation
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /print-consumer/attempts/{attemptId}/idle-confirmation (the `PostPrintConsumerAttemptsByAttemptIdIdleConfirmation` operationId).
+	PostPrintConsumerAttemptsByAttemptIdIdleConfirmation(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdIdleConfirmationParams, body PostPrintConsumerAttemptsByAttemptIdIdleConfirmationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostPrintConsumerAttemptsByAttemptIdReconciliationWithBody Post print consumer attempts by attempt ID reconciliation
 	//
@@ -7749,6 +7855,20 @@ type ClientInterface interface {
 	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/reprints (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprints` operationId).
 	PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprints(ctx context.Context, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithBody Post tenants by tenant ID inventories by inventory ID print jobs by job ID resolution
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/resolution (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithBody(ctx context.Context, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution Post tenants by tenant ID inventories by inventory ID print jobs by job ID resolution
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/resolution (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution(ctx context.Context, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetTenantsByTenantIdInventoriesByInventoryIdPrintSettings Get tenants by tenant ID inventories by inventory ID print settings
 	//
 	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-settings (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintSettings` operationId).
@@ -8260,6 +8380,40 @@ func (c *Client) GetPrintConsumerAttempts(ctx context.Context, params *GetPrintC
 // Corresponds with GET /print-consumer/attempts/{attemptId} (the `GetPrintConsumerAttemptsByAttemptId` operationId).
 func (c *Client) GetPrintConsumerAttemptsByAttemptId(ctx context.Context, attemptId string, params *GetPrintConsumerAttemptsByAttemptIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetPrintConsumerAttemptsByAttemptIdRequest(c.Server, attemptId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithBody Post print consumer attempts by attempt ID idle confirmation
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /print-consumer/attempts/{attemptId}/idle-confirmation (the `PostPrintConsumerAttemptsByAttemptIdIdleConfirmation` operationId).
+func (c *Client) PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithBody(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdIdleConfirmationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerAttemptsByAttemptIdIdleConfirmationRequestWithBody(c.Server, attemptId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerAttemptsByAttemptIdIdleConfirmation Post print consumer attempts by attempt ID idle confirmation
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /print-consumer/attempts/{attemptId}/idle-confirmation (the `PostPrintConsumerAttemptsByAttemptIdIdleConfirmation` operationId).
+func (c *Client) PostPrintConsumerAttemptsByAttemptIdIdleConfirmation(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdIdleConfirmationParams, body PostPrintConsumerAttemptsByAttemptIdIdleConfirmationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerAttemptsByAttemptIdIdleConfirmationRequest(c.Server, attemptId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -11509,6 +11663,40 @@ func (c *Client) PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdRe
 	return c.Client.Do(req)
 }
 
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithBody Post tenants by tenant ID inventories by inventory ID print jobs by job ID resolution
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/resolution (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution` operationId).
+func (c *Client) PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithBody(ctx context.Context, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionRequestWithBody(c.Server, tenantId, inventoryId, jobId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution Post tenants by tenant ID inventories by inventory ID print jobs by job ID resolution
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/resolution (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution` operationId).
+func (c *Client) PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution(ctx context.Context, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionRequest(c.Server, tenantId, inventoryId, jobId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetTenantsByTenantIdInventoriesByInventoryIdPrintSettings Get tenants by tenant ID inventories by inventory ID print settings
 //
 // Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-settings (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintSettings` operationId).
@@ -12857,6 +13045,68 @@ func NewGetPrintConsumerAttemptsByAttemptIdRequest(server string, attemptId stri
 	if err != nil {
 		return nil, err
 	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPostPrintConsumerAttemptsByAttemptIdIdleConfirmationRequest calls the generic PostPrintConsumerAttemptsByAttemptIdIdleConfirmation builder with application/json body
+func NewPostPrintConsumerAttemptsByAttemptIdIdleConfirmationRequest(server string, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdIdleConfirmationParams, body PostPrintConsumerAttemptsByAttemptIdIdleConfirmationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrintConsumerAttemptsByAttemptIdIdleConfirmationRequestWithBody(server, attemptId, params, "application/json", bodyReader)
+}
+
+// NewPostPrintConsumerAttemptsByAttemptIdIdleConfirmationRequestWithBody constructs an http.Request for the PostPrintConsumerAttemptsByAttemptIdIdleConfirmation method, with any body, and a specified content type
+func NewPostPrintConsumerAttemptsByAttemptIdIdleConfirmationRequestWithBody(server string, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdIdleConfirmationParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "attemptId", attemptId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-consumer/attempts/%s/idle-confirmation", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	if params != nil {
 
@@ -25112,6 +25362,93 @@ func NewPostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsReq
 	return req, nil
 }
 
+// NewPostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionRequest calls the generic PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution builder with application/json body
+func NewPostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionRequest(server string, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionRequestWithBody(server, tenantId, inventoryId, jobId, params, "application/json", bodyReader)
+}
+
+// NewPostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionRequestWithBody constructs an http.Request for the PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution method, with any body, and a specified content type
+func NewPostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionRequestWithBody(server string, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/print-jobs/%s/resolution", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
 // NewGetTenantsByTenantIdInventoriesByInventoryIdPrintSettingsRequest constructs an http.Request for the GetTenantsByTenantIdInventoriesByInventoryIdPrintSettings method
 func NewGetTenantsByTenantIdInventoriesByInventoryIdPrintSettingsRequest(server string, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintSettingsParams) (*http.Request, error) {
 	var err error
@@ -27503,6 +27840,20 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /print-consumer/attempts/{attemptId} (the `GetPrintConsumerAttemptsByAttemptId` operationId).
 	GetPrintConsumerAttemptsByAttemptIdWithResponse(ctx context.Context, attemptId string, params *GetPrintConsumerAttemptsByAttemptIdParams, reqEditors ...RequestEditorFn) (*GetPrintConsumerAttemptsByAttemptIdResponse, error)
 
+	// PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithBodyWithResponse Post print consumer attempts by attempt ID idle confirmation
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/attempts/{attemptId}/idle-confirmation (the `PostPrintConsumerAttemptsByAttemptIdIdleConfirmation` operationId).
+	PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithBodyWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdIdleConfirmationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse, error)
+
+	// PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithResponse Post print consumer attempts by attempt ID idle confirmation
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/attempts/{attemptId}/idle-confirmation (the `PostPrintConsumerAttemptsByAttemptIdIdleConfirmation` operationId).
+	PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdIdleConfirmationParams, body PostPrintConsumerAttemptsByAttemptIdIdleConfirmationJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse, error)
+
 	// PostPrintConsumerAttemptsByAttemptIdReconciliationWithBodyWithResponse Post print consumer attempts by attempt ID reconciliation
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -28914,6 +29265,20 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/reprints (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprints` operationId).
 	PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsWithResponse(ctx context.Context, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsResponse, error)
 
+	// PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithBodyWithResponse Post tenants by tenant ID inventories by inventory ID print jobs by job ID resolution
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/resolution (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithBodyWithResponse(ctx context.Context, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithResponse Post tenants by tenant ID inventories by inventory ID print jobs by job ID resolution
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/resolution (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithResponse(ctx context.Context, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse, error)
+
 	// GetTenantsByTenantIdInventoriesByInventoryIdPrintSettingsWithResponse Get tenants by tenant ID inventories by inventory ID print settings
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -29869,6 +30234,61 @@ func (r GetPrintConsumerAttemptsByAttemptIdResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetPrintConsumerAttemptsByAttemptIdResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse200Headers the declared response headers of an HTTP 200 response for PostPrintConsumerAttemptsByAttemptIdIdleConfirmation
+type PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePrintConsumerAttempt
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse) GetJSON200() *SuccessEnvelopePrintConsumerAttempt {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -37236,6 +37656,61 @@ func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsRes
 	return ""
 }
 
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse200Headers the declared response headers of an HTTP 200 response for PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution
+type PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePrintJob
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse) GetJSON200() *SuccessEnvelopePrintJob {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // GetTenantsByTenantIdInventoriesByInventoryIdPrintSettingsResponse200Headers the declared response headers of an HTTP 200 response for GetTenantsByTenantIdInventoriesByInventoryIdPrintSettings
 type GetTenantsByTenantIdInventoriesByInventoryIdPrintSettingsResponse200Headers struct {
 	CacheControl *string
@@ -38833,6 +39308,32 @@ func (c *ClientWithResponses) GetPrintConsumerAttemptsByAttemptIdWithResponse(ct
 		return nil, err
 	}
 	return ParseGetPrintConsumerAttemptsByAttemptIdResponse(rsp)
+}
+
+// PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithBodyWithResponse Post print consumer attempts by attempt ID idle confirmation
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/attempts/{attemptId}/idle-confirmation (the `PostPrintConsumerAttemptsByAttemptIdIdleConfirmation` operationId).
+func (c *ClientWithResponses) PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithBodyWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdIdleConfirmationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse, error) {
+	rsp, err := c.PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithBody(ctx, attemptId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse(rsp)
+}
+
+// PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithResponse Post print consumer attempts by attempt ID idle confirmation
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/attempts/{attemptId}/idle-confirmation (the `PostPrintConsumerAttemptsByAttemptIdIdleConfirmation` operationId).
+func (c *ClientWithResponses) PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdIdleConfirmationParams, body PostPrintConsumerAttemptsByAttemptIdIdleConfirmationJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse, error) {
+	rsp, err := c.PostPrintConsumerAttemptsByAttemptIdIdleConfirmation(ctx, attemptId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse(rsp)
 }
 
 // PostPrintConsumerAttemptsByAttemptIdReconciliationWithBodyWithResponse Post print consumer attempts by attempt ID reconciliation
@@ -41458,6 +41959,32 @@ func (c *ClientWithResponses) PostTenantsByTenantIdInventoriesByInventoryIdPrint
 	return ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsResponse(rsp)
 }
 
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithBodyWithResponse Post tenants by tenant ID inventories by inventory ID print jobs by job ID resolution
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/resolution (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution` operationId).
+func (c *ClientWithResponses) PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithBodyWithResponse(ctx context.Context, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse, error) {
+	rsp, err := c.PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithBody(ctx, tenantId, inventoryId, jobId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse(rsp)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithResponse Post tenants by tenant ID inventories by inventory ID print jobs by job ID resolution
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/resolution (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution` operationId).
+func (c *ClientWithResponses) PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithResponse(ctx context.Context, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse, error) {
+	rsp, err := c.PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolution(ctx, tenantId, inventoryId, jobId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse(rsp)
+}
+
 // GetTenantsByTenantIdInventoriesByInventoryIdPrintSettingsWithResponse Get tenants by tenant ID inventories by inventory ID print settings
 //
 // Returns a wrapper object for the known response body format(s).
@@ -42498,6 +43025,52 @@ func ParseGetPrintConsumerAttemptsByAttemptIdResponse(rsp *http.Response) (*GetP
 	switch {
 	case rsp.StatusCode == 200:
 		var headers GetPrintConsumerAttemptsByAttemptIdResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse parses an HTTP response from a PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithResponse call
+func ParsePostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse(rsp *http.Response) (*PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePrintConsumerAttempt
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostPrintConsumerAttemptsByAttemptIdIdleConfirmationResponse200Headers
 		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
 			var value string
 			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
@@ -47860,6 +48433,52 @@ func ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsR
 			headers.CacheControl = &value
 		}
 		response.Headers201 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse parses an HTTP response from a PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionWithResponse call
+func ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse(rsp *http.Response) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePrintJob
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdResolutionResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
 	}
 
 	return response, nil

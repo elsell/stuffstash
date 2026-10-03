@@ -260,7 +260,9 @@ shared hosted link resolution, and automatic smart-outlet control are deferred.
   the existing asset detail route with normal back navigation. Never stack asset
   navigation inside a camera modal or discard an unrelated unsaved draft.
 - In focused job views poll the API initially; stop on background/unmount and
-  terminal state, back off on failure, and refresh on return. No mandatory
+  terminal state (including a successful cancel or resolution), back off on failure,
+  and refresh on return. Native job reads start at five seconds; consecutive failures
+  double the delay up to sixty seconds, and a successful read resets the delay. No mandatory
   WebSocket/SSE delivery or direct CLI-to-client connection is needed.
 - Accessible status text must accompany color; announce meaningful transitions
   without announcing every poll. Preserve focus, draft choices, large text,
@@ -440,3 +442,109 @@ to current inventory authorization and cannot recreate a deleted result.
   change. Add adversarial parser/transport and navigation-race tests; runtime camera,
   native sharing/printing, and physical QR checks remain explicit device checklist
   items until actually observed.
+
+### Native Atomic Creation Delivery
+
+The Add item draft initializes its print switch once from scoped inventory defaults
+and persists the user's choice through navigation and metadata refresh. Loading
+label settings does not overwrite an explicit choice. If loading fails, show Retry
+and an explicit Add without a label choice; never silently drop a requested label.
+
+When enabled, creation captures the destination's media fingerprint, independent
+template, one copy, current inventory and a random request key. The mobile draft
+retains that complete create input before submission and freezes edits while its
+outcome is ambiguous. Retry Save sends that same intent, including previously
+prepared tag IDs, rather than creating tags/assets/jobs again. An initial definite
+rejection unlocks correction; a definite rejection after any ambiguous attempt
+does not erase the original intent. Scope changes cannot submit the captured
+request against a different selected inventory. Success clears the request and
+exposes View print job; parent creation never inherits the item print switch.
+
+The API client accepts `createAsset(tenantId, inventoryId, input, idempotencyKey?)`;
+`input.printLabel` comes from the generated atomic selection contract and the
+mapped result retains optional `printJobId`. No extra enqueue call is made.
+
+Every pending-tag write that prepares a create-and-print request carries its
+captured tenant/inventory scope. The mobile adapter checks that scope against the
+current selection before each write and uses the captured IDs in the API request.
+Changing inventory while an earlier tag write is in flight may finish that write
+in its original inventory, but no later tag or asset may target the replacement
+inventory. The final atomic create retains its own scope fence.
+
+### Atomic creation before label bootstrap
+
+Create-with-print must return HTTP 503 when instance identity has not been
+bootstrapped, with no asset or job committed. Authentication and inventory
+creation authorization still run first: anonymous and unrelated principals must
+not learn instance readiness by bypassing access checks. After the operator
+bootstraps the identity, the same authorized create command can succeed.
+### Web visible job polling
+
+While an inventory's printing view is visible, refresh job and printer/connector
+status without reloading editable defaults or clearing paginated history. Detail
+dialogs poll only while their job is nonterminal, including uncertain jobs awaiting
+idle confirmation. Stop polling while hidden, during a foreground command, behind
+a child printing dialog, or on teardown; refresh promptly when visible again.
+Use the existing conversation UI cadence: two seconds between successful reads,
+exponential error backoff capped at thirty seconds. Timer/visibility scheduling is
+an injected port with a browser adapter and controlled clock fake. Permit one
+outstanding poll per view, abort reads when the view stops, and fence late results
+across visibility, identity, foreground actions and teardown. Background failures
+use a separate recoverable status message without replacing a user's draft/error.
+Do not reset resolution choices on unchanged revisions or announce unchanged
+status on every poll.
+
+Controlled timer and repository fakes verify hidden pause, visible return, late
+response fencing after view replacement, no overlapping reads, error backoff,
+terminal stop, and preservation of an unsaved inventory default. A Chromium
+fixture confirms queued-to-printed updates without pressing Refresh. This is
+client status evidence, not physical printer verification.
+
+### Native Primary Creation And Quick Printing
+
+The all-kind print-choice requirement applies to primary capture forms. Native
+`/add` currently has one primary Add item task, with its print switch. As specified
+by the mobile capture contract, new non-location assets start as items and become
+containers through containment; printing must not introduce a kind picker. The
+New place task inside Add and the location/container creation inside Move are
+secondary destination tasks, not separate primary capture forms. They never
+inherit another draft's print choice. Any primary location/container capture form
+must expose its own explicit print choice; this requirement is unchanged.
+
+Native More → Print label is one explicit one-copy request using the compatible
+inventory default. It validates current content/media through server rendering,
+then queues without requiring a preview confirmation. Missing/retired defaults or
+incompatible rendering open the options task without enqueueing. Failed delivery
+retains the original request key and payload for an explicit retry; returning to
+a task or refreshing settings does not issue another request automatically.
+Label options offers editors a Print options task for custom printer/template
+selection and preview; viewers retain download access only. Scope cancellation
+before submission stops the quick request. Cancellation after submission retains
+its recovery identity and never implies that enqueueing was undone.
+
+Native custom print/reprint options expose a positive whole-number copy input.
+The API's configured maximum remains authoritative; do not hard-code its default
+as a client limit. Reject empty, fractional, nonnumeric or nonrepresentable counts
+locally. Changing copies invalidates the preview, just like changing the template.
+A first definite rejection preserves the draft for correction; any prior ambiguous
+submission keeps its original count, payload and key locked until recovery.
+Quick-default requests, asset creation and diagnostic test requests remain one copy.
+
+## Web default-print command and label options
+
+The asset menu's Print label command is the explicit authorization to enqueue
+one copy using the compatible inventory default. It opens the existing job task
+for progress and recovery, not a second mandatory preview/confirmation. Current
+content is rendered by the API without a preview fingerprint. Missing, retired,
+or incompatible defaults open the existing selection/preview task instead; no
+other printer is silently selected. Offline readiness alone does not prevent
+queueing. A definite compatibility rejection allows correcting the selection.
+
+Label options retains download/system print and exposes Printer options for
+editors. This replaces the current task rather than nesting dialogs; choosing
+options never auto-prints. The selection task retains fresh preview requirements.
+Both entry points share the scoped retained intent, preventing duplicate jobs
+on dismissal/reopening or a lost response. An uncertain request can only retry
+its original selection/key. Scope teardown, loss of edit access, or task dismissal
+before submission prevents deferred loading from starting a print. Focus returns
+to the originating asset menu after either task closes.

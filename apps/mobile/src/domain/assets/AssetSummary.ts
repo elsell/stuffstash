@@ -7,6 +7,7 @@ export type AssetExpiration = { readonly date: string; readonly precision: 'day'
 export type AssetExpirationContext = { readonly state: 'current' | 'upcoming' | 'expired'; readonly trackingEnabled: boolean; readonly advanceDays: number; readonly timezone: string; };
 
 export type AssetSummary = {
+  readonly printJobId?: string;
   readonly expirationContext?: AssetExpirationContext;
   readonly expiration?: AssetExpiration;
   readonly customAssetTypeId?: string;

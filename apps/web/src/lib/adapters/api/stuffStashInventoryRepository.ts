@@ -1,3 +1,4 @@
+import { PrintingFailure } from '$lib/domain/printing';
 import { t } from '$lib/presentation/localization';
 import { StuffStashAPIError, StuffStashClient } from '@stuff-stash/api-client';
 import type { RuntimeConfig } from '$lib/runtimeConfig';
@@ -243,14 +244,19 @@ export class StuffStashInventoryRepository
           customAssetTypeId: draft.customAssetTypeId,
           expiration: draft.expiration,
           customFields: draft.customFields,
-          tagIds: draft.tagIds
-        })
+          tagIds: draft.tagIds,
+          printLabel: draft.printLabel ? {printerId: draft.printLabel.printerId, expectedMediaFingerprint: draft.printLabel.expectedMediaFingerprint, templateId: draft.printLabel.templateId, templateVersion: draft.printLabel.templateVersion, templateOptions: {showReference: draft.printLabel.showReference}, copies: draft.printLabel.copies} : undefined
+        }, draft.creationKey)
       );
       this.invalidateInventoryReadCaches();
       this.observer.record('workspace.asset_created', { kind: asset.kind });
       return asset;
     } catch (error) {
       this.observer.record('workspace.asset_create_failed', { kind: draft.kind });
+      if (draft.printLabel) {
+        if (error instanceof StuffStashAPIError && [400,401,403,404,409,422].includes(error.status)) throw new PrintingFailure(error.status === 409 ? 'conflict' : error.status === 401 ? 'authentication_required' : error.status === 403 ? 'denied' : 'invalid');
+        throw new PrintingFailure('unavailable');
+      }
       throw safeError(error);
     }
   }

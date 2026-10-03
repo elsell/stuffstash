@@ -37,6 +37,8 @@ func printingPrinterFromDomain(p printing.Printer) (printingPrinterModel, error)
 }
 
 type printingConnectorModel struct {
+	ReportJSON                                            []byte
+	ReportReceivedAt                                      *time.Time
 	PendingCredentialHash                                 string `gorm:"uniqueIndex:idx_print_connector_pending_credential,where:pending_credential_hash <> ''"`
 	PendingCredentialVersion                              uint64
 	PendingCredentialExpiresAt, PendingActivationDeadline time.Time
@@ -54,7 +56,13 @@ type printingConnectorModel struct {
 
 func (printingConnectorModel) TableName() string { return "print_connectors" }
 func (m printingConnectorModel) domain() printing.Connector {
-	return printing.Connector{PendingCredentialHash: m.PendingCredentialHash, PendingCredentialVersion: m.PendingCredentialVersion, PendingCredentialExpiresAt: m.PendingCredentialExpiresAt, PendingActivationDeadline: m.PendingActivationDeadline, PendingPublicKey: append([]byte(nil), m.PendingPublicKey...), ID: printing.ConnectorID(m.ID), Scope: printing.Scope{TenantID: m.TenantID, InventoryID: m.InventoryID}, ServiceAccountID: printing.ServiceAccountID(m.ServiceAccountID), Name: m.Name, State: printing.ConnectorState(m.State), PublicKey: append([]byte(nil), m.PublicKey...), CredentialHash: m.CredentialHash, CredentialVersion: m.CredentialVersion, CredentialExpiresAt: m.CredentialExpiresAt, ActivationDeadline: m.ActivationDeadline, Generation: m.Generation, SyncedGeneration: m.SyncedGeneration, LastSeenAt: m.LastSeenAt, CreatedAt: m.CreatedAt, UpdatedAt: m.UpdatedAt}
+	var report *printing.ConnectorReport
+	if len(m.ReportJSON) > 0 {
+		if json.Unmarshal(m.ReportJSON, &report) != nil {
+			report = nil
+		}
+	}
+	return printing.Connector{Report: report, ReportReceivedAt: m.ReportReceivedAt, PendingCredentialHash: m.PendingCredentialHash, PendingCredentialVersion: m.PendingCredentialVersion, PendingCredentialExpiresAt: m.PendingCredentialExpiresAt, PendingActivationDeadline: m.PendingActivationDeadline, PendingPublicKey: append([]byte(nil), m.PendingPublicKey...), ID: printing.ConnectorID(m.ID), Scope: printing.Scope{TenantID: m.TenantID, InventoryID: m.InventoryID}, ServiceAccountID: printing.ServiceAccountID(m.ServiceAccountID), Name: m.Name, State: printing.ConnectorState(m.State), PublicKey: append([]byte(nil), m.PublicKey...), CredentialHash: m.CredentialHash, CredentialVersion: m.CredentialVersion, CredentialExpiresAt: m.CredentialExpiresAt, ActivationDeadline: m.ActivationDeadline, Generation: m.Generation, SyncedGeneration: m.SyncedGeneration, LastSeenAt: m.LastSeenAt, CreatedAt: m.CreatedAt, UpdatedAt: m.UpdatedAt}
 }
 
 type printingBindingModel struct {

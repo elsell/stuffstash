@@ -47,7 +47,7 @@ func TestPairingRepositoryKeepsPendingGrantsDeniedAndExchangeConsumed(t *testing
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.HeartbeatPrintConnector(ctx, current, now.Add(2*time.Minute), nil); err == nil {
+	if _, err := s.HeartbeatPrintConnector(ctx, current, now.Add(2*time.Minute), nil, nil); err == nil {
 		t.Fatal("expired activation accepted")
 	}
 }

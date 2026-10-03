@@ -10,6 +10,9 @@ import (
 )
 
 type Runner struct {
+	LabelsAPI   func(string, string) (ports.LabelsAPI, error)
+	LabelFiles  ports.LabelFiles
+	PrintingAPI func(string, string) (ports.HumanPrintingAPI, error)
 	API         func(string, string) (ports.API, error)
 	Auth        ports.Auth
 	Credentials ports.Credentials
@@ -74,14 +77,70 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	if err != nil {
 		return err
 	}
-	result, err := execute(ctx, api, o)
+	var result any
+	if isLabelCommand(o) {
+		if r.LabelsAPI == nil {
+			return ports.Failure("configuration", "label API is unavailable")
+		}
+		labelAPI, labelErr := r.LabelsAPI(o.Server, session.IDToken)
+		if labelErr != nil {
+			return labelErr
+		}
+		result, err = executeLabels(ctx, labelAPI, r.LabelFiles, o)
+	} else if isPrintingCommand(o) {
+		if r.PrintingAPI == nil {
+			return ports.Failure("configuration", "printing API is unavailable")
+		}
+		printingAPI, printErr := r.PrintingAPI(o.Server, session.IDToken)
+		if printErr != nil {
+			return printErr
+		}
+		if o.IdempotencyKey == "" && (o.PrintLabel || o.Command[1] == "print" || o.Command[1] == "test" || o.Command[1] == "reprint") {
+			var token [16]byte
+			if _, err = rand.Read(token[:]); err != nil {
+				return err
+			}
+			o.IdempotencyKey = hex.EncodeToString(token[:])
+		}
+		if o.IdempotencyKey != "" {
+			if err = r.Output.Notice("Print request key: " + o.IdempotencyKey + "; reuse this key and selection if the response is lost."); err != nil {
+				return err
+			}
+		}
+		if o.PrintLabel {
+			selection, selectErr := selectPrinter(ctx, printingAPI, o)
+			if selectErr != nil {
+				return selectErr
+			}
+			result, err = api.CreateAsset(ctx, o.Scope, ports.AssetInput{Kind: o.Kind, Title: o.Title, Parent: o.Parent, PrintLabel: &selection}, o.IdempotencyKey)
+		} else {
+			result, err = executePrinting(ctx, printingAPI, o)
+		}
+	} else {
+		result, err = execute(ctx, api, o)
+	}
 	if err != nil {
 		return err
 	}
-	r.Observer.Event(ctx, "cli.inventory.command.completed")
+	if isLabelCommand(o) {
+		r.Observer.Event(ctx, "cli.label.command.completed")
+	} else if isPrintingCommand(o) {
+		r.Observer.Event(ctx, "cli.print.command.completed")
+	} else {
+		r.Observer.Event(ctx, "cli.inventory.command.completed")
+	}
 	return r.Output.Result(result)
 }
 func validateCommand(o Options) error {
+	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
+		return ports.Failure("usage", "--print-label is only available for assets create")
+	}
+	if isLabelCommand(o) {
+		return validateLabelCommand(o)
+	}
+	if !o.PrintLabel && isPrintingCommand(o) {
+		return validatePrintingCommand(o)
+	}
 	if len(o.Command) < 2 {
 		return ports.Failure("usage", "expected inventories list or assets <action>")
 	}

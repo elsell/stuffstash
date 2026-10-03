@@ -227,3 +227,20 @@ it('passes the selected type and month expiration when creating an item', async 
     customAssetTypeId: 'type-medicine', expiration });
   expect(repository.createdInput).toMatchObject({ customAssetTypeId: 'type-medicine', expiration });
 });
+
+it('reuses the prepared tag IDs and atomic create identity after a lost response', async () => {
+  const repository = new FakeInventorySummaryRepository(); const original = repository.createAsset.bind(repository);
+  const persisted = new Map<string, AssetSummary>(); let loseResponse = true;
+  repository.createAsset = async input => {
+    const key = input.printRequest!.key; const existing = persisted.get(key);
+    if (existing) { expect(input.tagIds).toEqual(repository.createdInput!.tagIds); return existing; }
+    const asset = { ...await original(input), printJobId: 'job' }; persisted.set(key, asset);
+    if (loseResponse) { loseResponse = false; throw new Error('Response lost after atomic commit'); }
+    return asset;
+  };
+  const command = new CreateAssetCommand(repository);
+  const input = { title: 'Lamp', description: '', newTags: [{ displayName: 'Office' }], printRequest: { scope: { tenantId: 'tenant-home', inventoryId: 'inventory-home' }, key: 'request', selection: { printerId: 'printer', mediaFingerprint: 'media', copies: 1, template: { id: 'qr-title', version: 1, showReference: true } } } };
+  await expect(command.execute(input)).rejects.toThrow();
+  expect((await command.execute(input)).printJobId).toBe('job');
+  expect(persisted.size).toBe(1); expect(repository.createdTags).toHaveLength(1);
+});

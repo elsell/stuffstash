@@ -53,6 +53,33 @@ func coverPrintConsumerScenarios(t *testing.T, coverage executedScenarioCoverage
 	server := NewServer(":0", application)
 	token := "Bearer " + credential.Credential
 	requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", token, map[string]any{"sessionId": "session-for-printing"}), 200)
+
+	software := map[string]any{"version": "v1.2.3", "commit": "test-commit", "platform": "linux", "architecture": "amd64", "adapters": []any{map[string]any{"id": "brother-ql800", "contractVersions": []int{1}, "formats": []string{"image/png"}, "media": []any{map[string]any{"id": "brother-ql800-29x90", "version": 1}}, "completionEvidence": "printing_completed_then_waiting", "wake": false}}}
+	reportBody := map[string]any{"sessionId": "session-for-printing", "report": software}
+	for _, bad := range []string{"", "Bearer dev:owner", "Bearer malformed"} {
+		requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", bad, reportBody), 401)
+	}
+	reported := performRequest(server, "POST", "/print-consumer/heartbeat", token, reportBody)
+	requireStatus(t, reported, 200)
+	reportedData := labelResponseData(t, reported.Body.Bytes())
+	if reportedData["report"].(map[string]any)["version"] != "v1.2.3" || reportedData["reportReceivedAt"] == nil {
+		t.Fatal("software report missing", reported.Body.String())
+	}
+	receipt := reportedData["reportReceivedAt"]
+	clock.now = clock.now.Add(time.Second)
+	legacyBeat := performRequest(server, "POST", "/print-consumer/heartbeat", token, map[string]any{"sessionId": "session-for-printing"})
+	requireStatus(t, legacyBeat, 200)
+	if labelResponseData(t, legacyBeat.Body.Bytes())["reportReceivedAt"] != receipt {
+		t.Fatal("omitted report falsely refreshed capabilities")
+	}
+	software["version"] = "invalid\nversion"
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", token, reportBody), 400)
+	software["version"] = "v1.2.3"
+	reportDetail := performRequest(server, "GET", labelPrefix+"/print-connectors/"+string(credential.Connector.ID), "Bearer dev:owner", nil)
+	requireStatus(t, reportDetail, 200)
+	if !strings.Contains(reportDetail.Body.String(), `"version":"v1.2.3"`) {
+		t.Fatal("human connector view lost software report")
+	}
 	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "ready"}), 200)
 	connectorPath := labelPrefix + "/print-connectors/" + string(credential.Connector.ID)
 	health := performRequest(server, "GET", connectorPath, "Bearer dev:owner", nil)
@@ -190,6 +217,79 @@ func coverPrintConsumerScenarios(t *testing.T, coverage executedScenarioCoverage
 		t.Fatal(result.Body.String())
 	}
 	requireStatus(t, performRequest(server, "POST", "/print-consumer/attempts/attempt-after-restart/reconciliation", token, reconciliation), 200)
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", token, map[string]any{"sessionId": "session-for-printing"}), 200)
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "ready"}), 200)
+	// Human acknowledgement requires a serving connector's independent idle attestation.
+	recoveryJob := performRequestWithHeaders(server, "POST", labelPrefix+"/assets/"+assetID+"/print-jobs", "Bearer dev:owner", map[string]string{"Idempotency-Key": "human-resolution"}, map[string]any{"printerId": p.ID, "expectedMediaFingerprint": p.MediaFingerprint, "templateId": "qr-only", "templateVersion": 1, "templateOptions": map[string]any{"showReference": false}, "copies": 1})
+	requireStatus(t, recoveryJob, 201)
+	claim["attemptId"] = "attempt-human-resolution"
+	recoveryClaim := performRequest(server, "POST", "/print-consumer/claims", token, claim)
+	requireStatus(t, recoveryClaim, 200)
+	recoveryProof := map[string]any{"sessionId": "session-for-printing", "claimToken": secret, "revision": labelResponseData(t, recoveryClaim.Body.Bytes())["revision"]}
+	recoveryStart := performRequest(server, "POST", "/print-consumer/claims/attempt-human-resolution/start", token, recoveryProof)
+	requireStatus(t, recoveryStart, 200)
+	recoveryProof["revision"] = labelResponseData(t, recoveryStart.Body.Bytes())["revision"]
+	recoveryProof["outcome"] = map[string]any{"kind": "uncertain", "completedCopies": 0, "reason": "unknown", "retryable": false}
+	ambiguous := performRequest(server, "POST", "/print-consumer/claims/attempt-human-resolution/outcome", token, recoveryProof)
+	requireStatus(t, ambiguous, 200)
+	resolutionPath := labelPrefix + "/print-jobs/" + labelResponseData(t, recoveryJob.Body.Bytes())["id"].(string) + "/resolution"
+	resolutionBody := map[string]any{"revision": labelResponseData(t, ambiguous.Body.Bytes())["revision"], "acknowledgeUncertainty": true, "reportedOutcome": "unknown"}
+	if err := az.GrantInventoryViewer(ctx, identity.Principal{ID: "resolution-viewer"}, labelTenant, labelInventory); err != nil {
+		t.Fatal(err)
+	}
+	for _, bad := range []struct {
+		token  string
+		status int
+	}{{"", 401}, {"Bearer malformed", 401}, {"Bearer dev:other", 403}, {"Bearer dev:resolution-viewer", 403}} {
+		requireStatus(t, performRequest(server, "POST", resolutionPath, bad.token, resolutionBody), bad.status)
+	}
+	requireStatus(t, performRequest(server, "POST", resolutionPath, "Bearer dev:owner", resolutionBody), 409)
+	idlePath := "/print-consumer/attempts/attempt-human-resolution/idle-confirmation"
+	idleBody := map[string]any{"revision": resolutionBody["revision"]}
+	for _, bad := range []string{"", "Bearer dev:owner", "Bearer invalid"} {
+		requireStatus(t, performRequest(server, "POST", idlePath, bad, idleBody), 401)
+	}
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/attempts/unknown-attempt/idle-confirmation", token, idleBody), 404)
+	otherPair, err := application.PrintConnectors().Begin(ctx, printregistry.BeginPairing{Name: "Other host", PublicKey: pub, Candidates: []printing.PairingCandidate{{ID: "other-usb", Name: "Brother", AdapterID: "brother-ql800", DeviceID: "other-device"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = application.PrintConnectors().Approve(ctx, printregistry.ApprovePairing{Actor: actor, PairingID: otherPair.Pairing.ID, UserCode: otherPair.UserCode, Bindings: []printregistry.PairingBinding{{CandidateID: "other-usb", PrinterID: p.ID}}}); err != nil {
+		t.Fatal(err)
+	}
+	otherCredential, err := application.PrintConnectors().Exchange(ctx, otherPair.Pairing.ID, otherPair.PollToken, ed25519.Sign(key, printing.PairingProofMessage(otherPair.Pairing.ID, otherPair.PollToken)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	otherToken := "Bearer " + otherCredential.Credential
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", otherToken, map[string]any{"sessionId": "other-session"}), 200)
+	requireStatus(t, performRequest(server, "POST", idlePath, otherToken, idleBody), 404)
+
+	crossResolution := "/tenants/" + labelTenant + "/inventories/" + labelOtherInventory + "/print-jobs/" + labelResponseData(t, recoveryJob.Body.Bytes())["id"].(string) + "/resolution"
+	requireStatus(t, performRequest(server, "POST", crossResolution, "Bearer dev:other", resolutionBody), 404)
+	az.SetPrintingAvailable(false)
+	outageIdle := performRequest(server, "POST", idlePath, token, idleBody)
+	if outageIdle.Code < 400 {
+		t.Fatal("authorization outage allowed idle confirmation")
+	}
+	az.SetPrintingAvailable(true)
+	idle := performRequest(server, "POST", idlePath, token, idleBody)
+	requireStatus(t, idle, 200)
+	requireStatus(t, performRequest(server, "POST", idlePath, token, idleBody), 200)
+	if labelResponseData(t, idle.Body.Bytes())["status"] != "uncertain" {
+		t.Fatal("idle confirmation released queue")
+	}
+	resolutionBody["revision"] = labelResponseData(t, idle.Body.Bytes())["revision"]
+	resolved := performRequest(server, "POST", resolutionPath, "Bearer dev:owner", resolutionBody)
+	requireStatus(t, resolved, 200)
+	if labelResponseData(t, resolved.Body.Bytes())["status"] != "failed" || !strings.Contains(resolved.Body.String(), `"reportedOutcome":"unknown"`) || !strings.Contains(resolved.Body.String(), `"outcome":"uncertain"`) {
+		t.Fatal("resolution fabricated completion", resolved.Body.String())
+	}
+	requireStatus(t, performRequest(server, "POST", resolutionPath, "Bearer dev:owner", resolutionBody), 200)
+	resolutionBody["reportedOutcome"] = "printed"
+	requireStatus(t, performRequest(server, "POST", resolutionPath, "Bearer dev:owner", resolutionBody), 409)
+	coverage.operation["POST /tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/resolution"] = struct{}{}
+	coverage.operation["POST /print-consumer/attempts/{attemptId}/idle-confirmation"] = struct{}{}
 	requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", token, map[string]any{"sessionId": "session-for-printing"}), 200)
 	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "ready"}), 200)
 	// Losing the initiating editor's grant cancels unstarted output.

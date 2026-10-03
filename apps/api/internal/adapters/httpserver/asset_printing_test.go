@@ -11,7 +11,7 @@ import (
 )
 
 func TestAssetCreationWithPrintIsExplicitScopedAndIdempotent(t *testing.T) {
-	application, store, az := labelTestApplication(t)
+	application, store, az := labelTestApplicationWithBootstrap(t, false)
 	application = application.WithPrinterRegistry(store, printingprofiles.Catalog{}).WithPrintJobs(store, printingapp.JobConfig{MaxCopies: 20, MaxArtifactBytes: 1000000, ArtifactTTL: time.Hour}).WithAssetPrintUnitOfWork(store)
 	server := NewServer(":0", application)
 	printer := performRequestWithHeaders(server, "POST", labelPrefix+"/printers", "Bearer dev:owner", map[string]string{"Idempotency-Key": "printer"}, map[string]any{"name": "Garage", "adapterId": "brother-ql800", "presetId": "brother-ql800-29x90", "presetVersion": 1})
@@ -27,6 +27,15 @@ func TestAssetCreationWithPrintIsExplicitScopedAndIdempotent(t *testing.T) {
 		status int
 	}{{"", 401}, {"Bearer dev:viewer", 403}, {"Bearer dev:other", 403}} {
 		requireStatus(t, performRequestWithHeaders(server, "POST", labelPrefix+"/assets", c.token, headers, body), c.status)
+	}
+	requireStatus(t, performRequestWithHeaders(server, "POST", labelPrefix+"/assets", "Bearer dev:owner", headers, body), 503)
+	beforeBootstrap := performRequest(server, "GET", labelPrefix+"/assets", "Bearer dev:owner", nil)
+	requireStatus(t, beforeBootstrap, 200)
+	if !strings.Contains(beforeBootstrap.Body.String(), `"data":[]`) {
+		t.Fatal("unavailable printing saved an asset")
+	}
+	if _, err := application.Labels().BootstrapInstance(context.Background()); err != nil {
+		t.Fatal(err)
 	}
 	requireStatus(t, performRequest(server, "POST", labelPrefix+"/assets", "Bearer dev:owner", body), 400)
 	selection := body["printLabel"].(map[string]any)

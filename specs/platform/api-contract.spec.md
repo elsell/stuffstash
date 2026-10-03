@@ -233,3 +233,12 @@ API operations use that SDK behind an adapter. The planned generator version,
 configuration, output, and reproducible generation/drift checks must be established
 before code; no hand-maintained duplicate contract or generated-file edits.
 This extends client coverage without changing Huma's code-first server ownership.
+
+### Printing recovery client commands
+
+The shared generated-contract adapter exposes scoped resolution, linked reprint,
+and printer test-job commands. Resolution passes the caller's observed revision,
+explicit uncertainty acknowledgement, and reported outcome unchanged. Reprint and
+test commands require an explicit selection and caller-owned idempotency key;
+retries preserve that key and body. All three use authenticated fixed OpenAPI
+paths and remain behind each frontend's printing repository port.

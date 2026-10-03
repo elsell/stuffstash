@@ -405,7 +405,10 @@ message broker, public webhook receiver, or persistent event stream is required.
   between claim and start, credential rotation without privilege change,
   pending outbox grants/removals, reordered grant/revoke events, and fail-closed
   SpiceDB outages, and retirement between start and outcome/reconciliation.
-  No database-only authorization fallback is permitted.
+  No database-only authorization fallback is permitted. Pull-request CI runs the
+  real-SpiceDB acceptance runner, rather than silently skipping these tests.
+  PostgreSQL CI also runs concurrent default initialization and atomic asset-plus-
+  print creation, alongside claim and connector concurrency checks.
 - Real HTTP adversarial tests before endpoints: anonymous, wrong-role,
   cross-tenant/inventory/printer, forged IDs, expired/revoked credentials, pairing
   guessing/replay/approval races, wrong key, stolen code without polling secret,
@@ -652,6 +655,41 @@ Reprint idempotency outlives predecessor retention: while the new job is retaine
 an identical authorized request returns it even when its predecessor has expired.
 Diagnostic and reprint OpenAPI contracts expose both 201 creation and 200 replay.
 
+### Safe human uncertainty resolution
+
+The serving connector may POST an attempt revision to
+`/print-consumer/attempts/{attemptId}/idle-confirmation` only while holding its
+exclusive local journal and physical device locks and after a fresh adapter
+check confirms no active device submission. This is authenticated connector
+attestation, not independent server observation. Unknown, busy, disconnected,
+or unsupported adapters cannot attest. Confirmation is recorded on that attempt;
+it does not release the reservation or turn ambiguous output into success.
+An identical confirmation retry is harmless. No command may restart that attempt.
+
+An inventory editor may POST `{revision, acknowledgeUncertainty: true,
+reportedOutcome: "printed" | "not_printed" | "unknown"}` to the job's resolution
+endpoint. The current uncertain attempt must have the serving connector's idle
+confirmation. Resolution preserves all physical evidence and stores the human
+report separately with actor and time. It closes the job as `failed` (unconfirmed
+physical outcome), releases the printer reservation, and never reports confirmed
+completion. An identical repeat by the same actor returns the prior resolution;
+changed acknowledgement or stale revision conflicts. A later reprint is a
+separate explicit job. Late connector reconciliation cannot rewrite this decision.
+
+The CLI checks idle only during recovery, without sending label data. It keeps
+its durable journal until the server reports a terminal resolution. Restart,
+lease loss, and lock contention never justify replay. For the QL-800, a fresh
+status response in idle phase on a newly opened connection provides this check;
+existing active or uncertain connections cannot attest. Hardware operation
+already buffered remains outside server fencing guarantees.
+
+Missing local journal data does not permanently prevent acknowledgement. While
+holding the journal reservation and physical device lock, the CLI may use its
+scoped unsettled-attempt listing to confirm idle for an uncertain attempt. This
+never reconstructs completion/no-output evidence, writes a replacement claim,
+or submits a label. Claimed or printing attempts remain blocked. The worker
+continues to wait for human resolution before accepting another job.
+
 ### Human health projection
 
 Connector list/detail responses expose server-computed `availability` (`online`,
@@ -673,3 +711,376 @@ renewal does not refresh either health signal. Stale, missing, future-dated, or
 unavailable health rejects a new start without consuming the claim or emitting
 output. An identical already-started retry remains readable/idempotent. Outcome
 reporting and reconciliation remain usable while the printer is unavailable.
+### Browser Pairing Approval
+
+The deep link `/print-connectors/pair/{pairingId}` is a focused web task, using
+an accessible form in the existing authentication-page shell. It retains the
+pairing ID through sign-in without storing codes or credentials in URLs. Users
+choose an inventory they can configure and enter the CLI's short code before
+loading the safe review. A wrong code or unavailable request exposes no details.
+
+The review shows the connector name, public-key fingerprint, and candidate
+printer names. Each device is explicitly skipped, mapped to a compatible active
+registered printer, or registered with a user-entered name and an explicitly
+selected supported label preset. No device or label size is preselected. An
+existing destination shows its configured media. Initial choices remain the
+QL-800 and 29 × 90 mm preset returned by the API catalog.
+
+One explicit Approve command commits selected bindings. Creating a destination
+uses a stable idempotency key across retries; partial setup does not silently
+recreate destinations. Once printer creation starts, its submitted configuration
+is frozen until the outcome is known, including a lost-response retry. Duplicate destination assignments are rejected. Changing
+inventory or code clears the reviewed identity and selections before approval.
+Inputs are disabled during requests, errors retain the draft, and success says
+approval is complete while the CLI finishes activation. Permission changes and
+expiry remain server-enforced. Cancellation returns home without approval.
+
+This is a browser form, not a modal: it arrives from an external device and may
+require sign-in. The existing accessible Select primitive fits bounded inventory/media choices;
+existing Input, Button and Card primitives provide consistent keyboard and focus
+behavior. Status is announced locally, fingerprints and long names wrap, and the
+single completion action stays after the review. Source/fake evidence does not
+claim connected OIDC, real printer, or physical mobile verification.
+
+### Web Printer Settings And Manual Printing
+
+Inventory Settings includes a Printers destination at inventory scope. Every
+viewer can inspect registered destinations, configured label size, current
+readiness, connector state/last heartbeat, and recent jobs. Configure permission
+controls editable defaults and printer settings; asset edit permission controls
+manual print requests. The settings form loads defaults once, retains edits
+through background status refreshes, and submits the revision precondition.
+A conflict requires reloading the settings rather than overwriting another edit.
+Printer availability never prevents selecting an otherwise compatible default.
+
+The asset More menu opens a focused Print label dialog for any active asset kind.
+It selects a registered destination, compatible template/options and copies,
+then requests the actual server-rendered preview. Any selection change discards
+that preview. Queue submission includes its selection/media fingerprints and a
+stable idempotency key; uncertain API delivery freezes that request until retry.
+Session-owned intents survive dialog dismissal and route navigation, preserving
+the exact pending request, selection, and preview for reopening. A definite
+rejection permits correction only if no previous attempt had ambiguous delivery.
+Preview operations carry a generation fence. A newer preview, selection change,
+or canceled dialog invalidates older render responses; a late response cannot
+replace the selection currently shown or submitted.
+Preview bytes come through authenticated generated-client content methods and
+local object URLs are released on selection changes and dismissal. No credential
+is attached to arbitrary server-provided content URLs.
+
+The dialog and inventory job list show API-owned job state. A queued job for an
+unavailable printer explains that it waits for printer attention. Uncertain
+output never offers automatic retry or calls it failed. Cancellation is offered
+only before dispatch; reprint is an explicit new request from an asset, with
+current configuration and a fresh preview. Until the API exposes manual outcome
+resolution, show actionable uncertain guidance rather than inventing an endpoint.
+
+Use the existing settings navigation, accessible DropdownMenu, Dialog, Select,
+Checkbox, Input and Button primitives. The Print dialog owns one completion
+command, keyboard cancellation and focus return to its More trigger. Status
+updates are local and do not reset a draft. Narrow layouts wrap names/media and
+keep controls reachable; render both settings and preview/status fixtures in a
+browser. Fixture rendering is separate from connected OIDC and physical-printer
+acceptance.
+
+### Native Printer Settings And Job Tasks
+
+Inventory Settings opens a Printers navigation destination. Viewers see printer
+name, registered media, readiness, connector state and last seen independently.
+Configurators edit inventory defaults as one draft with an explicit Save action;
+short printer/template choices use NativeChoicePicker and automatic printing uses
+the native switch. Back leaves persisted settings unchanged. A stale revision
+retains the draft and offers reload instead of silently overwriting another edit.
+Offline printers remain selectable. Empty, denied and unavailable reads do not
+expose retained inventory data. Scope changes remount the task.
+
+Asset More exposes Print label for editable active assets, beside the existing
+viewer-accessible Label options download task. The print task selects a registered
+printer and independent template, previews the API-rendered PNG for that media,
+and submits one copy with an explicit command. Selection changes invalidate the
+preview. Once submission begins, retain its immutable payload and idempotency key
+across a lost-response retry; never make a replacement request implicitly.
+Submission means queued, never physically completed. Job detail shows server
+status and completed-copy evidence, permits cancellation only before output,
+and explains uncertain output without automatically reprinting. All reads and
+commands stay behind a mobile printing port and the generated API client adapter.
+
+The Add item switch initializes once from inventory defaults per new draft;
+background refresh never changes an explicit user choice. Printing is opt-in on
+the atomic create command, with a stable request identity across retries. Parent
+creation remains a separate explicit action and never inherits item printing.
+Critical checks use stateful printer/job/settings fakes for lost responses,
+revision conflict, permission loss and scope/route cancellation. Actual native
+layout, accessibility and USB operation remain device checklist follow-ups.
+
+A first definitive validation/conflict rejection of a manual print request unlocks
+its selection for correction and discards that unused request key. Network errors,
+server failures and any other ambiguous outcome retain the immutable intent. Once
+any attempt was ambiguous, a later rejection cannot prove that an earlier attempt
+did not enqueue: keep the original key and payload until success is recovered.
+Web settings and manual label controls are implemented with faithful stateful
+fakes covering settings conflicts, permission loss, preview media mismatch and
+ambiguous queue delivery. Chromium fixture review exercised 1280px settings and
+390px preview/queue status using the generated renderer PNG; this is not evidence
+of connected OIDC or physical printer execution.
+
+Web asset creation initializes its print checkbox from inventory defaults once per
+new draft. It captures a compatible default destination and media fingerprint;
+o default disables automatic printing with a settings link. The atomic asset
+request carries an explicit selection and stable idempotency key. A session-held
+frozen submission survives closing and reopening after an ambiguous response.
+Retry resumes the prepared child request without recreating confirmed quick
+parents or tags. Definite rejection unlocks corrections only before ambiguity.
+The returned asset's print-job ID links the new asset to its queued label status.
+
+The create checkbox was exercised in Chromium fixtures at 390px and 1280px: a
+true inventory default initializes checked, explicit unchecking survives title
+edits, and the control remains reachable above the action bar. Stateful workflow
+tests cover a committed child with a lost response followed by permission denial
+and successful same-key recovery, without duplicate parent/tag creation.
+
+### Unified web asset label menu
+
+Each asset detail exposes one More actions menu for its label tasks. Label options
+opens the existing download/system-print sheet for authorized viewers, including
+archived assets. Print label and the newly-created job's status entry are shown
+only for editors of active assets with a configured printing workspace. Saving or
+another asset action disables this menu and dismisses its transient surface.
+
+Use the existing accessible DropdownMenu, task sheet and print dialog. Selecting
+a command transfers focus into its surface; dismissal returns focus to the same
+More trigger. Asset identity changes remount the menu and its surfaces, aborting
+preview work; losing a required workspace or permission closes the corresponding
+surface. Combining the entry points does not broaden API permissions or discard
+session-owned unresolved print requests.
+
+Chromium fixture review at 1280px/390px confirms one menu, the three editor
+commands versus one viewer command, keyboard opening, and Escape focus return
+from both download and queued-print surfaces. Controlled repository tests verify
+preview cancellation on asset/workspace changes and editor-access removal.
+### Connector software and capability reports
+
+A heartbeat may include a bounded software report: version, source commit,
+platform, architecture, and up to 32 adapter capabilities. Each adapter reports
+its ID, supported consumer-contract versions, artifact formats, media preset
+IDs/versions, completion-evidence description, and optional wake support. These
+self-reported values describe installed software; they never grant authority,
+make a printer ready, or replace job validation. Device paths and secrets are
+excluded. The API validates bounds and records its own receipt timestamp.
+Omitting a report preserves the previous report and receipt time for older
+clients. Human connector reads expose this snapshot and timestamp under existing
+inventory authorization. Changed report content is audited; identical periodic
+telemetry only refreshes its server receipt time. The CLI builds the report from
+its baked-in version and actual registered adapters and includes it in each
+worker heartbeat, independently of individual printer availability.
+
+### Expired pairing cleanup
+
+Each connector-maintenance tick removes at most the configured connector batch
+size of expired pairing handshakes, including consumed and approved requests.
+Expiry uses the injected server clock and an indexed, bounded repository scan.
+The worker runs cleanup independently of authorization reconciliation failures.
+Cleanup removes handshake hashes, public keys, and discovered candidate snapshots;
+it never deletes connector registrations, credentials, bindings, jobs, or audit
+history. Unexpired pairings remain usable. No additional retention interval is
+needed because expired handshake credentials are already unusable.
+
+### Browser credential replacement approval
+
+A pairing URL with the public tenant, inventory, and connector identifiers opens
+an existing-connector replacement task. Partial or invalid targeting fails closed;
+it never falls back to new registration. Preserve the exact target through sign-in.
+The page finds the authorized inventory, reads that connector, and displays both
+before requesting the pairing code. Review must identify a rotation-only pairing.
+Explicit approval sends the reviewed connector generation and pairing/code to the
+existing scoped credential-rotation API. No printer creation, discovery, or media
+selection occurs. A conflict retains the task for review again; permission loss
+cannot turn this into a different inventory or connector. Show success only after
+the API confirms approval. Credentials remain private to the CLI exchange.
+
+The replacement form reuses the existing authentication Card, labeled Input, and
+Button primitives. The named connector and inventory remain visible while entering
+the code, reviewing its fingerprint, and explicitly approving. Source/fake checks
+cover inaccessible target, stale generation, and separate review/approval. A
+controlled browser fixture verified 1280px and 390px form layout, keyboard review,
+no narrow horizontal overflow, and explicit success; this is not connected OIDC
+or a physical credential replacement claim.
+
+### Web uncertainty recovery
+
+An uncertain job shows why another print cannot be started. Resolution controls
+appear only for an editor when the latest attempt has connector idle confirmation.
+The inline form requires an explicit observed outcome and acknowledgement that
+physical output remains uncertain. Submission includes the displayed revision;
+an unconfirmed response retains the exact outcome and revision for retry. Status
+refresh remains available. No resolution action automatically creates a reprint.
+
+Resolved jobs display the user's report separately from physical evidence and
+use “Resolved by user — output unconfirmed”, never “Printed” or an ordinary
+hardware-failure label. Show the report's actor/time. The latest attempt's original
+outcome and confirmed-copy count remain unchanged. Controls use existing Select,
+Checkbox, Label and Button primitives within the job row.
+
+Chromium fixture review at 390px and 1280px exercised choosing an outcome,
+acknowledging uncertainty, and the resulting human-resolution status. Stateful
+component tests cover missing idle evidence, viewer permissions, lost responses,
+and retry while preserving physical evidence and creating no new print job.
+
+If an explicit refresh returns a different job revision while resolution remains
+available, discard the previous resolution draft and require a new observed
+outcome and acknowledgement. A failed request alone must not reset or silently
+rebase an acknowledged payload; retries against unchanged state remain exact.
+
+### Browser pairing request projection
+
+The shared browser API adapter must project pairing review and approval scope
+into the contract's tenant and inventory IDs. Rich client inventory objects may
+also carry display names; those fields must not enter the request body. The
+server continues to reject unknown fields rather than weakening its contract.
+
+### Native uncertain-job acknowledgement
+
+The existing job-detail screen keeps uncertainty recovery in place: a native
+single-choice picker asks whether a label printed, did not print, or cannot be
+confirmed. No outcome is preselected. A separate native acknowledgement switch
+states that the physical outcome remains unconfirmed. The explicit Resolve job
+command requires editor permission, both choices, and idle confirmation on the
+latest attempt. Without that confirmation, explain that the serving connector
+must first report the printer idle; older attempt evidence never enables recovery.
+
+Submit the displayed job revision and selected report through the printing port.
+While a response is ambiguous, retain and retry the exact acknowledgement; prevent
+selection changes until fresh status resolves it. Report failure inline and allow
+refresh. Successful acknowledgement displays the human report and preserved
+uncertainty, never a confirmed completion or automatic reprint. Native controls
+reuse the existing picker, switch, command button, and job-detail navigation.
+Actual layout and assistive navigation remain recorded device follow-ups.
+
+A pending native acknowledgement remains bound to its original attempt and job
+revision during polling or an ambiguous retry. An explicit Refresh status read
+that confirms a different current revision or latest attempt discards that old
+intent and clears both the outcome choice and acknowledgement. The user must
+make both choices again; the client never rebases an old acknowledgement onto a
+new attempt. Refreshing the same revision retains the exact pending payload,
+including when the loading state temporarily unmounts the controls.
+### Web linked reprints
+
+An editor can explicitly reprint a terminal asset label from recent jobs or its
+asset print dialog. Open the existing bounded print dialog to choose a current
+destination/template and preview current content. Submit through the predecessor
+reprint endpoint with a fresh idempotency key; never silently use the ordinary
+asset-create-job endpoint. A session retains the same reprint intent per scoped
+predecessor across dismissal and navigation, including ambiguous responses.
+Choosing to reprint its completed successor starts a new linked intent. Viewer,
+nonterminal, and unresolved-uncertainty rows have no reprint command. Escape
+returns focus to the invoking command; workspace/permission changes dismiss the
+surface. No label is enqueued by opening or previewing the dialog.
+
+Chromium fixtures at 390px and 1280px verify preview, lost-response dismissal,
+Escape focus return, and retry after reopening. Controlled repository and real
+component tests preserve one successor per intent, its predecessor relationship,
+and viewer/nonterminal gates. These checks do not exercise physical USB output.
+
+### Native linked reprints and diagnostic commands
+
+Job detail offers Reprint label only for completed, failed, or canceled jobs and
+editors. It navigates to the existing label-selection task, retaining the source
+job as predecessor. Fetch current printer/media and independent template defaults;
+asset reprints require a fresh preview of current content before submission.
+Diagnostic predecessors use the fixed test content with explanatory text because
+there is no diagnostic-preview endpoint; they never provision an asset identity.
+Each accepted reprint is a new job, and success navigates to that job's detail.
+A retained ambiguous reprint remains retryable if the predecessor expires; retries
+use its original predecessor, selection, and key rather than starting a new job.
+
+Each active printer in native inventory settings exposes an explicit Print test
+label command to editors. It uses one copy, that printer's current media and the
+current independent template default. It never runs on registration, page entry,
+heartbeat, or refresh. Success navigates to the diagnostic job. Test and reprint
+intents are separately namespaced by scope and target in the session-owned request
+store. Lost-response retries survive navigation with the same immutable payload;
+only a definitive first rejection permits correction. Native task navigation,
+existing pickers, and contextual command buttons are reused. No new confirmation
+modal or automatic reprint is introduced.
+### Web explicit printer test
+
+Each non-retired printer offers editors an explicit Print test label command.
+Use a bounded dialog showing the named destination, registered media, and a flat
+layout picker. Explain that it prints one diagnostic label and creates no asset;
+this is not an asset-label preview. Opening or configuring the dialog does not
+print. Submission fixes copies to one and captures the current media fingerprint.
+Retain the exact scoped printer request across dismissal/navigation and ambiguous
+responses; repeated submit retries that intent. Display its normal job status and
+allow refresh/cancel/manual uncertainty resolution. A terminal job permits an
+explicit new test with a new key, never an automatic retry or reprint. Retired
+printers and viewers have no test command. Permission/workspace changes dismiss
+the dialog; Escape restores focus to the initiating printer command.
+
+Chromium fixtures at 390px and 1280px verify the diagnostic explanation, explicit
+submission, lost-response dismissal/reopen/retry, and Escape focus restoration.
+Stateful component tests verify no automatic job and no asset, one copy only,
+viewer/retired-printer restrictions, and exactly one job after response loss.
+Physical printer output remains outside this browser evidence.
+
+### Native registered-printer media editing
+
+For inventory configurators, each printer section exposes its loaded label size
+as the existing native single-choice picker plus Save label size. Choices come
+from the authenticated profile catalog for that printer's adapter; initially only
+QL-800 29 × 90 mm version 1 is available. No custom dimensions, roll detection,
+printer wake, or online-readiness requirement is introduced. Viewers retain the
+read-only size row. This is an in-place configuration task, not a new destination
+or confirmation modal.
+
+The printing application port receives explicit tenant/inventory scope, the
+current printer revision and selected preset ID/version. The generated PATCH
+changes only those media fields; name, retirement and assignments remain intact.
+A stale revision retains the selection, reports the failure, and offers an explicit
+reload. Never silently retry with a newer revision. A successful update refreshes
+the displayed printer/media snapshot without discarding unsaved inventory-default
+edits or changing queued job artifacts. Scope/navigation cancellation suppresses
+late UI results. Native layout/assistive checks remain device follow-ups.
+
+If the API omits a human-readable media name, native size rows and printer/preset
+choices display localized dimensions from the registered media in millimeters;
+they never substitute a hard-coded nominal size.
+
+Native test-label commands use committed inventory defaults. A successful Save
+defaults updates their template selection immediately; unsaved draft edits do not.
+### Web printer health and registered media
+
+Display server-computed connector availability separately from registration and
+last heartbeat; never infer availability with a client-side time cutoff. Show
+printer readiness separately, with the safe reported reason and report timestamp.
+Map known reasons to plain user actions and unknown reasons to a generic condition,
+not raw adapter text. If a registered media name is missing, derive its display
+name from registered physical dimensions in millimeters.
+
+Inventory administrators can edit a printer in a bounded dialog: name, registered
+media chosen from that adapter's server catalog, and retired state. Initial
+catalog support remains only QL-800 with 29-by-90-mm media; do not add custom-size
+inputs or infer the physical roll. Show that the chosen size must match the loaded
+roll and queued jobs keep their original size. Save with the displayed printer
+revision and selected preset identity/version. A stale revision or ambiguous save
+requires explicit reload before another write, preserving the rejected draft
+until then. Reload reads the current server resource and does not silently rebase
+an earlier choice. Viewers/editors without inventory configure permission cannot
+open or submit printer configuration. Dismiss on permission/workspace changes and
+return keyboard focus to the invoking command.
+
+Chromium fixtures at 390px and 1280px verify separate online/attention status,
+media configuration, save, and keyboard focus return after save and Escape.
+Controlled HTTP tests cover scoped revision/preset transport and auth rejection;
+component fakes cover stale drafts, explicit reload, administrator gating, and
+unnamed-media dimensions. No physical roll detection is claimed.
+
+### Atomic printer retirement lifecycle
+
+The revisioned printer update commits retirement, cancellation of every queued or
+claimed job, and clearing an affected inventory default in one transaction under
+the same printer lock used by claim/start. Each canceled job and changed settings
+record receives its own audit event. Failure to persist any event rolls back the
+entire retirement. Started or uncertain attempts and their printer reservation
+remain intact for reconciliation; retirement never reports them as canceled or
+safe to replay. Settings revisions advance when their default is cleared, so an
+older settings form cannot silently restore the retired destination.

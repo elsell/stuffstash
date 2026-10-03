@@ -1,6 +1,9 @@
 <script lang="ts">
   import { inventoryArchiveContext, type InventoryArchiveWorkspace } from '$lib/ports/inventoryArchive';
-  import { canCreateInventory } from '$lib/domain/inventory';
+  import InventoryPrintingSettings from '$lib/components/printing/InventoryPrintingSettings.svelte';
+  import { printingWorkspaceContext, type PrintingWorkspace } from '$lib/ports/printingRepository';
+  const printing = getContext<PrintingWorkspace | undefined>(printingWorkspaceContext);
+  import { canCreateInventory, canEditAsset, hasAccessPermission } from '$lib/domain/inventory';
   import InventoryArchivePanel from './InventoryArchivePanel.svelte';
   const archives = getContext<InventoryArchiveWorkspace | undefined>(inventoryArchiveContext);
   import { t } from '$lib/presentation/localization';
@@ -88,7 +91,11 @@
 {:else}
   <div class="workspace-main settings-management settings-management-resource">
     <Button.Root href={levelHref} variant="ghost" class="settings-back" onclick={(event) => navigate(event, levelHref)}><ArrowLeft /> {levelTitle}</Button.Root>
-    {#if route.settingsCollection === 'notifications' && inventory && notifications}
+    {#if route.settingsCollection === 'printing' && inventory && printing}
+      {#key JSON.stringify([printing.apiIdentity, principal.id, tenant.id, inventory.id])}
+        <InventoryPrintingSettings scope={{tenantId: tenant.id, inventoryId: inventory.id}} repository={printing.repository} intents={printing.intents} canConfigure={hasAccessPermission(inventory.access, 'configure')} canPrint={canEditAsset(inventory)} />
+      {/key}
+    {:else if route.settingsCollection === 'notifications' && inventory && notifications}
       {#key JSON.stringify([notifications.apiIdentity, principal.id, tenant.id, inventory.id])}
         <NotificationSettings tenantId={tenant.id} inventoryId={inventory.id} initialTimezone={Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'} repository={notifications.repository} onChanged={notifications.onPreferencesChanged} {observer} typeRepository={repository} />
       {/key}

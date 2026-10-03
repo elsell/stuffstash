@@ -44,7 +44,7 @@ func TestExpiredPendingCredentialCannotReuseReplacementAuthority(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := store.HeartbeatPrintConnector(ctx, issued, clock.now, func(printing.Connector, bool) (audit.Record, error) { return audit.Record{ID: "activated"}, nil }); err != nil {
+	if _, err := store.HeartbeatPrintConnector(ctx, issued, clock.now, func(printing.Connector, bool) (audit.Record, error) { return audit.Record{ID: "activated"}, nil }, nil); err != nil {
 		t.Fatal(err)
 	}
 	service := printregistry.ConnectorService{Registry: printregistry.Service{Clock: clock}, Repository: store, Authorization: authorization, Secrets: secrets}
@@ -73,10 +73,10 @@ func TestExpiredPendingCredentialCannotReuseReplacementAuthority(t *testing.T) {
 	if next.CredentialVersion != delayedA.CredentialVersion {
 		t.Fatal("fixture must exercise the same pending version")
 	}
-	if _, err := store.HeartbeatPrintConnector(ctx, next, clock.now, func(printing.Connector, bool) (audit.Record, error) { return audit.Record{ID: "B-activated"}, nil }); err != nil {
+	if _, err := store.HeartbeatPrintConnector(ctx, next, clock.now, func(printing.Connector, bool) (audit.Record, error) { return audit.Record{ID: "B-activated"}, nil }, nil); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := store.HeartbeatPrintConnector(ctx, delayedA, clock.now, nil); err == nil {
+	if _, err := store.HeartbeatPrintConnector(ctx, delayedA, clock.now, nil, nil); err == nil {
 		t.Error("delayed A heartbeat authenticated as replacement B")
 	}
 	if _, err := service.AuthorizePrinter(ctx, delayedA, printer.ID, ports.PrinterPermissionConsume); err == nil {

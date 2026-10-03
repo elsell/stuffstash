@@ -1,0 +1,47 @@
+import type { ReportedPrintOutcome, PrinterMediaChoice, LabelTemplate, PrintDefaults, PrintScope, RegisteredPrinter, PrintConnector, PrintJob, PrintPage, LabelSelection, LabelPreview, LabelMedia } from '$lib/domain/printing';
+export interface PrintingRepository {
+    printers(scope: PrintScope, signal?: AbortSignal): Promise<RegisteredPrinter[]>;
+    connectors(scope: PrintScope, signal?: AbortSignal): Promise<PrintConnector[]>;
+    mediaProfiles(scope: PrintScope): Promise<PrinterMediaChoice[]>;
+    templates(scope: PrintScope): Promise<LabelTemplate[]>;
+    settings(scope: PrintScope): Promise<PrintDefaults>;
+    saveSettings(scope: PrintScope, settings: PrintDefaults): Promise<PrintDefaults>;
+    updatePrinter(scope: PrintScope, printer: RegisteredPrinter, name: string, retired: boolean, media?: LabelMedia): Promise<RegisteredPrinter>;
+    preview(scope: PrintScope, assetId: string, selection: LabelSelection, media: LabelMedia): Promise<LabelPreview>;
+    createJob(scope: PrintScope, assetId: string, selection: LabelSelection, previewFingerprint: string, key: string): Promise<PrintJob>;
+    reprint(scope: PrintScope, predecessor: string, selection: LabelSelection, previewFingerprint: string, key: string): Promise<PrintJob>;
+    testPrinter(scope: PrintScope, printerId: string, selection: LabelSelection, key: string): Promise<PrintJob>;
+    job(scope: PrintScope, id: string, signal?: AbortSignal): Promise<PrintJob>;
+    jobs(scope: PrintScope, cursor?: string, signal?: AbortSignal): Promise<PrintPage<PrintJob>>;
+    resolve(scope:PrintScope,job:PrintJob,outcome:ReportedPrintOutcome):Promise<PrintJob>;
+    cancel(scope: PrintScope, job: PrintJob): Promise<PrintJob>;
+}
+export const printingWorkspaceContext = Symbol('printingWorkspace');
+export interface PrintingWorkspace {
+    apiIdentity: string;
+    repository: PrintingRepository;
+    intents: PrintIntents;
+}
+export interface PrintIntent {
+    readonly locked: boolean;
+    readonly selection: LabelSelection | null;
+    readonly rendered: LabelPreview | null;
+    readonly result: PrintJob | null;
+    invalidate(): void;
+    preview(selection: LabelSelection, media: LabelMedia, signal?: AbortSignal): Promise<LabelPreview>;
+    submitDefault(selection: LabelSelection): Promise<PrintJob>;
+    submit(): Promise<PrintJob>;
+}
+export interface PrinterTestIntent {
+    readonly locked: boolean;
+    readonly selection: LabelSelection | null;
+    readonly result: PrintJob | null;
+    submit(selection: LabelSelection): Promise<PrintJob>;
+}
+export interface PrintIntents {
+    forPrinterTest(scope: PrintScope, printerId: string): PrinterTestIntent;
+    startAnotherPrinterTest(scope: PrintScope, printerId: string, priorJob: PrintJob): PrinterTestIntent;
+    forAsset(scope: PrintScope, assetId: string): PrintIntent;
+    forReprint(scope: PrintScope, assetId: string, predecessor: string): PrintIntent;
+    startAnother(scope: PrintScope, assetId: string): PrintIntent;
+}

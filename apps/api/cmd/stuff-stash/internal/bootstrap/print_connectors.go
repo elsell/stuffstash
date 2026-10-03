@@ -19,6 +19,11 @@ func configurePrintConnectors(application app.App, repositories repositories, au
 }
 func startPrintConnectorWorker(ctx context.Context, application app.App, observer ports.Observer, cfg config.PrintConnectorConfig) {
 	go runPeriodicDrain(ctx, cfg.PollInterval, func() {
+		if count, err := application.PrintConnectors().CleanupExpiredPairings(ctx, cfg.BatchSize); err != nil {
+			observer.Record(ctx, ports.Event{Name: ports.EventPrintPairingCleanupFailed, Message: "expired print pairing cleanup failed"})
+		} else if count > 0 {
+			observer.Record(ctx, ports.Event{Name: ports.EventPrintPairingsExpired})
+		}
 		if err := application.PrintConnectors().DrainAuthorization(ctx, cfg.BatchSize); err != nil {
 			observer.Record(ctx, ports.Event{Name: ports.EventPrintConnectorSyncFailed, Message: "print connector authorization reconciliation failed"})
 		}

@@ -32,7 +32,7 @@ func TestPrinterRepositoryReplaysAndRollsBackWithAudit(t *testing.T) {
 	change := func(p *printing.Printer) error { p.Name = "Mutated"; p.Revision++; return nil }
 	// A duplicate history primary key fails after the row update; the complete
 	// transaction must roll back rather than leave a mutation without history.
-	if _, err := store.UpdatePrinter(ctx, scope, p.ID, 1, change, func(printing.Printer) (audit.Record, error) { return record, nil }); err == nil {
+	if _, err := store.UpdatePrinter(ctx, scope, p.ID, 1, change, func(printing.Printer) (audit.Record, error) { return record, nil }, nil); err == nil {
 		t.Fatal("duplicate audit accepted")
 	}
 	unchanged, err := store.GetPrinter(ctx, scope, p.ID)

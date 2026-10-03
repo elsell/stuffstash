@@ -13,9 +13,10 @@ type PairingCandidate struct {
 }
 type BeginPairingInput struct {
 	Body struct {
+		Rotation   bool               `json:"rotation,omitempty"`
 		Name       string             `json:"name" minLength:"1" maxLength:"100"`
 		PublicKey  []byte             `json:"publicKey"`
-		Candidates []PairingCandidate `json:"candidates" minItems:"1" maxItems:"16"`
+		Candidates []PairingCandidate `json:"candidates" maxItems:"16"`
 	}
 }
 type PairingStarted struct {
@@ -58,14 +59,16 @@ type ApprovePairingInput struct {
 	}
 }
 type Connector struct {
-	Availability         string     `json:"availability" enum:"online,offline,unknown"`
-	Generation           uint64     `json:"generation"`
-	PrinterIDs           []string   `json:"printerIds"`
-	ID                   string     `json:"id"`
-	Name                 string     `json:"name"`
-	State                string     `json:"state"`
-	AuthorizationPending bool       `json:"authorizationPending"`
-	LastSeenAt           *time.Time `json:"lastSeenAt,omitempty"`
+	Availability         string           `json:"availability" enum:"online,offline,unknown"`
+	Report               *ConnectorReport `json:"report,omitempty"`
+	ReportReceivedAt     *time.Time       `json:"reportReceivedAt,omitempty"`
+	Generation           uint64           `json:"generation"`
+	PrinterIDs           []string         `json:"printerIds"`
+	ID                   string           `json:"id"`
+	Name                 string           `json:"name"`
+	State                string           `json:"state"`
+	AuthorizationPending bool             `json:"authorizationPending"`
+	LastSeenAt           *time.Time       `json:"lastSeenAt,omitempty"`
 }
 type ConnectorOutput struct {
 	CacheControl string `header:"Cache-Control"`
@@ -92,7 +95,8 @@ type PairingCredentialOutput struct {
 type HeartbeatInput struct {
 	Authorization string `header:"Authorization"`
 	Body          struct {
-		SessionID string `json:"sessionId" minLength:"1" maxLength:"100"`
+		SessionID string           `json:"sessionId" minLength:"1" maxLength:"100"`
+		Report    *ConnectorReport `json:"report,omitempty"`
 	}
 }
 
@@ -160,6 +164,7 @@ type PublicPairingCandidate struct {
 	AdapterID string `json:"adapterId"`
 }
 type PairingReview struct {
+	Rotation             bool                     `json:"rotation"`
 	ID                   string                   `json:"id"`
 	Name                 string                   `json:"name"`
 	PublicKeyFingerprint string                   `json:"publicKeyFingerprint"`

@@ -31,6 +31,7 @@ type ConnectorService struct {
 }
 
 type BeginPairing struct {
+	Rotation   bool
 	Name       string
 	PublicKey  []byte
 	Candidates []printing.PairingCandidate
@@ -65,7 +66,7 @@ func (s ConnectorService) Begin(ctx context.Context, input BeginPairing) (Pairin
 		return PairingStarted{}, errors.New("invalid connector policy")
 	}
 	input.Name = strings.TrimSpace(input.Name)
-	if !validPrinterName(input.Name) || len(input.PublicKey) != 32 || len(input.Candidates) < 1 || len(input.Candidates) > 16 {
+	if !validPrinterName(input.Name) || len(input.PublicKey) != 32 || (!input.Rotation && len(input.Candidates) < 1) || (input.Rotation && len(input.Candidates) != 0) || len(input.Candidates) > 16 {
 		return PairingStarted{}, apperrors.ErrInvalidInput
 	}
 	ids := map[string]bool{}
@@ -96,7 +97,7 @@ func (s ConnectorService) Begin(ctx context.Context, input BeginPairing) (Pairin
 		return PairingStarted{}, err
 	}
 	now := s.Registry.Clock.Now()
-	p := printing.Pairing{ID: printing.PairingID(s.Registry.IDs.NewID()), Name: input.Name, PublicKey: append([]byte(nil), input.PublicKey...), Candidates: append([]printing.PairingCandidate(nil), input.Candidates...), PollHash: s.Secrets.Digest(token), CodeHash: s.Secrets.Digest(code), State: printing.PairingPending, ExpiresAt: now.Add(s.Policy.PairingLifetime), CreatedAt: now}
+	p := printing.Pairing{Rotation: input.Rotation, ID: printing.PairingID(s.Registry.IDs.NewID()), Name: input.Name, PublicKey: append([]byte(nil), input.PublicKey...), Candidates: append([]printing.PairingCandidate(nil), input.Candidates...), PollHash: s.Secrets.Digest(token), CodeHash: s.Secrets.Digest(code), State: printing.PairingPending, ExpiresAt: now.Add(s.Policy.PairingLifetime), CreatedAt: now}
 	if err := s.Repository.CreatePrintPairing(ctx, p); err != nil {
 		return PairingStarted{}, registryError(err)
 	}
@@ -192,16 +193,25 @@ func (s ConnectorService) AuthorizePrinter(ctx context.Context, c printing.Conne
 	return authority, nil
 }
 func (s ConnectorService) Heartbeat(ctx context.Context, c printing.Connector) (printing.Connector, error) {
+	return s.HeartbeatWithReport(ctx, c, nil)
+}
+func (s ConnectorService) HeartbeatWithReport(ctx context.Context, c printing.Connector, report *printing.ConnectorReport) (printing.Connector, error) {
+	if report != nil && !report.Valid() {
+		return printing.Connector{}, apperrors.ErrInvalidInput
+	}
 	if err := s.Authorization.CheckPrintConnector(ctx, c.ServiceAccountID, c.ID); err != nil {
 		return printing.Connector{}, err
 	}
 	result, err := s.Repository.HeartbeatPrintConnector(ctx, c, s.Registry.Clock.Now(), func(activated printing.Connector, rotated bool) (audit.Record, error) {
 		action := audit.ActionPrintConnectorActivated
+		if c.State == printing.ConnectorActive {
+			action = audit.ActionPrintConnectorUpdated
+		}
 		if rotated {
 			action = audit.ActionPrintConnectorCredentialRotated
 		}
 		return s.machineAudit(activated, action)
-	})
+	}, report)
 	return result, connectorError(err)
 }
 func (s ConnectorService) Reconcile(ctx context.Context, scope printing.Scope, id printing.ConnectorID) error {

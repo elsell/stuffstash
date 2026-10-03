@@ -7,7 +7,7 @@ import (
 )
 
 type PrintRegistry interface {
-	Heartbeat(context.Context, string) error
+	Heartbeat(context.Context, string, *printing.ConnectorReport) error
 	Printers(context.Context) ([]printing.RegisteredPrinter, error)
 	Report(context.Context, string, printing.Readiness) error
 }

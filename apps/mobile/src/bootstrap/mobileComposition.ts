@@ -1,3 +1,7 @@
+import { PrintRequests } from '../application/printing/PrintSubmission';
+import { PrintingClient } from '@stuff-stash/api-client';
+import { ApiPrintingRepository } from '../adapters/printing/ApiPrintingRepository';
+import type { PrintingWorkspace } from '../application/printing/PrintingWorkspace';
 import { LabelsClient } from '@stuff-stash/api-client';
 import { ApiLabelRepository } from '../adapters/labels/ApiLabelRepository';
 import { ExpoLabelFiles } from '../adapters/labels/ExpoLabelFiles';
@@ -145,6 +149,7 @@ import { createTimeoutFetch, mobileApiRequestTimeoutMs } from '../adapters/netwo
 
 export type MobileComposition = {
   readonly labels: LabelWorkspace;
+  readonly printing: PrintingWorkspace;
   readonly openLabel: OpenLabel;
   readonly createWorkspace: CreateWorkspace;
  readonly expirationWorkspaceQuery: ExpirationWorkspaceQuery;
@@ -292,6 +297,10 @@ export function createMobileComposition(
     fetch: createTimeoutFetch(mobileApiRequestTimeoutMs, createExpoArchiveFetch(async (input, init) => (await import('expo/fetch')).fetch(input, init)))
   }));
   const labels: LabelWorkspace = { repository: labelRepository, files: new ExpoLabelFiles(() => options.onLabelEvent?.({ name: 'label.cleanup_failed' })), parse: parseMobileLabelLink };
+  const printingOptions = { baseUrl: profile.apiBaseUrl, tokenProvider: () => validIdTokenForProfile(profile, sessionOptions),
+    fetch: createTimeoutFetch(mobileApiRequestTimeoutMs, createExpoArchiveFetch(async (input, init) => (await import('expo/fetch')).fetch(input, init))) };
+  const printingRepository = new ApiPrintingRepository(new PrintingClient(printingOptions), new LabelsClient(printingOptions));
+  const printing: PrintingWorkspace = { repository: printingRepository, requests: new PrintRequests(printingRepository, Crypto.randomUUID), files: labels.files, newRequestKey: Crypto.randomUUID };
   const exportObserver: InventoryExportObserver = { record: event => options.onExportEvent?.(event) };
   const exportFiles = new ExpoExportTemporaryFiles(exportObserver);
   void exportFiles.sweep().catch(() => exportObserver.record({ name: 'inventory_export.cleanup_failed' }));
@@ -366,6 +375,7 @@ export function createMobileComposition(
     pushNotificationResponses,
     notificationObserver,
     labels,
+    printing,
     openLabel: new OpenLabel(labelRepository, async (target, signal) => {
       await selectInventoryCommand.execute(target.inventoryId, { signal });
       const selected = await inventorySummaries.getCurrentInventoryScope({ signal });

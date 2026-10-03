@@ -10,6 +10,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi"
+	"github.com/stuffstash/stuff-stash/cli/internal/adapters/labelfiles"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/oidcauth"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/presentation"
 	"github.com/stuffstash/stuff-stash/cli/internal/app"
@@ -40,7 +41,7 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		return exit(output, err)
 	}
 	options.Server = oidcauth.CanonicalServer(options.Server)
-	if len(options.Command) == 3 && options.Command[0] == "connectors" && options.Command[1] == "print" && options.Command[2] == "register" {
+	if len(options.Command) == 3 && options.Command[0] == "connectors" && options.Command[1] == "print" && (options.Command[2] == "register" || options.Command[2] == "rotate") {
 		return exit(output, registerPrintConnector(ctx, options, getenv, output))
 	}
 	if len(options.Command) == 3 && options.Command[0] == "connectors" && options.Command[1] == "print" && options.Command[2] == "run" {
@@ -52,7 +53,14 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 	}
 	client := &http.Client{Timeout: 30 * time.Second}
 	clock := systemClock{}
-	runner := app.Runner{API: func(server, token string) (ports.API, error) { return httpapi.New(server, token, client) }, Auth: oidcauth.Adapter{HTTP: client, Clock: clock, Output: output, Browser: oidcauth.SystemBrowser{}, AllowLoopbackHTTP: options.AllowLoopbackHTTP}, Credentials: store, Clock: clock, Output: output, Observer: presentation.SilentObserver{}}
+	runner := app.Runner{
+		LabelFiles:  labelfiles.Files{},
+		LabelsAPI:   func(server, token string) (ports.LabelsAPI, error) { return httpapi.New(server, token, client) },
+		PrintingAPI: func(server, token string) (ports.HumanPrintingAPI, error) { return httpapi.New(server, token, client) },
+		API:         func(server, token string) (ports.API, error) { return httpapi.New(server, token, client) },
+		Auth:        oidcauth.Adapter{HTTP: client, Clock: clock, Output: output, Browser: oidcauth.SystemBrowser{}, AllowLoopbackHTTP: options.AllowLoopbackHTTP},
+		Credentials: store, Clock: clock, Output: output, Observer: presentation.SilentObserver{},
+	}
 	return exit(output, runner.Run(ctx, options))
 }
 func exit(output ports.Output, err error) int {
@@ -81,19 +89,33 @@ const Help = `Stuff Stash CLI
   stuffstash inventories list --tenant ID
   stuffstash assets list --tenant ID --inventory ID [--limit N --cursor CURSOR]
   stuffstash assets show ID
-  stuffstash assets create --kind item|container|location --title TITLE
+  stuffstash assets create --kind item|container|location --title TITLE [--print-label]
   stuffstash assets update ID --title TITLE
   stuffstash assets move ID --parent ID|root
   stuffstash assets archive ID
   stuffstash assets restore ID
   stuffstash version
+  stuffstash labels templates
+  stuffstash labels render ASSET_ID --format png|pdf --output PATH [--printer ID | --media-preset ID]
+  stuffstash labels resolve LABEL_URL
+  stuffstash labels print ASSET_ID [--printer ID --template ID --template-version N]
+  stuffstash printers list
+  stuffstash printers configure PRINTER_ID --label-size PRESET_ID
+  stuffstash printers test PRINTER_ID
+  stuffstash print-jobs list [--printer ID]
+  stuffstash print-jobs show JOB_ID
+  stuffstash print-jobs cancel JOB_ID
+  stuffstash print-jobs reprint JOB_ID [--printer ID]
   stuffstash printers discover
   stuffstash printers catalog [--json]
   stuffstash connectors print register --name NAME
+  stuffstash connectors print rotate --connector ID
   stuffstash connectors print run --connector ID [--journal-dir PATH]
 
 Context: --server, --tenant, --inventory or STUFF_STASH_CLI_SERVER,
 STUFF_STASH_CLI_TENANT, STUFF_STASH_CLI_INVENTORY. No implicit inventory selection.
+Render writes a new private file; existing paths are never overwritten.
+Standalone dimensions: --width-mm WIDTH --height-mm HEIGHT (exact catalog geometry).
 Finite commands accept --json. Mutations accept --idempotency-key.
 Headless credential storage: explicitly set STUFF_STASH_CLI_CREDENTIAL_FILE.
 Local printer discovery and catalog export do not need login.

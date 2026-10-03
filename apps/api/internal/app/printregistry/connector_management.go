@@ -150,6 +150,7 @@ func (s ConnectorService) List(ctx context.Context, a Actor, limit int, cursor s
 }
 
 type PairingReview struct {
+	Rotation                   bool
 	ID                         printing.PairingID
 	Name, PublicKeyFingerprint string
 	Candidates                 []printing.PairingCandidate
@@ -178,5 +179,5 @@ func (s ConnectorService) Review(ctx context.Context, a Actor, id printing.Pairi
 	if err := s.Registry.Audit.SaveAuditRecord(ctx, record); err != nil {
 		return PairingReview{}, err
 	}
-	return PairingReview{ID: p.ID, Name: p.Name, PublicKeyFingerprint: s.Secrets.Digest(string(p.PublicKey)), Candidates: candidates}, nil
+	return PairingReview{Rotation: p.Rotation, ID: p.ID, Name: p.Name, PublicKeyFingerprint: s.Secrets.Digest(string(p.PublicKey)), Candidates: candidates}, nil
 }

@@ -10,6 +10,12 @@ import (
 )
 
 type Options struct {
+	Format, OutputPath, MediaPreset                                       string
+	WidthMM, HeightMM                                                     float64
+	PrinterID, TemplateID, LabelSize                                      string
+	TemplateVersion                                                       uint
+	Copies                                                                int
+	PrintLabel, ShowReference, ShowReferenceSet                           bool
 	Command                                                               []string
 	ConnectorID, ConnectorName, ConnectorCredentialFile, JournalDirectory string
 	Server                                                                string
@@ -30,6 +36,18 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	}
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
+	flags.StringVar(&o.Format, "format", "png", "label file format: png or pdf")
+	flags.StringVar(&o.OutputPath, "output", "", "new private label file path")
+	flags.StringVar(&o.MediaPreset, "media-preset", "", "authorized media preset ID")
+	flags.Float64Var(&o.WidthMM, "width-mm", 0, "catalog physical label width in millimeters")
+	flags.Float64Var(&o.HeightMM, "height-mm", 0, "catalog physical label height in millimeters")
+	flags.StringVar(&o.LabelSize, "label-size", "", "supported printer media preset ID")
+	flags.StringVar(&o.PrinterID, "printer", "", "registered printer destination")
+	flags.StringVar(&o.TemplateID, "template", "", "label template ID")
+	flags.UintVar(&o.TemplateVersion, "template-version", 0, "label template version")
+	flags.IntVar(&o.Copies, "copies", 1, "number of label copies")
+	flags.BoolVar(&o.PrintLabel, "print-label", false, "create a label job with the new asset")
+	flags.BoolVar(&o.ShowReference, "show-reference", false, "show label reference")
 	flags.StringVar(&o.ConnectorID, "connector", o.ConnectorID, "registered connector ID")
 	flags.StringVar(&o.ConnectorName, "name", "", "connector name")
 	flags.StringVar(&o.JournalDirectory, "journal-dir", o.JournalDirectory, "persistent print recovery directory")
@@ -75,6 +93,14 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	}
 	if err := flags.Parse(flagArgs); err != nil {
 		return o, ports.Failure("usage", "invalid command option")
+	}
+	flags.Visit(func(f *flag.Flag) {
+		if f.Name == "show-reference" {
+			o.ShowReferenceSet = true
+		}
+	})
+	if o.Copies < 1 || o.TemplateVersion > uint(^uint32(0)) {
+		return o, ports.Failure("usage", "invalid copies or template version")
 	}
 	o.Command = positional
 	if o.Page.Limit < 1 {

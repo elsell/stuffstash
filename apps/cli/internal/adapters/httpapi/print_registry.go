@@ -2,13 +2,14 @@ package httpapi
 
 import (
 	"context"
+	"github.com/oapi-codegen/nullable"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi/generated"
 	"github.com/stuffstash/stuff-stash/cli/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 )
 
-func (c *Client) Heartbeat(ctx context.Context, session string) error {
-	_, err := read[generated.SuccessEnvelopeConnector](c.sdk.PostPrintConsumerHeartbeat(ctx, nil, generated.HeartbeatInputBody{SessionId: session}))
+func (c *Client) Heartbeat(ctx context.Context, session string, report *printing.ConnectorReport) error {
+	_, err := read[generated.SuccessEnvelopeConnector](c.sdk.PostPrintConsumerHeartbeat(ctx, nil, generated.HeartbeatInputBody{SessionId: session, Report: connectorReport(report)}))
 	return consumerError(err)
 }
 func (c *Client) Printers(ctx context.Context) ([]printing.RegisteredPrinter, error) {
@@ -55,4 +56,23 @@ func (c *Client) Report(ctx context.Context, id string, readiness printing.Readi
 	}
 	_, err := read[generated.SuccessEnvelopeStruct](c.sdk.PostPrintConsumerPrinterReports(ctx, nil, generated.PrinterReportInputBody{PrinterId: id, State: state, Reason: &reason}))
 	return consumerError(err)
+}
+
+func connectorReport(report *printing.ConnectorReport) *generated.ConnectorReport {
+	if report == nil {
+		return nil
+	}
+	adapters := []generated.ConnectorAdapterCapability{}
+	for _, a := range report.Adapters {
+		versions := []int32{}
+		media := []generated.ConnectorMediaCapability{}
+		for _, v := range a.ContractVersions {
+			versions = append(versions, int32(v))
+		}
+		for _, m := range a.Media {
+			media = append(media, generated.ConnectorMediaCapability{Id: m.PresetID, Version: int32(m.Version)})
+		}
+		adapters = append(adapters, generated.ConnectorAdapterCapability{Id: a.ID, Formats: nullable.NewNullableWithValue(a.Formats), CompletionEvidence: a.CompletionEvidence, Wake: a.Wake, ContractVersions: nullable.NewNullableWithValue(versions), Media: nullable.NewNullableWithValue(media)})
+	}
+	return &generated.ConnectorReport{Version: report.Version, Commit: report.Commit, Platform: report.Platform, Architecture: report.Architecture, Adapters: nullable.NewNullableWithValue(adapters)}
 }

@@ -12,6 +12,7 @@ var ErrRecoveryRequired = errors.New("printer has unresolved recovery evidence; 
 // PrintJobs is scoped to the configured authenticated API and connector. Neither
 // artifact URLs nor arbitrary transport paths cross this application port.
 type PrintJobs interface {
+	ConfirmIdle(context.Context, string, uint64) error
 	Unsettled(context.Context, string) ([]printing.AttemptStatus, error)
 	Claim(context.Context, string, printing.AttemptControl) (*printing.Claim, error)
 	Artifact(context.Context, printing.AttemptControl, int64) ([]byte, string, error)

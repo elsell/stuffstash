@@ -189,6 +189,13 @@ stuffstash print-jobs reprint <job-id>
   connector credential with the server. A restart reuses this registration.
 - Add `stuffstash printers configure <printer-id> --label-size <supported-size>`
   as a human-authorized, revision-checked update of the same registration.
+  The label-size argument is an exact preset ID from the authenticated profile
+  catalog for that printer's adapter. Fetch the current registration, resolve one
+  supported preset version, then PATCH only revision, preset ID, and preset version.
+  Preserve name, retirement state, adapter, and connector assignments. Unsupported
+  or ambiguous presets fail without mutation; a stale revision fails without an
+  automatic overwrite/retry. Offline readiness does not block configuration.
+  Initial support remains only `brother-ql800-29x90` version 1.
   Web/mobile printer settings expose the same edit. Worker credentials cannot
   change media settings; they retrieve and apply the server's configured snapshot.
   No automatic roll detection, multiple saved-roll UI, or recurrent confirmation
@@ -235,7 +242,7 @@ stuffstash print-jobs reprint <job-id>
   status, claim/recovery, and artifact endpoints, uses a Go SDK automatically
   generated from the same Huma-produced OpenAPI artifact used by web/mobile:
   `packages/api-client/openapi.json`. The existing client there is TypeScript;
-  a Go SDK does not yet exist. No separately hand-maintained Go API schema or
+  the Go SDK now uses that same contract. No separately hand-maintained Go API schema or
   endpoint/DTO layer is permitted.
 - Generate the Go SDK into `apps/cli/internal/adapters/httpapi/generated` with a
   reviewed pinned generator recorded in the tooling spec before implementation.
@@ -269,8 +276,12 @@ stuffstash print-jobs reprint <job-id>
 - Physical printing and scan checks remain explicitly unverified until performed.
   Collect user-device checks in `docs/reports/user-testing-checklist.md` during
   implementation; do not repeatedly request them or block unrelated release work.
-- Current evidence is read-only inspection of the old script on Paul, not a new
-  print, current-device discovery, or completed connector implementation.
+- The connector and Linux USB adapter are implemented. Stateful protocol,
+  journal, and worker tests verify recovery without duplicate submission. Real
+  Dex browser PKCE and device-code login have been exercised against the API;
+  these checks do not establish physical printer or scan behavior. Read-only
+  discovery on Paul found no currently attached Brother device. Physical
+  printing and scanning remain on the user-testing checklist.
 
 ## Generated First-Party Printer Documentation
 
@@ -533,6 +544,71 @@ journal directory is `stuffstash/print-state` under the OS user configuration
 directory, with owner-only permissions; `--journal-dir` overrides it. Recovery
 runs before hardware access, including when an active printer is powered off.
 
+### Human queue-command delivery
+
+Human printing commands resolve omitted template/options and destination from
+inventory print settings, then fetch that destination's current registered media
+fingerprint. Explicit flags override the corresponding setting. An offline
+registered destination remains selectable; a missing destination is a usage
+error, never an implicit first-printer choice. Scripts only print during asset
+creation when `--print-label` is present, regardless of the inventory UI default.
+Every enqueue/create-with-print command reports its logical request key to stderr
+before sending; an ambiguous failure can be retried with that exact key and
+selection. The CLI never automatically retries with a new key. Cancellation reads
+the current revision and relies on the API's compare-and-swap fence. Human output
+identifies queued jobs as queued and includes the creation's print-job ID.
+
+### Existing connector credential rotation
+
+`stuffstash connectors print rotate --connector ID` loads the existing connector's
+local identity, creates a fresh key-bound pairing, and directs the user to browser
+approval for that exact tenant, inventory, and connector. The verification URL
+carries those public identifiers as `tenantId`, `inventoryId`, and `connectorId`
+query parameters; these express intent and never authorize rotation. The browser
+requires authenticated configuration permission and explicit replacement approval
+through the existing credential-rotation command, rather than new registration.
+
+The CLI rejects an exchanged credential for any different server, tenant,
+inventory, or connector before saving or activating it. Expired local credentials
+may identify the target: only the human approval grants a replacement. A successful
+exchange persists the replacement before its activation heartbeat; failed storage
+leaves the old credential untouched, and failed activation retains the replacement
+for the worker's existing activation recovery. No credential or polling secret is
+included in the URL or output. Run the normal worker command after activation.
+
+Rotation starts an explicitly marked `rotation: true` pairing with no discovered
+printer candidates; it works while the printer is disconnected or powered off.
+Ordinary registration still requires candidates. Rotation-only pairings cannot
+use the new-registration approval command, and review exposes their purpose.
+### Standalone Label Commands
+
+`labels templates` lists the authorized versioned catalog. `labels resolve URL`
+needs a configured authenticated server but no selected inventory: parse locally,
+check `/instance`, then use only the generated configured-server resolver endpoint.
+HTTPS links may retain obsolete hosts/path prefixes; no request reaches that host.
+Apply the shared label protocol restrictions, including canonical opaque IDs,
+version, path, whitespace/encoding, and rejection of credentials/query/fragment.
+
+`labels render ASSET --format png|pdf --output PATH` uses explicit scoped context
+and inventory template defaults, with the existing template/version/reference
+flags. Media comes from `--printer` (or the configured default printer), an
+explicit `--media-preset` from the authenticated registry, or paired positive
+`--width-mm` and `--height-mm` values selecting an exact supported catalog size.
+Dimensions never synthesize unreviewed printer geometry; initial standalone stock
+remains 29 × 90 mm. Conflicting media selectors fail before rendering. Rendering
+without a registered printer does not create one, enqueue work, or access USB.
+
+Provision label identity, request the immutable artifact, then download only its
+scoped generated content endpoint. Ignore returned content URLs. Verify the expected
+PNG/PDF content type, a bounded 16 MiB download, and SHA-256 before publishing.
+Write a private file atomically without replacing any existing path or symlink;
+failed or canceled downloads leave no output file. Output reports the path, format
+and digest through the presentation port, never binary bytes mixed with JSON.
+
+Private label-file publication initially supports Linux and macOS. Windows must
+fail closed without creating a file until a Windows adapter establishes and verifies
+an owner-only DACL; Unix mode 0600 alone is not evidence of Windows privacy.
+Other Windows label and queue commands remain supported.
 ### Release capability metadata
 
 The Linux Brother adapter is now integrated. Linux amd64 and arm64 binaries

@@ -377,15 +377,15 @@ minute with a 15-minute backoff cap. Configure these with
 `STUFF_STASH_PUSH_RETRY_MAXIMUM_DELAY`. Provider retry deadlines may extend that
 backoff. Duration values use Go notation, such as `30s` or `5m`.
 
-## API: Labels (development builds)
+## API: Labels
 
 These settings enable asset label downloads and scanning in the app and website.
-Direct delivery through registered physical printers is separate work in progress.
+The CLI connector delivers queued labels to registered printers.
 Invalid values fail startup. An empty label base disables label operations.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `STUFF_STASH_PUBLIC_WEB_BASE_URL` | empty | HTTPS web address used for label links when no separate label base is set. |
+| `STUFF_STASH_PUBLIC_WEB_BASE_URL` | empty; web origin in self-host Compose | HTTPS web address for connector approval and label links when no separate label base is set. |
 | `STUFF_STASH_LABEL_BASE_URL` | public web base | Optional stable HTTPS label address, including any path prefix. No credentials, query, or fragment. |
 | `STUFF_STASH_LABEL_RENDER_TTL` | `1h` | Private preview/download lifetime; at most `24h`. |
 | `STUFF_STASH_LABEL_RENDER_MAX_BYTES` | `1048576` | Maximum stored artifact size; at most 16 MiB. |
@@ -395,7 +395,7 @@ Invalid values fail startup. An empty label base disables label operations.
 | `STUFF_STASH_LABEL_MAX_TITLE_RUNES` | `2048` | Maximum title characters accepted by rendering; at most 4096. |
 | `STUFF_STASH_LABEL_MAX_REFERENCE_RUNES` | `128` | Maximum reference characters; at most 512. |
 
-Use the [one-time bootstrap command](../self-host-operations/#initialize-label-identities-development-builds)
+Use the [one-time bootstrap command](../self-host-operations/#set-up-labels-and-printing)
 after database migration. Rendering currently supports the built-in font's
 Latin, Greek, and Cyrillic coverage; unsupported text returns an error rather
 than printing replacement boxes. QR-only labels can omit the title.

@@ -12,6 +12,7 @@ import (
 )
 
 type Runtime struct {
+	SoftwareReport                  *printing.ConnectorReport
 	Registry                        ports.PrintRegistry
 	Devices                         ports.DevicePrinters
 	State                           ports.PrintState
@@ -46,7 +47,7 @@ func (r *Runtime) Run(ctx context.Context) error {
 			return err
 		default:
 		}
-		err := r.Registry.Heartbeat(ctx, r.Worker.Config.SessionID)
+		err := r.Registry.Heartbeat(ctx, r.Worker.Config.SessionID, r.SoftwareReport)
 		var registrations []printing.RegisteredPrinter
 		if err == nil {
 			registrations, err = r.Registry.Printers(ctx)

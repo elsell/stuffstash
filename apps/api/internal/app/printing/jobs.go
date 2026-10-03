@@ -240,13 +240,17 @@ func (s *JobService) Create(ctx context.Context, input CreateJobInput) (label.Jo
 		job.Kind = label.JobPrinterTest
 		job.LabelReference = ""
 	}
-	record, err := s.audit(input.Scope, audit.ActionPrintJobQueued, job.ID)
+	action, event := audit.ActionPrintJobQueued, ports.EventPrintJobQueued
+	if job.Predecessor != "" {
+		action, event = audit.ActionPrintJobReprinted, ports.EventPrintJobReprinted
+	}
+	record, err := s.audit(input.Scope, action, job.ID)
 	if err != nil {
 		return label.Job{}, false, err
 	}
 	result, created, err := s.jobs.CreatePrintJob(ctx, ports.PrintJobCreate{Job: job, Content: renderedContent, PrinterRevision: printer.Revision, RequestFingerprint: fingerprint, Audit: record})
 	if err == nil && created && s.labels.deps.Observer != nil {
-		s.labels.deps.Observer.Record(ctx, ports.Event{Name: ports.EventPrintJobQueued})
+		s.labels.deps.Observer.Record(ctx, ports.Event{Name: event})
 	}
 	return result, created, jobError(err)
 }

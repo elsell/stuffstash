@@ -71,7 +71,11 @@ func asset(a generated.AssetResponse) ports.Asset {
 	if a.ParentAssetId != nil {
 		p = *a.ParentAssetId
 	}
-	return ports.Asset{ID: a.Id, Title: a.Title, Kind: a.Kind, Parent: p, Lifecycle: a.LifecycleState}
+	printJobID := ""
+	if a.PrintJobId != nil {
+		printJobID = *a.PrintJobId
+	}
+	return ports.Asset{PrintJobID: printJobID, ID: a.Id, Title: a.Title, Kind: a.Kind, Parent: p, Lifecycle: a.LifecycleState}
 }
 func assetResult(r generated.SuccessEnvelopeAssetResponse, err error) (ports.Result[ports.Asset], error) {
 	if err != nil {

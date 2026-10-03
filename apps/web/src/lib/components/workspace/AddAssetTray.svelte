@@ -2,7 +2,12 @@
   import { t } from '$lib/presentation/localization';
   import { addReturnFocusTarget } from '$lib/application/workspaceAddFocus';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
-  import { onDestroy, tick } from 'svelte';
+  import { getContext, onDestroy, tick } from 'svelte';
+  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
+  import { printingWorkspaceContext, type PrintingWorkspace } from '$lib/ports/printingRepository';
+  import type {PrintScope,LabelSelection} from '$lib/domain/printing';
+  import {settingsResourceHref} from '$lib/application/settingsManagementNavigation';
+  const printing = getContext<PrintingWorkspace | undefined>(printingWorkspaceContext);
   import X from '@lucide/svelte/icons/x';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Sheet from '$lib/components/ui/sheet/index.js';
@@ -44,7 +49,7 @@
   import SegmentedControl from './SegmentedControl.svelte';
 
   let {
-    open,
+    open, printScope, pendingPrintDraft,
     initialKind = 'item',
     initialParentAssetId = null,
     closeHref,
@@ -59,6 +64,8 @@
     onSave
   }: {
     open: boolean;
+    printScope?:PrintScope;
+    pendingPrintDraft?:AddAssetSubmission;
     initialKind?: AssetKind;
     initialParentAssetId?: string | null;
     closeHref: string;
@@ -73,6 +80,36 @@
     onSave: (draft: AddAssetSubmission) => Promise<AddAssetSaveResult>;
   } = $props();
 
+  let printChecked = $state(false);
+  let printSelection = $state<LabelSelection|null>(null);
+  let printLoading = $state(false);
+  let printLoadFailed = $state(false);
+  let printDefaultResolved=$state(false);
+  let printGeneration = 0;
+  let lastPrintScope = '';
+  const printScopeKey = $derived(JSON.stringify(printScope));
+  async function initializePrinting() {
+    const generation = ++printGeneration;
+    printChecked = false; printSelection = null; printLoadFailed = false; printLoading=false; printDefaultResolved=false;
+    if (pendingPrintDraft) {printDefaultResolved=true;printChecked=Boolean(pendingPrintDraft.printLabel);printSelection=pendingPrintDraft.printLabel??null;return;}
+    if (!printing || !printScope) {printDefaultResolved=true;return;}
+    printLoading = true;
+    try {
+      const [defaults,printers] = await Promise.all([printing.repository.settings(printScope),printing.repository.printers(printScope)]);
+      if (generation!==printGeneration) return;
+      const printer=printers.find(p=>p.id===defaults.defaultPrinterId&&!p.retired);
+      printDefaultResolved=!defaults.printOnCreateDefault||Boolean(printer);
+      if(!printDefaultResolved)printLoadFailed=true;
+      if (printer) {printSelection={printerId:printer.id,expectedMediaFingerprint:printer.mediaFingerprint,templateId:defaults.templateId,templateVersion:defaults.templateVersion,showReference:defaults.showReference,copies:1};printChecked=defaults.printOnCreateDefault;}
+    } catch {if(generation===printGeneration)printLoadFailed=true;}
+    finally {if(generation===printGeneration)printLoading=false;}
+  }
+  function restorePendingDraft(draft:AddAssetSubmission) {
+    kind=draft.kind;title=draft.title;description=draft.description;parentAssetId=draft.parentAssetId??'';
+    quickParentEnabled=Boolean(draft.parentQuickCreate);quickParentTitle=draft.parentQuickCreate?.title??'';quickParentKind=draft.parentQuickCreate?.kind??'location';
+    customAssetTypeId=draft.customAssetTypeId??'';expiration=draft.expiration;customFieldValues=Object.fromEntries(Object.entries(draft.customFields??{}).map(([key,value])=>[key,String(value)]));
+    selectedTagIds=[...(draft.tagIds??[])];newTags=[...(draft.newTags??[])];selectedPhotos=draft.photos.map(photo=>({...photo,previewUrl:URL.createObjectURL(photo.file)}));
+  }
   let kind = $state<AssetKind>('item');
   let title = $state('');
   let description = $state('');
@@ -117,20 +154,24 @@
   let quickParentNameError = quickParentMissingNameMessage();
 
   $effect(() => {
-    if (open && !wasOpen) {
+    if (open && (!wasOpen || lastPrintScope!==printScopeKey)) {
       returnFocusElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       resetDraft(initialKind, validInitialParentId(initialParentAssetId));
+      lastPrintScope=printScopeKey;
+      if(pendingPrintDraft)restorePendingDraft(pendingPrintDraft);
+      void initializePrinting();
       wasOpen = true;
       void tick().then(() => titleInput?.focus());
     } else if (!open && wasOpen) {
       wasOpen = false;
+      printGeneration++;
       revokePhotoPreviews(selectedPhotos);
       if (restoreFocusOnClose) addReturnFocusTarget(returnFocusElement)?.focus();
       returnFocusElement = null;
-    } else if (open && initialKind !== lastInitialKind) {
+    } else if (open && !pendingPrintDraft && initialKind !== lastInitialKind) {
       kind = initialKind;
       lastInitialKind = initialKind;
-    } else if (open && initialParentAssetId !== lastInitialParentAssetId) {
+    } else if (open && !pendingPrintDraft && initialParentAssetId !== lastInitialParentAssetId) {
       parentAssetId = validInitialParentId(initialParentAssetId) ?? '';
       parentSearch = parentAssetId ? parentTargets.find((target) => target.id === parentAssetId)?.title ?? '' : '';
       lastInitialParentAssetId = initialParentAssetId;
@@ -138,6 +179,7 @@
   });
 
   onDestroy(() => {
+    printGeneration++;
     revokePhotoPreviews(selectedPhotos);
   });
 
@@ -145,7 +187,8 @@
     if (!title.trim() || photoError || !expirationValid) {
       return;
     }
-    const result = await onSave({
+    const result = await onSave(pendingPrintDraft ?? {
+      printLabel: printChecked && printSelection ? {...printSelection} : undefined,
       kind,
       title: title.trim(),
       description: description.trim(),
@@ -331,7 +374,7 @@
       <Button.Root href={closeHref} variant="ghost" size="icon-sm" aria-label={t('web.AddAssetTray.closeAddTray')} onclick={closeFromLink}><X /></Button.Root>
     </Sheet.Header>
 
-    <div class="add-tray-body">
+    <fieldset class="add-tray-body" disabled={saving || Boolean(pendingPrintDraft)}>
       <div class="add-summary">
         <p class="visually-hidden" aria-live="polite" aria-atomic="true">
           {addFormPresentation.summaryTypeLabel}: {kindCopy.kindLabel}.
@@ -456,11 +499,25 @@
         onFiles={captureFiles}
         onRemove={removePhoto}
       />
-    </div>
+      {#if printing && printScope}
+        <div class="print-create-choice"><Checkbox id="create-print-label" bind:checked={printChecked} disabled={printLoading||!printSelection}/><Label for="create-print-label">{t('web.Printing.createPrint')}</Label></div>
+        {#if printLoadFailed && !printDefaultResolved}<div class="print-fallback"><Button.Root variant="outline" onclick={()=>void initializePrinting()}>{t('web.Printing.retryDefaults')}</Button.Root><Button.Root variant="outline" onclick={()=>{printDefaultResolved=true;printChecked=false;}}>{t('web.Printing.createWithoutLabel')}</Button.Root></div>{/if}
+        {#if !printSelection || printLoadFailed}<p>{t(printLoadFailed?'web.Printing.unavailable':'web.Printing.chooseDefault')} <a href={settingsResourceHref({level:'inventory',tenantId:printScope.tenantId,inventoryId:printScope.inventoryId,collection:'printing'})}>{t('web.Printing.title')}</a></p>{/if}
+      {/if}
+    </fieldset>
+    {#if pendingPrintDraft}<p class="pending-print" role="status">{t('web.Printing.pendingCreate')}</p>{/if}
 
     <Sheet.Footer class="tray-actions shrink-0 border-t px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
       <Button.Root href={closeHref} variant="outline" onclick={closeFromLink}>{t('web.AddAssetTray.cancel')}</Button.Root>
-      <Button.Root disabled={saving || !expirationValid || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>{kindCopy.saveLabel}</Button.Root>
+      <Button.Root disabled={saving || printLoading || (Boolean(printing&&printScope)&&!printDefaultResolved) || !expirationValid || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>{pendingPrintDraft?t('web.Printing.retryCreate'):kindCopy.saveLabel}</Button.Root>
     </Sheet.Footer>
   </Sheet.Content>
 </Sheet.Root>
+
+<style>
+.print-create-choice{display:flex;align-items:center;gap:var(--space-3);min-height:var(--space-11)}
+.print-create-choice :global(input[type="checkbox"]){min-width:1rem;min-height:1rem;width:1rem;height:1rem}
+.print-fallback{display:flex;flex-wrap:wrap;gap:var(--space-3)}
+.pending-print{padding-inline:var(--space-5);overflow-wrap:anywhere}
+fieldset{min-inline-size:0;border:0}
+</style>

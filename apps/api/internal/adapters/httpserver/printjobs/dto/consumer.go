@@ -80,6 +80,7 @@ type PrintConsumerMedia struct {
 	CutPolicy          string            `json:"cutPolicy"`
 }
 type PrintConsumerAttempt struct {
+	ResolvedAt       *time.Time          `json:"resolvedAt,omitempty"`
 	ProtocolVersion  int                 `json:"protocolVersion"`
 	JobID            string              `json:"jobId"`
 	PrinterID        string              `json:"printerId"`

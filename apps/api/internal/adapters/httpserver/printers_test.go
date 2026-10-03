@@ -81,7 +81,7 @@ func TestPrinterRegistrationEnforcesRolesScopeIdempotencyAndRevisions(t *testing
 		p.MediaFingerprint = "previous-media"
 		p.Revision++
 		return nil
-	}, func(printing.Printer) (audit.Record, error) { return audit.Record{ID: "test-queue-start"}, nil })
+	}, func(printing.Printer) (audit.Record, error) { return audit.Record{ID: "test-queue-start"}, nil }, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
