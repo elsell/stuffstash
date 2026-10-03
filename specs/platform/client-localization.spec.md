@@ -411,3 +411,13 @@ validation and user names. Saved items, created parents and tags must survive
 failures without duplicate creation. Unavailable tag creation uses an explicitly
 safe cataloged message. Verify initial failure, partial success and unavailable
 tag capability through the real workflow; preserve pseudo-localization.
+
+### Mobile read and photo-selection recovery boundaries
+
+Home initial-load and refresh, location initial-load, and voice-plan photo-selection
+failures must not display ordinary exception messages. Use their cataloged fallback
+guidance. Preserve deliberately catalog-owned failures (empty workspace, missing
+tenant/location, camera permission and unsupported photo format) through a typed
+error carrying a catalog key, never an arbitrary safe-text flag. Retain retry,
+existing content, photo drafts and departed-visit suppression. Verify mounted
+recovery and the actual photo provider's permission failure.

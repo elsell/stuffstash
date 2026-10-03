@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { HomeDashboardQuery } from '../../application/home/HomeDashboardQuery';
@@ -152,9 +153,17 @@ describe('Home interactions through mounted components', () => {
     expect(h.byText('Cancel return')).toBeUndefined();
     await h.run(() => pending.resolve(snapshot([]))); await settle();
   });
+  it('preserves cataloged empty-workspace guidance from the real query', async () => {
+    repository.load = async () => ({ checkedOutAssets: [], workspace: { tenants: [], inventories: [], defaultInventoryId: inventoryId('inventory-home') } });
+    await render();
+    expect(h.allText()).toContain(t('inventory.workspaceEmpty'));
+    expect(h.byLabel('Retry loading Home')).toBeDefined();
+  });
   it('recovers an initial load failure using Retry', async () => {
     repository.load = async () => { throw new Error('Connection failed'); }; await render();
     expect(h.byLabel('Retry loading Home')).toBeDefined();
+    expect(h.allText()).not.toContain('Connection failed');
+    expect(h.allText()).toContain(t('mobile.HomeScreen.stuffStashCouldNotLoadTheMobileHomeScreen'));
     repository.load = async () => snapshot(); await h.press(h.byLabel('Retry loading Home')); await settle();
     expect(h.byLabel('Open asset Recent bowl')).toBeDefined(); expect(h.byLabel('Retry loading Home')).toBeUndefined();
   });
@@ -178,6 +187,8 @@ describe('Home interactions through mounted components', () => {
     repository.load = async () => { throw new Error('Connection failed'); };
     await h.run(async () => { await refresh().onRefresh(); }); await settle();
     expect(h.byText('Could not refresh Home')).toBeDefined();
+    expect(h.allText()).not.toContain('Connection failed');
+    expect(h.allText()).toContain(t('mobile.HomeScreen.stuffStashCouldNotRefreshTheMobileHomeScreen'));
     expect(refresh().refreshing).toBe(false);
     expect(h.byLabel('Open asset Recent bowl')).toBeDefined();
   });

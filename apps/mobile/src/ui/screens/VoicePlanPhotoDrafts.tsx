@@ -1,3 +1,4 @@
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import {MeasuredImage as Image} from '../components/MeasuredImage';
 import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
@@ -27,7 +28,7 @@ export function showVoicePlanPhotoSourceChooser({
     if (!isCurrent()) return;
     action().catch((error: unknown) => {
       if (!isCurrent()) return;
-      Alert.alert(t('mobile.VoicePlanPhotoDrafts.couldNotAddPhotos'), error instanceof Error ? error.message : t('mobile.VoicePlanPhotoDrafts.photoSelectionFailed'));
+      Alert.alert(t('mobile.VoicePlanPhotoDrafts.couldNotAddPhotos'), catalogRecoveryMessage(error, t('mobile.VoicePlanPhotoDrafts.photoSelectionFailed')));
     });
   };
 

@@ -74,3 +74,24 @@ it('keeps a source choice invalid after returning to a visit or replacing the pl
     open(); latestActionSheetCallback()?.(1); expect(starts).toBe(1);
   } finally { await h.unmount(); setScreenFocused(true); }
 });
+
+ it('uses catalog recovery for photo failures and preserves camera permission guidance', async () => {
+  const { showVoicePlanPhotoSourceChooser } = await import('./VoicePlanPhotoDrafts');
+  const { latestActionSheetCallback, latestAlert } = await import('../../test-support/react-native');
+  const { ExpoPhotoSelectionProvider } = await import('../../adapters/photos/ExpoPhotoSelectionProvider');
+  const { photoPickerFake } = await import('../../test-support/expo-image-picker');
+  const { t } = await import('../../presentation/localization');
+  const h = new MobileRenderHarness();
+  try {
+    for (const permissionFailure of [false, true]) {
+      photoPickerFake.cameraGranted = false;
+      const select = async () => {
+        if (permissionFailure) await new ExpoPhotoSelectionProvider().captureFromCamera(0);
+        else throw new Error('private photo diagnostic');
+      };
+      showVoicePlanPhotoSourceChooser({ isCurrent: () => true, onCamera: select, onLibrary: select });
+      await h.run(async () => { latestActionSheetCallback()?.(0); await new Promise(resolve => setTimeout(resolve, 20)); });
+      expect(latestAlert()?.message).toBe(t(permissionFailure ? 'recovery.cameraRequired' : 'mobile.VoicePlanPhotoDrafts.photoSelectionFailed'));
+    }
+  } finally { await h.unmount(); }
+});

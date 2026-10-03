@@ -1,3 +1,4 @@
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { type ReactNode } from 'react';
@@ -59,7 +60,7 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
       feedback.showNotice({
         tone: 'error',
         title: t('mobile.HomeScreen.couldNotRefreshHome'),
-        message: readableError(error, t('mobile.HomeScreen.stuffStashCouldNotRefreshTheMobileHomeScreen'))
+        message: catalogRecoveryMessage(error, t('mobile.HomeScreen.stuffStashCouldNotRefreshTheMobileHomeScreen'))
       });
     }
   }
@@ -72,7 +73,7 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
       {dashboardState.isPending && !dashboardState.data ? <LoadingState /> : null}
       {dashboardState.isError && !dashboardState.data ? (
         <ErrorState
-          message={readableError(dashboardState.error, t('mobile.HomeScreen.stuffStashCouldNotLoadTheMobileHomeScreen'))}
+          message={catalogRecoveryMessage(dashboardState.error, t('mobile.HomeScreen.stuffStashCouldNotLoadTheMobileHomeScreen'))}
           onRetry={() => { void dashboardState.refetch(); }}
         />
       ) : null}
@@ -112,9 +113,6 @@ function ErrorState({ message, onRetry }: { readonly message: string; readonly o
   );
 }
 
-function readableError(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
-}
 
 function Dashboard({
   expirationSection,

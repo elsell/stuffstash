@@ -1,3 +1,4 @@
+import { CatalogRecoveryError } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import type {
   PhotoSelectionProvider,
@@ -21,7 +22,7 @@ export class ExpoPhotoSelectionProvider implements PhotoSelectionProvider {
     const ImagePicker = await import('expo-image-picker');
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      throw new Error(t('recovery.cameraRequired'));
+      throw new CatalogRecoveryError('recovery.cameraRequired');
     }
 
     const result = await ImagePicker.launchCameraAsync({
@@ -48,7 +49,7 @@ async function mapImagePickerResult(
   for (const [index, asset] of (result.assets ?? []).entries()) {
     const contentType = normalizeImageContentType(asset.mimeType);
     if (!contentType) {
-      throw new Error(t('recovery.photoFormat'));
+      throw new CatalogRecoveryError('recovery.photoFormat');
     }
     selectedPhotos.push({
       id: `${asset.assetId ?? asset.uri}-${selectedAt}-${index.toString()}`,

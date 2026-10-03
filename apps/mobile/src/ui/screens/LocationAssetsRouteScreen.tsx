@@ -1,3 +1,4 @@
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePullRefreshFeedback } from '../serverState/usePullRefreshFeedback';
@@ -47,7 +48,7 @@ export function LocationAssetsRouteScreen({
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       {locationAssets.isPending && !locationAssets.data ? <LoadingState /> : null}
       {locationAssets.isError && !locationAssets.data ? (
-        <ErrorState retrying={locationAssets.isFetching} onRetry={() => { if (!locationAssets.isFetching) void locationAssets.refetch(); }} message={readableError(locationAssets.error, t('mobile.LocationAssetsRouteScreen.couldNotLoadLocation'))} />
+        <ErrorState retrying={locationAssets.isFetching} onRetry={() => { if (!locationAssets.isFetching) void locationAssets.refetch(); }} message={catalogRecoveryMessage(locationAssets.error, t('mobile.LocationAssetsRouteScreen.couldNotLoadLocation'))} />
       ) : null}
       {locationAssets.data ? (
         <LocationAssetList
@@ -132,9 +133,6 @@ function ErrorState({ message, retrying, onRetry }: { readonly message: string; 
   );
 }
 
-function readableError(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
-}
 
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
