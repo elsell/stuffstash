@@ -1,5 +1,23 @@
 # Platform Interaction Review
 
+## User-device checks are follow-ups, not delivery gates
+
+Per the October 3 user instruction, maintain one consolidated checklist at
+`docs/reports/user-testing-checklist.md` for tests that need the user's device,
+account, assistive setup, or judgment. Add actionable steps, expected results,
+relevant build/evidence, and status. Group by everyday workflow and avoid asking
+for the same test repeatedly. Preserve confirmed results unless a relevant change
+justifies a targeted retest.
+
+Missing user testing is explicitly unverified. It must not block implementation,
+PR merging, release, or the active goal. Continue work that can be performed
+independently; do not mark the goal blocked solely because a user test is pending.
+Release evidence and user acceptance remain separate. Required automated security
+and behavior checks still apply, and a known failing product behavior is not
+reclassified as merely missing user testing. Never claim an unperformed test passed.
+Provider/environment decisions remain tracked separately from user-device tests.
+
+
 ## Move creation acceptance observations
 
 Run35867595817 retained iPad hierarchy contains the full `Audit crate` value after
