@@ -1,3 +1,4 @@
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
@@ -194,7 +195,7 @@ export function AssetDetailRouteScreen({
       await coreAsset.reconcile();
       feedback.showNotice({ tone: 'success', title: t('mobile.AssetDetailRouteScreen.editUndone'), message: t('mobile.AssetDetailRouteScreen.thePreviousValuesWereReapplied') });
     } catch (error) {
-      feedback.showNotice({ tone: 'error', title: t('mobile.AssetDetailRouteScreen.couldNotUndoEdit'), message: readableError(error, t('mobile.AssetDetailRouteScreen.undoFailed')) });
+      feedback.showNotice({ tone: 'error', title: t('mobile.AssetDetailRouteScreen.couldNotUndoEdit'), message: catalogRecoveryMessage(error, t('mobile.AssetDetailRouteScreen.undoFailed')) });
     }
   }
 
@@ -220,7 +221,7 @@ export function AssetDetailRouteScreen({
       feedback.showNotice({
         tone: 'error',
         title: t('mobile.AssetDetailRouteScreen.couldNotRefreshAsset'),
-        message: readableError(error, t('mobile.AssetDetailRouteScreen.couldNotRefreshAsset2'))
+        message: catalogRecoveryMessage(error, t('mobile.AssetDetailRouteScreen.couldNotRefreshAsset2'))
       });
     }
   });
@@ -290,7 +291,7 @@ export function AssetDetailRouteScreen({
       feedback.showNotice({
         tone: 'error',
         title: failureTitle,
-        message: readableError(error, t('mobile.AssetDetailRouteScreen.photoUploadFailed'))
+        message: catalogRecoveryMessage(error, t('mobile.AssetDetailRouteScreen.photoUploadFailed'))
       });
     } finally {
       scope.pending = false;
@@ -324,7 +325,7 @@ export function AssetDetailRouteScreen({
       if (!canPresent()) return;
       feedback.showDialog({
         title: t('mobile.AssetDetailRouteScreen.couldNotRemovePhoto'),
-        message: readableError(error, t('mobile.AssetDetailRouteScreen.photoRemovalFailed')),
+        message: catalogRecoveryMessage(error, t('mobile.AssetDetailRouteScreen.photoRemovalFailed')),
         primaryAction: { label: t('mobile.AssetDetailRouteScreen.oK') }
       });
     } finally {
@@ -407,7 +408,7 @@ export function AssetDetailRouteScreen({
       const failure = assetLifecycleFailurePresentation(
         action,
         asset,
-        readableError(error, t('mobile.AssetDetailRouteScreen.lifecycleActionFailed'))
+        error
       );
       feedback.showNotice({
         tone: 'error',
@@ -447,7 +448,7 @@ export function AssetDetailRouteScreen({
       feedback.showNotice({
         tone: 'error',
         title: action === 'checkout' ? t('mobile.AssetDetailRouteScreen.couldNotCheckoutAsset') : t('mobile.AssetDetailRouteScreen.couldNotReturnAsset'),
-        message: readableError(error, t('mobile.AssetDetailRouteScreen.checkoutActionFailed'))
+        message: catalogRecoveryMessage(error, t('mobile.AssetDetailRouteScreen.checkoutActionFailed'))
       });
     } finally {
       scope.pending = false;
@@ -565,9 +566,6 @@ function LoadingState() {
   );
 }
 
-function readableError(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
-}
 
 function createStyles(palette: MobileColorPalette) {
   return StyleSheet.create({

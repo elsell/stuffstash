@@ -1,3 +1,4 @@
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import {MeasuredImage as Image} from '../components/MeasuredImage';
 import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
@@ -41,7 +42,7 @@ export function LocationsScreen({ locationsQuery }: LocationsScreenProps) {
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
       {locations.isPending && !locations.data ? <LoadingState /> : null}
       {locations.isError && !locations.data ? (
-        <ErrorState retrying={locations.isFetching} onRetry={() => { if (!locations.isFetching) void locations.refetch(); }} message={readableError(locations.error, t('mobile.LocationsScreen.stuffStashCouldNotLoadLocations'))} />
+        <ErrorState retrying={locations.isFetching} onRetry={() => { if (!locations.isFetching) void locations.refetch(); }} message={catalogRecoveryMessage(locations.error, t('mobile.LocationsScreen.stuffStashCouldNotLoadLocations'))} />
       ) : null}
       {locations.data ? (
         <LocationsList
@@ -162,9 +163,6 @@ function LocationRow({ location }: { readonly location: LocationBrowserItemViewM
   );
 }
 
-function readableError(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
-}
 
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({

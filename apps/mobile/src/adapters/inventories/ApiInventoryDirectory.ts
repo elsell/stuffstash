@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { CatalogRecoveryError } from '../../application/shared/CatalogRecoveryError';
 import { assertReadActive } from '../../application/shared/ReadRequest';
 import type { Inventory, Page, StuffStashClient, Tenant } from '@stuff-stash/api-client';
 import { SelectedInventoryUnavailableError } from '../../application/shared/SelectedInventoryUnavailableError';
@@ -100,8 +100,8 @@ async function collectPages<T>(read: (cursor?: string) => Promise<Page<T>>, sign
     rows.push(...page.items);
     cursor = page.pagination.nextCursor ?? undefined;
     if (!cursor) return rows;
-    if (cursors.has(cursor)) throw new Error(t('recovery.inventoryDiscovery'));
+    if (cursors.has(cursor)) throw new CatalogRecoveryError('recovery.inventoryDiscovery');
     cursors.add(cursor);
   }
-  throw new Error(t('recovery.inventoryDiscovery'));
+  throw new CatalogRecoveryError('recovery.inventoryDiscovery');
 }

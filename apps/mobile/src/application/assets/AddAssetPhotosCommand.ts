@@ -1,3 +1,4 @@
+import { CatalogRecoveryError } from '../shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import { assetId } from '../../domain/assets/AssetSummary';
 import type {
@@ -33,7 +34,7 @@ export class AddAssetPhotosCommand {
 
   async execute(input: AddAssetPhotosCommandInput): Promise<AddAssetPhotosCommandResult> {
     if (input.photos.length === 0) {
-      throw new Error(t('recovery.choosePhoto'));
+      throw new CatalogRecoveryError('recovery.choosePhoto');
     }
 
     const targetAssetId = assetId(input.assetId);

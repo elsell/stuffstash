@@ -421,3 +421,12 @@ tenant/location, camera permission and unsupported photo format) through a typed
 error carrying a catalog key, never an arbitrary safe-text flag. Retain retry,
 existing content, photo drafts and departed-visit suppression. Verify mounted
 recovery and the actual photo provider's permission failure.
+
+### Mobile list and asset-action recovery
+
+Apply the catalog-only error boundary to inventory/location lists, asset-details
+commands and Home return/details/undo actions. Preserve cataloged command and
+upload precondition guidance. Lifecycle recovery may recognize the existing
+active-children or archived-parent diagnostic category, but never interpolate
+the diagnostic itself into visible text. Use complete cataloged action guidance,
+retain authored asset names, and preserve retry, draft retention and visit scope.

@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { CatalogRecoveryError } from '../../application/shared/CatalogRecoveryError';
 import {
   CreateInventoryAssetPhotoInput,
   InventoryAssetPhotoDirectUpload
@@ -34,12 +34,12 @@ export class ExpoDirectUploadTransport implements DirectUploadTransport {
       return false;
     }
     if (!isDirectUploadHTTPTransportAllowed(input.upload.url, this.directUploadPolicy)) {
-      throw new Error(t('recovery.uploadConfiguration'));
+      throw new CatalogRecoveryError('recovery.uploadConfiguration');
     }
     const uploadMethod = directUploadMethod(input.upload.method);
     const result = await this.uploadFile(input, uploadMethod);
     if (result.status < 200 || result.status >= 300) {
-      throw new Error(t('recovery.uploadFailed'));
+      throw new CatalogRecoveryError('recovery.uploadFailed');
     }
     return true;
   }
@@ -50,7 +50,7 @@ export async function attachmentContentBase64(input: CreateInventoryAssetPhotoIn
     return input.contentBase64;
   }
   if (!input.uri) {
-    throw new Error(t('recovery.uploadContentUnavailable'));
+    throw new CatalogRecoveryError('recovery.uploadContentUnavailable');
   }
   const FileSystem = await import('expo-file-system/legacy');
   return FileSystem.readAsStringAsync(input.uri, { encoding: FileSystem.EncodingType.Base64 });

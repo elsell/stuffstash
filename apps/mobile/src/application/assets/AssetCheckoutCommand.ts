@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { CatalogRecoveryError } from '../shared/CatalogRecoveryError';
 import { assetId } from '../../domain/assets/AssetSummary';
 import type {
   AssetCheckoutInput,
@@ -34,12 +34,12 @@ export class AssetCheckoutCommand {
     switch (input.action) {
       case 'checkout':
         if (!this.inventories.checkoutAsset) {
-          throw new Error(t('recovery.checkoutUnavailable'));
+          throw new CatalogRecoveryError('recovery.checkoutUnavailable');
         }
         return await this.inventories.checkoutAsset(selectedAssetId, checkoutInput);
       case 'return':
         if (!this.inventories.returnAsset) {
-          throw new Error(t('recovery.returnUnavailable'));
+          throw new CatalogRecoveryError('recovery.returnUnavailable');
         }
         return await this.inventories.returnAsset(selectedAssetId, checkoutInput);
       default:
@@ -49,14 +49,14 @@ export class AssetCheckoutCommand {
 
   async updateReturnedCheckoutDetails(input: UpdateReturnedCheckoutDetailsCommandInput): Promise<AssetCheckoutResult> {
     if (!this.inventories.updateReturnedCheckoutDetails) {
-      throw new Error(t('recovery.returnDetailsUnavailable'));
+      throw new CatalogRecoveryError('recovery.returnDetailsUnavailable');
     }
     return await this.inventories.updateReturnedCheckoutDetails(assetId(input.assetId), input.checkoutId, { details: input.details });
   }
 
   async undoOperation(input: UndoCheckoutOperationCommandInput): Promise<void> {
     if (!this.inventories.undoInventoryOperation) {
-      throw new Error(t('recovery.checkoutUndoUnavailable'));
+      throw new CatalogRecoveryError('recovery.checkoutUndoUnavailable');
     }
     await this.inventories.undoInventoryOperation(input.operationId);
   }

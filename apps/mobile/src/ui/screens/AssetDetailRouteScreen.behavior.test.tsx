@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { navigationOptions, resetNavigation, dispatchedActions, setScreenFocused } from '../../test-support/navigation';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
@@ -200,7 +201,7 @@ it.each(['current', 'unmounted', 'departed', 'returned'])('handles photo-removal
       }
     } else {
       expect(latestAlert()?.title).toBe('Could not remove photo');
-      expect(latestAlert()?.message).toBe('Connection failed');
+      expect(latestAlert()?.message).toBe(t('mobile.AssetDetailRouteScreen.photoRemovalFailed'));
       expect(latestAlert()?.buttons.map(button => button.text)).toEqual(['OK']);
       await test.harness.run(() => { latestAlert()?.buttons.find(button => button.text === 'OK')?.onPress?.(); });
       expect(calls).toBe(1);
@@ -432,7 +433,7 @@ it('restores directly, rejects duplicate dispatch and supports retry after failu
     expect(calls).toBe(1);
     await test.harness.run(() => command.reject(new Error('Restore unavailable')));
     await settle(test.harness);
-    expect(test.harness.allText().join(' ')).toContain('Restore unavailable');
+    expect(test.harness.allText().join(' ')).toContain(t('mobile.AssetDetailRouteScreen.lifecycleActionFailed'));
     await test.harness.press(test.harness.byLabel('More actions for Family tent'));
     await test.harness.press(test.harness.byText('Restore')?.parent ?? undefined);
     await settle(test.harness);
@@ -453,12 +454,12 @@ it('does not let old checkout completion unlock the replacement asset operation'
     expect(test.harness.all().find(n => String(n.props.accessibilityLabel ?? '').startsWith('More actions for '))?.props.accessibilityState.disabled).toBe(true);
     await test.harness.run(() => old.reject(new Error('Old asset failed')));
     expect(test.harness.all().find(n => String(n.props.accessibilityLabel ?? '').startsWith('More actions for '))?.props.accessibilityState.disabled).toBe(true);
-    expect(test.harness.allText()).not.toContain('Old asset failed');
+    expect(test.harness.allText()).not.toContain(t('mobile.AssetDetailRouteScreen.checkoutActionFailed'));
     await test.harness.run(() => current.reject(new Error('Current asset failed')));
     const recovered = await detailCommand(test.harness, 'Check out');
     expect(recovered).toBeDefined();
     expect(recovered?.props.disabled).not.toBe(true);
-    expect(test.harness.allText()).toContain('Current asset failed');
+    expect(test.harness.allText()).toContain(t('mobile.AssetDetailRouteScreen.checkoutActionFailed'));
   } finally { await test.harness.unmount(); }
 });
 

@@ -1,3 +1,4 @@
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
@@ -45,7 +46,7 @@ export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (
     if (mounted.current) setPendingReturn(value);
   }
   function notice(session: { active: boolean } | undefined, title: string, error: unknown, fallback: string) {
-    if (mounted.current && session?.active) feedback.showNotice({ tone: 'error', title, message: error instanceof Error ? error.message : fallback });
+    if (mounted.current && session?.active) feedback.showNotice({ tone: 'error', title, message: catalogRecoveryMessage(error, fallback) });
   }
   function alreadyReturned(asset: HomeCheckedOutAssetViewModel) {
     return completedReturns.current.has(asset.id) && (!asset.checkoutId || completedReturns.current.get(asset.id) === asset.checkoutId);
@@ -85,7 +86,7 @@ export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (
       updateEditor(undefined);
       void reconcile(() => mounted.current && session.active);
     } catch (error) {
-      updateEditor({ ...draft, isSaving: false, error: { title: undo ? t('mobile.useHomeReturnActions.couldNotCancelReturn') : t('mobile.useHomeReturnActions.couldNotSaveReturnDetails'), message: error instanceof Error ? error.message : undo ? t('mobile.useHomeReturnActions.theAssetIsStillReturned') : t('mobile.useHomeReturnActions.returnDetailsWereNotSaved') } });
+      updateEditor({ ...draft, isSaving: false, error: { title: undo ? t('mobile.useHomeReturnActions.couldNotCancelReturn') : t('mobile.useHomeReturnActions.couldNotSaveReturnDetails'), message: catalogRecoveryMessage(error, undo ? t('mobile.useHomeReturnActions.theAssetIsStillReturned') : t('mobile.useHomeReturnActions.returnDetailsWereNotSaved')) } });
     } finally { operationPending.current = false; }
   }
   return {
