@@ -93,6 +93,7 @@ func (a *api) Claim(_ context.Context, _ string, control printing.AttemptControl
 		return nil, errors.New("printer reserved")
 	}
 	a.claims++
+	a.idleConfirmed = false
 	a.claim.Control = control
 	a.claim.Control.Revision = 1
 	a.claim.LeaseExpiresAt = a.clock.now.Add(time.Minute)
@@ -352,5 +353,44 @@ func TestUncertainRecoveryAttestsIdleWithoutReplayingAndWaitsForHuman(t *testing
 	}
 	if j.record != nil || recoveredDevice.submissions != 0 {
 		t.Fatal("resolution recovery replayed output")
+	}
+}
+
+func TestMissingJournalConfirmsScopedUncertaintyWithoutInventingEvidence(t *testing.T) {
+	w, a, j, p := fixture(t)
+	p.uncertainAt = 1
+	if err := w.Step(context.Background(), j, p); err == nil {
+		t.Fatal("expected ambiguous output")
+	}
+	claims := a.claims
+	originalEvidence := a.evidence
+	j.record = nil // Lost local state; the server still owns the uncertain attempt.
+	if err := w.Step(context.Background(), j, nil); !errors.Is(err, ports.ErrRecoveryRequired) {
+		t.Fatal(err)
+	}
+	if a.idleConfirmed {
+		t.Fatal("confirmed without device lock/connection")
+	}
+	recoveredDevice := &printer{api: a, journal: j, ready: true}
+	if err := w.Step(context.Background(), j, recoveredDevice); !errors.Is(err, ports.ErrRecoveryRequired) {
+		t.Fatal(err)
+	}
+	if !a.idleConfirmed || a.evidence != originalEvidence || a.claims != claims || j.record != nil || recoveredDevice.submissions != 0 {
+		t.Fatal("lost journal prevented idle proof or fabricated evidence/output")
+	}
+	a.status.Phase = printing.RemoteFailed // Human acknowledgement releases the queue.
+	w.Config.RecoveryOnly = true
+	if err := w.Step(context.Background(), j, recoveredDevice); err != nil {
+		t.Fatal("resolved attempt still blocked", err)
+	}
+	if a.claims != claims || recoveredDevice.submissions != 0 {
+		t.Fatal("recovery itself printed")
+	}
+	w.Config.RecoveryOnly = false
+	if err := w.Step(context.Background(), j, recoveredDevice); err != nil {
+		t.Fatal("subsequent queued work remained blocked", err)
+	}
+	if a.claims != claims+1 {
+		t.Fatal("next job was not consumed")
 	}
 }

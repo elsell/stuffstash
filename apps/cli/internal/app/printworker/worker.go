@@ -49,7 +49,7 @@ func (w *Worker) Step(ctx context.Context, journal ports.LockedPrintState, print
 		return err
 	}
 	if len(unsettled) > 0 {
-		return ports.ErrRecoveryRequired
+		return w.recoverMissingJournal(ctx, printer, unsettled)
 	}
 	if w.Config.RecoveryOnly {
 		return nil

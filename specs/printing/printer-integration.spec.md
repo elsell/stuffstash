@@ -679,3 +679,10 @@ lease loss, and lock contention never justify replay. For the QL-800, a fresh
 status response in idle phase on a newly opened connection provides this check;
 existing active or uncertain connections cannot attest. Hardware operation
 already buffered remains outside server fencing guarantees.
+
+Missing local journal data does not permanently prevent acknowledgement. While
+holding the journal reservation and physical device lock, the CLI may use its
+scoped unsettled-attempt listing to confirm idle for an uncertain attempt. This
+never reconstructs completion/no-output evidence, writes a replacement claim,
+or submits a label. Claimed or printing attempts remain blocked. The worker
+continues to wait for human resolution before accepting another job.
