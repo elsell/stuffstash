@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"github.com/stuffstash/stuff-stash/internal/adapters/printingprofiles"
 	"github.com/stuffstash/stuff-stash/internal/adapters/push"
 
 	"github.com/stuffstash/stuff-stash/internal/adapters/credentials"
@@ -51,7 +52,12 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	realtimeVoiceProviderResolver := buildRealtimeVoiceProviderResolver(cfg, repositories, providerCredentialVault, stt, languageInference, tts)
 	importer := homebox.NewLegacyImporter(nil)
 	evaluations := buildEvaluationRuntime(cfg, evaluationSettings, workflowLimits, observer, authorizer, repositories, providerCredentialVault)
+	labels, err := buildLabels(cfg, repositories, authorizer, observer)
+	if err != nil {
+		return app.App{}, err
+	}
 	application := app.New(app.Dependencies{
+		Labels:        labels,
 		ExportEncoder: inventoryexport.Encoder{}, ExportMaxRecords: exportRecords, ExportMaxBytes: exportBytes,
 		NotificationPreferences:          repositories.notificationPreferences,
 		NotificationDevices:              repositories.notificationDevices,
@@ -135,6 +141,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		TextToSpeech:                     tts,
 		RealtimeVoiceProviderResolver:    realtimeVoiceProviderResolver,
 	})
+	application = application.WithPrinterRegistry(repositories.printers, printingprofiles.Catalog{})
 	application = application.WithImportWorker(importworker.NewInProcess(application, observer))
 	if _, err := application.ResumeRunningImportJobs(ctx, 25); err != nil {
 		return app.App{}, err

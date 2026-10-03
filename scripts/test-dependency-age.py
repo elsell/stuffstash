@@ -41,6 +41,23 @@ def main():
         assert not failures, failures
         assert ("npm", "expo-auth-session", "55.0.17") in allowlist
 
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        api = root / "apps" / "api"
+        api.mkdir(parents=True)
+        shared = root / "packages" / "profiles"
+        shared.mkdir(parents=True)
+        (shared / "go.mod").write_text("module example.test/profiles\n")
+        local = {"Path": "example.test/profiles", "Replace": {"Path": "../../packages/profiles"}}
+        assert module.repository_module(local, api / "go.mod", root)
+        local["Replace"]["Path"] = "../../../../outside"
+        try:
+            module.repository_module(local, api / "go.mod", root)
+        except RuntimeError:
+            pass
+        else:
+            raise AssertionError("outside-repository replacement accepted")
+
     cutoff = dt.datetime(2026, 6, 20, tzinfo=UTC)
     published_at = dt.datetime(2026, 6, 25, tzinfo=UTC)
     allowed = {("npm", "expo-auth-session", "55.0.17")}

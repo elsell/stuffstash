@@ -26,3 +26,22 @@ definition inventory {
   permission view_import_job = edit
   permission create_import_job = edit
 }
+
+definition service_account {}
+
+definition print_connector {
+  relation inventory: inventory
+  relation agent: service_account
+  permission report = agent
+}
+
+definition printer {
+  relation inventory: inventory
+  relation consumer: service_account
+  permission view = inventory->view
+  permission configure = inventory->configure
+  permission print = inventory->edit_asset
+  permission view_consumer = consumer
+  permission report = consumer
+  permission consume = consumer
+}

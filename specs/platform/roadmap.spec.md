@@ -11,6 +11,12 @@ release is cut. Registry-rendered catalog pages remain independent follow-up wor
 
 ## In Progress: Labels, Printers, And CLI — October 3, 2026
 
+Delivered foundations now include human CLI authentication/inventory commands,
+server rendering, and the Linux USB QL-800 adapter. The registration slice adds
+authenticated inventory printer CRUD and executable media profiles to both
+generated SDKs. Connector pairing and job dispatch remain separate work; registering
+a printer alone does not enable automatic output. Physical output remains unverified.
+
 The user authorized specification of QR labels/scanning and registered CLI print
 consumers. Design PR #337 is merged; implementation is underway in isolated
 worktrees. The first slice adds public CLI OIDC discovery, separately configured

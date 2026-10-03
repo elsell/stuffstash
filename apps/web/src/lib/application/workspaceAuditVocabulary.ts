@@ -1,6 +1,18 @@
 import { t } from '$lib/presentation/localization';
 
 const actionMessages = {
+  "printer.registered": "audit.action.printer.registered",
+  "printer.viewed": "audit.action.printer.viewed",
+  "printer.listed": "audit.action.printer.listed",
+  "printer.updated": "audit.action.printer.updated",
+
+  "label.provisioned": "audit.action.label.provisioned",
+  "label.viewed": "audit.action.label.viewed",
+  "label.resolved": "audit.action.label.resolved",
+  "label.rendered": "audit.action.label.rendered",
+  "label.content_downloaded": "audit.action.label.content_downloaded",
+  "label.templates_listed": "audit.action.label.templates_listed",
+
   "archive_job.viewed": "audit.action.archive_job.viewed",
   "archive_job.created": "audit.action.archive_job.created",
   "archive_job.updated": "audit.action.archive_job.updated",

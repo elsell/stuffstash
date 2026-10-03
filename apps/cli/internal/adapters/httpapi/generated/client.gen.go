@@ -748,6 +748,24 @@ func (e RegisterDeviceBodyTransport) Valid() bool {
 	}
 }
 
+// Defines values for RenderInputBodyFormat.
+const (
+	Pdf RenderInputBodyFormat = "pdf"
+	Png RenderInputBodyFormat = "png"
+)
+
+// Valid indicates whether the value is a known member of the RenderInputBodyFormat enum.
+func (e RenderInputBodyFormat) Valid() bool {
+	switch e {
+	case Pdf:
+		return true
+	case Png:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for UpdateAssetBodyExpirationPrecision.
 const (
 	UpdateAssetBodyExpirationPrecisionDay   UpdateAssetBodyExpirationPrecision = "day"
@@ -2377,6 +2395,12 @@ type InitiateDirectUploadBody struct {
 // InitiateDirectUploadBodyContentType Media type
 type InitiateDirectUploadBodyContentType string
 
+// InstanceResponse defines model for InstanceResponse.
+type InstanceResponse struct {
+	InstanceId      string `json:"instanceId"`
+	ProtocolVersion int64  `json:"protocolVersion"`
+}
+
 // InventoryResponse defines model for InventoryResponse.
 type InventoryResponse struct {
 	Access         AccessResponse `json:"access"`
@@ -2451,6 +2475,25 @@ type InvitationResponseRelationship string
 // InvitationResponseStatus defines model for InvitationResponse.Status.
 type InvitationResponseStatus string
 
+// LabelResponse defines model for LabelResponse.
+type LabelResponse struct {
+	AssetId        string `json:"assetId"`
+	InstanceId     string `json:"instanceId"`
+	InventoryId    string `json:"inventoryId"`
+	LabelId        string `json:"labelId"`
+	LifecycleState string `json:"lifecycleState"`
+	TenantId       string `json:"tenantId"`
+	Url            string `json:"url"`
+}
+
+// Margins defines model for Margins.
+type Margins struct {
+	Bottom int64 `json:"bottom"`
+	Left   int64 `json:"left"`
+	Right  int64 `json:"right"`
+	Top    int64 `json:"top"`
+}
+
 // Measurement defines model for Measurement.
 type Measurement struct {
 	DurationMs float64              `json:"durationMs"`
@@ -2475,6 +2518,47 @@ type MeasurementSurface string
 
 // MeasurementVariant defines model for Measurement.Variant.
 type MeasurementVariant string
+
+// Media defines model for Media.
+type Media struct {
+	ColorMode          string  `json:"color_mode"`
+	CutPolicy          string  `json:"cut_policy"`
+	DisplayRotation    int64   `json:"display_rotation"`
+	HeightMicrometers  int64   `json:"height_micrometers"`
+	MarginsMicrometers Margins `json:"margins_micrometers"`
+	Orientation        string  `json:"orientation"`
+	PresetId           *string `json:"preset_id,omitempty"`
+	RasterHeight       int64   `json:"raster_height"`
+	RasterWidth        int64   `json:"raster_width"`
+	ResolutionDpi      int64   `json:"resolution_dpi"`
+	Version            *int32  `json:"version,omitempty"`
+	WidthMicrometers   int64   `json:"width_micrometers"`
+}
+
+// MediaMargins defines model for MediaMargins.
+type MediaMargins struct {
+	Bottom int64 `json:"bottom"`
+	Left   int64 `json:"left"`
+	Right  int64 `json:"right"`
+	Top    int64 `json:"top"`
+}
+
+// MediaProfile defines model for MediaProfile.
+type MediaProfile struct {
+	ColorMode          string       `json:"colorMode"`
+	CutPolicy          string       `json:"cutPolicy"`
+	DisplayRotation    int64        `json:"displayRotation"`
+	HeightMicrometers  int64        `json:"heightMicrometers"`
+	MarginsMicrometers MediaMargins `json:"marginsMicrometers"`
+	Name               string       `json:"name"`
+	Orientation        string       `json:"orientation"`
+	PresetId           string       `json:"presetId"`
+	RasterHeight       int64        `json:"rasterHeight"`
+	RasterWidth        int64        `json:"rasterWidth"`
+	ResolutionDpi      int64        `json:"resolutionDpi"`
+	Version            int32        `json:"version"`
+	WidthMicrometers   int64        `json:"widthMicrometers"`
+}
 
 // Meta defines model for Meta.
 type Meta struct {
@@ -2562,6 +2646,28 @@ type PrincipalResponse struct {
 	Id          string  `json:"id"`
 }
 
+// Printer defines model for Printer.
+type Printer struct {
+	AdapterId        string       `json:"adapterId"`
+	Id               string       `json:"id"`
+	Media            MediaProfile `json:"media"`
+	MediaFingerprint string       `json:"mediaFingerprint"`
+	Name             string       `json:"name"`
+	Readiness        string       `json:"readiness"`
+	Retired          bool         `json:"retired"`
+	Revision         int64        `json:"revision"`
+}
+
+// PrinterProfile defines model for PrinterProfile.
+type PrinterProfile struct {
+	AdapterId          string                            `json:"adapterId"`
+	Media              nullable.Nullable[[]MediaProfile] `json:"media"`
+	Name               string                            `json:"name"`
+	PhysicallyVerified bool                              `json:"physicallyVerified"`
+	SupportedPlatforms nullable.Nullable[[]string]       `json:"supportedPlatforms"`
+	Transport          string                            `json:"transport"`
+}
+
 // ProviderProfileResponse defines model for ProviderProfileResponse.
 type ProviderProfileResponse struct {
 	Capability         string                 `json:"capability"`
@@ -2633,6 +2739,46 @@ type RegisterDeviceBody struct {
 
 // RegisterDeviceBodyTransport defines model for RegisterDeviceBody.Transport.
 type RegisterDeviceBodyTransport string
+
+// RegisterPrinterBody defines model for RegisterPrinterBody.
+type RegisterPrinterBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/RegisterPrinterBody.json
+	Schema        *string `json:"$schema,omitempty"`
+	AdapterId     string  `json:"adapterId"`
+	Name          string  `json:"name"`
+	PresetId      string  `json:"presetId"`
+	PresetVersion int32   `json:"presetVersion"`
+}
+
+// RenderInputBody defines model for RenderInputBody.
+type RenderInputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/RenderInputBody.json
+	Schema   *string               `json:"$schema,omitempty"`
+	Format   RenderInputBodyFormat `json:"format"`
+	Media    Media                 `json:"media"`
+	Template TemplateSelection     `json:"template"`
+}
+
+// RenderInputBodyFormat defines model for RenderInputBody.Format.
+type RenderInputBodyFormat string
+
+// RenderResponse defines model for RenderResponse.
+type RenderResponse struct {
+	ContentPath          string `json:"contentPath"`
+	ContentType          string `json:"contentType"`
+	DisplayRotation      int64  `json:"displayRotation"`
+	ExpiresAt            string `json:"expiresAt"`
+	HeightPixels         int64  `json:"heightPixels"`
+	Id                   string `json:"id"`
+	MediaFingerprint     string `json:"mediaFingerprint"`
+	SelectionFingerprint string `json:"selectionFingerprint"`
+	Sha256               string `json:"sha256"`
+	WidthPixels          int64  `json:"widthPixels"`
+}
 
 // ReplaceProviderProfileCredentialBody defines model for ReplaceProviderProfileCredentialBody.
 type ReplaceProviderProfileCredentialBody struct {
@@ -2897,6 +3043,16 @@ type SuccessEnvelopeInboxReadAllResponse struct {
 	Meta   Meta                 `json:"meta"`
 }
 
+// SuccessEnvelopeInstanceResponse defines model for SuccessEnvelopeInstanceResponse.
+type SuccessEnvelopeInstanceResponse struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopeInstanceResponse.json
+	Schema *string          `json:"$schema,omitempty"`
+	Data   InstanceResponse `json:"data"`
+	Meta   Meta             `json:"meta"`
+}
+
 // SuccessEnvelopeInventoryResponse defines model for SuccessEnvelopeInventoryResponse.
 type SuccessEnvelopeInventoryResponse struct {
 	// Schema A URL to the JSON Schema for this object.
@@ -2935,6 +3091,16 @@ type SuccessEnvelopeInvitationResponse struct {
 	Schema *string            `json:"$schema,omitempty"`
 	Data   InvitationResponse `json:"data"`
 	Meta   Meta               `json:"meta"`
+}
+
+// SuccessEnvelopeLabelResponse defines model for SuccessEnvelopeLabelResponse.
+type SuccessEnvelopeLabelResponse struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopeLabelResponse.json
+	Schema *string       `json:"$schema,omitempty"`
+	Data   LabelResponse `json:"data"`
+	Meta   Meta          `json:"meta"`
 }
 
 // SuccessEnvelopeListArchiveJob defines model for SuccessEnvelopeListArchiveJob.
@@ -3117,6 +3283,26 @@ type SuccessEnvelopeListNotificationResponse struct {
 	Meta   Meta                                      `json:"meta"`
 }
 
+// SuccessEnvelopeListPrinter defines model for SuccessEnvelopeListPrinter.
+type SuccessEnvelopeListPrinter struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopeListPrinter.json
+	Schema *string                      `json:"$schema,omitempty"`
+	Data   nullable.Nullable[[]Printer] `json:"data"`
+	Meta   Meta                         `json:"meta"`
+}
+
+// SuccessEnvelopeListPrinterProfile defines model for SuccessEnvelopeListPrinterProfile.
+type SuccessEnvelopeListPrinterProfile struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopeListPrinterProfile.json
+	Schema *string                             `json:"$schema,omitempty"`
+	Data   nullable.Nullable[[]PrinterProfile] `json:"data"`
+	Meta   Meta                                `json:"meta"`
+}
+
 // SuccessEnvelopeListProviderProfileResponse defines model for SuccessEnvelopeListProviderProfileResponse.
 type SuccessEnvelopeListProviderProfileResponse struct {
 	// Schema A URL to the JSON Schema for this object.
@@ -3145,6 +3331,16 @@ type SuccessEnvelopeListRevision struct {
 	Schema *string                       `json:"$schema,omitempty"`
 	Data   nullable.Nullable[[]Revision] `json:"data"`
 	Meta   Meta                          `json:"meta"`
+}
+
+// SuccessEnvelopeListTemplateResponse defines model for SuccessEnvelopeListTemplateResponse.
+type SuccessEnvelopeListTemplateResponse struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopeListTemplateResponse.json
+	Schema *string                               `json:"$schema,omitempty"`
+	Data   nullable.Nullable[[]TemplateResponse] `json:"data"`
+	Meta   Meta                                  `json:"meta"`
 }
 
 // SuccessEnvelopeListWorkflowHead defines model for SuccessEnvelopeListWorkflowHead.
@@ -3197,6 +3393,16 @@ type SuccessEnvelopePrincipalResponse struct {
 	Meta   Meta              `json:"meta"`
 }
 
+// SuccessEnvelopePrinter defines model for SuccessEnvelopePrinter.
+type SuccessEnvelopePrinter struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopePrinter.json
+	Schema *string `json:"$schema,omitempty"`
+	Data   Printer `json:"data"`
+	Meta   Meta    `json:"meta"`
+}
+
 // SuccessEnvelopeProviderProfileResponse defines model for SuccessEnvelopeProviderProfileResponse.
 type SuccessEnvelopeProviderProfileResponse struct {
 	// Schema A URL to the JSON Schema for this object.
@@ -3205,6 +3411,16 @@ type SuccessEnvelopeProviderProfileResponse struct {
 	Schema *string                 `json:"$schema,omitempty"`
 	Data   ProviderProfileResponse `json:"data"`
 	Meta   Meta                    `json:"meta"`
+}
+
+// SuccessEnvelopeRenderResponse defines model for SuccessEnvelopeRenderResponse.
+type SuccessEnvelopeRenderResponse struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopeRenderResponse.json
+	Schema *string        `json:"$schema,omitempty"`
+	Data   RenderResponse `json:"data"`
+	Meta   Meta           `json:"meta"`
 }
 
 // SuccessEnvelopeRevision defines model for SuccessEnvelopeRevision.
@@ -3255,6 +3471,31 @@ type SuccessEnvelopeVoiceProviderConfigurationResponse struct {
 	Schema *string                            `json:"$schema,omitempty"`
 	Data   VoiceProviderConfigurationResponse `json:"data"`
 	Meta   Meta                               `json:"meta"`
+}
+
+// TemplateOptions defines model for TemplateOptions.
+type TemplateOptions struct {
+	ShowReference bool `json:"show_reference"`
+}
+
+// TemplateResponse defines model for TemplateResponse.
+type TemplateResponse struct {
+	Defaults              TemplateOptions             `json:"defaults"`
+	Font                  string                      `json:"font"`
+	GlyphCoverage         string                      `json:"glyphCoverage"`
+	Id                    string                      `json:"id"`
+	MinimumQRModulePixels int64                       `json:"minimumQRModulePixels"`
+	Name                  string                      `json:"name"`
+	Options               nullable.Nullable[[]string] `json:"options"`
+	Purpose               string                      `json:"purpose"`
+	Version               int32                       `json:"version"`
+}
+
+// TemplateSelection defines model for TemplateSelection.
+type TemplateSelection struct {
+	Id      string          `json:"id"`
+	Options TemplateOptions `json:"options"`
+	Version int32           `json:"version"`
 }
 
 // TenantResponse defines model for TenantResponse.
@@ -3423,6 +3664,19 @@ type UpdateInvitationExpirationBody struct {
 	ExpiresAt time.Time `json:"expiresAt"`
 }
 
+// UpdatePrinterBody defines model for UpdatePrinterBody.
+type UpdatePrinterBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/UpdatePrinterBody.json
+	Schema        *string `json:"$schema,omitempty"`
+	Name          *string `json:"name,omitempty"`
+	PresetId      *string `json:"presetId,omitempty"`
+	PresetVersion *int32  `json:"presetVersion,omitempty"`
+	Retired       *bool   `json:"retired,omitempty"`
+	Revision      int64   `json:"revision"`
+}
+
 // UpdateProviderProfileBody defines model for UpdateProviderProfileBody.
 type UpdateProviderProfileBody struct {
 	// Schema A URL to the JSON Schema for this object.
@@ -3561,6 +3815,12 @@ type WorkflowSelection struct {
 // PostClientTelemetryParams defines parameters for PostClientTelemetry.
 type PostClientTelemetryParams struct {
 	Authorization *string `json:"Authorization,omitempty"`
+}
+
+// GetLabelsV1ByInstanceIdByLabelIdParams defines parameters for GetLabelsV1ByInstanceIdByLabelId.
+type GetLabelsV1ByInstanceIdByLabelIdParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
 }
 
 // GetMeParams defines parameters for GetMe.
@@ -4389,6 +4649,24 @@ type PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByChe
 	XRequestID *string `json:"X-Request-ID,omitempty"`
 }
 
+// GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams defines parameters for GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel.
+type GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams defines parameters for PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel.
+type PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersParams defines parameters for PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders.
+type PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
 // PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestoreParams defines parameters for PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestore.
 type PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestoreParams struct {
 	// Authorization Bearer dev:<principal-id>
@@ -4670,6 +4948,18 @@ type PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStartParams 
 	XRequestID *string `json:"X-Request-ID,omitempty"`
 }
 
+// ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentParams defines parameters for ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent.
+type ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesParams defines parameters for GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates.
+type GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
 // PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesParams defines parameters for PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevices.
 type PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesParams struct {
 	Authorization *string `json:"Authorization,omitempty"`
@@ -4757,6 +5047,38 @@ type DeleteTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationI
 
 // PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadParams defines parameters for PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdRead.
 type PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesParams defines parameters for GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfiles.
+type GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintersParams defines parameters for GetTenantsByTenantIdInventoriesByInventoryIdPrinters.
+type GetTenantsByTenantIdInventoriesByInventoryIdPrintersParams struct {
+	Limit         *int64  `form:"limit,omitempty" json:"limit,omitempty"`
+	Cursor        *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintersParams defines parameters for PostTenantsByTenantIdInventoriesByInventoryIdPrinters.
+type PostTenantsByTenantIdInventoriesByInventoryIdPrintersParams struct {
+	Authorization  *string `json:"Authorization,omitempty"`
+	XRequestID     *string `json:"X-Request-ID,omitempty"`
+	IdempotencyKey string  `json:"Idempotency-Key"`
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams defines parameters for GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId.
+type GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams defines parameters for PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId.
+type PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams struct {
 	Authorization *string `json:"Authorization,omitempty"`
 	XRequestID    *string `json:"X-Request-ID,omitempty"`
 }
@@ -5070,6 +5392,9 @@ type PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutJSONReq
 // PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetailsJSONRequestBody defines body for PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetails for application/json ContentType.
 type PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetailsJSONRequestBody = UpdateReturnedCheckoutDetailsBody
 
+// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersJSONRequestBody defines body for PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders for application/json ContentType.
+type PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersJSONRequestBody = RenderInputBody
+
 // PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdReturnJSONRequestBody defines body for PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdReturn for application/json ContentType.
 type PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdReturnJSONRequestBody = ReturnAssetBody
 
@@ -5105,6 +5430,12 @@ type PostTenantsByTenantIdInventoriesByInventoryIdNotificationPreferencesInitial
 
 // PutTenantsByTenantIdInventoriesByInventoryIdNotificationPreferencesTypesByCustomAssetTypeIdJSONRequestBody defines body for PutTenantsByTenantIdInventoriesByInventoryIdNotificationPreferencesTypesByCustomAssetTypeId for application/json ContentType.
 type PutTenantsByTenantIdInventoriesByInventoryIdNotificationPreferencesTypesByCustomAssetTypeIdJSONRequestBody = TypeOverrideBody
+
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintersJSONRequestBody defines body for PostTenantsByTenantIdInventoriesByInventoryIdPrinters for application/json ContentType.
+type PostTenantsByTenantIdInventoriesByInventoryIdPrintersJSONRequestBody = RegisterPrinterBody
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdJSONRequestBody defines body for PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId for application/json ContentType.
+type PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdJSONRequestBody = UpdatePrinterBody
 
 // PostTenantsByTenantIdInventoriesByInventoryIdTagsJSONRequestBody defines body for PostTenantsByTenantIdInventoriesByInventoryIdTags for application/json ContentType.
 type PostTenantsByTenantIdInventoriesByInventoryIdTagsJSONRequestBody = CreateAssetTagBody
@@ -5216,6 +5547,16 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /client-telemetry (the `PostClientTelemetry` operationId).
 	PostClientTelemetry(ctx context.Context, params *PostClientTelemetryParams, body PostClientTelemetryJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetInstance Get instance
+	//
+	// Corresponds with GET /instance (the `GetInstance` operationId).
+	GetInstance(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetLabelsV1ByInstanceIdByLabelId Get labels v1 by instance ID by label ID
+	//
+	// Corresponds with GET /labels/v1/{instanceId}/{labelId} (the `GetLabelsV1ByInstanceIdByLabelId` operationId).
+	GetLabelsV1ByInstanceIdByLabelId(ctx context.Context, instanceId string, labelId string, params *GetLabelsV1ByInstanceIdByLabelIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMe Get me
 	//
@@ -5906,6 +6247,30 @@ type ClientInterface interface {
 	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts/{checkoutId}/return-details (the `PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetails` operationId).
 	PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetails(ctx context.Context, tenantId string, inventoryId string, assetId string, checkoutId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetailsParams, body PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetailsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel Get tenants by tenant ID inventories by inventory ID assets by asset ID label
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label (the `GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel(ctx context.Context, tenantId string, inventoryId string, assetId string, params *GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel Post tenants by tenant ID inventories by inventory ID assets by asset ID label
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label (the `PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel(ctx context.Context, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithBody Post tenants by tenant ID inventories by inventory ID assets by asset ID label renders
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label-renders (the `PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithBody(ctx context.Context, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders Post tenants by tenant ID inventories by inventory ID assets by asset ID label renders
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label-renders (the `PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders(ctx context.Context, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersParams, body PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestore Patch tenants by tenant ID inventories by inventory ID assets by asset ID restore
 	//
 	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore (the `PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestore` operationId).
@@ -6108,6 +6473,16 @@ type ClientInterface interface {
 	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}/start (the `PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStart` operationId).
 	PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStart(ctx context.Context, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStartParams, body PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStartJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent List tenants by tenant ID inventories by inventory ID label renders by render ID content
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/label-renders/{renderId}/content (the `ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent` operationId).
+	ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent(ctx context.Context, tenantId string, inventoryId string, renderId string, params *ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates Get tenants by tenant ID inventories by inventory ID label templates
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/label-templates (the `GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesWithBody Post tenants by tenant ID inventories by inventory ID notification devices
 	//
 	// Takes any type of body and a specified content type.
@@ -6213,6 +6588,49 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /tenants/{tenantId}/inventories/{inventoryId}/notifications/{notificationId}/read (the `PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdRead` operationId).
 	PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdRead(ctx context.Context, tenantId string, inventoryId string, notificationId string, params *PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfiles Get tenants by tenant ID inventories by inventory ID printer profiles
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/printer-profiles (the `GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfiles` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfiles(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTenantsByTenantIdInventoriesByInventoryIdPrinters Get tenants by tenant ID inventories by inventory ID printers
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/printers (the `GetTenantsByTenantIdInventoriesByInventoryIdPrinters` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdPrinters(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithBody Post tenants by tenant ID inventories by inventory ID printers
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/printers (the `PostTenantsByTenantIdInventoriesByInventoryIdPrinters` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithBody(ctx context.Context, tenantId string, inventoryId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintersParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdPrinters Post tenants by tenant ID inventories by inventory ID printers
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/printers (the `PostTenantsByTenantIdInventoriesByInventoryIdPrinters` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdPrinters(ctx context.Context, tenantId string, inventoryId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintersParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId Get tenants by tenant ID inventories by inventory ID printers by printer ID
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId} (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId(ctx context.Context, tenantId string, inventoryId string, printerId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithBody Patch tenants by tenant ID inventories by inventory ID printers by printer ID
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId` operationId).
+	PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithBody(ctx context.Context, tenantId string, inventoryId string, printerId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId Patch tenants by tenant ID inventories by inventory ID printers by printer ID
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId` operationId).
+	PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId(ctx context.Context, tenantId string, inventoryId string, printerId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, body PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PatchTenantsByTenantIdInventoriesByInventoryIdRestore Patch tenants by tenant ID inventories by inventory ID restore
 	//
@@ -6408,6 +6826,36 @@ func (c *Client) PostClientTelemetryWithBody(ctx context.Context, params *PostCl
 // Corresponds with POST /client-telemetry (the `PostClientTelemetry` operationId).
 func (c *Client) PostClientTelemetry(ctx context.Context, params *PostClientTelemetryParams, body PostClientTelemetryJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostClientTelemetryRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetInstance Get instance
+//
+// Corresponds with GET /instance (the `GetInstance` operationId).
+func (c *Client) GetInstance(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetInstanceRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetLabelsV1ByInstanceIdByLabelId Get labels v1 by instance ID by label ID
+//
+// Corresponds with GET /labels/v1/{instanceId}/{labelId} (the `GetLabelsV1ByInstanceIdByLabelId` operationId).
+func (c *Client) GetLabelsV1ByInstanceIdByLabelId(ctx context.Context, instanceId string, labelId string, params *GetLabelsV1ByInstanceIdByLabelIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLabelsV1ByInstanceIdByLabelIdRequest(c.Server, instanceId, labelId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -8267,6 +8715,70 @@ func (c *Client) PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCh
 	return c.Client.Do(req)
 }
 
+// GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel Get tenants by tenant ID inventories by inventory ID assets by asset ID label
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label (the `GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel` operationId).
+func (c *Client) GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel(ctx context.Context, tenantId string, inventoryId string, assetId string, params *GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRequest(c.Server, tenantId, inventoryId, assetId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel Post tenants by tenant ID inventories by inventory ID assets by asset ID label
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label (the `PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel` operationId).
+func (c *Client) PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel(ctx context.Context, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRequest(c.Server, tenantId, inventoryId, assetId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithBody Post tenants by tenant ID inventories by inventory ID assets by asset ID label renders
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label-renders (the `PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders` operationId).
+func (c *Client) PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithBody(ctx context.Context, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersRequestWithBody(c.Server, tenantId, inventoryId, assetId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders Post tenants by tenant ID inventories by inventory ID assets by asset ID label renders
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label-renders (the `PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders` operationId).
+func (c *Client) PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders(ctx context.Context, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersParams, body PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersRequest(c.Server, tenantId, inventoryId, assetId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestore Patch tenants by tenant ID inventories by inventory ID assets by asset ID restore
 //
 // Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore (the `PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestore` operationId).
@@ -8809,6 +9321,36 @@ func (c *Client) PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobId
 	return c.Client.Do(req)
 }
 
+// ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent List tenants by tenant ID inventories by inventory ID label renders by render ID content
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/label-renders/{renderId}/content (the `ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent` operationId).
+func (c *Client) ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent(ctx context.Context, tenantId string, inventoryId string, renderId string, params *ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentRequest(c.Server, tenantId, inventoryId, renderId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates Get tenants by tenant ID inventories by inventory ID label templates
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/label-templates (the `GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates` operationId).
+func (c *Client) GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesRequest(c.Server, tenantId, inventoryId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesWithBody Post tenants by tenant ID inventories by inventory ID notification devices
 //
 // Takes any type of body and a specified content type.
@@ -9085,6 +9627,119 @@ func (c *Client) DeleteTenantsByTenantIdInventoriesByInventoryIdNotificationsByN
 // Corresponds with PUT /tenants/{tenantId}/inventories/{inventoryId}/notifications/{notificationId}/read (the `PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdRead` operationId).
 func (c *Client) PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdRead(ctx context.Context, tenantId string, inventoryId string, notificationId string, params *PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadRequest(c.Server, tenantId, inventoryId, notificationId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfiles Get tenants by tenant ID inventories by inventory ID printer profiles
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/printer-profiles (the `GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfiles` operationId).
+func (c *Client) GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfiles(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesRequest(c.Server, tenantId, inventoryId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrinters Get tenants by tenant ID inventories by inventory ID printers
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/printers (the `GetTenantsByTenantIdInventoriesByInventoryIdPrinters` operationId).
+func (c *Client) GetTenantsByTenantIdInventoriesByInventoryIdPrinters(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTenantsByTenantIdInventoriesByInventoryIdPrintersRequest(c.Server, tenantId, inventoryId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithBody Post tenants by tenant ID inventories by inventory ID printers
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/printers (the `PostTenantsByTenantIdInventoriesByInventoryIdPrinters` operationId).
+func (c *Client) PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithBody(ctx context.Context, tenantId string, inventoryId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintersParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantsByTenantIdInventoriesByInventoryIdPrintersRequestWithBody(c.Server, tenantId, inventoryId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdPrinters Post tenants by tenant ID inventories by inventory ID printers
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/printers (the `PostTenantsByTenantIdInventoriesByInventoryIdPrinters` operationId).
+func (c *Client) PostTenantsByTenantIdInventoriesByInventoryIdPrinters(ctx context.Context, tenantId string, inventoryId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintersParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantsByTenantIdInventoriesByInventoryIdPrintersRequest(c.Server, tenantId, inventoryId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId Get tenants by tenant ID inventories by inventory ID printers by printer ID
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId} (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId` operationId).
+func (c *Client) GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId(ctx context.Context, tenantId string, inventoryId string, printerId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdRequest(c.Server, tenantId, inventoryId, printerId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithBody Patch tenants by tenant ID inventories by inventory ID printers by printer ID
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId` operationId).
+func (c *Client) PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithBody(ctx context.Context, tenantId string, inventoryId string, printerId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdRequestWithBody(c.Server, tenantId, inventoryId, printerId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId Patch tenants by tenant ID inventories by inventory ID printers by printer ID
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId` operationId).
+func (c *Client) PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId(ctx context.Context, tenantId string, inventoryId string, printerId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, body PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdRequest(c.Server, tenantId, inventoryId, printerId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -9584,6 +10239,100 @@ func NewPostClientTelemetryRequestWithBody(server string, params *PostClientTele
 			}
 
 			req.Header.Set("Authorization", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewGetInstanceRequest constructs an http.Request for the GetInstance method
+func NewGetInstanceRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/instance")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetLabelsV1ByInstanceIdByLabelIdRequest constructs an http.Request for the GetLabelsV1ByInstanceIdByLabelId method
+func NewGetLabelsV1ByInstanceIdByLabelIdRequest(server string, instanceId string, labelId string, params *GetLabelsV1ByInstanceIdByLabelIdParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "instanceId", instanceId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "labelId", labelId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/labels/v1/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
 		}
 
 	}
@@ -16749,6 +17498,241 @@ func NewPatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsBy
 	return req, nil
 }
 
+// NewGetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRequest constructs an http.Request for the GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel method
+func NewGetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRequest(server string, tenantId string, inventoryId string, assetId string, params *GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "assetId", assetId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/assets/%s/label", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRequest constructs an http.Request for the PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel method
+func NewPostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRequest(server string, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "assetId", assetId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/assets/%s/label", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersRequest calls the generic PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders builder with application/json body
+func NewPostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersRequest(server string, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersParams, body PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersRequestWithBody(server, tenantId, inventoryId, assetId, params, "application/json", bodyReader)
+}
+
+// NewPostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersRequestWithBody constructs an http.Request for the PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders method, with any body, and a specified content type
+func NewPostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersRequestWithBody(server string, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "assetId", assetId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/assets/%s/label-renders", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
 // NewPatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestoreRequest constructs an http.Request for the PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestore method
 func NewPatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestoreRequest(server string, tenantId string, inventoryId string, assetId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestoreParams) (*http.Request, error) {
 	var err error
@@ -19028,6 +20012,147 @@ func NewPostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStartRequ
 	return req, nil
 }
 
+// NewListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentRequest constructs an http.Request for the ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent method
+func NewListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentRequest(server string, tenantId string, inventoryId string, renderId string, params *ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "renderId", renderId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/label-renders/%s/content", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewGetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesRequest constructs an http.Request for the GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates method
+func NewGetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesRequest(server string, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/label-templates", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
 // NewPostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesRequest calls the generic PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevices builder with application/json body
 func NewPostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesRequest(server string, tenantId string, inventoryId string, params *PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesParams, body PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -20188,6 +21313,418 @@ func NewPutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationI
 	if err != nil {
 		return nil, err
 	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewGetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesRequest constructs an http.Request for the GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfiles method
+func NewGetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesRequest(server string, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/printer-profiles", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewGetTenantsByTenantIdInventoriesByInventoryIdPrintersRequest constructs an http.Request for the GetTenantsByTenantIdInventoriesByInventoryIdPrinters method
+func NewGetTenantsByTenantIdInventoriesByInventoryIdPrintersRequest(server string, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintersParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/printers", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int64"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPostTenantsByTenantIdInventoriesByInventoryIdPrintersRequest calls the generic PostTenantsByTenantIdInventoriesByInventoryIdPrinters builder with application/json body
+func NewPostTenantsByTenantIdInventoriesByInventoryIdPrintersRequest(server string, tenantId string, inventoryId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintersParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintersJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostTenantsByTenantIdInventoriesByInventoryIdPrintersRequestWithBody(server, tenantId, inventoryId, params, "application/json", bodyReader)
+}
+
+// NewPostTenantsByTenantIdInventoriesByInventoryIdPrintersRequestWithBody constructs an http.Request for the PostTenantsByTenantIdInventoriesByInventoryIdPrinters method, with any body, and a specified content type
+func NewPostTenantsByTenantIdInventoriesByInventoryIdPrintersRequestWithBody(server string, tenantId string, inventoryId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintersParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/printers", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+		var headerParam2 string
+
+		headerParam2, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam2)
+
+	}
+
+	return req, nil
+}
+
+// NewGetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdRequest constructs an http.Request for the GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId method
+func NewGetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdRequest(server string, tenantId string, inventoryId string, printerId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "printerId", printerId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/printers/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdRequest calls the generic PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId builder with application/json body
+func NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdRequest(server string, tenantId string, inventoryId string, printerId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, body PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdRequestWithBody(server, tenantId, inventoryId, printerId, params, "application/json", bodyReader)
+}
+
+// NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdRequestWithBody constructs an http.Request for the PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId method, with any body, and a specified content type
+func NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdRequestWithBody(server string, tenantId string, inventoryId string, printerId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "printerId", printerId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/printers/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	if params != nil {
 
@@ -21849,6 +23386,20 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /client-telemetry (the `PostClientTelemetry` operationId).
 	PostClientTelemetryWithResponse(ctx context.Context, params *PostClientTelemetryParams, body PostClientTelemetryJSONRequestBody, reqEditors ...RequestEditorFn) (*PostClientTelemetryResponse, error)
 
+	// GetInstanceWithResponse Get instance
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /instance (the `GetInstance` operationId).
+	GetInstanceWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetInstanceResponse, error)
+
+	// GetLabelsV1ByInstanceIdByLabelIdWithResponse Get labels v1 by instance ID by label ID
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /labels/v1/{instanceId}/{labelId} (the `GetLabelsV1ByInstanceIdByLabelId` operationId).
+	GetLabelsV1ByInstanceIdByLabelIdWithResponse(ctx context.Context, instanceId string, labelId string, params *GetLabelsV1ByInstanceIdByLabelIdParams, reqEditors ...RequestEditorFn) (*GetLabelsV1ByInstanceIdByLabelIdResponse, error)
+
 	// GetMeWithResponse Get me
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -22658,6 +24209,34 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts/{checkoutId}/return-details (the `PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetails` operationId).
 	PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetailsWithResponse(ctx context.Context, tenantId string, inventoryId string, assetId string, checkoutId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetailsParams, body PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetailsJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetailsResponse, error)
 
+	// GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelWithResponse Get tenants by tenant ID inventories by inventory ID assets by asset ID label
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label (the `GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelWithResponse(ctx context.Context, tenantId string, inventoryId string, assetId string, params *GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelWithResponse Post tenants by tenant ID inventories by inventory ID assets by asset ID label
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label (the `PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelWithResponse(ctx context.Context, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithBodyWithResponse Post tenants by tenant ID inventories by inventory ID assets by asset ID label renders
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label-renders (the `PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithBodyWithResponse(ctx context.Context, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithResponse Post tenants by tenant ID inventories by inventory ID assets by asset ID label renders
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label-renders (the `PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithResponse(ctx context.Context, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersParams, body PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse, error)
+
 	// PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestoreWithResponse Patch tenants by tenant ID inventories by inventory ID assets by asset ID restore
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -22896,6 +24475,20 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}/start (the `PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStart` operationId).
 	PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStartWithResponse(ctx context.Context, tenantId string, inventoryId string, jobId string, params *PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStartParams, body PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStartJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStartResponse, error)
 
+	// ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentWithResponse List tenants by tenant ID inventories by inventory ID label renders by render ID content
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/label-renders/{renderId}/content (the `ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent` operationId).
+	ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentWithResponse(ctx context.Context, tenantId string, inventoryId string, renderId string, params *ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentParams, reqEditors ...RequestEditorFn) (*ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse, error)
+
+	// GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesWithResponse Get tenants by tenant ID inventories by inventory ID label templates
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/label-templates (the `GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesWithResponse(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse, error)
+
 	// PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesWithBodyWithResponse Post tenants by tenant ID inventories by inventory ID notification devices
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -23021,6 +24614,55 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PUT /tenants/{tenantId}/inventories/{inventoryId}/notifications/{notificationId}/read (the `PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdRead` operationId).
 	PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadWithResponse(ctx context.Context, tenantId string, inventoryId string, notificationId string, params *PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadParams, reqEditors ...RequestEditorFn) (*PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadResponse, error)
+
+	// GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesWithResponse Get tenants by tenant ID inventories by inventory ID printer profiles
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/printer-profiles (the `GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfiles` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesWithResponse(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse, error)
+
+	// GetTenantsByTenantIdInventoriesByInventoryIdPrintersWithResponse Get tenants by tenant ID inventories by inventory ID printers
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/printers (the `GetTenantsByTenantIdInventoriesByInventoryIdPrinters` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdPrintersWithResponse(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintersParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithBodyWithResponse Post tenants by tenant ID inventories by inventory ID printers
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/printers (the `PostTenantsByTenantIdInventoriesByInventoryIdPrinters` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithBodyWithResponse(ctx context.Context, tenantId string, inventoryId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintersParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithResponse Post tenants by tenant ID inventories by inventory ID printers
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/printers (the `PostTenantsByTenantIdInventoriesByInventoryIdPrinters` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithResponse(ctx context.Context, tenantId string, inventoryId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintersParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse, error)
+
+	// GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithResponse Get tenants by tenant ID inventories by inventory ID printers by printer ID
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId} (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId` operationId).
+	GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithResponse(ctx context.Context, tenantId string, inventoryId string, printerId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse, error)
+
+	// PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithBodyWithResponse Patch tenants by tenant ID inventories by inventory ID printers by printer ID
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId` operationId).
+	PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithBodyWithResponse(ctx context.Context, tenantId string, inventoryId string, printerId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse, error)
+
+	// PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithResponse Patch tenants by tenant ID inventories by inventory ID printers by printer ID
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId` operationId).
+	PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithResponse(ctx context.Context, tenantId string, inventoryId string, printerId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, body PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse, error)
 
 	// PatchTenantsByTenantIdInventoriesByInventoryIdRestoreWithResponse Patch tenants by tenant ID inventories by inventory ID restore
 	//
@@ -23302,6 +24944,116 @@ func (r PostClientTelemetryResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PostClientTelemetryResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetInstanceResponse200Headers the declared response headers of an HTTP 200 response for GetInstance
+type GetInstanceResponse200Headers struct {
+	CacheControl *string
+}
+
+type GetInstanceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeInstanceResponse
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetInstanceResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetInstanceResponse) GetJSON200() *SuccessEnvelopeInstanceResponse {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetInstanceResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetInstanceResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetInstanceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetInstanceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetInstanceResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetLabelsV1ByInstanceIdByLabelIdResponse200Headers the declared response headers of an HTTP 200 response for GetLabelsV1ByInstanceIdByLabelId
+type GetLabelsV1ByInstanceIdByLabelIdResponse200Headers struct {
+	CacheControl *string
+}
+
+type GetLabelsV1ByInstanceIdByLabelIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeLabelResponse
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetLabelsV1ByInstanceIdByLabelIdResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetLabelsV1ByInstanceIdByLabelIdResponse) GetJSON200() *SuccessEnvelopeLabelResponse {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetLabelsV1ByInstanceIdByLabelIdResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetLabelsV1ByInstanceIdByLabelIdResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLabelsV1ByInstanceIdByLabelIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLabelsV1ByInstanceIdByLabelIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetLabelsV1ByInstanceIdByLabelIdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -27596,6 +29348,171 @@ func (r PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsBy
 	return ""
 }
 
+// GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse200Headers the declared response headers of an HTTP 200 response for GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel
+type GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse200Headers struct {
+	CacheControl *string
+}
+
+type GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeLabelResponse
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse) GetJSON200() *SuccessEnvelopeLabelResponse {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse200Headers the declared response headers of an HTTP 200 response for PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel
+type PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeLabelResponse
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse) GetJSON200() *SuccessEnvelopeLabelResponse {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse201Headers the declared response headers of an HTTP 201 response for PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders
+type PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse201Headers struct {
+	CacheControl *string
+}
+
+type PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *SuccessEnvelopeRenderResponse
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers201 the parsed response headers for an HTTP 201 response
+	Headers201 *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse201Headers
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse) GetJSON201() *SuccessEnvelopeRenderResponse {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestoreResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -28832,6 +30749,111 @@ func (r PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStartResp
 	return ""
 }
 
+// ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse200Headers the declared response headers of an HTTP 200 response for ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent
+type ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse200Headers struct {
+	CacheControl       *string
+	ContentDisposition *string
+	ContentType        *string
+}
+
+type ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]byte
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse) GetJSON200() *[]byte {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeListTemplateResponse
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse) GetJSON200() *SuccessEnvelopeListTemplateResponse {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -29498,6 +31520,246 @@ func (r PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationI
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeListPrinterProfile
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse) GetJSON200() *SuccessEnvelopeListPrinterProfile {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeListPrinter
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse) GetJSON200() *SuccessEnvelopeListPrinter {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePrinter
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse) GetJSON200() *SuccessEnvelopePrinter {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePrinter
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse) GetJSON200() *SuccessEnvelopePrinter {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePrinter
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse) GetJSON200() *SuccessEnvelopePrinter {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -30501,6 +32763,32 @@ func (c *ClientWithResponses) PostClientTelemetryWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParsePostClientTelemetryResponse(rsp)
+}
+
+// GetInstanceWithResponse Get instance
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /instance (the `GetInstance` operationId).
+func (c *ClientWithResponses) GetInstanceWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetInstanceResponse, error) {
+	rsp, err := c.GetInstance(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetInstanceResponse(rsp)
+}
+
+// GetLabelsV1ByInstanceIdByLabelIdWithResponse Get labels v1 by instance ID by label ID
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /labels/v1/{instanceId}/{labelId} (the `GetLabelsV1ByInstanceIdByLabelId` operationId).
+func (c *ClientWithResponses) GetLabelsV1ByInstanceIdByLabelIdWithResponse(ctx context.Context, instanceId string, labelId string, params *GetLabelsV1ByInstanceIdByLabelIdParams, reqEditors ...RequestEditorFn) (*GetLabelsV1ByInstanceIdByLabelIdResponse, error) {
+	rsp, err := c.GetLabelsV1ByInstanceIdByLabelId(ctx, instanceId, labelId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLabelsV1ByInstanceIdByLabelIdResponse(rsp)
 }
 
 // GetMeWithResponse Get me
@@ -32008,6 +34296,58 @@ func (c *ClientWithResponses) PatchTenantsByTenantIdInventoriesByInventoryIdAsse
 	return ParsePatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetailsResponse(rsp)
 }
 
+// GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelWithResponse Get tenants by tenant ID inventories by inventory ID assets by asset ID label
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label (the `GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel` operationId).
+func (c *ClientWithResponses) GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelWithResponse(ctx context.Context, tenantId string, inventoryId string, assetId string, params *GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse, error) {
+	rsp, err := c.GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel(ctx, tenantId, inventoryId, assetId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse(rsp)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelWithResponse Post tenants by tenant ID inventories by inventory ID assets by asset ID label
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label (the `PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel` operationId).
+func (c *ClientWithResponses) PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelWithResponse(ctx context.Context, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelParams, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse, error) {
+	rsp, err := c.PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel(ctx, tenantId, inventoryId, assetId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse(rsp)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithBodyWithResponse Post tenants by tenant ID inventories by inventory ID assets by asset ID label renders
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label-renders (the `PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders` operationId).
+func (c *ClientWithResponses) PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithBodyWithResponse(ctx context.Context, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse, error) {
+	rsp, err := c.PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithBody(ctx, tenantId, inventoryId, assetId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse(rsp)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithResponse Post tenants by tenant ID inventories by inventory ID assets by asset ID label renders
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label-renders (the `PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders` operationId).
+func (c *ClientWithResponses) PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithResponse(ctx context.Context, tenantId string, inventoryId string, assetId string, params *PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersParams, body PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse, error) {
+	rsp, err := c.PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders(ctx, tenantId, inventoryId, assetId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse(rsp)
+}
+
 // PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestoreWithResponse Patch tenants by tenant ID inventories by inventory ID assets by asset ID restore
 //
 // Returns a wrapper object for the known response body format(s).
@@ -32450,6 +34790,32 @@ func (c *ClientWithResponses) PostTenantsByTenantIdInventoriesByInventoryIdImpor
 	return ParsePostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStartResponse(rsp)
 }
 
+// ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentWithResponse List tenants by tenant ID inventories by inventory ID label renders by render ID content
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/label-renders/{renderId}/content (the `ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent` operationId).
+func (c *ClientWithResponses) ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentWithResponse(ctx context.Context, tenantId string, inventoryId string, renderId string, params *ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentParams, reqEditors ...RequestEditorFn) (*ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse, error) {
+	rsp, err := c.ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent(ctx, tenantId, inventoryId, renderId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse(rsp)
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesWithResponse Get tenants by tenant ID inventories by inventory ID label templates
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/label-templates (the `GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates` operationId).
+func (c *ClientWithResponses) GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesWithResponse(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse, error) {
+	rsp, err := c.GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates(ctx, tenantId, inventoryId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse(rsp)
+}
+
 // PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesWithBodyWithResponse Post tenants by tenant ID inventories by inventory ID notification devices
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -32682,6 +35048,97 @@ func (c *ClientWithResponses) PutTenantsByTenantIdInventoriesByInventoryIdNotifi
 		return nil, err
 	}
 	return ParsePutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificationIdReadResponse(rsp)
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesWithResponse Get tenants by tenant ID inventories by inventory ID printer profiles
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/printer-profiles (the `GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfiles` operationId).
+func (c *ClientWithResponses) GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesWithResponse(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse, error) {
+	rsp, err := c.GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfiles(ctx, tenantId, inventoryId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse(rsp)
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintersWithResponse Get tenants by tenant ID inventories by inventory ID printers
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/printers (the `GetTenantsByTenantIdInventoriesByInventoryIdPrinters` operationId).
+func (c *ClientWithResponses) GetTenantsByTenantIdInventoriesByInventoryIdPrintersWithResponse(ctx context.Context, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintersParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse, error) {
+	rsp, err := c.GetTenantsByTenantIdInventoriesByInventoryIdPrinters(ctx, tenantId, inventoryId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse(rsp)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithBodyWithResponse Post tenants by tenant ID inventories by inventory ID printers
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/printers (the `PostTenantsByTenantIdInventoriesByInventoryIdPrinters` operationId).
+func (c *ClientWithResponses) PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithBodyWithResponse(ctx context.Context, tenantId string, inventoryId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintersParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse, error) {
+	rsp, err := c.PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithBody(ctx, tenantId, inventoryId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse(rsp)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithResponse Post tenants by tenant ID inventories by inventory ID printers
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/printers (the `PostTenantsByTenantIdInventoriesByInventoryIdPrinters` operationId).
+func (c *ClientWithResponses) PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithResponse(ctx context.Context, tenantId string, inventoryId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintersParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse, error) {
+	rsp, err := c.PostTenantsByTenantIdInventoriesByInventoryIdPrinters(ctx, tenantId, inventoryId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse(rsp)
+}
+
+// GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithResponse Get tenants by tenant ID inventories by inventory ID printers by printer ID
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId} (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId` operationId).
+func (c *ClientWithResponses) GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithResponse(ctx context.Context, tenantId string, inventoryId string, printerId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, reqEditors ...RequestEditorFn) (*GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse, error) {
+	rsp, err := c.GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId(ctx, tenantId, inventoryId, printerId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse(rsp)
+}
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithBodyWithResponse Patch tenants by tenant ID inventories by inventory ID printers by printer ID
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId` operationId).
+func (c *ClientWithResponses) PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithBodyWithResponse(ctx context.Context, tenantId string, inventoryId string, printerId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse, error) {
+	rsp, err := c.PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithBody(ctx, tenantId, inventoryId, printerId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse(rsp)
+}
+
+// PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithResponse Patch tenants by tenant ID inventories by inventory ID printers by printer ID
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId` operationId).
+func (c *ClientWithResponses) PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithResponse(ctx context.Context, tenantId string, inventoryId string, printerId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdParams, body PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse, error) {
+	rsp, err := c.PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId(ctx, tenantId, inventoryId, printerId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse(rsp)
 }
 
 // PatchTenantsByTenantIdInventoriesByInventoryIdRestoreWithResponse Patch tenants by tenant ID inventories by inventory ID restore
@@ -33096,6 +35553,98 @@ func ParsePostClientTelemetryResponse(rsp *http.Response) (*PostClientTelemetryR
 		}
 		response.JSONDefault = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParseGetInstanceResponse parses an HTTP response from a GetInstanceWithResponse call
+func ParseGetInstanceResponse(rsp *http.Response) (*GetInstanceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetInstanceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeInstanceResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetInstanceResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetLabelsV1ByInstanceIdByLabelIdResponse parses an HTTP response from a GetLabelsV1ByInstanceIdByLabelIdWithResponse call
+func ParseGetLabelsV1ByInstanceIdByLabelIdResponse(rsp *http.Response) (*GetLabelsV1ByInstanceIdByLabelIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLabelsV1ByInstanceIdByLabelIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeLabelResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetLabelsV1ByInstanceIdByLabelIdResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
 	}
 
 	return response, nil
@@ -36120,6 +38669,144 @@ func ParsePatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckouts
 	return response, nil
 }
 
+// ParseGetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse parses an HTTP response from a GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelWithResponse call
+func ParseGetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse(rsp *http.Response) (*GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeLabelResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse parses an HTTP response from a PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelWithResponse call
+func ParsePostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse(rsp *http.Response) (*PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeLabelResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse parses an HTTP response from a PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithResponse call
+func ParsePostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse(rsp *http.Response) (*PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest SuccessEnvelopeRenderResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 201:
+		var headers PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersResponse201Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers201 = &headers
+	}
+
+	return response, nil
+}
+
 // ParsePatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestoreResponse parses an HTTP response from a PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestoreWithResponse call
 func ParsePatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestoreResponse(rsp *http.Response) (*PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestoreResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -36993,6 +39680,99 @@ func ParsePostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdStartRe
 	return response, nil
 }
 
+// ParseListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse parses an HTTP response from a ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentWithResponse call
+func ParseListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse(rsp *http.Response) (*ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []byte
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContentResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		if values := rsp.Header.Values("Content-Disposition"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Disposition", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentDisposition = &value
+		}
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse parses an HTTP response from a GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesWithResponse call
+func ParseGetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse(rsp *http.Response) (*GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplatesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeListTemplateResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParsePostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesResponse parses an HTTP response from a PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesWithResponse call
 func ParsePostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesResponse(rsp *http.Response) (*PostTenantsByTenantIdInventoriesByInventoryIdNotificationDevicesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -37438,6 +40218,171 @@ func ParsePutTenantsByTenantIdInventoriesByInventoryIdNotificationsByNotificatio
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest SuccessEnvelopeNotificationReadResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse parses an HTTP response from a GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesWithResponse call
+func ParseGetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse(rsp *http.Response) (*GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfilesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeListPrinterProfile
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse parses an HTTP response from a GetTenantsByTenantIdInventoriesByInventoryIdPrintersWithResponse call
+func ParseGetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse(rsp *http.Response) (*GetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTenantsByTenantIdInventoriesByInventoryIdPrintersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeListPrinter
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse parses an HTTP response from a PostTenantsByTenantIdInventoriesByInventoryIdPrintersWithResponse call
+func ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse(rsp *http.Response) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostTenantsByTenantIdInventoriesByInventoryIdPrintersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePrinter
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse parses an HTTP response from a GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithResponse call
+func ParseGetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse(rsp *http.Response) (*GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePrinter
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse parses an HTTP response from a PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdWithResponse call
+func ParsePatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse(rsp *http.Response) (*PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePrinter
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

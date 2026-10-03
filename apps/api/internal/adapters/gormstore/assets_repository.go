@@ -390,6 +390,10 @@ func (s Store) DeleteAsset(ctx context.Context, tenantID tenant.ID, inventoryID 
 			return err
 		}
 
+		if err := tombstoneAssetLabels(tx, tenantID, inventoryID, assetID); err != nil {
+			return err
+		}
+
 		result := tx.Where(&assetModel{ID: assetID.String(), TenantID: tenantID.String(), InventoryID: inventoryID.String()}).Delete(&assetModel{})
 		if result.Error != nil {
 			return result.Error
