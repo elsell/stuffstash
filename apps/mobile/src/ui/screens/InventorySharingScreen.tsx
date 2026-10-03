@@ -1,5 +1,6 @@
 import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
-import { t } from '../../presentation/localization';
+import { t, localization } from '../../presentation/localization';
+import { sharingCopy } from '../../presentation/SharingCopy';
 import { InvitationEmailInput } from './InvitationEmailInput';
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
 import { NativeActionMenu } from '../components/NativeActionMenu';
@@ -53,6 +54,7 @@ export function InventorySharingScreen({
   readonly scope: InventorySharingScope;
 }) {
   const palette = useAppearancePalette();
+  const copy = sharingCopy(localization);
   const { styles: settingsStyles } = useSettingsListStyles();
   const styles = createStyles(palette);
   const compositionScopeId = useMobileServerStateScopeId();
@@ -228,7 +230,7 @@ export function InventorySharingScreen({
       style={settingsStyles.shell}
     >
       <View style={settingsStyles.detailHeader}>
-        <Text accessibilityRole="header" style={settingsStyles.detailTitle}>{t('mobile.InventorySharingScreen.share')}{scope.inventoryName}</Text>
+        <Text accessibilityRole="header" style={settingsStyles.detailTitle}>{copy.heading(scope.inventoryName)}</Text>
         <Text style={settingsStyles.detailSubtitle}>{t('mobile.InventorySharingScreen.inviteSomeoneByEmailAsAViewerOrEditor')}</Text>
       </View>
 
@@ -264,7 +266,7 @@ export function InventorySharingScreen({
           <View style={styles.oneTimeLink}>
             <Text style={styles.successTitle}>{t('mobile.InventorySharingScreen.invitationReady')}</Text>
             <Text style={styles.linkContext}>
-              {visibleCreated.email} · {titleCase(visibleCreated.relationship)}{t('mobile.InventorySharingScreen.expires')}{formatDate(visibleCreated.expiresAt)}
+              {copy.createdMetadata(visibleCreated)}
             </Text>
             <Text accessibilityLabel={t('mobile.InventorySharingScreen.completeInvitationLink')} selectable style={styles.linkText}>
               {visibleCreated.inviteUrl}
@@ -295,7 +297,7 @@ export function InventorySharingScreen({
               <View style={styles.invitationText}>
                 <Text style={styles.invitationEmail}>{invitation.email}</Text>
                 <Text style={styles.invitationMetadata}>
-                  {titleCase(invitation.relationship)} · {statusLabel(invitation)}{t('mobile.InventorySharingScreen.expires')}{formatDate(invitation.expiresAt)}
+                  {copy.metadata(invitation)}
                 </Text>
                 {cancellingKeys.has(cancellationKey(invitation.id)) ? <Text accessibilityLiveRegion="polite" style={styles.invitationMetadata}>{t('mobile.InventorySharingScreen.cancelling')}</Text> : null}
                 {cancellationErrors[invitation.id] ? <View accessibilityRole="alert" accessibilityLiveRegion="polite">
@@ -323,20 +325,6 @@ export function InventorySharingScreen({
       </View> : null}
     </ScrollView>
   );
-}
-
-function statusLabel(invitation: InventoryInvitationSummary): string {
-  if (invitation.isExpired) return t('mobile.InventorySharingScreen.expired');
-  return titleCase(invitation.status);
-}
-
-function titleCase(value: string): string {
-  return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
-}
-
-function formatDate(value: string): string {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { dateStyle: 'medium' });
 }
 
 function confirmCancel(invitation: InventoryInvitationSummary, cancel: (value: InventoryInvitationSummary) => Promise<void>): void {
