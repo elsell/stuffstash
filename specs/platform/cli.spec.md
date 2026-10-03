@@ -360,3 +360,20 @@ configured issuer. Discovery failure is a startup/configuration error when CLI
 OIDC is enabled; never advertise guessed provider capabilities. Bundled Dex uses
 a separate public CLI client whose empty redirect list permits Dex's supported
 loopback/device authorization policy. These values are public, never secrets.
+## Initial Human CLI Delivery
+
+The first executable slice provides login, logout, version, inventories list, and
+asset list/show/create/update/move/archive/restore. Printer commands arrive with
+their API contracts. No unavailable command is presented as operational.
+`STUFF_STASH_CLI_SERVER`, `STUFF_STASH_CLI_TENANT`, and
+`STUFF_STASH_CLI_INVENTORY` provide explicit context; flags override them.
+`STUFF_STASH_CLI_CREDENTIAL_FILE` explicitly selects the headless file store.
+`STUFF_STASH_CLI_ALLOW_LOOPBACK_HTTP=true` permits HTTP only for loopback
+development API/issuer URLs. The normal default credential store is the OS
+keyring, keyed by canonical API origin. Login never silently switches servers.
+Finite commands accept context/output flags before or after positional arguments.
+Human inventory output includes IDs and pagination continuation; JSON preserves
+client-owned result models and pagination, without token or provider error bodies.
+Initial portable release targets are Linux/macOS amd64 and arm64, plus Windows
+amd64; API commands use pure Go builds. USB capability is separately advertised
+and initially absent until the Linux Brother adapter is integrated.
