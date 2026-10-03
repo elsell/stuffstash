@@ -467,3 +467,23 @@ keep hardware acceptance explicitly unverified and do not represent it as passin
   audit history because it reads static shipped capability metadata, not stored
   inventory content. Profile responses identify supported platforms and whether
   the profile has been physically verified.
+- Registry services live in `internal/app/printregistry`; rendering and labels
+  remain in `internal/app/printing`. A human creates the logical printer with a
+  name, adapter, and media preset. Pairing creation supplies local discovered
+  candidates with an opaque candidate ID, display name, adapter ID, and protected
+  device identity. Approval maps candidate IDs to existing printer IDs; the
+  server requires matching adapters and persists the device binding. Human DTOs
+  never return the protected device identity, credentials, or local paths.
+- Heartbeats include a process session ID for observability but do not replace an
+  existing attempt owner. Connector last-seen time advances only on a heartbeat;
+  readiness reports have separate timestamps. Fresh heartbeat and readiness are
+  dispatch requirements, not prerequisites for reporting an earlier outcome.
+- Printer registration requires `Idempotency-Key`; its scope includes the human
+  actor and inventory. An identical replay returns the existing printer; reusing
+  the key with different registration content conflicts. Persistence stores only
+  a hash of the scoped request key and a canonical request fingerprint.
+- The initial printer CRUD slice creates logical registrations before connector
+  authorization. Pairing reconciliation must sync each printer's inventory
+  relationship before granting/synchronizing connector bindings; pending sync
+  remains denied by the persistence fence. A human registration alone grants no
+  service principal access.

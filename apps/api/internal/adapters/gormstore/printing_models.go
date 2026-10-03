@@ -7,8 +7,11 @@ import (
 )
 
 type printingPrinterModel struct {
+	RequestKey                    string `gorm:"uniqueIndex:idx_printer_request,priority:3"`
+	RequestFingerprint            string
 	ID                            string `gorm:"primaryKey"`
-	TenantID, InventoryID         string
+	TenantID                      string `gorm:"uniqueIndex:idx_printer_request,priority:1"`
+	InventoryID                   string `gorm:"uniqueIndex:idx_printer_request,priority:2"`
 	Name, AdapterID, DeviceID     string
 	MediaJSON                     []byte
 	MediaFingerprint              string
@@ -26,11 +29,11 @@ func (m printingPrinterModel) domain() (printing.Printer, error) {
 	if err := json.Unmarshal(m.MediaJSON, &media); err != nil {
 		return printing.Printer{}, err
 	}
-	return printing.Printer{ID: printing.PrinterID(m.ID), Scope: printing.Scope{TenantID: m.TenantID, InventoryID: m.InventoryID}, Name: m.Name, AdapterID: m.AdapterID, DeviceID: m.DeviceID, Media: media, MediaFingerprint: m.MediaFingerprint, Revision: m.Revision, Retired: m.Retired, ActiveJobID: m.ActiveJobID, ReservationState: m.ReservationState, Readiness: printing.PrinterReadiness(m.Readiness), ReadinessReason: m.ReadinessReason, ReportedAt: m.ReportedAt, CreatedAt: m.CreatedAt, UpdatedAt: m.UpdatedAt}, nil
+	return printing.Printer{RequestKey: m.RequestKey, RequestFingerprint: m.RequestFingerprint, ID: printing.PrinterID(m.ID), Scope: printing.Scope{TenantID: m.TenantID, InventoryID: m.InventoryID}, Name: m.Name, AdapterID: m.AdapterID, DeviceID: m.DeviceID, Media: media, MediaFingerprint: m.MediaFingerprint, Revision: m.Revision, Retired: m.Retired, ActiveJobID: m.ActiveJobID, ReservationState: m.ReservationState, Readiness: printing.PrinterReadiness(m.Readiness), ReadinessReason: m.ReadinessReason, ReportedAt: m.ReportedAt, CreatedAt: m.CreatedAt, UpdatedAt: m.UpdatedAt}, nil
 }
 func printingPrinterFromDomain(p printing.Printer) (printingPrinterModel, error) {
 	media, err := json.Marshal(p.Media)
-	return printingPrinterModel{ID: string(p.ID), TenantID: p.Scope.TenantID, InventoryID: p.Scope.InventoryID, Name: p.Name, AdapterID: p.AdapterID, DeviceID: p.DeviceID, MediaJSON: media, MediaFingerprint: p.MediaFingerprint, Revision: p.Revision, Retired: p.Retired, ActiveJobID: p.ActiveJobID, ReservationState: p.ReservationState, Readiness: string(p.Readiness), ReadinessReason: p.ReadinessReason, ReportedAt: p.ReportedAt, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}, err
+	return printingPrinterModel{RequestKey: p.RequestKey, RequestFingerprint: p.RequestFingerprint, ID: string(p.ID), TenantID: p.Scope.TenantID, InventoryID: p.Scope.InventoryID, Name: p.Name, AdapterID: p.AdapterID, DeviceID: p.DeviceID, MediaJSON: media, MediaFingerprint: p.MediaFingerprint, Revision: p.Revision, Retired: p.Retired, ActiveJobID: p.ActiveJobID, ReservationState: p.ReservationState, Readiness: string(p.Readiness), ReadinessReason: p.ReadinessReason, ReportedAt: p.ReportedAt, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}, err
 }
 
 type printingConnectorModel struct {
