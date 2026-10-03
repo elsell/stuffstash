@@ -6,6 +6,8 @@ import (
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/usblp"
 	"github.com/stuffstash/stuff-stash/cli/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
+	"slices"
+	"strings"
 )
 
 type PrinterRuntime struct {
@@ -45,4 +47,14 @@ func printerCommand(ctx context.Context, action string, getenv func(string) stri
 		devices = append(devices, found...)
 	}
 	return output.Result(devices)
+}
+
+func supportsUSB(printers []PrinterRuntime, platform string) bool {
+	for _, printer := range printers {
+		descriptor := printer.Printer.Descriptor()
+		if strings.HasPrefix(descriptor.Transport, "usb") && slices.Contains(descriptor.Platforms, platform) {
+			return true
+		}
+	}
+	return false
 }
