@@ -534,3 +534,38 @@ claim lease (default 60 seconds), and readiness freshness (default 90 seconds).
 Expiry removes private artifact bytes while preserving job/attempt metadata and
 safe audit history; an expired artifact cannot be started or downloaded. An
 uncertain reservation is never removed by retention cleanup.
+### Durable Connector Reconciliation
+
+The connector's desired `generation` and acknowledged `synced_generation` form
+its durable authorization outbox record. Approval and binding/revocation changes
+persist the new generation together with audit history in one transaction. The
+worker scans mismatched generations and synchronizes the latest complete desired
+state under the connector lock; it never replays a stale captured grant payload.
+The acknowledged generation advances only after all required printer inventory
+relationships and connector relationships have been delivered. A failed external
+write or failed database commit leaves the outbox pending and consumers denied.
+
+Consumer readiness report reasons are finite safe codes: empty for ready,
+`device_unavailable`, `device_busy`, `paper_empty`, `cover_open`, `hardware_error`,
+or `unknown`. Device error strings and USB paths must not become report reasons.
+
+Connector runtime policy is configured with `STUFF_STASH_PRINT_CONNECTOR_`
+variables: `PAIRING_LIFETIME` (10m), `CREDENTIAL_LIFETIME` (720h),
+`ACTIVATION_LIFETIME` (5m), `AUTHORIZATION_TIMEOUT` (5s), `POLL_INTERVAL` (5s),
+`REPORT_MAX_AGE` (1m), and `BATCH_SIZE` (100). Invalid bounds fail startup.
+The existing environment-configured per-client-IP HTTP rate limiter covers
+pairing creation, status, proof exchange and approval guessing. Request bodies
+and polling-token headers are never included in observability or audit fields.
+
+`POST /print-connector-pairings/{pairingId}/review` is the human approval preview:
+it requires current `inventory.configure` for the selected tenant/inventory and
+the short code in its body. It returns the connector name, public-key fingerprint
+and candidate ID/name/adapter only; protected device identities remain hidden.
+Approval submits the same code with the explicit candidate-to-printer selection.
+
+Pairing creation returns `verificationUrl` at the configured HTTPS
+`STUFF_STASH_PUBLIC_WEB_BASE_URL` plus `/print-connectors/pair/{pairingId}`.
+The pairing ID is a public reference, not authorization; neither short code nor
+polling token appears in this URL. Without a configured public web base, new
+pairing creation is unavailable (503); already configured consumers remain
+operational. Existing label rendering uses the same public web base setting.

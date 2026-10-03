@@ -1,6 +1,12 @@
 import { t } from '$lib/presentation/localization';
 
 const actionMessages = {
+  "print_connector.pairing_reviewed": "audit.action.print_connector.pairing_reviewed",
+  "print_connector.viewed": "audit.action.print_connector.viewed",
+  "print_connector.listed": "audit.action.print_connector.listed",
+  "print_connector.updated": "audit.action.print_connector.updated",
+  "print_connector.approved": "audit.action.print_connector.approved",
+
  "print_job.queued": "audit.action.print_job.queued",
  "print_job.viewed": "audit.action.print_job.viewed",
  "print_job.listed": "audit.action.print_job.listed",

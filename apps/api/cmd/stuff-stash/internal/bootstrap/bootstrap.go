@@ -37,6 +37,7 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		return err
 	}
 	defer recordCloseFailure(observer, closeAuthorizer)
+	printingAuthorization, _ := authorizer.(ports.PrintingAuthorization)
 	if telemetryEnabled {
 		authenticator = observability.ObserveAuthenticator(authenticator, telemetry.Telemetry)
 		authorizer = observability.ObserveAuthorizer(authorizer, telemetry.Telemetry)
@@ -73,6 +74,14 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	}
 	repositories.thumbnailReader = reader
 	application, err := buildApplication(ctx, cfg, observer, authenticator, authorizer, repositories, pushSender)
+	if err != nil {
+		return err
+	}
+	printConnectorConfig, err := config.LoadPrintConnectors()
+	if err != nil {
+		return err
+	}
+	application, err = configurePrintConnectors(application, repositories, printingAuthorization, printConnectorConfig)
 	if err != nil {
 		return err
 	}
@@ -135,6 +144,7 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	stopArchives := startArchiveWorkers(ctx, archiveWorker, archiveService, observer, archiveConfig)
 	defer stopArchives()
 	startOutboxWorkers(ctx, application, observer, cfg)
+	startPrintConnectorWorker(ctx, application, observer, printConnectorConfig)
 	stopThumbnails := startThumbnailWorkers(ctx, thumbnailWorker, observer, thumbnailConfig)
 	defer stopThumbnails()
 	stopBackfill := startThumbnailBackfill(ctx, repositories.thumbnailBackfill, ports.SystemClock{}, observer, thumbnailConfig)

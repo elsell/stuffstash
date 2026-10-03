@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"crypto/rand"
+	"github.com/stuffstash/stuff-stash/internal/app/printregistry"
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"time"
 
@@ -22,6 +23,10 @@ type App struct {
 	printJobs                    *printingapp.JobService
 	labels                       *printingapp.LabelService
 	printerRepository            ports.PrinterRepository
+	printConnectorRepository     ports.ConnectorRepository
+	printConnectorAuthorization  ports.PrintingAuthorization
+	printPairingSecrets          ports.PairingSecrets
+	printConnectorPolicy         printregistry.ConnectorPolicy
 	printerCatalog               ports.PrinterCatalog
 	exportService                exportapp.Service
 	notificationService          notificationapp.Service
