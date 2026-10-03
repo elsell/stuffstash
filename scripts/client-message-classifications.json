@@ -399,5 +399,391 @@
       "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: approve, send and follow-up catches",
       "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: buildFailedVoiceRealtimeState"
     ]
+  },
+  {
+    "file": "apps/mobile/src/ui/screens/AssetLifecyclePresentation.ts",
+    "strings": [
+      "active child",
+      "active children",
+      "active things",
+      "not found",
+      "access denied",
+      "not available"
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Literal substrings classify failures. The returned presentation uses catalogRecoveryMessage or catalog messages.",
+    "evidence": [
+      "lifecycleValidationKind",
+      "isUnavailableAssetError",
+      "assetLifecycleFailurePresentation"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/components/workspace/importMessagePresentation.ts",
+    "strings": [
+      "import validation failed",
+      "partial date",
+      "attachment validation",
+      "unsupported file type"
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Literal substrings select guidance/category; known causes use the catalog and source diagnostic details remain verbatim per spec.",
+    "evidence": [
+      "importIssuePresentation"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/application/workspaceImportRequest.ts",
+    "strings": [
+      "invalid request.",
+      "validation failed"
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Generic validation phrases are compared to choose supplied recovery, not generated copy. Specific safe server details stay verbatim.",
+    "evidence": [
+      "isGenericInvalidRequest",
+      "readableImportActionError"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/adapters/api/stuffStashInventoryRepository.ts",
+    "strings": [
+      "Stuff Stash returned an invalid invitation link.",
+      "Request failed.",
+      "Direct upload target is not available in this browser."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "DirectUploadTargetUnavailableError selects fallback base64 upload; DirectUploadFailedError uses photos.storageUploadFailed catalog key. Invalid invitation links and unknown Request failed errors remain plain Errors, not safeForUser; access panels and root workspace present catalog fallback.",
+    "evidence": [
+      "apps/web/src/lib/components/workspace/InventoryAccessManager.svelte",
+      "apps/web/src/lib/application/workspaceSafeError.ts"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/application/assets/InventoryAssetTypesQuery.ts",
+    "strings": [
+      "Inventory changed. Reopen the item to continue.",
+      "Could not load the complete asset type list. Try again."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Plain Errors for scope mismatch and incomplete lists do not render as messages. AddAssetScreen and AssetNativeActionSheetScreens render cataloged type-load guidance. NotificationSettingsScreen also uses its cataloged failure presentation.",
+    "evidence": [
+      "apps/mobile/src/application/assets/InventoryAssetTypesQuery.ts"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/adapters/api/stuffStashExpirationRepository.ts",
+    "strings": [
+      "Expiration results are unavailable. Refresh and try again.",
+      "Filter choices are incomplete. Try again."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Plain Errors for invalid results and incomplete choices are replaced by cataloged guidance in ExpirationList.load and ExpirationWorkspace choices catch.",
+    "evidence": [
+      "apps/web/src/lib/adapters/api/stuffStashExpirationRepository.ts"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/application/expirationList.ts",
+    "strings": [
+      "Incomplete expiration results."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Incomplete expiration results is thrown and caught within load; resulting state.error is always chosen from the catalog.",
+    "evidence": [
+      "apps/web/src/lib/application/expirationList.ts"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/application/workspaceSafeError.ts",
+    "strings": [
+      "invalid request.",
+      "validation failed"
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Invalid request and validation failed are diagnostic comparisons. Only errors explicitly marked safeForUser can surface server-provided messages; other failures use caller fallback.",
+    "evidence": [
+      "apps/web/src/lib/application/workspaceSafeError.ts"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/adapters/expiration/ApiExpirationRepository.ts",
+    "strings": [
+      "Expiration inventory changed. Refresh and try again.",
+      "Expiration item could not be read. Try refreshing.",
+      "Expiration status could not be read."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Plain adapter errors propagate through ExpirationWorkspaceQuery. ExpirationRouteScreen selects cataloged inventory/mismatch/expiration recovery instead of presenting the exception message.",
+    "evidence": [
+      "apps/mobile/src/application/expiration/ExpirationWorkspaceQuery.ts",
+      "apps/mobile/src/ui/expiration/ExpirationRouteScreen.tsx"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/application/customization/CustomizationEditorCommands.ts",
+    "strings": [
+      "Tags support archive only.",
+      "Customization resource ID is required."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Plain invariant errors are not accepted by safeCustomizationMessage, which only permits typed CustomizationFailure and CustomizationValidationError. Editor save/lifecycle catches supply operation-specific catalog fallback.",
+    "evidence": [
+      "apps/mobile/src/application/customization/CustomizationErrors.ts",
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/adapters/notifications/ExpoPushRegistrationJournal.ts",
+    "strings": [
+      "Invalid installation identity",
+      "Invalid registration journal",
+      "Invalid registration scope"
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Every public journal operation uses run(), replacing internal failures with typed NotificationFailure(unavailable) before returning to UI.",
+    "evidence": [
+      "apps/mobile/src/application/notifications/NotificationFailure.ts",
+      "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/application/settingsManagement.ts",
+    "strings": [
+      "Settings collection could not be fully loaded."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "NotificationSettings and FieldSettingsManager handle supporting list failures via safeWorkspaceErrorMessage with catalog fallback; the plain paging diagnostic is not safeForUser.",
+    "evidence": [
+      "apps/web/src/lib/components/workspace/settings/NotificationSettings.svelte",
+      "apps/web/src/lib/components/workspace/settings/FieldSettingsManager.svelte"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetDetailReads.ts",
+    "strings": [
+      "Asset scope no longer matches the selected inventory.",
+      "Asset is not available in the selected inventory."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Plain scoped-read/attachment diagnostics are not rendered directly. Asset detail routes select cataloged core-load or region recovery messages.",
+    "evidence": [
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
+      "apps/mobile/src/ui/components/AssetRegionRecovery.tsx"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetPhotos.ts",
+    "strings": [
+      "Asset attachments could not be loaded."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Plain scoped-read/attachment diagnostics are not rendered directly. Asset detail routes select cataloged core-load or region recovery messages.",
+    "evidence": [
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
+      "apps/mobile/src/ui/components/AssetRegionRecovery.tsx"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/application/assets/AssetActivityQuery.ts",
+    "strings": [
+      "History scope is required."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Invalid history scope is an internal query precondition; historyLoadError selects cataloged status-specific recovery.",
+    "evidence": [
+      "apps/mobile/src/ui/screens/AssetHistoryPresentation.ts",
+      "apps/mobile/src/ui/screens/AssetHistoryRouteScreen.tsx"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/application/assets/AssetLifecycleCommand.ts",
+    "strings": [
+      "Unsupported asset lifecycle action."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Unsupported action is an invariant error. Asset lifecycle presentation chooses catalog recovery rather than rendering this diagnostic.",
+    "evidence": [
+      "apps/mobile/src/ui/screens/AssetLifecyclePresentation.ts",
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/application/assets/DeleteAssetPhotoCommand.ts",
+    "strings": [
+      "Photo ID is required."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Blank photo ID is an internal command precondition. The detail photo-removal catch uses catalogRecoveryMessage with photoRemovalFailed fallback.",
+    "evidence": [
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/application/shared/ReadRequest.ts",
+    "strings": [
+      "Read cancelled."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Cancellation uses AbortError; this is an internal read-control diagnostic, not authored presentation copy.",
+    "evidence": [
+      "apps/mobile/src/application/shared/ReadRequest.ts"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/application/voice/VoiceTextSafety.ts",
+    "strings": [
+      "$1: [redacted]",
+      "bearer [redacted]"
+    ],
+    "classification": "technical-constant",
+    "reason": "Replacement strings preserve regex capture groups and fixed security redaction markers, rather than human-facing action labels.",
+    "evidence": [
+      "apps/mobile/src/application/voice/VoiceTextSafety.ts"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/ui/theme/tokens.ts",
+    "strings": [
+      "rgba(0, 0, 0, 0.68)",
+      "rgba(0, 0, 0, 0.72)"
+    ],
+    "classification": "technical-constant",
+    "reason": "RGBA strings specify colors, not presentation messages.",
+    "evidence": [
+      "apps/mobile/src/ui/theme/tokens.ts"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/application/workspaceAddFocus.ts",
+    "strings": [
+      "(max-width: 900px)"
+    ],
+    "classification": "technical-constant",
+    "reason": "The literal is a CSS media query used to choose the return-focus target, not visible copy.",
+    "evidence": [
+      "apps/web/src/lib/application/workspaceAddFocus.ts"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/adapters/customization/ApiCustomizationRepository.ts",
+    "strings": [
+      "Inventory scope is required."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Inventory scope is an adapter precondition. mapFailure maps ordinary errors to unavailable and editor fallback only permits typed presentable errors.",
+    "evidence": [
+      "apps/mobile/src/application/customization/CustomizationErrors.ts",
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/adapters/inventories/ApiInventorySummaryRepository.ts",
+    "strings": [
+      "API workspace did not hydrate the selected inventory.",
+      "API workspace did not include an inventory."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Incomplete hydration is a plain repository diagnostic. Representative Home load/refresh paths use catalogRecoveryMessage with explicit fallback instead of arbitrary error text. This does not prove every repository consumer.",
+    "evidence": [
+      "apps/mobile/src/ui/screens/HomeScreen.tsx"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/adapters/api/boundedTaskScheduler.ts",
+    "strings": [
+      "Task scheduler limit must be a positive integer.",
+      "Task scheduler is closed."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Constructor capacity validation and closed-scheduler errors are internal scheduling diagnostics. Thumbnail consumers handle failure separately; these strings are not UI labels.",
+    "evidence": [
+      "apps/web/src/lib/adapters/api/stuffStashInventoryRepository.ts: loadThumbnail and thumbnailScheduler"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/domain/inventories/InventorySummary.ts",
+    "strings": [
+      "Inventory ID must not be empty.",
+      "Tenant ID must not be empty."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Branded-ID constructors reject empty internal identity values. These are domain invariants, not presentation messages; localization must not introduce presentation dependencies into the domain.",
+    "evidence": [
+      "apps/mobile/src/ui/screens/HomeScreen.tsx: typed catalog recovery",
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx: query failure presentation"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/domain/assets/AssetSummary.ts",
+    "strings": [
+      "Asset ID must not be empty."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Branded-ID constructors reject empty internal identity values. These are domain invariants, not presentation messages; localization must not introduce presentation dependencies into the domain.",
+    "evidence": [
+      "apps/mobile/src/ui/screens/HomeScreen.tsx: typed catalog recovery",
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx: query failure presentation"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/adapters/api/cursorPagination.ts",
+    "strings": [
+      "Paginated response is missing continuation cursor.",
+      "Paginated response repeated continuation cursor."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Malformed pagination/checkout wire data throws plain internal Error. The repository safeError preserves plain errors without marking them safeForUser; reviewed root/dialog presenters therefore use catalog fallback.",
+    "evidence": [
+      "apps/web/src/lib/adapters/api/stuffStashInventoryRepository.ts: safeError",
+      "apps/web/src/lib/application/workspaceSafeError.ts"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/adapters/api/inventoryMapper.ts",
+    "strings": [
+      "Checked-out asset is missing checkout state."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Malformed pagination/checkout wire data throws plain internal Error. The repository safeError preserves plain errors without marking them safeForUser; reviewed root/dialog presenters therefore use catalog fallback.",
+    "evidence": [
+      "apps/web/src/lib/adapters/api/stuffStashInventoryRepository.ts: safeError",
+      "apps/web/src/lib/application/workspaceSafeError.ts"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/adapters/query/conversationSession.ts",
+    "strings": [
+      "Conversation session is no longer active."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Disposed-session mutation attempts throw AbortError. Workflow/case catches select catalog messages only while the session is active; run setup similarly selects typed failure/fallback guidance.",
+    "evidence": [
+      "apps/web/src/lib/components/workspace/settings/conversations/WorkflowWorkspace.svelte",
+      "apps/web/src/lib/components/workspace/settings/conversations/CaseWorkspace.svelte",
+      "apps/web/src/lib/components/workspace/settings/conversations/RunSetup.svelte"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/application/assets/AssetCheckoutHistoryQuery.ts",
+    "strings": [
+      "Asset ID is required."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Missing asset identity is a query precondition. Checkout history route selects cataloged checkoutHistoryCouldNotBeLoaded when its query fails.",
+    "evidence": [
+      "apps/mobile/src/ui/screens/AssetCheckoutHistoryScreen.tsx"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/ui/screens/AddAssetInitialParent.ts",
+    "strings": [
+      "Add-here parent must be a container or location."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Rejects a non-container/non-location passed into add-here route construction. This is an internal invariant; the detail route exposes Add here only for canAddContainedAssets. It is not a displayed validation prompt.",
+    "evidence": [
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx: onAddHere"
+    ]
   }
 ]
