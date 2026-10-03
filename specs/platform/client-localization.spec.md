@@ -561,6 +561,7 @@ presentation, permissions, cancellation or keyboard behavior.
 Verify all supported roles/statuses, reordered translated metadata with intact
 user values, and locale-specific expiry dates through the production presenter.
 The known sharing-menu keyboard obstruction remains issue #239.
+
 ## Date presentation consumers
 
 Invitation acceptance expiry, mobile History day headings and web Expiration month
