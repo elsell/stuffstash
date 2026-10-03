@@ -482,7 +482,8 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertFalse(app.keyboards.firstMatch.exists, "Opening cancellation confirmation must not restore email editing")
     capture("sharing-cancellation-confirmation")
     confirm.tap()
-    feedback("Could not cancel invitation", message: "Audit cancellation unavailable. Try again.", captureName: "sharing-cancel-recovery")
+    feedback("Could not cancel invitation", message: "The action failed safely. Try again.", captureName: "sharing-cancel-recovery")
+    XCTAssertFalse(app.staticTexts["Audit cancellation unavailable. Try again."].exists, "Do not expose raw fixture exceptions")
     reveal(cancel); cancel.tap()
     XCTAssertTrue(confirm.waitForExistence(timeout: 5))
     XCTAssertTrue(confirm.isHittable)
@@ -497,12 +498,14 @@ final class FixtureAuditTests: XCTestCase {
     reveal(link, interactive: false)
     let copy = app.buttons["Copy link"].firstMatch
     reveal(copy); copy.tap()
-    feedback("Could not copy invitation", message: "Audit copy unavailable. Try again.", captureName: "sharing-copy-recovery")
+    feedback("Could not copy invitation", message: "The action failed safely. Try again.", captureName: "sharing-copy-recovery")
+    XCTAssertFalse(app.staticTexts["Audit copy unavailable. Try again."].exists, "Do not expose raw fixture exceptions")
     reveal(copy); copy.tap()
     feedback("Invitation link copied", captureName: "sharing-copy-complete")
     let share = app.buttons["Share invitation"].firstMatch
     reveal(share); share.tap()
-    feedback("Could not share invitation", message: "Audit sharing does not open external destinations.", captureName: "sharing-share-recovery")
+    feedback("Could not share invitation", message: "The action failed safely. Try again.", captureName: "sharing-share-recovery")
+    XCTAssertFalse(app.staticTexts["Audit sharing does not open external destinations."].exists, "Do not expose raw fixture exceptions")
     header.buttons["BackButton"].firstMatch.tap()
     XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
   }

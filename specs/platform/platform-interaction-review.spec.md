@@ -1881,3 +1881,11 @@ guidance. No new field-level blur or remount workaround is permitted in this
 candidate. Verify the complete failed creation, preserved email, cancellation
 confirmation, failed cancellation and retry on iPhone and iPad. Capture the row
 and confirmation at normal text size. Source tests alone cannot close #239.
+
+Native candidate run37127946651 reached the direct cancellation confirmation with
+no keyboard on both devices, then stopped at an obsolete assertion expecting the
+fixture's raw cancellation exception. Retained screenshots instead show the
+current catalog recovery message. Assert that safe message for cancellation, copy
+and share failures, and explicitly reject the synthetic raw exception strings.
+Preserve complete typing, confirmation, retry and return checks. This permits one
+corrected acceptance run; it does not establish the unexecuted remainder passed.
