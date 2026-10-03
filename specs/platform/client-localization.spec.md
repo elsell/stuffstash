@@ -571,3 +571,13 @@ Invitation acceptance success uses a whole named-placeholder message preserving
 the inventory name. Verify non-default formatting locale and invalid History
 dates without changing grouping semantics. These copy/formatting changes do not
 claim native navigation, assistive or physical-device acceptance.
+
+## Mobile asset and archive date consumers
+
+Asset update labels, checkout labels and archive expiry metadata must format dates
+through the configured client translator, including an explicit verification
+locale. Preserve short month/day/year for asset dates and date/time for archive
+expiry. Missing or invalid asset updates still show Loaded from API; an invalid checkout
+timestamp still shows Checked out. Do not change checkout, archive expiry or date
+sorting semantics. Verify production view models and archive rendering with a
+non-default locale, alongside existing archive behavior tests.
