@@ -64,22 +64,11 @@ func (s Store) ClaimPrintJob(ctx context.Context, input ports.PrintClaim) (resul
 				return nil
 			}
 		}
-		var connector printingConnectorModel
-		if e = tx.Where(&printingConnectorModel{ID: string(input.Authority.ConnectorID), TenantID: p.TenantID, InventoryID: p.InventoryID}).First(&connector).Error; e != nil {
-			return e
-		}
-		if connector.LastSeenAt == nil || input.Now.Before(*connector.LastSeenAt) || input.Now.Sub(*connector.LastSeenAt) > input.ReportMaxAge {
-			return nil
-		}
-		var report printingReportModel
-		e = tx.Where(&printingReportModel{ConnectorID: connector.ID, PrinterID: p.ID, TenantID: p.TenantID, InventoryID: p.InventoryID}).First(&report).Error
-		if errors.Is(e, gorm.ErrRecordNotFound) {
-			return nil
-		}
+		ready, e := printingDispatchReady(tx, input.Authority, input.Now, input.ReportMaxAge)
 		if e != nil {
 			return e
 		}
-		if report.State != string(printing.PrinterReady) || input.Now.Before(report.ReportedAt) || input.Now.Sub(report.ReportedAt) > input.ReportMaxAge {
+		if !ready {
 			return nil
 		}
 		var before printingJobModel
@@ -97,7 +86,7 @@ func (s Store) ClaimPrintJob(ctx context.Context, input ports.PrintClaim) (resul
 		if e = j.Claim(input.Owner.AttemptID, input.Owner, input.Now, input.Lease, j.Revision); e != nil {
 			return e
 		}
-		index := printingAttemptIndex{ID: string(input.Owner.AttemptID), TenantID: p.TenantID, InventoryID: p.InventoryID, ConnectorID: connector.ID, JobID: before.ID}
+		index := printingAttemptIndex{ID: string(input.Owner.AttemptID), TenantID: p.TenantID, InventoryID: p.InventoryID, ConnectorID: string(input.Authority.ConnectorID), JobID: before.ID}
 		if e = tx.Create(&index).Error; e != nil {
 			return e
 		}

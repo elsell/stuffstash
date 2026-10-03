@@ -65,13 +65,7 @@ func (s *Store) ClaimPrintJob(_ context.Context, input ports.PrintClaim) (printi
 			return printing.Job{}, false, nil
 		}
 	}
-	connector := s.printingConnectors[input.Authority.ConnectorID]
-	if connector.LastSeenAt == nil || input.Now.Before(*connector.LastSeenAt) || input.Now.Sub(*connector.LastSeenAt) > input.ReportMaxAge {
-		commit()
-		return printing.Job{}, false, nil
-	}
-	report, ready := s.printingReports[string(input.Authority.ConnectorID)+":"+string(p.ID)]
-	if !ready || report.Scope != p.Scope || report.State != printing.PrinterReady || input.Now.Before(report.ReportedAt) || input.Now.Sub(report.ReportedAt) > input.ReportMaxAge {
+	if !s.printingDispatchReadyLocked(input.Authority, input.Now, input.ReportMaxAge) {
 		commit()
 		return printing.Job{}, false, nil
 	}
