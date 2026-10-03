@@ -102,6 +102,7 @@ export const webMessages = {
   "web.Printing.testDescription": "Print one diagnostic label using this printer's registered label size. This does not create an inventory item.",
   "web.Printing.printOneTest": "Print one test label",
   "web.Printing.anotherTest": "Print another test label",
+  "web.Printing.printerOptions": "Printer options",
   "web.Printing.printLabel": "Print label",
   "web.Printing.moreActions": "More actions",
   "web.Printing.preview": "Preview label",

@@ -55,7 +55,7 @@ export class FakePrintingRepository implements PrintingRepository {
         if (!this.canPrint)
             throw new PrintingFailure('denied');
         const fingerprint = JSON.stringify({ assetId, selection, predecessor });
-        if (JSON.stringify({assetId, selection}) !== previewFingerprint)
+        if (previewFingerprint && JSON.stringify({assetId, selection}) !== previewFingerprint)
             throw new PrintingFailure('conflict');
         const prior = this.requests.get(key);
         if (prior) {

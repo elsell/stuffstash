@@ -7,7 +7,7 @@
   import {Checkbox} from '$lib/components/ui/checkbox/index.js';
   import * as Select from '$lib/components/ui/select/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
-  let {workspace,scope} : {workspace:LabelWorkspace;scope:LabelScope}=$props();
+  let {workspace,scope,onPrinterOptions} : {workspace:LabelWorkspace;scope:LabelScope;onPrinterOptions?:()=>void}=$props();
   let catalog=$state<LabelCatalog|null>(null),choice=$state<LabelChoice|null>(null),artifact=$state<LabelArtifact|null>(null);
   let error=$state(''),busy=$state(false),preview=$state('');
   let controller:AbortController|undefined;
@@ -52,6 +52,7 @@
 {#if error}<p role="alert">{error}</p><Button.Root onclick={()=>void initialize()}>{t('labels.web.retry')}</Button.Root>{/if}
 {#if artifact && preview}<div class="label-preview"><img src={preview} alt={t('labels.web.preview')} style:transform={previewTransform}/></div>{/if}
 <div class="flex flex-wrap gap-2">
+  {#if onPrinterOptions}<Button.Root variant="outline" onclick={onPrinterOptions}>{t('web.Printing.printerOptions')}</Button.Root>{/if}
   <Button.Root disabled={!choice||busy} onclick={()=>void render('png','download')}>{t('labels.web.png')}</Button.Root>
   <Button.Root variant="outline" disabled={!choice||busy} onclick={()=>void render('pdf','download')}>{t('labels.web.pdf')}</Button.Root>
   <Button.Root variant="outline" disabled={!choice||busy} onclick={()=>void render('pdf','print')}>{t('labels.web.print')}</Button.Root>

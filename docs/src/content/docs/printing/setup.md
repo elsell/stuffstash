@@ -25,9 +25,13 @@ roll sizes, and remote wake are not part of the initial supported setup.
 
 In inventory settings, choose the default printer and layout, then choose whether
 new items should print a label by default. You can change that choice on the create
-form. On an existing item, container, or location, use its menu to print a label.
-Preview the layout before sending it to the printer. Inventory printing settings
-show registered printers and recent jobs. Use **Print test label** to check a
+form. On an existing item, container, or location, choose **Print label** from its
+menu to queue one copy with the inventory default. If no compatible default is
+available, the app opens printer options instead.
+
+To change the printer, layout, or number of copies, open **Label options**, then
+**Printer options** on web or **Print** on mobile. Preview your selection before
+sending it. Inventory printing settings show registered printers and recent jobs. Use **Print test label** to check a
 printer without creating an inventory item; it prints only after confirmation.
 
 A queued job can wait while its printer is unavailable. Connector availability and

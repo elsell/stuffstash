@@ -529,3 +529,21 @@ locally. Changing copies invalidates the preview, just like changing the templat
 A first definite rejection preserves the draft for correction; any prior ambiguous
 submission keeps its original count, payload and key locked until recovery.
 Quick-default requests, asset creation and diagnostic test requests remain one copy.
+## Web default-print command and label options
+
+The asset menu's Print label command is the explicit authorization to enqueue
+one copy using the compatible inventory default. It opens the existing job task
+for progress and recovery, not a second mandatory preview/confirmation. Current
+content is rendered by the API without a preview fingerprint. Missing, retired,
+or incompatible defaults open the existing selection/preview task instead; no
+other printer is silently selected. Offline readiness alone does not prevent
+queueing. A definite compatibility rejection allows correcting the selection.
+
+Label options retains download/system print and exposes Printer options for
+editors. This replaces the current task rather than nesting dialogs; choosing
+options never auto-prints. The selection task retains fresh preview requirements.
+Both entry points share the scoped retained intent, preventing duplicate jobs
+on dismissal/reopening or a lost response. An uncertain request can only retry
+its original selection/key. Scope teardown, loss of edit access, or task dismissal
+before submission prevents deferred loading from starting a print. Focus returns
+to the originating asset menu after either task closes.
