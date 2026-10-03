@@ -230,3 +230,18 @@ search workflows and CocoaPods resolution, not a second transformation in CI.
 The reviewed catch-up batch pins Astro to 6.4.6 and Go's crypto, net, and sys
 modules to 0.52.0, 0.54.0, and 0.45.0 respectively, with their committed
 lockfiles. CI must validate the combined docs build and API/security suites.
+
+## Pinned CLI Tooling
+
+- Go SDK generator: `github.com/oapi-codegen/oapi-codegen/v2 v2.8.0`, whose
+  released parser supports the canonical Huma OpenAPI 3.1 nullable type arrays.
+- SDK runtime: `github.com/oapi-codegen/runtime v1.7.0`; nullable patch values:
+  `github.com/oapi-codegen/nullable v1.2.0` preserve omitted versus explicit null.
+- CLI OIDC verifier: `github.com/coreos/go-oidc/v3 v3.18.0`; OAuth browser/device
+  grants: `golang.org/x/oauth2 v0.36.0`, matching the API's reviewed versions.
+- OS credential adapter: `github.com/zalando/go-keyring v0.2.8`. Headless hosts
+  explicitly opt into an owner-only file store; no silent insecure fallback.
+- CLI command parsing, presentation, build metadata, and release packaging use
+  the standard library and existing shell tooling. Generated files begin with
+  the standard generated-code marker, emitted deterministically by the generator
+  script. No alternate OpenAPI document or hand-edited transport schema is used.
