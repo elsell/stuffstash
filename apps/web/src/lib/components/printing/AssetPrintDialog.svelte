@@ -6,7 +6,7 @@ import { Input } from '$lib/components/ui/input/index.js';
 import { Label } from '$lib/components/ui/label/index.js';
 import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 import { t } from '$lib/presentation/localization';
-import { printingFailureMessage } from '$lib/presentation/printing';
+import { labelMediaName, printingFailureMessage } from '$lib/presentation/printing';
 import type { PrintingRepository, PrintIntents } from '$lib/ports/printingRepository';
 import type { ReportedPrintOutcome, PrintScope, RegisteredPrinter, LabelTemplate, PrintJob } from '$lib/domain/printing';
 import PairingChoice from './PairingChoice.svelte';
@@ -138,7 +138,7 @@ async function resolve(current:PrintJob,outcome:ReportedPrintOutcome){if(busy)re
  {#if error}<p role="alert">{error}</p>{/if}
  {#if job}{#if job.status==='queued'}<p role="status">{t('web.Printing.requestQueued')}</p>{/if}<PrintJobList jobs={[job]} {printers} {scope} canPrint={true} {busy} onCancel={cancel} onResolve={resolve}/><Button variant="outline" disabled={busy} onclick={()=>void refresh()}>{t('web.Printing.refresh')}</Button>{#if ['completed','failed','canceled'].includes(job.status)}<Button onclick={another}>{t('web.Printing.printAgain')}</Button>{/if}
  {:else}
- <PairingChoice id="label-printer" label={t('web.Printing.printer')} value={printerId} options={printers.map(p=>({value:p.id,label:`${p.name} — ${p.media.name}`}))} disabled={busy||locked} onChange={value=>{printerId=value;changed();}}/>
+ <PairingChoice id="label-printer" label={t('web.Printing.printer')} value={printerId} options={printers.map(p=>({value:p.id,label:`${p.name} — ${labelMediaName(p.media)}`}))} disabled={busy||locked} onChange={value=>{printerId=value;changed();}}/>
  <PairingChoice id="label-template" label={t('web.Printing.template')} value={templateKey} options={templates.map(p=>({value:`${p.id}:${p.version}`,label:p.name}))} disabled={busy||locked} onChange={value=>{templateKey=value;changed();}}/>
  <div class="check-row"><Checkbox id="label-reference" bind:checked={showReference} disabled={busy||locked} onchange={changed}/><Label for="label-reference">{t('web.Printing.showReference')}</Label></div>
  <div><Label for="label-copies">{t('web.Printing.copies')}</Label><Input id="label-copies" type="number" min="1" step="1" bind:value={copies} oninput={changed} disabled={busy||locked}/></div>

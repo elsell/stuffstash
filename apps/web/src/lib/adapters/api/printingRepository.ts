@@ -1,15 +1,17 @@
-import { PrintingClient, StuffStashAPIError, type TokenProvider } from '@stuff-stash/api-client';
+import { LabelsClient, PrintingClient, StuffStashAPIError, type TokenProvider } from '@stuff-stash/api-client';
 import type { PrintingRepository } from '$lib/ports/printingRepository';
 import { PrintingFailure, type PrintScope, type ReportedPrintOutcome, type PrintDefaults, type RegisteredPrinter, type PrintConnector, type PrintJob, type LabelSelection, type LabelMedia, type LabelPreview } from '$lib/domain/printing';
 export class ApiPrintingRepository implements PrintingRepository {
     private readonly client: PrintingClient;
-    constructor(baseUrl: string, tokenProvider: TokenProvider, fetchImpl?: typeof fetch) { this.client = new PrintingClient({ baseUrl, tokenProvider, fetch: fetchImpl }); }
+    private readonly labels: LabelsClient;
+    constructor(baseUrl: string, tokenProvider: TokenProvider, fetchImpl?: typeof fetch) { const options={baseUrl,tokenProvider,fetch:fetchImpl}; this.client = new PrintingClient(options); this.labels=new LabelsClient(options); }
     async printers(scope: PrintScope): Promise<RegisteredPrinter[]> { return guarded(async () => (await collect(cursor => this.client.printers(scope, cursor))).map(mapPrinter)); }
-    async connectors(scope: PrintScope): Promise<PrintConnector[]> { return guarded(async () => (await collect(cursor => this.client.connectors(scope, cursor))).map(c => ({ id: c.id, name: c.name, state: c.state, authorizationPending: c.authorizationPending, lastSeenAt: c.lastSeenAt, printerIds: c.printerIds ?? [] }))); }
+    async connectors(scope: PrintScope): Promise<PrintConnector[]> { return guarded(async () => (await collect(cursor => this.client.connectors(scope, cursor))).map(c => ({ id: c.id, name: c.name, state: c.state, authorizationPending: c.authorizationPending, availability: c.availability, lastSeenAt: c.lastSeenAt, printerIds: c.printerIds ?? [] }))); }
+    async mediaProfiles(scope:PrintScope){return guarded(async()=>(await this.labels.profiles(scope.tenantId,scope.inventoryId)??[]).flatMap(profile=>(profile.media??[]).map(media=>({adapterId:profile.adapterId,media:{...media}}))));}
     async templates(scope: PrintScope) { return guarded(async () => (await this.client.templates(scope)).map(t => ({ id: t.id, version: t.version, name: t.name, showReferenceDefault: t.defaults.show_reference }))); }
     async settings(scope: PrintScope) { return guarded(async () => mapSettings(await this.client.settings(scope))); }
     async saveSettings(scope: PrintScope, s: PrintDefaults) { return guarded(async () => mapSettings(await this.client.saveSettings(scope, { revision: s.revision, defaultPrinterId: s.defaultPrinterId, template: { id: s.templateId, version: s.templateVersion, options: { showReference: s.showReference } }, printOnCreateDefault: s.printOnCreateDefault }))); }
-    async updatePrinter(scope: PrintScope, printer: RegisteredPrinter, name: string, retired: boolean) { return guarded(async () => mapPrinter(await this.client.updatePrinter(scope, printer.id, { revision: printer.revision, name, retired }))); }
+    async updatePrinter(scope: PrintScope, printer: RegisteredPrinter, name: string, retired: boolean, media?: LabelMedia) { return guarded(async () => mapPrinter(await this.client.updatePrinter(scope, printer.id, { revision: printer.revision, name, retired, ...(media?{presetId:media.presetId,presetVersion:media.version}:{}) }))); }
     async preview(scope: PrintScope, assetId: string, selection: LabelSelection, media: LabelMedia): Promise<LabelPreview> {
         return guarded(async () => {
             const rendered = await this.client.render(scope, assetId, { media: { preset_id: media.presetId, version: media.version, width_micrometers: media.widthMicrometers, height_micrometers: media.heightMicrometers, margins_micrometers: media.marginsMicrometers, resolution_dpi: media.resolutionDpi, raster_width: media.rasterWidth, raster_height: media.rasterHeight, orientation: media.orientation, color_mode: media.colorMode, cut_policy: media.cutPolicy, display_rotation: media.displayRotation }, template: { id: selection.templateId, version: selection.templateVersion, options: { show_reference: selection.showReference } }, format: 'png' });
@@ -30,7 +32,7 @@ export class ApiPrintingRepository implements PrintingRepository {
 function mapPrinter(p: Awaited<ReturnType<PrintingClient['printers']>>['items'][number]): RegisteredPrinter {
     if (!['ready', 'unknown', 'unavailable', 'error'].includes(p.readiness))
         throw new PrintingFailure('unavailable');
-    return { id: p.id, name: p.name, adapterId: p.adapterId, revision: p.revision, retired: p.retired, media: { ...p.media }, mediaFingerprint: p.mediaFingerprint, readiness: p.readiness as RegisteredPrinter['readiness'] };
+    return { readinessReason:p.readinessReason,reportedAt:p.reportedAt,id: p.id, name: p.name, adapterId: p.adapterId, revision: p.revision, retired: p.retired, media: { ...p.media }, mediaFingerprint: p.mediaFingerprint, readiness: p.readiness as RegisteredPrinter['readiness'] };
 }
 function mapSettings(s: Awaited<ReturnType<PrintingClient['settings']>>): PrintDefaults { return { revision: s.revision, defaultPrinterId: s.defaultPrinterId, templateId: s.template.id, templateVersion: s.template.version, showReference: s.template.options.showReference, printOnCreateDefault: s.printOnCreateDefault }; }
 function mapJob(j: Awaited<ReturnType<PrintingClient['job']>>): PrintJob {

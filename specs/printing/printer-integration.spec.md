@@ -1044,3 +1044,29 @@ they never substitute a hard-coded nominal size.
 
 Native test-label commands use committed inventory defaults. A successful Save
 defaults updates their template selection immediately; unsaved draft edits do not.
+### Web printer health and registered media
+
+Display server-computed connector availability separately from registration and
+last heartbeat; never infer availability with a client-side time cutoff. Show
+printer readiness separately, with the safe reported reason and report timestamp.
+Map known reasons to plain user actions and unknown reasons to a generic condition,
+not raw adapter text. If a registered media name is missing, derive its display
+name from registered physical dimensions in millimeters.
+
+Inventory administrators can edit a printer in a bounded dialog: name, registered
+media chosen from that adapter's server catalog, and retired state. Initial
+catalog support remains only QL-800 with 29-by-90-mm media; do not add custom-size
+inputs or infer the physical roll. Show that the chosen size must match the loaded
+roll and queued jobs keep their original size. Save with the displayed printer
+revision and selected preset identity/version. A stale revision or ambiguous save
+requires explicit reload before another write, preserving the rejected draft
+until then. Reload reads the current server resource and does not silently rebase
+an earlier choice. Viewers/editors without inventory configure permission cannot
+open or submit printer configuration. Dismiss on permission/workspace changes and
+return keyboard focus to the invoking command.
+
+Chromium fixtures at 390px and 1280px verify separate online/attention status,
+media configuration, save, and keyboard focus return after save and Escape.
+Controlled HTTP tests cover scoped revision/preset transport and auth rejection;
+component fakes cover stale drafts, explicit reload, administrator gating, and
+unnamed-media dimensions. No physical roll detection is claimed.

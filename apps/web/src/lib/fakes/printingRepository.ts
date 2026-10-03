@@ -10,7 +10,7 @@ export class FakePrintingRepository implements PrintingRepository {
     loseNextResolutionResponse=false;
     previewBytes = new Blob(['controlled-label'], { type: 'image/png' });
     defaults: PrintDefaults = { revision: 0, defaultPrinterId: 'printer', templateId: 'qr-title', templateVersion: 1, showReference: true, printOnCreateDefault: false };
-    destinations: RegisteredPrinter[] = [{ id: 'printer', name: 'Garage Brother', adapterId: 'brother-ql800', revision: 1, retired: false, media: fakePrintMedia, mediaFingerprint: 'media-v1', readiness: 'unavailable' }];
+    destinations: RegisteredPrinter[] = [{ id: 'printer', name: 'Garage Brother', adapterId: 'brother-ql800', revision: 1, retired: false, media: structuredClone(fakePrintMedia), mediaFingerprint: 'media-v1', readiness: 'unavailable' }];
     registrations: PrintConnector[] = [{ id: 'connector', name: 'Garage computer', state: 'active', authorizationPending: false, printerIds: ['printer'], lastSeenAt: '2026-10-03T12:00:00Z' }];
     readonly queued = new Map<string, PrintJob>();
     private readonly requests = new Map<string, {
@@ -22,16 +22,18 @@ export class FakePrintingRepository implements PrintingRepository {
         throw new PrintingFailure('invalid'); }
     async printers(scope: PrintScope) { this.check(scope); return structuredClone(this.destinations); }
     async connectors(scope: PrintScope) { this.check(scope); return structuredClone(this.registrations); }
+    async mediaProfiles(scope:PrintScope){this.check(scope);return [{adapterId:'brother-ql800',media:structuredClone(fakePrintMedia)}];}
     async templates(scope: PrintScope) { this.check(scope); return [{ id: 'qr-title', version: 1, name: 'QR and title', showReferenceDefault: true }]; }
     async settings(scope: PrintScope) { this.check(scope); return structuredClone(this.defaults); }
     async saveSettings(scope: PrintScope, next: PrintDefaults) { this.check(scope); if (!this.canConfigure)
         throw new PrintingFailure('denied'); if (next.revision !== this.defaults.revision)
         throw new PrintingFailure('conflict'); if (next.printOnCreateDefault && !this.destinations.some(p => p.id === next.defaultPrinterId && !p.retired))
         throw new PrintingFailure('invalid'); this.defaults = { ...next, revision: next.revision + 1 }; return structuredClone(this.defaults); }
-    async updatePrinter(scope: PrintScope, current: RegisteredPrinter, name: string, retired: boolean) { this.check(scope); if (!this.canConfigure)
+    async updatePrinter(scope: PrintScope, current: RegisteredPrinter, name: string, retired: boolean, media?:LabelMedia) { this.check(scope); if (!this.canConfigure)
         throw new PrintingFailure('denied'); const stored = this.destinations.find(p => p.id === current.id); if (!stored)
         throw new PrintingFailure('invalid'); if (stored.revision !== current.revision)
-        throw new PrintingFailure('conflict'); Object.assign(stored, { name, retired, revision: stored.revision + 1 }); return structuredClone(stored); }
+        throw new PrintingFailure('conflict'); if(media){if(stored.adapterId!=='brother-ql800'||media.presetId!==fakePrintMedia.presetId||media.version!==fakePrintMedia.version)throw new PrintingFailure('invalid');stored.media=structuredClone(fakePrintMedia);}
+        Object.assign(stored, { name, retired, revision: stored.revision + 1 }); return structuredClone(stored); }
     async preview(scope: PrintScope, assetId: string, selection: LabelSelection, _media: LabelMedia) { this.check(scope); if (!this.canPrint)
         throw new PrintingFailure('denied'); return { bytes: this.previewBytes, selectionFingerprint: JSON.stringify({ assetId, selection }), mediaFingerprint: selection.expectedMediaFingerprint, displayRotation: 270, expiresAt: '2099-01-01T00:00:00Z' }; }
     async createJob(scope: PrintScope, assetId: string, selection: LabelSelection, previewFingerprint: string, key: string) {

@@ -1,3 +1,4 @@
+import {labelMediaName} from '$lib/presentation/printing';
 import { PrintPairingClient, StuffStashAPIError, StuffStashClient, type TokenProvider } from '@stuff-stash/api-client';
 import type { PrintPairingRepository } from '$lib/ports/printPairingRepository';
 import { PairingFailure, type PairingInventory, type PairingMedia, type PairingReview, type PairingSetup } from '$lib/domain/printPairing';
@@ -43,7 +44,7 @@ export class ApiPrintPairingRepository implements PrintPairingRepository {
             const cursors = new Set<string>();
             do {
                 const page = await this.client.printers(scope, cursor);
-                printers.push(...page.items.filter(p => !p.retired).map(p => ({ id: p.id, name: p.name, adapterId: p.adapterId, mediaName: p.media.name })));
+                printers.push(...page.items.filter(p => !p.retired).map(p => ({ id: p.id, name: p.name, adapterId: p.adapterId, mediaName: labelMediaName(p.media) })));
                 cursor = page.nextCursor;
                 if (cursor && cursors.has(cursor))
                     throw new PairingFailure('unavailable');

@@ -5,7 +5,7 @@ import {Button} from '$lib/components/ui/button/index.js';
 import {Checkbox} from '$lib/components/ui/checkbox/index.js';
 import {Label} from '$lib/components/ui/label/index.js';
 import {t} from '$lib/presentation/localization';
-import {printingFailureMessage} from '$lib/presentation/printing';
+import {labelMediaName,printingFailureMessage} from '$lib/presentation/printing';
 import {PrintingFailure,type PrintScope,type RegisteredPrinter,type LabelTemplate,type PrintJob,type ReportedPrintOutcome} from '$lib/domain/printing';
 import type {PrintingRepository,PrintIntents} from '$lib/ports/printingRepository';
 import PairingChoice from './PairingChoice.svelte';
@@ -53,7 +53,7 @@ async function cancel(current:PrintJob){await run(()=>repository.cancel(scope,cu
  <Dialog.Content onCloseAutoFocus={event=>{event.preventDefault();onRestoreFocus();}}>
   <Dialog.Header><Dialog.Title>{t('web.Printing.testLabel')}</Dialog.Title><Dialog.Description>{t('web.Printing.testDescription')}</Dialog.Description></Dialog.Header>
   {#if error}<p role="alert">{error}</p>{/if}
-  {#if printer}<p><strong>{printer.name}</strong> · {printer.media.name}</p>{/if}
+  {#if printer}<p><strong>{printer.name}</strong> · {labelMediaName(printer.media)}</p>{/if}
   {#if job}
    {#if job.status==='queued'}<p role="status">{t('web.Printing.requestQueued')}</p>{/if}
    <PrintJobList jobs={[job]} printers={printer?[printer]:[]} {scope} canPrint={true} {busy} onCancel={cancel} onResolve={resolve}/>
