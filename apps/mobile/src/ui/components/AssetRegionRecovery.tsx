@@ -11,10 +11,13 @@ export function AssetRegionRecovery({ region, isRetrying, onRetry }: {
   readonly onRetry: () => void;
 }) {
   const palette = useAppearanceAwarePalette();
+  const messages = region === 'contents'
+    ? { loading: 'mobile.AssetRegionRecovery.contentsLoading', failed: 'mobile.AssetRegionRecovery.contentsFailed', retry: 'mobile.AssetRegionRecovery.contentsRetry' } as const
+    : { loading: 'mobile.AssetRegionRecovery.photosLoading', failed: 'mobile.AssetRegionRecovery.photosFailed', retry: 'mobile.AssetRegionRecovery.photosRetry' } as const;
   return <View style={{ gap: spacing.sm }}>
     <Text accessibilityRole="alert" style={{ color: palette.text, fontSize: 16 }}>
-      {isRetrying ? t('mobile.AssetRegionRecovery.loading', { region: String(region) }) : t('mobile.AssetRegionRecovery.couldNotLoad', { region: String(region) })}
+      {t(isRetrying ? messages.loading : messages.failed)}
     </Text>
-    <NativeCommandButton label={t('mobile.AssetRegionRecovery.retry', { region: String(region) })} disabled={isRetrying} onPress={onRetry} />
+    <NativeCommandButton label={t(messages.retry)} disabled={isRetrying} onPress={onRetry} />
   </View>;
 }

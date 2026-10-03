@@ -17,11 +17,11 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
  const open = (next: Page) => { setSearch(''); setPage(next); };
  const searchable = page === 'types' || page === 'tags' || page === 'locations';
  const label = (items: readonly Choice[], id?: string) => items.find(item => item.id === id)?.label ?? (id ? t('mobile.ExpirationFiltersScreen.selected') : t('mobile.ExpirationFiltersScreen.any'));
- const headerOptions = useMemo(() => ({ title: page === 'overview' ? t('mobile.ExpirationFiltersScreen.filters') : page === 'dates' ? t('mobile.ExpirationFiltersScreen.dateRange') : page[0].toUpperCase() + page.slice(1),
+ const headerOptions = useMemo(() => ({ title: page === 'overview' ? t('mobile.ExpirationFiltersScreen.filters') : page === 'dates' ? t('mobile.ExpirationFiltersScreen.dateRange') : page === 'types' ? t('mobile.ExpirationFiltersScreen.typesTitle') : page === 'tags' ? t('mobile.ExpirationFiltersScreen.tags') : t('mobile.ExpirationFiltersScreen.locationsTitle'),
   }), [page]);
  return <>
   <Stack.Screen options={headerOptions} />
-  <NativeFilterSheet title={headerOptions.title} search={searchable ? { query: search, placeholder: t('mobile.ExpirationFiltersScreen.search', { page: String(page) }), onChange: setSearch, onSubmit: setSearch, onClear: () => setSearch('') } : undefined} footerTestID="expiration-filter-footer" actions={{
+  <NativeFilterSheet title={headerOptions.title} search={searchable ? { query: search, placeholder: t(page === 'types' ? 'mobile.ExpirationFiltersScreen.searchTypes' : page === 'tags' ? 'mobile.ExpirationFiltersScreen.searchTags' : 'mobile.ExpirationFiltersScreen.searchLocations'), onChange: setSearch, onSubmit: setSearch, onClear: () => setSearch('') } : undefined} footerTestID="expiration-filter-footer" actions={{
    primaryLabel: t('mobile.ExpirationFiltersScreen.applyFilters'), primaryAccessibilityLabel: t('mobile.ExpirationFiltersScreen.applyExpirationFilters'), secondaryAccessibilityLabel: t('mobile.ExpirationFiltersScreen.cancelOrReturnToFilters'),
    secondaryLabel: page === 'overview' ? t('mobile.ExpirationFiltersScreen.cancel') : t('mobile.ExpirationFiltersScreen.back'), disabled: rangeError,
    onBack: () => page === 'overview' ? onCancel() : open('overview'), onApply: () => onApply(draft)

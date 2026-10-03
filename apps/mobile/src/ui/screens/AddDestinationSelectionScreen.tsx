@@ -83,7 +83,7 @@ export function AddDestinationSelectionScreen(props: AddDestinationSelectionProp
           {props.creating ? <SettingsSection><SettingsLoadingRow label={t('mobile.AddDestinationSelectionScreen.creatingPlace')} /></SettingsSection> : null}
         </> : <>
         <SettingsSection footer={t('mobile.AddDestinationSelectionScreen.choosingADestinationChangesThisDraftOnly')}>
-          <View style={styles.navigationRow}><Text style={styles.rowContext}>{t('mobile.AddDestinationSelectionScreen.current', { value: String(props.selected?.pathLabel || props.selected?.title || props.unresolvedSelection || 'Top level in this inventory') })}</Text></View>
+          <View style={styles.navigationRow}><Text style={styles.rowContext}>{t('mobile.AddDestinationSelectionScreen.current', { value: String(props.selected?.pathLabel || props.selected?.title || props.unresolvedSelection || t('mobile.AddDestinationSelectionScreen.inventoryRoot')) })}</Text></View>
           <SettingsChoiceRow label={t('mobile.AddDestinationSelectionScreen.topLevel')} accessibilityLabel={t('mobile.AddDestinationSelectionScreen.chooseInventoryTopLevel')} selected={!props.selected && !props.unresolvedSelection} disabled={props.disabled} onPress={() => select()} />
         </SettingsSection>
         {props.error ? <SettingsSection><View style={styles.navigationRow}><Text accessibilityRole="alert" style={styles.rowContext}>{props.error}</Text></View></SettingsSection> : null}
