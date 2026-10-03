@@ -524,3 +524,17 @@ Durations and limits are validated before device access. The default persistent
 journal directory is `stuffstash/print-state` under the OS user configuration
 directory, with owner-only permissions; `--journal-dir` overrides it. Recovery
 runs before hardware access, including when an active printer is powered off.
+
+### Human queue-command delivery
+
+Human printing commands resolve omitted template/options and destination from
+inventory print settings, then fetch that destination's current registered media
+fingerprint. Explicit flags override the corresponding setting. An offline
+registered destination remains selectable; a missing destination is a usage
+error, never an implicit first-printer choice. Scripts only print during asset
+creation when `--print-label` is present, regardless of the inventory UI default.
+Every enqueue/create-with-print command reports its logical request key to stderr
+before sending; an ambiguous failure can be retried with that exact key and
+selection. The CLI never automatically retries with a new key. Cancellation reads
+the current revision and relies on the API's compare-and-swap fence. Human output
+identifies queued jobs as queued and includes the creation's print-job ID.

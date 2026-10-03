@@ -21,17 +21,21 @@ type Inventory struct {
 	Lifecycle string `json:"lifecycleState"`
 }
 type Asset struct {
-	ID        string `json:"id"`
-	Title     string `json:"title"`
-	Kind      string `json:"kind"`
-	Parent    string `json:"parentAssetId,omitempty"`
-	Lifecycle string `json:"lifecycleState"`
+	PrintJobID string `json:"printJobId,omitempty"`
+	ID         string `json:"id"`
+	Title      string `json:"title"`
+	Kind       string `json:"kind"`
+	Parent     string `json:"parentAssetId,omitempty"`
+	Lifecycle  string `json:"lifecycleState"`
 }
 type Result[T any] struct {
 	Data       T           `json:"data"`
 	Pagination *Pagination `json:"pagination,omitempty"`
 }
-type AssetInput struct{ Kind, Title, Parent string }
+type AssetInput struct {
+	Kind, Title, Parent string
+	PrintLabel          *LabelPrintSelection
+}
 type AssetChange struct {
 	Title      *string
 	Parent     *string

@@ -51,7 +51,7 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 	}
 	client := &http.Client{Timeout: 30 * time.Second}
 	clock := systemClock{}
-	runner := app.Runner{API: func(server, token string) (ports.API, error) { return httpapi.New(server, token, client) }, Auth: oidcauth.Adapter{HTTP: client, Clock: clock, Output: output, Browser: oidcauth.SystemBrowser{}, AllowLoopbackHTTP: options.AllowLoopbackHTTP}, Credentials: store, Clock: clock, Output: output, Observer: presentation.SilentObserver{}}
+	runner := app.Runner{PrintingAPI: func(server, token string) (ports.HumanPrintingAPI, error) { return httpapi.New(server, token, client) }, API: func(server, token string) (ports.API, error) { return httpapi.New(server, token, client) }, Auth: oidcauth.Adapter{HTTP: client, Clock: clock, Output: output, Browser: oidcauth.SystemBrowser{}, AllowLoopbackHTTP: options.AllowLoopbackHTTP}, Credentials: store, Clock: clock, Output: output, Observer: presentation.SilentObserver{}}
 	return exit(output, runner.Run(ctx, options))
 }
 func exit(output ports.Output, err error) int {
@@ -80,12 +80,19 @@ const Help = `Stuff Stash CLI
   stuffstash inventories list --tenant ID
   stuffstash assets list --tenant ID --inventory ID [--limit N --cursor CURSOR]
   stuffstash assets show ID
-  stuffstash assets create --kind item|container|location --title TITLE
+  stuffstash assets create --kind item|container|location --title TITLE [--print-label]
   stuffstash assets update ID --title TITLE
   stuffstash assets move ID --parent ID|root
   stuffstash assets archive ID
   stuffstash assets restore ID
   stuffstash version
+  stuffstash labels print ASSET_ID [--printer ID --template ID --template-version N]
+  stuffstash printers list
+  stuffstash printers test PRINTER_ID
+  stuffstash print-jobs list [--printer ID]
+  stuffstash print-jobs show JOB_ID
+  stuffstash print-jobs cancel JOB_ID
+  stuffstash print-jobs reprint JOB_ID [--printer ID]
   stuffstash printers discover
   stuffstash printers catalog [--json]
   stuffstash connectors print register --name NAME
