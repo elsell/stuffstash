@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { timestampLabel } from '$lib/presentation/timestamp';
   import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import { t } from '$lib/presentation/localization';
   import {formatAssetExpiration, expirationStatusLabel} from '$lib/application/expirationPresentation';
@@ -706,9 +707,9 @@ import { assetKindLabel, assetLifecycleLabel } from '$lib/presentation/assetKind
 	          <div><dt>{t('web.AssetDetail.kind')}</dt><dd>{assetKindLabel(asset.kind)}</dd></div>
 	          <div><dt>{t('web.AssetDetail.type')}</dt><dd>{asset.customAssetTypeLabel ?? t('web.AssetDetail.baseAsset')}</dd></div>
 	          {#if asset.currentCheckout}
-	            <div><dt>{t('web.AssetDetail.checkout')}</dt><dd>{new Date(asset.currentCheckout.checkedOutAt).toLocaleString()}</dd></div>
+	            <div><dt>{t('web.AssetDetail.checkout')}</dt><dd>{timestampLabel(asset.currentCheckout.checkedOutAt)}</dd></div>
 	          {/if}
-	          <div><dt>{t('web.AssetDetail.updated')}</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : t('web.AssetDetail.notAvailable')}</dd></div>
+	          <div><dt>{t('web.AssetDetail.updated')}</dt><dd>{asset.updatedAt ? timestampLabel(asset.updatedAt) : t('web.AssetDetail.notAvailable')}</dd></div>
         </dl>
         <div class="detail-actions">
           <Button.Root href={actionHref('edit')} disabled={!actionIsAvailable('edit')} onclick={(event) => openAction(event, 'edit')}><Pencil /> {t('web.AssetDetail.edit')}</Button.Root>
@@ -858,12 +859,12 @@ import { assetKindLabel, assetLifecycleLabel } from '$lib/presentation/assetKind
             <div class="history-row">
               <div>
                 <strong>{checkout.state === 'returned' ? t('web.AssetDetail.returned') : checkout.state === 'undone' ? t('web.AssetDetail.undone') : t('web.AssetDetail.checkedOut')}</strong>
-                <small>{t('web.AssetDetail.byFull', { value: new Date(checkout.checkedOutAt).toLocaleString(), checkedOutByPrincipalId: checkout.checkedOutByPrincipalId })}</small>
+                <small>{t('web.AssetDetail.byFull', { value: timestampLabel(checkout.checkedOutAt), checkedOutByPrincipalId: checkout.checkedOutByPrincipalId })}</small>
                 {#if checkout.checkoutDetails}
                   <small>{checkout.checkoutDetails}</small>
                 {/if}
                 {#if checkout.returnedAt}
-                  <small>{t('web.AssetDetail.returnedByFull', { value: new Date(checkout.returnedAt).toLocaleString(), returnedByPrincipalId: checkout.returnedByPrincipalId ?? '' })}</small>
+                  <small>{t('web.AssetDetail.returnedByFull', { value: timestampLabel(checkout.returnedAt), returnedByPrincipalId: checkout.returnedByPrincipalId ?? '' })}</small>
                 {/if}
                 {#if checkout.returnDetails}
                   <small>{checkout.returnDetails}</small>

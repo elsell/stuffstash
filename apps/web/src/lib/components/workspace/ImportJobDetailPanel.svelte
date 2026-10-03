@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { timestampLabel } from '$lib/presentation/timestamp';
   import { importCountAction, importCountActionLabel } from './importCountMetrics';
   import { t } from '$lib/presentation/localization';
   import Activity from '@lucide/svelte/icons/activity';
@@ -327,7 +328,7 @@
                       {#each visibleResources as resource}
                         <Table.Row>
                           <Table.Cell class="font-semibold text-foreground md:min-w-48">{resourceLabel(resource)}</Table.Cell>
-                          <Table.Cell>{t('web.ImportJobDetailPanel.importedFull', { value: resourceDiagnosticLabel(resource), value2: new Date(resource.createdAt).toLocaleString() })}</Table.Cell>
+                          <Table.Cell>{t('web.ImportJobDetailPanel.importedFull', { value: resourceDiagnosticLabel(resource), value2: timestampLabel(resource.createdAt) })}</Table.Cell>
                           <Table.Cell class="w-px whitespace-nowrap">
                             {#if resourceCanOpen(job, resource)}
                               <a
@@ -383,7 +384,7 @@
                         <small>
                           {progress.total > 0 ? `${Math.min(progress.done, progress.total)} / ${progress.total}` : ''}
                           {progress.total > 0 && progress.updatedAt ? ' · ' : ''}
-                          {progress.updatedAt ? new Date(progress.updatedAt).toLocaleString() : ''}
+                          {progress.updatedAt ? timestampLabel(progress.updatedAt) : ''}
                         </small>
                       </div>
                     </div>

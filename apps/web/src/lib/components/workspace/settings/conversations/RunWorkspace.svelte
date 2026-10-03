@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { timestampLabel } from '$lib/presentation/timestamp';
   import { t } from '$lib/presentation/localization';
   import { onDestroy } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
@@ -29,7 +30,7 @@
     {#key selectedId}<RunDetails {session} runs={repositories.runs} cases={repositories.cases} workflows={repositories.workflows} runId={selectedId} {visible} />{/key}
   {:else}<Button.Root onclick={() => { creating = true; }}>{t('web.RunWorkspace.newRun')}</Button.Root>
     {#if heads.isPending}<p role="status">{t('web.RunWorkspace.loadingRuns')}</p>{:else if heads.isError}<p role="alert">{t('web.RunWorkspace.couldNotLoadRuns')} <Button.Root onclick={() => heads.refetch()}>{t('web.RunWorkspace.retryRuns')}</Button.Root></p>
-    {:else}<ul>{#each heads.data.items as head (head.id)}<li><Button.Root variant="outline" onclick={() => { selectedId = head.id; }}>{t('web.RunWorkspace.casesFull', { value: names[head.state], completedCases: head.completedCases, totalCases: head.totalCases, value4: new Date(head.createdAt).toLocaleString() })}</Button.Root></li>{/each}</ul>
+    {:else}<ul>{#each heads.data.items as head (head.id)}<li><Button.Root variant="outline" onclick={() => { selectedId = head.id; }}>{t('web.RunWorkspace.casesFull', { value: names[head.state], completedCases: head.completedCases, totalCases: head.totalCases, value4: timestampLabel(head.createdAt) })}</Button.Root></li>{/each}</ul>
       {#if !heads.data.items.length}<p>{t('web.RunWorkspace.noEvaluationRunsYetStartWithASavedWorkflow')}</p>{/if}
       {#if heads.data.pagination.hasMore}<Button.Root onclick={() => { cursor = heads.data?.pagination.nextCursor ?? undefined; }}>{t('web.RunWorkspace.nextRuns')}</Button.Root>{/if}
       {#if cursor}<Button.Root variant="ghost" onclick={() => { cursor = undefined; }}>{t('web.RunWorkspace.firstRuns')}</Button.Root>{/if}

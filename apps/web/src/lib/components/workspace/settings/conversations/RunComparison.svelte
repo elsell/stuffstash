@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { timestampLabel } from '$lib/presentation/timestamp';
   import { localization, t } from '$lib/presentation/localization';
   import { createQuery } from '@tanstack/svelte-query';
   import type { ConversationSession } from '$lib/adapters/query/conversationSession';
@@ -20,7 +21,7 @@
 <Button.Root variant="outline" aria-expanded={expanded} onclick={() => { expanded = !expanded; }}>{expanded ? t('web.RunComparison.hideRunComparison') : t('web.RunComparison.compareWithAnotherRun')}</Button.Root>
 {#if expanded}<section aria-label={t('web.RunComparison.compareRuns')} class="run-comparison"><h4>{t('web.RunComparison.chooseAnEarlierRun')}</h4>
   {#if heads.isPending}<p role="status">{t('web.RunComparison.loadingRuns')}</p>{:else if heads.isError}<p role="alert">{t('web.RunComparison.couldNotLoadRuns')} <Button.Root onclick={() => heads.refetch()}>{t('web.RunComparison.retryComparisonRuns')}</Button.Root></p>
-  {:else}<ul>{#each heads.data.items.filter(value => value.id !== current.id) as head (head.id)}<li><Button.Root variant="outline" aria-pressed={baselineId === head.id} onclick={() => { baselineId = head.id; }}>{t('web.RunComparison.passedFull', { value: new Date(head.createdAt).toLocaleString(), passedCases: head.passedCases, totalCases: head.totalCases })}</Button.Root></li>{/each}</ul>
+  {:else}<ul>{#each heads.data.items.filter(value => value.id !== current.id) as head (head.id)}<li><Button.Root variant="outline" aria-pressed={baselineId === head.id} onclick={() => { baselineId = head.id; }}>{t('web.RunComparison.passedFull', { value: timestampLabel(head.createdAt), passedCases: head.passedCases, totalCases: head.totalCases })}</Button.Root></li>{/each}</ul>
     {#if !heads.data.items.some(value => value.id !== current.id)}<p>{t('web.RunComparison.noOtherRunsOnThisPage')}</p>{/if}
     {#if heads.data.pagination.hasMore}<Button.Root onclick={() => { cursor = heads.data?.pagination.nextCursor ?? undefined; }}>{t('web.RunComparison.nextComparisonRuns')}</Button.Root>{/if}
     {#if cursor}<Button.Root variant="ghost" onclick={() => { cursor = undefined; }}>{t('web.RunComparison.firstComparisonRuns')}</Button.Root>{/if}

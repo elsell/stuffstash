@@ -571,3 +571,13 @@ Invitation acceptance success uses a whole named-placeholder message preserving
 the inventory name. Verify non-default formatting locale and invalid History
 dates without changing grouping semantics. These copy/formatting changes do not
 claim native navigation, assistive or physical-device acceptance.
+
+## Web timestamp consumers
+
+Use one configured-locale timestamp presenter for three remaining consumer groups:
+asset details/checkout metadata; import progress/archive expiry; and activity
+metadata/conversation-run lists. Preserve existing date/time precision and runtime
+timezone. Existing invalid activity metadata remains verbatim; other invalid
+timestamp displays keep their existing browser fallback. Do not change grouping,
+ordering, expiry, protocol timestamps or timezone identifiers. Test locale
+selection and representative component behavior; no whole-runtime claim follows.
