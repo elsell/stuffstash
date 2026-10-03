@@ -1,0 +1,6 @@
+package: generated
+generate:
+  models: true
+  client: true
+output-options:
+  nullable-type: true

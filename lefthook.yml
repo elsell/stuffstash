@@ -7,7 +7,7 @@ pre-commit:
       stage_fixed: true
     go-test:
       glob: "*.go"
-      run: GOCACHE="$PWD/.cache/go-build" go test ./apps/api/...
+      run: GOCACHE="$PWD/.cache/go-build" go test ./apps/api/... ./apps/cli/...
     audit-action-migrations:
       run: python3 scripts/check-audit-action-migrations.py
     go-structural-rules:
@@ -16,6 +16,9 @@ pre-commit:
     go-domain-imports:
       glob: "*.go"
       run: scripts/check-go-domain-imports.sh {staged_files}
+    cli-client-check-generated:
+      glob: "{apps/api/internal/adapters/httpserver/**,apps/api/cmd/stuff-stash-openapi/**,packages/api-client/openapi.json,apps/cli/oapi-codegen.yaml,apps/cli/internal/adapters/httpapi/generated/**,scripts/*cli-client*}"
+      run: make cli-client-check-generated
     api-client-check-generated:
       glob: "packages/api-client/**"
       run: make api-client-check-generated

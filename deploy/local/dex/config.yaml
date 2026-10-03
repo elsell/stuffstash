@@ -32,6 +32,11 @@ staticClients:
     public: true
     redirectURIs:
       - http://localhost:5173/callback
+  # Dex public-client policy permits ephemeral loopback and device flow when
+  # redirectURIs is omitted. This is a distinct CLI audience, never a secret.
+  - id: stuff-stash-cli-local
+    name: Stuff Stash CLI
+    public: true
   - id: stuff-stash-mobile-local
     name: Stuff Stash Mobile Local
     public: true

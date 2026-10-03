@@ -19,7 +19,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 )
 
-func TestMCPSignedOIDCBoundaryRejectsInvalidTokens(t *testing.T) {
+func TestSignedOIDCBoundariesRejectInvalidTokens(t *testing.T) {
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		t.Fatal(err)
@@ -42,7 +42,7 @@ func TestMCPSignedOIDCBoundaryRejectsInvalidTokens(t *testing.T) {
 	}))
 	defer issuer.Close()
 	issuerURL = issuer.URL
-	authenticator, err := auth.NewOIDCAuthenticatorFromIssuer(context.Background(), issuerURL, "stuffstash-client")
+	authenticator, err := auth.NewOIDCAuthenticatorFromIssuerForClientIDs(context.Background(), issuerURL, []string{"stuffstash-client", "stuffstash-cli"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,12 +71,17 @@ func TestMCPSignedOIDCBoundaryRejectsInvalidTokens(t *testing.T) {
 		status      int
 	}{
 		{"verified", valid, 200},
+		{"CLI audience", token(issuerURL, "stuffstash-cli", time.Now().Add(time.Hour)), 200},
 		{"expired", token(issuerURL, "stuffstash-client", time.Now().Add(-time.Hour)), 401},
 		{"wrong issuer", token("https://another-issuer.invalid", "stuffstash-client", time.Now().Add(time.Hour)), 401},
 		{"wrong audience", token(issuerURL, "another-client", time.Now().Add(time.Hour)), 401},
 		{"unsigned", unsigned, 401}, {"malformed", "not-a-jwt", 401}, {"dev token", "dev:owner", 401},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			rest := performRequest(server, http.MethodGet, "/me/tenants", "Bearer "+tc.token, nil)
+			if rest.Code != tc.status {
+				t.Fatalf("REST status %d want %d: %s", rest.Code, tc.status, rest.Body.String())
+			}
 			request := httptest.NewRequest(http.MethodPost, "https://stash.example.test/mcp", strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}`))
 			request.Header.Set("Authorization", "Bearer "+tc.token)
 			request.Header.Set("Content-Type", "application/json")

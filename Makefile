@@ -18,7 +18,7 @@ DOCS_PATH := $(CODEX_RUNTIME_NODE_BIN):$(PATH)
 PNPM ?= $(shell if command -v pnpm >/dev/null 2>&1; then command -v pnpm; elif test -x "$(CODEX_RUNTIME_BIN)/pnpm"; then printf '%s\n' "$(CODEX_RUNTIME_BIN)/pnpm"; else printf '%s\n' pnpm; fi)
 
 test:
-	GOCACHE=$(GOCACHE) go test ./apps/api/...
+	GOCACHE=$(GOCACHE) go test ./apps/api/... ./apps/cli/...
 
 api-release-build:
 	cd apps/api && GOWORK=off GOCACHE=$(GOCACHE) CGO_ENABLED=0 GOOS=linux go build -o /tmp/stuff-stash-release-check ./cmd/stuff-stash
@@ -196,7 +196,7 @@ docker-build-web:
 dependency-age-check:
 	python3 scripts/check-dependency-age.py
 
-required-checks: audit-action-migration-check client-message-check dependency-age-check scripts-test go-structural-check mobile-ui-structural-check test api-release-build web-install web-test web-check web-build mobile-test mobile-check api-client-test api-client-check api-client-check-generated docs-install docs-build
+required-checks: cli-client-check-generated cli-release-build audit-action-migration-check client-message-check dependency-age-check scripts-test go-structural-check mobile-ui-structural-check test api-release-build web-install web-test web-check web-build mobile-test mobile-check api-client-test api-client-check api-client-check-generated docs-install docs-build
 
 release-plan-test:
 	scripts/test-release-planner.sh
@@ -292,3 +292,13 @@ client-message-check: web-install
 .PHONY: audit-action-migration-check
 audit-action-migration-check:
 	python3 scripts/check-audit-action-migrations.py
+
+.PHONY: cli-client-generate cli-client-check-generated cli-release-build
+cli-client-generate: api-openapi-generate
+	scripts/generate-cli-client.sh
+
+cli-client-check-generated:
+	scripts/check-cli-client-generated.sh
+
+cli-release-build:
+	cd apps/cli && GOWORK=off go build -mod=readonly -buildvcs=false -o /tmp/stuffstash-cli-check ./cmd/stuffstash
