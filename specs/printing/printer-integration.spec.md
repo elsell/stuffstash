@@ -629,3 +629,12 @@ job and attempt metadata may be removed after the terminal history lifetime,
 measured from its last state transition; audit history remains. The request
 idempotency window ends when that terminal job is removed. Cleanup uses the same
 printer lock as claims and state changes and rechecks eligibility under the lock.
+
+### Dispatch readiness fence
+
+The start transition rechecks the serving connector heartbeat and its readiness
+report under the same transaction and locks as the printer reservation. A lease
+renewal does not refresh either health signal. Stale, missing, future-dated, or
+unavailable health rejects a new start without consuming the claim or emitting
+output. An identical already-started retry remains readable/idempotent. Outcome
+reporting and reconciliation remain usable while the printer is unavailable.

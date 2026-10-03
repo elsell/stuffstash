@@ -93,6 +93,18 @@ func (s Store) UpdatePrintJob(ctx context.Context, input ports.PrintJobUpdate) (
 		if e = input.Change(&j, printer); e != nil {
 			return e
 		}
+		if before.Status != string(printing.JobPrinting) && j.Status == printing.JobPrinting && input.StartReportMaxAge > 0 {
+			if input.Authority == nil {
+				return ports.ErrConflict
+			}
+			ready, e := printingDispatchReady(tx, *input.Authority, input.Now, input.StartReportMaxAge)
+			if e != nil {
+				return e
+			}
+			if !ready {
+				return ports.ErrConflict
+			}
+		}
 		if e = savePrintJobChange(tx, before, j, &p, input.Audit); e != nil {
 			return e
 		}
