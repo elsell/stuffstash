@@ -1,6 +1,6 @@
 import { PrintRequestRejected } from '../../application/printing/PrintSubmission';
 import { PrintingClient, LabelsClient, StuffStashAPIError } from '@stuff-stash/api-client';
-import type { PrintCatalog, PrintJob, PrintOutcome, PrintScope, PrintSelection, PrintSettings, PrintTemplate, PrintingRepository, RegisteredPrinter } from '../../application/printing/PrintingWorkspace';
+import type { PrintCatalog, PrintJob, PrintMediaPreset, PrintOutcome, PrintScope, PrintSelection, PrintSettings, PrintTemplate, PrintingRepository, RegisteredPrinter } from '../../application/printing/PrintingWorkspace';
 import { assertReadActive } from '../../application/shared/ReadRequest';
 import { labelBlobBytes } from '../labels/LabelBlobBytes';
 
@@ -15,12 +15,16 @@ export class ApiPrintingRepository implements PrintingRepository {
       this.client.templates(scope), this.client.settings(scope)
     ]);
     assertReadActive(signal);
-    return { printers: printers.map(printer => ({ id: printer.id, name: printer.name, retired: printer.retired, readiness: printer.readiness, readinessReason: printer.readinessReason, reportedAt: printer.reportedAt, revision: printer.revision,
-      mediaFingerprint: printer.mediaFingerprint, mediaName: printer.media.name, media: { presetId: printer.media.presetId, version: printer.media.version, widthMicrometers: printer.media.widthMicrometers,
-        heightMicrometers: printer.media.heightMicrometers, margins: printer.media.marginsMicrometers, resolutionDPI: printer.media.resolutionDpi, rasterWidth: printer.media.rasterWidth,
-        rasterHeight: printer.media.rasterHeight, orientation: printer.media.orientation, colorMode: printer.media.colorMode, cutPolicy: printer.media.cutPolicy, displayRotation: printer.media.displayRotation } })),
+    return { printers: printers.map(mapPrinter),
       connectors: connectors.map(connector => ({ id: connector.id, name: connector.name, state: connector.state, availability: connector.availability, lastSeenAt: connector.lastSeenAt, printerIds: connector.printerIds ?? [] })),
       templates: templates.map(template => ({ id: template.id, version: template.version, name: template.name, showReference: template.defaults.show_reference, supportsReference: (template.options ?? []).includes('show_reference') })), settings: mapSettings(settings) };
+  }
+  async mediaPresets(scope: PrintScope, printer: RegisteredPrinter, signal: AbortSignal): Promise<readonly PrintMediaPreset[]> {
+    const profiles = await this.labels.profiles(scope.tenantId, scope.inventoryId, signal); assertReadActive(signal);
+    return (profiles ?? []).filter(profile => profile.adapterId === printer.adapterId).flatMap(profile => (profile.media ?? []).map(media => ({ id: media.presetId, version: media.version, name: media.name, widthMicrometers: media.widthMicrometers, heightMicrometers: media.heightMicrometers })));
+  }
+  async configurePrinter(scope: PrintScope, printer: RegisteredPrinter, preset: PrintMediaPreset) {
+    return mapPrinter(await this.client.updatePrinter(scope, printer.id, { revision: printer.revision, presetId: preset.id, presetVersion: preset.version }));
   }
   async saveSettings(scope: PrintScope, settings: PrintSettings) {
     return mapSettings(await this.client.saveSettings(scope, { ...settings, template: { id: settings.template.id, version: settings.template.version, options: { showReference: settings.template.showReference } } }));
@@ -72,4 +76,12 @@ function wireSelection(selection: PrintSelection) {
 async function requestJob(send: () => Promise<WireJob>) {
   try { return mapJob(await send()); }
   catch (error) { if (error instanceof StuffStashAPIError && [400, 409, 422].includes(error.status)) throw new PrintRequestRejected(); throw error; }
+}
+
+type WirePrinter = Awaited<ReturnType<PrintingClient['printers']>>['items'][number];
+function mapPrinter(printer: WirePrinter): RegisteredPrinter {
+  return { id: printer.id, adapterId: printer.adapterId, name: printer.name, retired: printer.retired, readiness: printer.readiness, readinessReason: printer.readinessReason, reportedAt: printer.reportedAt, revision: printer.revision,
+    mediaFingerprint: printer.mediaFingerprint, mediaName: printer.media.name, media: { presetId: printer.media.presetId, version: printer.media.version, widthMicrometers: printer.media.widthMicrometers,
+      heightMicrometers: printer.media.heightMicrometers, margins: printer.media.marginsMicrometers, resolutionDPI: printer.media.resolutionDpi, rasterWidth: printer.media.rasterWidth,
+      rasterHeight: printer.media.rasterHeight, orientation: printer.media.orientation, colorMode: printer.media.colorMode, cutPolicy: printer.media.cutPolicy, displayRotation: printer.media.displayRotation } };
 }

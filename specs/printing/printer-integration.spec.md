@@ -1018,3 +1018,29 @@ submission, lost-response dismissal/reopen/retry, and Escape focus restoration.
 Stateful component tests verify no automatic job and no asset, one copy only,
 viewer/retired-printer restrictions, and exactly one job after response loss.
 Physical printer output remains outside this browser evidence.
+
+### Native registered-printer media editing
+
+For inventory configurators, each printer section exposes its loaded label size
+as the existing native single-choice picker plus Save label size. Choices come
+from the authenticated profile catalog for that printer's adapter; initially only
+QL-800 29 × 90 mm version 1 is available. No custom dimensions, roll detection,
+printer wake, or online-readiness requirement is introduced. Viewers retain the
+read-only size row. This is an in-place configuration task, not a new destination
+or confirmation modal.
+
+The printing application port receives explicit tenant/inventory scope, the
+current printer revision and selected preset ID/version. The generated PATCH
+changes only those media fields; name, retirement and assignments remain intact.
+A stale revision retains the selection, reports the failure, and offers an explicit
+reload. Never silently retry with a newer revision. A successful update refreshes
+the displayed printer/media snapshot without discarding unsaved inventory-default
+edits or changing queued job artifacts. Scope/navigation cancellation suppresses
+late UI results. Native layout/assistive checks remain device follow-ups.
+
+If the API omits a human-readable media name, native size rows and printer/preset
+choices display localized dimensions from the registered media in millimeters;
+they never substitute a hard-coded nominal size.
+
+Native test-label commands use committed inventory defaults. A successful Save
+defaults updates their template selection immediately; unsaved draft edits do not.
