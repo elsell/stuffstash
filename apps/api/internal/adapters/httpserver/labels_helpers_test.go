@@ -26,6 +26,9 @@ func labelTestServer(t *testing.T, clocks ...ports.Clock) (*http.Server, *memory
 	return NewServer(":0", application), store, az
 }
 func labelTestApplication(t *testing.T, clocks ...ports.Clock) (app.App, *memory.Store, *memory.Authorizer) {
+	return labelTestApplicationWithBootstrap(t, true, clocks...)
+}
+func labelTestApplicationWithBootstrap(t *testing.T, bootstrap bool, clocks ...ports.Clock) (app.App, *memory.Store, *memory.Authorizer) {
 	t.Helper()
 	ctx := context.Background()
 	store := memory.NewStore()
@@ -37,8 +40,10 @@ func labelTestApplication(t *testing.T, clocks ...ports.Clock) (app.App, *memory
 	}
 	renderer, _ := labelrenderer.New(labelrenderer.DefaultLimits())
 	svc := printingapp.NewLabelService(printingapp.LabelDependencies{Repository: store, Renders: store, Assets: store, Inventories: store, Tenants: store, Authorizer: az, Audit: store, IDs: idgen.NewULIDGenerator(), Clock: clock, Renderer: renderer, Templates: renderer, BaseURL: "https://example.test/stash", RenderTTL: time.Hour, MaxRenderBytes: 1000000})
-	if _, err := svc.BootstrapInstance(ctx); err != nil {
-		t.Fatal(err)
+	if bootstrap {
+		if _, err := svc.BootstrapInstance(ctx); err != nil {
+			t.Fatal(err)
+		}
 	}
 	application := app.New(app.Dependencies{Clock: clock, Labels: svc, Observer: &fakeObserver{}, Auth: auth.NewLocalDevAuthenticator(), Authorizer: az, Users: store, Tenants: store, TenantUnitOfWork: store, Inventories: store, InventoryUnitOfWork: store, InventoryAccess: store, InventoryAccessUnitOfWork: store, Assets: store, AssetUnitOfWork: store, AssetTags: store, AssetTagUnitOfWork: store, Checkouts: store, Undoables: store, CustomAssetTypes: store, CustomFields: store, Audit: store, Outbox: store})
 	return application, store, az
