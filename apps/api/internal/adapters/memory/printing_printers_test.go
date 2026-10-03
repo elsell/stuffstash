@@ -21,7 +21,7 @@ func TestPrinterMutationIsScopedRevisionCheckedAndAuditAtomic(t *testing.T) {
 	}
 	rename := func(p *printing.Printer) error { p.Name = "Changed"; p.Revision++; return nil }
 	failedAudit := func(printing.Printer) (audit.Record, error) { return audit.Record{}, errors.New("audit unavailable") }
-	if _, err := store.UpdatePrinter(ctx, scope, original.ID, 1, rename, failedAudit); err == nil {
+	if _, err := store.UpdatePrinter(ctx, scope, original.ID, 1, rename, failedAudit, nil); err == nil {
 		t.Fatal("ignored failed audit")
 	}
 	unchanged, err := store.GetPrinter(ctx, scope, original.ID)
@@ -29,10 +29,10 @@ func TestPrinterMutationIsScopedRevisionCheckedAndAuditAtomic(t *testing.T) {
 		t.Fatalf("mutation leaked: %+v %v", unchanged, err)
 	}
 	acceptedAudit := func(printing.Printer) (audit.Record, error) { return audit.Record{ID: "update-audit"}, nil }
-	if _, err := store.UpdatePrinter(ctx, scope, original.ID, 0, rename, acceptedAudit); err == nil {
+	if _, err := store.UpdatePrinter(ctx, scope, original.ID, 0, rename, acceptedAudit, nil); err == nil {
 		t.Fatal("accepted stale revision")
 	}
-	if _, err := store.UpdatePrinter(ctx, scope, original.ID, 1, rename, acceptedAudit); err != nil {
+	if _, err := store.UpdatePrinter(ctx, scope, original.ID, 1, rename, acceptedAudit, nil); err != nil {
 		t.Fatal(err)
 	}
 	result, err := store.GetPrinter(ctx, scope, original.ID)

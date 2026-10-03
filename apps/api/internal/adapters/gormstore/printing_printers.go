@@ -82,7 +82,7 @@ func (s Store) ListPrinters(ctx context.Context, scope printing.Scope, limit int
 	}
 	return out, nil
 }
-func (s Store) UpdatePrinter(ctx context.Context, scope printing.Scope, id printing.PrinterID, revision uint64, change ports.PrinterMutation, makeAudit ports.PrinterAudit) (printing.Printer, error) {
+func (s Store) UpdatePrinter(ctx context.Context, scope printing.Scope, id printing.PrinterID, revision uint64, change ports.PrinterMutation, makeAudit ports.PrinterAudit, retirement *ports.PrinterRetirement) (printing.Printer, error) {
 	var result printing.Printer
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		model, err := printerByScope(tx, scope, id)
@@ -101,6 +101,13 @@ func (s Store) UpdatePrinter(ctx context.Context, scope printing.Scope, id print
 		}
 		if string(p.ID) != model.ID || p.Scope != scope {
 			return ports.ErrPrintConflict
+		}
+		if p.Retired && !model.Retired {
+			if err := retirePrinterWork(tx, &model, retirement); err != nil {
+				return err
+			}
+			p.ActiveJobID = model.ActiveJobID
+			p.ReservationState = model.ReservationState
 		}
 		next, err := printingPrinterFromDomain(p)
 		if err != nil {
