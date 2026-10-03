@@ -1,5 +1,5 @@
 import {afterEach,expect,it} from 'vitest';
-import {mount,tick,unmount} from 'svelte';
+import {flushSync,mount,tick,unmount} from 'svelte';
 import LabelOptions from './LabelOptions.svelte';
 import type {LabelRepository,LabelWorkspace} from '$lib/ports/labels';
 import type {LabelArtifact,LabelChoice,LabelScope} from '$lib/domain/label';
@@ -20,7 +20,12 @@ it('invalidates stale previews and cancels artifact delivery after leaving the t
   const repository=new LabelRepositoryFake();const saved:Blob[]=[];
   const workspace:LabelWorkspace={repository,camera:{async start(){}},files:{save(content){saved.push(content);},preparePrint(){return {show(){},close(){}};}}};
   component=mount(LabelOptions,{target:document.body,props:{workspace,scope}});await settle();
-  const layout=document.querySelectorAll('select')[1];layout.value='qr-only';layout.dispatchEvent(new Event('change',{bubbles:true}));await settle();
+  const layout=document.querySelector<HTMLButtonElement>('#label-layout')!;
+  layout.focus();layout.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));flushSync();
+  await expect.poll(()=>layout.getAttribute('aria-expanded')).toBe('true');
+  const option=()=>Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(item=>item.textContent?.trim()==='QR only');
+  await expect.poll(()=>Boolean(option())).toBe(true);
+  option()!.dispatchEvent(new PointerEvent('pointerup',{pointerType:'mouse',bubbles:true,cancelable:true}));flushSync();await settle();
   expect(repository.attempts[0].signal.aborted).toBe(true);
   const artifact={content:new Blob(['png'],{type:'image/png'}),displayRotation:270,width:306,height:991};
   repository.attempts[0].complete(artifact);await settle();expect(document.querySelector('img')).toBeNull();
