@@ -1861,3 +1861,23 @@ does not depend on Metro. Retain the source revision and APK checksum with the
 short-lived artifact. Build success proves compilation and packaging only; all three journey
 claims require recorded runtime evidence against an isolated authenticated stack.
 Do not change production Android distribution or claim physical-device acceptance.
+
+## Sharing cancellation presentation candidate
+
+Issue #239 retains a verified iOS keyboard obstruction when opening the pending
+invitation's single-command SwiftUI menu after an unsuccessful creation. The next
+candidate removes that redundant menu: a native, explicitly labeled destructive
+Cancel invitation command within the pending invitation row opens the existing
+native confirmation directly. Keep the row context, email draft, permission and
+feedback ownership, per-invitation locks, failure recovery and retry semantics.
+The command sits below its invitation metadata to avoid squeezing long email
+addresses. Non-pending or expired rows expose no cancellation command.
+
+This is a task-fit choice, not a rule that all menus should become buttons. It
+uses the existing native command adapter and confirmation, consistent with Apple's
+[buttons](https://developer.apple.com/design/human-interface-guidelines/buttons)
+and [alerts](https://developer.apple.com/design/human-interface-guidelines/alerts)
+guidance. No new field-level blur or remount workaround is permitted in this
+candidate. Verify the complete failed creation, preserved email, cancellation
+confirmation, failed cancellation and retry on iPhone and iPad. Capture the row
+and confirmation at normal text size. Source tests alone cannot close #239.
