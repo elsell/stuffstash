@@ -151,6 +151,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Web browser E2E smoke tests may remain outside the blocking gate until the suite is made deterministic and green enough for routine pull request use.
 - The `main` branch protection rule must require the `Required checks` status, require branches to be up to date before merging, and include administrators.
 - Dependency freshness must be checked mechanically for npm and Go modules.
+- Go replacements that resolve to a matching module checked into this repository are project source, not registry releases; the age check verifies their module declaration and repository containment instead of demanding a publish timestamp. External local paths fail closed. Container builds preserve these modules at the same relative paths as the monorepo.
 - npm package versions and Go module versions must be at least fourteen days old before they are accepted into the committed dependency graph.
 - Dependency age checks must fail closed when package metadata cannot be retrieved or parsed, except for Go pseudo versions where the timestamp embedded in the version is available.
 - The dependency age threshold may only be lowered or bypassed by a spec update that names the package, version, reason, and compensating verification.
