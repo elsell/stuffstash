@@ -1,5 +1,12 @@
 /** web presentation messages. */
 export const webMessages = {
+  "audit.action.label.provisioned": "Label created",
+  "audit.action.label.viewed": "Label viewed",
+  "audit.action.label.resolved": "Label opened",
+  "audit.action.label.rendered": "Label prepared",
+  "audit.action.label.content_downloaded": "Label downloaded",
+  "audit.action.label.templates_listed": "Label layouts viewed",
+
   "audit.action.archive_job.viewed": "Archive job viewed",
   "audit.action.archive_job.created": "Archive job created",
   "audit.action.archive_job.updated": "Archive job updated",
