@@ -86,6 +86,15 @@ func (s *Store) CreatePrintJob(_ context.Context, input ports.PrintJobCreate) (p
 	if _, exists := s.printingJobs[j.ID]; exists {
 		return printing.Job{}, false, ports.ErrConflict
 	}
+	if j.Predecessor != "" {
+		previous, err := s.printJobLocked(j.Scope, j.Predecessor)
+		if err != nil {
+			return printing.Job{}, false, err
+		}
+		if !previous.Terminal() || previous.Kind != j.Kind || previous.AssetID != j.AssetID || previous.IdempotencyKey == j.IdempotencyKey {
+			return printing.Job{}, false, ports.ErrConflict
+		}
+	}
 	if err := s.validatePrintAuditLocked(input.Audit, j); err != nil {
 		return printing.Job{}, false, err
 	}

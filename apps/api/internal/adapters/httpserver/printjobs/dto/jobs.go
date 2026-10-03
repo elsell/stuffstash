@@ -29,6 +29,17 @@ type CreateInput struct {
 	IdempotencyKey string `header:"Idempotency-Key" required:"true" minLength:"1" maxLength:"200"`
 	Body           PrintJobSelection
 }
+type ReprintInput struct {
+	JobInput
+	IdempotencyKey string `header:"Idempotency-Key" required:"true" minLength:"1" maxLength:"200"`
+	Body           PrintJobSelection
+}
+type TestJobInput struct {
+	Scope
+	PrinterID      string `path:"printerId"`
+	IdempotencyKey string `header:"Idempotency-Key" required:"true" minLength:"1" maxLength:"200"`
+	Body           PrintJobSelection
+}
 type JobInput struct {
 	Scope
 	JobID string `path:"jobId"`
@@ -59,6 +70,7 @@ type PrintJobAttempt struct {
 }
 type PrintJob struct {
 	ID               string            `json:"id"`
+	Predecessor      string            `json:"predecessor,omitempty"`
 	PrinterID        string            `json:"printerId"`
 	AssetID          string            `json:"assetId,omitempty"`
 	Kind             string            `json:"kind"`

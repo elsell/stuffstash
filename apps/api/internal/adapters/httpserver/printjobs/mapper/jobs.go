@@ -17,7 +17,7 @@ func Job(j printing.Job) dto.PrintJob {
 	for _, a := range j.Attempts {
 		attempts = append(attempts, dto.PrintJobAttempt{ID: string(a.ID), ConnectorID: string(a.Authority.ConnectorID), ClaimedAt: a.ClaimedAt, LeaseExpiresAt: a.LeaseExpiresAt, StartedAt: optionalTime(a.StartedAt), SettledAt: optionalTime(a.SettledAt), Outcome: string(a.Outcome.Kind), Reason: string(a.Outcome.Reason), CompletedCopies: a.Outcome.CompletedCopies})
 	}
-	return dto.PrintJob{ID: string(j.ID), PrinterID: string(j.PrinterID), AssetID: j.AssetID, Kind: string(j.Kind), Status: string(j.Status), Revision: j.Revision, Copies: j.Copies, MediaFingerprint: j.MediaFingerprint, RequestedBy: j.RequestedBy, CreatedAt: j.CreatedAt, UpdatedAt: j.UpdatedAt, Attempts: attempts}
+	return dto.PrintJob{ID: string(j.ID), Predecessor: string(j.Predecessor), PrinterID: string(j.PrinterID), AssetID: j.AssetID, Kind: string(j.Kind), Status: string(j.Status), Revision: j.Revision, Copies: j.Copies, MediaFingerprint: j.MediaFingerprint, RequestedBy: j.RequestedBy, CreatedAt: j.CreatedAt, UpdatedAt: j.UpdatedAt, Attempts: attempts}
 }
 func Jobs(values []printing.Job) []dto.PrintJob {
 	out := make([]dto.PrintJob, 0, len(values))

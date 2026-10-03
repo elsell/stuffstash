@@ -39,6 +39,7 @@ func output(j printing.Job, status int, err error) (*dto.Output, error) {
 }
 func Register(api huma.API, a app.App) {
 	registerConsumers(api, a)
+	registerJobRequests(api, a)
 	huma.Post(api, path+"/assets/{assetId}/print-jobs", func(ctx context.Context, in *dto.CreateInput) (*dto.Output, error) {
 		scope, err := authenticate(ctx, a, in.Scope)
 		if err != nil {
