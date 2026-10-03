@@ -26,7 +26,7 @@ let { jobs, printers, scope, canPrint, busy = false, onCancel, onResolve }: {
    {#if job.status==='uncertain'}
     <p role="status">{t('web.Printing.uncertainHelp')}</p>
     {#if !job.idleConfirmedAt}<p>{t('web.Printing.waitingIdleConfirmation')}</p>
-    {:else if canPrint&&onResolve}<PrintJobResolution {job} {busy} {onResolve}/>{/if}
+    {:else if canPrint&&onResolve}{#key job.revision}<PrintJobResolution {job} {busy} {onResolve}/>{/key}{/if}
    {/if}
    {#if job.resolution}<p>{t('web.Printing.reportedOutcome')}: {reportedPrintOutcomeLabel(job.resolution.reportedOutcome)}</p><p>{t('web.Printing.resolutionActorTime',{actor:job.resolution.resolvedBy,time:timestampLabel(job.resolution.resolvedAt)})}</p>{/if}
    {#if canPrint&&(job.status==='queued'||job.status==='claimed')}<Button.Root variant="outline" disabled={busy} onclick={()=>void onCancel(job)}>{t('web.Printing.cancelJob')}</Button.Root>{/if}

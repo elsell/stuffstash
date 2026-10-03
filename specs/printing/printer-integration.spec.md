@@ -922,3 +922,8 @@ Chromium fixture review at 390px and 1280px exercised choosing an outcome,
 acknowledging uncertainty, and the resulting human-resolution status. Stateful
 component tests cover missing idle evidence, viewer permissions, lost responses,
 and retry while preserving physical evidence and creating no new print job.
+
+If an explicit refresh returns a different job revision while resolution remains
+available, discard the previous resolution draft and require a new observed
+outcome and acknowledgement. A failed request alone must not reset or silently
+rebase an acknowledged payload; retries against unchanged state remain exact.
