@@ -1,0 +1,241 @@
+{
+  "labels": {
+    "examples": [
+      {
+        "display_height_pixels": 306,
+        "display_png": "qr-only-v1-brother-ql800-29x90-v1-reference-true-display.png",
+        "display_width_pixels": 991,
+        "height_pixels": 991,
+        "media": {
+          "color_mode": "monochrome",
+          "cut_policy": "after_label",
+          "display_rotation": 270,
+          "height_micrometers": 89800,
+          "margins_micrometers": {
+            "bottom": 2963,
+            "left": 1524,
+            "right": 1524,
+            "top": 2963
+          },
+          "orientation": "feed",
+          "preset_id": "brother-ql800-29x90",
+          "raster_height": 991,
+          "raster_width": 306,
+          "resolution_dpi": 300,
+          "version": 1,
+          "width_micrometers": 29000
+        },
+        "pdf": "qr-only-v1-brother-ql800-29x90-v1-reference-true.pdf",
+        "png": "qr-only-v1-brother-ql800-29x90-v1-reference-true.png",
+        "template": {
+          "id": "qr-only",
+          "options": {
+            "show_reference": true
+          },
+          "version": 1
+        },
+        "width_pixels": 306
+      },
+      {
+        "display_height_pixels": 306,
+        "display_png": "qr-only-v1-brother-ql800-29x90-v1-reference-false-display.png",
+        "display_width_pixels": 991,
+        "height_pixels": 991,
+        "media": {
+          "color_mode": "monochrome",
+          "cut_policy": "after_label",
+          "display_rotation": 270,
+          "height_micrometers": 89800,
+          "margins_micrometers": {
+            "bottom": 2963,
+            "left": 1524,
+            "right": 1524,
+            "top": 2963
+          },
+          "orientation": "feed",
+          "preset_id": "brother-ql800-29x90",
+          "raster_height": 991,
+          "raster_width": 306,
+          "resolution_dpi": 300,
+          "version": 1,
+          "width_micrometers": 29000
+        },
+        "pdf": "qr-only-v1-brother-ql800-29x90-v1-reference-false.pdf",
+        "png": "qr-only-v1-brother-ql800-29x90-v1-reference-false.png",
+        "template": {
+          "id": "qr-only",
+          "options": {
+            "show_reference": false
+          },
+          "version": 1
+        },
+        "width_pixels": 306
+      },
+      {
+        "display_height_pixels": 306,
+        "display_png": "qr-title-v1-brother-ql800-29x90-v1-reference-true-display.png",
+        "display_width_pixels": 991,
+        "height_pixels": 991,
+        "media": {
+          "color_mode": "monochrome",
+          "cut_policy": "after_label",
+          "display_rotation": 270,
+          "height_micrometers": 89800,
+          "margins_micrometers": {
+            "bottom": 2963,
+            "left": 1524,
+            "right": 1524,
+            "top": 2963
+          },
+          "orientation": "feed",
+          "preset_id": "brother-ql800-29x90",
+          "raster_height": 991,
+          "raster_width": 306,
+          "resolution_dpi": 300,
+          "version": 1,
+          "width_micrometers": 29000
+        },
+        "pdf": "qr-title-v1-brother-ql800-29x90-v1-reference-true.pdf",
+        "png": "qr-title-v1-brother-ql800-29x90-v1-reference-true.png",
+        "template": {
+          "id": "qr-title",
+          "options": {
+            "show_reference": true
+          },
+          "version": 1
+        },
+        "width_pixels": 306
+      },
+      {
+        "display_height_pixels": 306,
+        "display_png": "qr-title-v1-brother-ql800-29x90-v1-reference-false-display.png",
+        "display_width_pixels": 991,
+        "height_pixels": 991,
+        "media": {
+          "color_mode": "monochrome",
+          "cut_policy": "after_label",
+          "display_rotation": 270,
+          "height_micrometers": 89800,
+          "margins_micrometers": {
+            "bottom": 2963,
+            "left": 1524,
+            "right": 1524,
+            "top": 2963
+          },
+          "orientation": "feed",
+          "preset_id": "brother-ql800-29x90",
+          "raster_height": 991,
+          "raster_width": 306,
+          "resolution_dpi": 300,
+          "version": 1,
+          "width_micrometers": 29000
+        },
+        "pdf": "qr-title-v1-brother-ql800-29x90-v1-reference-false.pdf",
+        "png": "qr-title-v1-brother-ql800-29x90-v1-reference-false.png",
+        "template": {
+          "id": "qr-title",
+          "options": {
+            "show_reference": false
+          },
+          "version": 1
+        },
+        "width_pixels": 306
+      }
+    ],
+    "media": [
+      {
+        "color_mode": "monochrome",
+        "cut_policy": "after_label",
+        "display_rotation": 270,
+        "height_micrometers": 89800,
+        "margins_micrometers": {
+          "bottom": 2963,
+          "left": 1524,
+          "right": 1524,
+          "top": 2963
+        },
+        "orientation": "feed",
+        "preset_id": "brother-ql800-29x90",
+        "raster_height": 991,
+        "raster_width": 306,
+        "resolution_dpi": 300,
+        "version": 1,
+        "width_micrometers": 29000
+      }
+    ],
+    "notice": "Generated from executable template registrations. Fixtures do not establish printer support or physical verification.",
+    "schema_version": 1,
+    "templates": [
+      {
+        "defaults": {
+          "show_reference": true
+        },
+        "font": "Go Regular (golang.org/x/image v0.41.0)",
+        "glyph_coverage": "Latin, Greek, Cyrillic; unsupported glyphs and shaping scripts are rejected",
+        "id": "qr-only",
+        "minimum_qr_module_pixels": 3,
+        "name": "QR",
+        "options": [
+          "show_reference"
+        ],
+        "purpose": "QR with an optional human-readable reference",
+        "version": 1
+      },
+      {
+        "defaults": {
+          "show_reference": true
+        },
+        "font": "Go Regular (golang.org/x/image v0.41.0)",
+        "glyph_coverage": "Latin, Greek, Cyrillic; unsupported glyphs and shaping scripts are rejected",
+        "id": "qr-title",
+        "minimum_qr_module_pixels": 3,
+        "name": "QR and title",
+        "options": [
+          "show_reference"
+        ],
+        "purpose": "QR beside the asset title",
+        "version": 1
+      }
+    ]
+  },
+  "printers": [
+    {
+      "completion_evidence": "printing_completed_then_waiting",
+      "contract_versions": [
+        1
+      ],
+      "formats": [
+        "image/png"
+      ],
+      "id": "brother-ql800",
+      "media_presets": [
+        {
+          "color_mode": "monochrome",
+          "cut_policy": "after_label",
+          "display_rotation": 270,
+          "height_micrometers": 89800,
+          "margins_micrometers": {
+            "bottom": 2963,
+            "left": 1524,
+            "right": 1524,
+            "top": 2963
+          },
+          "orientation": "feed",
+          "preset_id": "brother-ql800-29x90",
+          "raster_height": 991,
+          "raster_width": 306,
+          "resolution_dpi": 300,
+          "version": 1,
+          "width_micrometers": 29000
+        }
+      ],
+      "model": "Brother QL-800",
+      "physically_verified": false,
+      "platforms": [
+        "linux"
+      ],
+      "transport": "usb-usblp",
+      "wake": false
+    }
+  ]
+}

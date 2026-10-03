@@ -7,7 +7,7 @@ output="${3:?output directory is required}"
 [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'expected stable vMAJOR.MINOR.PATCH release tag' >&2; exit 1; }
 [[ "$commit" =~ ^[0-9a-f]{40}$ ]] || { echo 'expected full release commit' >&2; exit 1; }
 [[ "$(git -C "$root" rev-parse HEAD)" == "$commit" ]] || { echo 'release commit does not match checkout' >&2; exit 1; }
-if [[ -n "$(git -C "$root" status --porcelain -- apps/cli scripts/build-cli-release.sh)" ]]; then
+if [[ -n "$(git -C "$root" status --porcelain -- apps/cli packages/printingprofiles scripts/build-cli-release.sh)" ]]; then
   echo 'CLI release inputs must be committed and clean' >&2
   exit 1
 fi
@@ -21,7 +21,7 @@ for os in linux darwin windows; do
 done | sort -u | sed '/^$/d' > "$tmp/module-paths"
 mapfile -t modules < "$tmp/module-paths"
 (cd "$root/apps/cli" && go list -m -json "${modules[@]}") > "$tmp/modules.json"
-python3 - "$tmp/modules.json" "$tmp/THIRD_PARTY_LICENSES.txt" <<'PYLICENSE'
+python3 - "$tmp/modules.json" "$tmp/THIRD_PARTY_LICENSES.txt" "$root" <<'PYLICENSE'
 from pathlib import Path
 import json, sys
 raw=Path(sys.argv[1]).read_text()
@@ -35,6 +35,9 @@ notices=[]
 for module in modules:
     if module.get('Main'): continue
     directory=Path(module['Dir'])
+    if module['Path'] == 'github.com/stuffstash/stuff-stash/printingprofiles' and directory.resolve() == (Path(sys.argv[3])/'packages/printingprofiles').resolve():
+        notices.append('First-party source: '+module['Path']+' (included from this repository; no additional license grant).')
+        continue
     licenses=sorted(file for file in directory.iterdir() if file.is_file() and file.name.lower().startswith(('license','copying','notice')))
     if not licenses: raise SystemExit('No license found for '+module['Path'])
     notices.append(module['Path']+' '+module['Version'])
