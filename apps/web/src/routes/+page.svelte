@@ -18,6 +18,9 @@
   import { StuffStashExpirationRepository } from '$lib/adapters/api/stuffStashExpirationRepository';
   import type { ExpirationWorkspace } from '$lib/ports/expirationRepository';
   import { StuffStashNotificationRepository } from '$lib/adapters/api/stuffStashNotificationRepository';
+  import { SessionPrintIntents } from '$lib/application/printing/manualPrint';
+  import { ApiPrintingRepository } from '$lib/adapters/api/printingRepository';
+  import type { PrintingWorkspace } from '$lib/ports/printingRepository';
   import type { NotificationWorkspace } from '$lib/ports/notificationWorkspace';
   import { conversationWorkspaceRepositories } from '$lib/adapters/api/conversations/workspaceRepositories';
   import type { ConversationWorkspaceRepositories } from '$lib/ports/conversationWorkspace';
@@ -58,6 +61,7 @@
   let session = $state<AuthSession | null>(null);
   let repository = $state<WorkspaceRepository | null>(null);
   let expiration = $state<ExpirationWorkspace | undefined>();
+  let printing = $state<PrintingWorkspace | undefined>();
   let notifications = $state<NotificationWorkspace | undefined>();
   let archives = $state<InventoryArchiveWorkspace | undefined>();
   let exportCommand = $state<ExportInventory | undefined>();
@@ -111,6 +115,8 @@
           }
           if (!mounted) return;
           expiration = { repository: new StuffStashExpirationRepository(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch) };
+          const printingRepository = new ApiPrintingRepository(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch);
+          printing = { apiIdentity: loadedConfig.apiBaseUrl, repository: printingRepository, intents: new SessionPrintIntents(printingRepository, () => crypto.randomUUID()) };
           notifications = { apiIdentity: loadedConfig.apiBaseUrl, repository: new StuffStashNotificationRepository(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch) };
           archives = { repository: new ApiInventoryArchiveRepository(new ArchiveClient({ baseUrl: loadedConfig.apiBaseUrl, tokenProvider: () => getStoredSession()?.idToken ?? null, fetch: ownedPerformance?.fetch })), files: new BrowserArchiveFileDelivery() };
           exportCommand = new ExportInventory(new ApiInventoryExportRepository(new InventoryExportClient({ baseUrl: loadedConfig.apiBaseUrl, tokenProvider: () => getStoredSession()?.idToken ?? null, fetch: ownedPerformance?.fetch })), new BrowserExportFileDelivery());
@@ -211,7 +217,7 @@
     onSignIn={signIn}
   />
 {:else if repository && workspaceData}
-  <InventoryWorkspaceApp {archives} {inventoryConversation} {exportCommand} {expiration} {repository} {conversations} {notifications} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
+  <InventoryWorkspaceApp {archives} {inventoryConversation} {exportCommand} {expiration} {repository} {conversations} {notifications} {printing} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
 {:else if workspaceError}
   <main class="loading-shell">
     <Card.Root>

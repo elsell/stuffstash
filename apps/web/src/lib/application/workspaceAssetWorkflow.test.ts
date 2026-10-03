@@ -580,3 +580,34 @@ function safeUploadError(message: string): Error & { safeForUser: true } {
   error.safeForUser = true;
   return error;
 }
+
+import {PrintingFailure} from '$lib/domain/printing';
+import {prepareAssetPrintCreation} from './printing/assetCreation';
+class AtomicCreationRepository {
+ readonly assets=new Map<string,Asset>();
+ readonly tags=new Map<string,AssetTag>();
+ readonly requests=new Map<string,{fingerprint:string;asset:Asset}>();
+ loseNextChildResponse=true;
+ deny=false;
+ async createAsset(tenantId:string,inventoryId:string,draft:AddAssetDraft):Promise<Asset>{
+  if(tenantId!==inventory.tenantId||inventoryId!==inventory.id||this.deny)throw new PrintingFailure('denied');
+  const fingerprint=JSON.stringify({...draft,photos:undefined});
+  const prior=draft.creationKey?this.requests.get(draft.creationKey):undefined;if(prior){if(prior.fingerprint!==fingerprint)throw new PrintingFailure('conflict');return {...prior.asset};}
+  const created={id:`asset-${this.assets.size+1}`,tenantId,inventoryId,kind:draft.kind,title:draft.title,description:draft.description,parentAssetId:draft.parentAssetId,lifecycleState:'active' as const,...(draft.printLabel?{printJobId:'job-1'}:{})};
+  this.assets.set(created.id,created);if(draft.creationKey)this.requests.set(draft.creationKey,{fingerprint,asset:created});
+  if(draft.printLabel&&this.loseNextChildResponse){this.loseNextChildResponse=false;throw new PrintingFailure('unavailable');}return {...created};
+ }
+ async createAssetTag(_tenantId:string,_inventoryId:string,draft:{displayName:string}){const tag={id:`tag-${this.tags.size+1}`,key:draft.displayName.toLowerCase(),displayName:draft.displayName};this.tags.set(tag.id,tag);return tag;}
+ async selectAssetLifecycle(){return workspaceData([...this.assets.values()]);}
+ async uploadAssetPhoto():Promise<AssetAttachment>{throw new Error('No photos in controlled fixture');}
+}
+it('retries the same atomic child without duplicating its confirmed parent and tags',async()=>{
+ const repository=new AtomicCreationRepository();const attempt=prepareAssetPrintCreation({kind:'item',title:'Drill',description:'',parentAssetId:null,parentQuickCreate:{kind:'container',title:'Tools'},photos:[],newTags:[{displayName:'Workshop'}],printLabel:{printerId:'printer',expectedMediaFingerprint:'media',templateId:'qr-title',templateVersion:1,showReference:true,copies:1}},'create-1');
+ const first=await createAssetWorkflow(repository,workspaceData(),inventory,attempt.draft,attempt.checkpoint);expect(first.saveResult.saved).toBe(false);expect(attempt.checkpoint.ambiguous).toBe(true);expect(repository.assets.size).toBe(2);expect(repository.tags.size).toBe(1);
+ repository.deny=true;const denied=await createAssetWorkflow(repository,first.data,inventory,attempt.draft,attempt.checkpoint);expect(denied.saveResult.saved).toBe(false);expect(attempt.checkpoint.ambiguous).toBe(true);
+ repository.deny=false;const recovered=await createAssetWorkflow(repository,first.data,inventory,attempt.draft,attempt.checkpoint);expect(recovered.saveResult.saved).toBe(true);expect(recovered.selectedAsset?.printJobId).toBe('job-1');expect(repository.assets.size).toBe(2);expect(repository.tags.size).toBe(1);expect(recovered.data.assets.length).toBe(2);
+});
+it('does not classify a first definite create rejection as ambiguous',async()=>{
+ const repository=new AtomicCreationRepository();repository.deny=true;const attempt=prepareAssetPrintCreation({kind:'item',title:'Drill',description:'',parentAssetId:null,photos:[],printLabel:{printerId:'printer',expectedMediaFingerprint:'media',templateId:'qr-title',templateVersion:1,showReference:true,copies:1}},'create-1');
+ const result=await createAssetWorkflow(repository,workspaceData(),inventory,attempt.draft,attempt.checkpoint);expect(result.saveResult.saved).toBe(false);expect(attempt.checkpoint.ambiguous).toBe(false);expect(repository.assets.size).toBe(0);
+});

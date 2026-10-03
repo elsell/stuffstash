@@ -2,7 +2,7 @@ import { t } from '$lib/presentation/localization';
 import type { AuditScope, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
 import { workspaceRouteHref, type AccessInvitationRouteAction, type SettingsCollection, type SettingsResourceAction } from './workspaceRoute';
 
-export type SettingsDestinationIcon = 'account' | 'tenant' | 'inventory' | 'access' | 'activity' | 'fields' | 'asset-types' | 'tags' | 'conversations' | 'notifications';
+export type SettingsDestinationIcon = 'account' | 'tenant' | 'inventory' | 'access' | 'activity' | 'fields' | 'asset-types' | 'tags' | 'conversations' | 'notifications' | 'printing';
 
 export interface SettingsDestination {
   label: string;
@@ -57,6 +57,7 @@ export function tenantSettingsDestinations(tenant: Pick<Tenant, 'id'>): Settings
 export function inventorySettingsDestinations(inventory: Pick<Inventory, 'id' | 'tenantId'>): SettingsDestination[] {
   const base = { level: 'inventory' as const, tenantId: inventory.tenantId, inventoryId: inventory.id };
   return [
+    { label: t('web.Printing.title'), eyebrow: t('web.Printing.shared'), description: t('web.Printing.description'), icon: 'printing', href: settingsResourceHref({ ...base, collection: 'printing' }) },
     { label: t('web.settingsManagementNavigation.notifications'), eyebrow: t('web.settingsManagementNavigation.personal'), description: t('web.settingsManagementNavigation.expirationRemindersAndAssetTypeOverrides'), icon: 'notifications', href: settingsResourceHref({ ...base, collection: 'notifications' }) },
     { label: t('web.settingsManagementNavigation.sharing'), eyebrow: t('web.settingsManagementNavigation.people'), description: t('web.settingsManagementNavigation.accessAndInvitations'), icon: 'access', href: settingsResourceHref({ ...base, collection: 'access' }) },
     { label: t('web.settingsManagementNavigation.tags'), eyebrow: t('web.settingsManagementNavigation.organization'), description: t('web.settingsManagementNavigation.reusableLabelsForThisInventory'), icon: 'tags', href: settingsResourceHref({ ...base, collection: 'tags' }) },

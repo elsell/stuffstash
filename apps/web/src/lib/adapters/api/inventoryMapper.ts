@@ -78,6 +78,7 @@ export function mapCapability(inventory: Inventory | null | undefined): Capabili
 
 export function mapAsset(asset: ApiAsset): Asset {
   return {
+    printJobId: asset.printJobId,
     expiration: asset.expiration,
     ...(asset.expirationContext ? {expirationContext:asset.expirationContext}:{}),
     id: asset.id,

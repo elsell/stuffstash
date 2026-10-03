@@ -755,6 +755,12 @@ It selects a registered destination, compatible template/options and copies,
 then requests the actual server-rendered preview. Any selection change discards
 that preview. Queue submission includes its selection/media fingerprints and a
 stable idempotency key; uncertain API delivery freezes that request until retry.
+Session-owned intents survive dialog dismissal and route navigation, preserving
+the exact pending request, selection, and preview for reopening. A definite
+rejection permits correction only if no previous attempt had ambiguous delivery.
+Preview operations carry a generation fence. A newer preview, selection change,
+or canceled dialog invalidates older render responses; a late response cannot
+replace the selection currently shown or submitted.
 Preview bytes come through authenticated generated-client content methods and
 local object URLs are released on selection changes and dismissal. No credential
 is attached to arbitrary server-provided content URLs.
@@ -809,3 +815,43 @@ its selection for correction and discards that unused request key. Network error
 server failures and any other ambiguous outcome retain the immutable intent. Once
 any attempt was ambiguous, a later rejection cannot prove that an earlier attempt
 did not enqueue: keep the original key and payload until success is recovered.
+Web settings and manual label controls are implemented with faithful stateful
+fakes covering settings conflicts, permission loss, preview media mismatch and
+ambiguous queue delivery. Chromium fixture review exercised 1280px settings and
+390px preview/queue status using the generated renderer PNG; this is not evidence
+of connected OIDC or physical printer execution.
+
+Web asset creation initializes its print checkbox from inventory defaults once per
+new draft. It captures a compatible default destination and media fingerprint;
+o default disables automatic printing with a settings link. The atomic asset
+request carries an explicit selection and stable idempotency key. A session-held
+frozen submission survives closing and reopening after an ambiguous response.
+Retry resumes the prepared child request without recreating confirmed quick
+parents or tags. Definite rejection unlocks corrections only before ambiguity.
+The returned asset's print-job ID links the new asset to its queued label status.
+
+The create checkbox was exercised in Chromium fixtures at 390px and 1280px: a
+true inventory default initializes checked, explicit unchecking survives title
+edits, and the control remains reachable above the action bar. Stateful workflow
+tests cover a committed child with a lost response followed by permission denial
+and successful same-key recovery, without duplicate parent/tag creation.
+
+### Unified web asset label menu
+
+Each asset detail exposes one More actions menu for its label tasks. Label options
+opens the existing download/system-print sheet for authorized viewers, including
+archived assets. Print label and the newly-created job's status entry are shown
+only for editors of active assets with a configured printing workspace. Saving or
+another asset action disables this menu and dismisses its transient surface.
+
+Use the existing accessible DropdownMenu, task sheet and print dialog. Selecting
+a command transfers focus into its surface; dismissal returns focus to the same
+More trigger. Asset identity changes remount the menu and its surfaces, aborting
+preview work; losing a required workspace or permission closes the corresponding
+surface. Combining the entry points does not broaden API permissions or discard
+session-owned unresolved print requests.
+
+Chromium fixture review at 1280px/390px confirms one menu, the three editor
+commands versus one viewer command, keyboard opening, and Escape focus return
+from both download and queued-print surfaces. Controlled repository tests verify
+preview cancellation on asset/workspace changes and editor-access removal.
