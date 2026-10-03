@@ -1070,3 +1070,14 @@ media configuration, save, and keyboard focus return after save and Escape.
 Controlled HTTP tests cover scoped revision/preset transport and auth rejection;
 component fakes cover stale drafts, explicit reload, administrator gating, and
 unnamed-media dimensions. No physical roll detection is claimed.
+
+### Atomic printer retirement lifecycle
+
+The revisioned printer update commits retirement, cancellation of every queued or
+claimed job, and clearing an affected inventory default in one transaction under
+the same printer lock used by claim/start. Each canceled job and changed settings
+record receives its own audit event. Failure to persist any event rolls back the
+entire retirement. Started or uncertain attempts and their printer reservation
+remain intact for reconciliation; retirement never reports them as canceled or
+safe to replay. Settings revisions advance when their default is cleared, so an
+older settings form cannot silently restore the retired destination.

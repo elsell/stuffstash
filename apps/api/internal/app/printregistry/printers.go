@@ -223,7 +223,18 @@ func (s Service) Update(ctx context.Context, input UpdatePrinter) (printing.Prin
 	makeAudit := func(p printing.Printer) (audit.Record, error) {
 		return s.auditRecord(input.Actor, audit.ActionPrinterUpdated, string(p.ID))
 	}
-	p, err := s.Printers.UpdatePrinter(ctx, input.Actor.Scope, input.ID, input.Revision, change, makeAudit)
+	p, err := s.Printers.UpdatePrinter(ctx, input.Actor.Scope, input.ID, input.Revision, change, makeAudit, &ports.PrinterRetirement{
+		Now: s.Clock.Now(),
+		JobAudit: func(_, job printing.Job) (audit.Record, error) {
+			record, err := s.auditRecord(input.Actor, audit.ActionPrintJobCanceled, string(input.ID))
+			record.TargetID = string(job.ID)
+			record.TargetType = audit.TargetPrintJob
+			return record, err
+		},
+		SettingsAudit: func(printing.InventoryPrintSettings) (audit.Record, error) {
+			return s.auditRecord(input.Actor, audit.ActionPrintSettingsUpdated, string(input.ID))
+		},
+	})
 	if err != nil {
 		return printing.Printer{}, registryError(err)
 	}
