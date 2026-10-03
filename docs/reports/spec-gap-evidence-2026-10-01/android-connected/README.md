@@ -20,7 +20,33 @@ then displayed the authenticated inventory and its seeded assets, as shown in
 `owner-home-after-relaunch.png`: session persistence worked despite the return
 navigation defect. Cross-principal isolation was not attempted in this build.
 
+## Revised runtime acceptance
+
+The normal release-mode APK at `43dabdcc6c29a6f421a446229830c4a8ff9cea54`
+passed [hosted packaging](https://github.com/elsell/stuffstash/actions/runs/37108659742).
+Its checksum and scoped results are in `fixed-runtime-result.json`.
+
+Real browser sign-in now returns directly to Home with the seeded inventory and
+assets (`owner-home-fixed.png`). Force-stop and launcher restart preserved that
+session. Native Account → Sign Out → confirmation returned to Connect with the
+server retained. Signing in through Dex as the separate synthetic account showed
+household onboarding, without the previous account's inventory or asset data
+(`second-account-onboarding.png`).
+
+After creating that account's own household, explicitly navigating to the app root
+showed its empty Home Inventory (`second-account-home.png`). Opening the first
+account's asset URL in this authenticated session showed “Asset unavailable” and
+no owner asset content (`second-account-denied-owner-asset.png`). These checks
+cover this representative account switch and foreign-asset read, not every role
+or native workflow. Existing API authorization tests remain separate evidence.
+
+**Follow-up discovered:** household creation succeeded but initially landed on
+“Containing location” with “This proposal is no longer available for editing”
+(`household-created-wrong-route.png`). Root navigation recovered Home. This is an
+unresolved onboarding navigation defect; the full onboarding journey did not pass.
+Track it in the next product batch rather than rerunning this unchanged APK.
+
 The native-intent fix suppresses warm callback navigation while AuthSession retains
-its original URL event and state/PKCE validation. Cold callbacks return to the root
-without query parameters. Revised native sign-in, relaunch and isolation acceptance
-remain pending; source tests alone do not close this batch.
+its original URL event and state/PKCE validation. Cold callbacks return to root
+without query parameters; cold callback behavior has source-test coverage only.
+No iPhone, physical-device, TalkBack or authenticated archive acceptance is implied.

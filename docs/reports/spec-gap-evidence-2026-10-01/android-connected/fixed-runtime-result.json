@@ -1,0 +1,16 @@
+{
+  "source": "43dabdcc6c29a6f421a446229830c4a8ff9cea54",
+  "apkSHA256": "a90894b92901c231586990d6b22d5c637eba73caadab52857d871328951af363",
+  "buildRun": 37108659742,
+  "runtime": "Android API36 emulator-5580, normal font scale 1.0",
+  "server": "isolated Paul v0.27.3 API with real Dex and SpiceDB",
+  "trustAndNetworking": "Same disposable emulator test CA and IPv4 hostname mapping as initial run; normal APK TLS unchanged",
+  "warmSignInReturn": "passed: browser credentials returned directly to owner Home",
+  "sessionAfterRelaunch": "passed: force-stop and launcher restart retained owner inventory and seeded assets",
+  "nativeSignOut": "passed: Account Sign Out confirmation returned to Connect retaining server",
+  "secondPrincipal": "passed: separate real Dex login showed household onboarding without owner content",
+  "foreignAssetRead": "passed: after creating independent household and opening root, owner asset deep link displayed Asset unavailable with no owner content",
+  "onboardingCompletion": "failed: successful household creation landed on unrelated Containing location route; explicit root navigation recovered empty second-account Home",
+  "coldCallbackNative": "not run; source tests only",
+  "physicalAndAssistive": "not run"
+}
