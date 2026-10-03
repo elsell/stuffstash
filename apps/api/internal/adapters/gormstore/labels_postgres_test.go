@@ -51,11 +51,11 @@ func TestPostgresLabelProvisionIsAtomicAcrossProcesses(t *testing.T) {
 	t.Cleanup(cleanup)
 	saveTenant(t, ctx, store, tid, "Labels")
 	saveInventory(t, ctx, store, iid.String(), tid, "Tools")
-	item := assetItem("label-concurrency-asset", tid.String(), iid.String(), asset.KindItem, "")
-	if err := createAsset(t, ctx, store, item); err != nil {
+	ids := idgen.NewULIDGenerator()
+	item := assetItem(ids.NewID(), tid.String(), iid.String(), asset.KindItem, "")
+	if err := store.CreateAsset(ctx, item, auditRecord(t, ids.NewID(), tid, iid, audit.ActionAssetCreated), nil); err != nil {
 		t.Fatal(err)
 	}
-	ids := idgen.NewULIDGenerator()
 	instance, err := store.BootstrapLabelInstance(ctx, printing.InstanceID(ids.NewID()))
 	if err != nil {
 		t.Fatal(err)
