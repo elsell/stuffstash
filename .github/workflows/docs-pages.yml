@@ -38,6 +38,19 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
+      - name: Setup Go for runtime catalog export
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version: '1.25.8'
+          cache-dependency-path: |
+            apps/api/go.sum
+            apps/cli/go.sum
+
+      - name: Prepare pinned catalog build dependencies
+        run: |
+          (cd apps/api && GOWORK=off go mod download)
+          (cd apps/cli && GOWORK=off go mod download)
+
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
@@ -59,8 +72,16 @@ jobs:
         if: github.event_name == 'pull_request'
         run: echo "STUFF_STASH_DOCS_BASE=/stuffstash/pr-${{ github.event.pull_request.number }}/" >> "$GITHUB_ENV"
 
-      - name: Build docs
-        run: pnpm --dir docs build
+      - name: Generate and check runtime printing catalog
+        id: printing_catalog
+        continue-on-error: true
+        run: make printing-docs-check-generated PRINTING_DOCS_OUTPUT="$RUNNER_TEMP/printing-docs"
+
+      - name: Build candidate documentation
+        run: |
+          test -f "$RUNNER_TEMP/printing-docs/docs/src/assets/printing/generated/manifest.json"
+          cp -R "$RUNNER_TEMP/printing-docs/docs/." docs/
+          pnpm --dir docs build
 
       - name: Upload docs artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -69,6 +90,12 @@ jobs:
           path: docs/dist
           if-no-files-found: error
           retention-days: 1
+
+      - name: Reject stale checked-in printing documentation
+        if: steps.printing_catalog.outcome != 'success'
+        run: |
+          echo 'Printing documentation is stale. Run make printing-docs-generate and commit the output. The docs-dist artifact contains the newly rendered candidate.' >&2
+          exit 1
 
   deploy:
     name: Deploy docs

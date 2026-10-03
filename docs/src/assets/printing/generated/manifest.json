@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "files": {
+    "docs/src/assets/printing/generated/catalog.json": "ec2b599b972e538e5e035152a375f6dc982a75856853eb4c0e246c17a713bf54",
+    "docs/src/assets/printing/generated/qr-only-v1-brother-ql800-29x90-v1-reference-false-display.png": "0746a7af08335f3b578b99d2fff2700da71fc5aed0b52d91741932440bce9375",
+    "docs/src/assets/printing/generated/qr-only-v1-brother-ql800-29x90-v1-reference-false.pdf": "cbf0353da1b3c5f924db68599fe5b9da328f10ca239518f7bd1948cd19a344d1",
+    "docs/src/assets/printing/generated/qr-only-v1-brother-ql800-29x90-v1-reference-false.png": "9d29d9103bffff1f588bda6f7579fb4c2d7e48006503c8a4937122f5f2e2174d",
+    "docs/src/assets/printing/generated/qr-only-v1-brother-ql800-29x90-v1-reference-true-display.png": "fffd2100248851552696e0344f72e9a2995a441e14cf343a0b92f9c0b89b6a35",
+    "docs/src/assets/printing/generated/qr-only-v1-brother-ql800-29x90-v1-reference-true.pdf": "3aa3539224ddfea930a664f84aa46781fbf8f07449e05716564d13d4470366d5",
+    "docs/src/assets/printing/generated/qr-only-v1-brother-ql800-29x90-v1-reference-true.png": "2d4c23a04a492f83b35dd2ad8a08b022b16408a7a2a15ba07c9cb7f59b383e66",
+    "docs/src/assets/printing/generated/qr-title-v1-brother-ql800-29x90-v1-reference-false-display.png": "f9675ff63dcf6c3a290cc93ca62227db38374ba163a1039ddaf2395522281fa9",
+    "docs/src/assets/printing/generated/qr-title-v1-brother-ql800-29x90-v1-reference-false.pdf": "f041a20a2c8328105b44f0267572f5b8b3498c1ee5841fcd6197eb5a089264a9",
+    "docs/src/assets/printing/generated/qr-title-v1-brother-ql800-29x90-v1-reference-false.png": "28e0ab892c8ee5c6ee5f0d6d4925ab8b9c37c8be99c9fa6b935c9f95dc7fb008",
+    "docs/src/assets/printing/generated/qr-title-v1-brother-ql800-29x90-v1-reference-true-display.png": "b1bf10a4b5809f5fdfeb71938de1e058474f10955b256bd2c077769ef12b01e2",
+    "docs/src/assets/printing/generated/qr-title-v1-brother-ql800-29x90-v1-reference-true.pdf": "63f31c963df3848abd6fe5fbaa1f87ac04758e34116d82fe3b086bccf3a1cf2b",
+    "docs/src/assets/printing/generated/qr-title-v1-brother-ql800-29x90-v1-reference-true.png": "736c72bf2c8e8108d8477645dab03818942498cda3d49aeafbf0212afe1864a3",
+    "docs/src/content/docs/printing/label-sizes.mdx": "b078d4719d45bd7d850bd708715819888947cb705870d52ecff612adc047e312",
+    "docs/src/content/docs/printing/supported-printers.mdx": "292e9bcfe362af4ae83fda99b03d907cab82d4b1d0d9afa082fc14a0e9aa0b46",
+    "docs/src/content/docs/printing/templates.mdx": "d103a0ebadbfbbf24afb27d065b6ad4c5757b77f1c4593f659377d6cd0dbcd71"
+  }
+}

@@ -24,6 +24,36 @@ env:
   PNPM_VERSION: "11.0.7"
 
 jobs:
+  printing-catalog:
+    name: Generated printing catalog
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - name: Setup Go
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: |
+            apps/api/go.sum
+            apps/cli/go.sum
+      - name: Prepare pinned exporter dependencies
+        run: |
+          (cd apps/api && GOWORK=off go mod download)
+          (cd apps/cli && GOWORK=off go mod download)
+      - name: Verify runtime-generated pages and PNGs
+        run: make printing-docs-check-generated PRINTING_DOCS_OUTPUT="$RUNNER_TEMP/printing-docs"
+      - name: Retain regenerated candidate output
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: generated-printing-docs
+          path: ${{ runner.temp }}/printing-docs
+          if-no-files-found: warn
+          retention-days: 7
+
   web-image:
     name: Web release image
     timeout-minutes: 15

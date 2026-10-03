@@ -1,7 +1,12 @@
 package printingcatalog_test
 
 import (
+	"bytes"
 	"context"
+	"github.com/makiuchi-d/gozxing"
+	"github.com/makiuchi-d/gozxing/qrcode"
+	"github.com/stuffstash/stuff-stash/internal/adapters/printingprofiles"
+	"image/png"
 	"reflect"
 	"sort"
 	"testing"
@@ -13,7 +18,10 @@ import (
 
 func TestExportUsesRuntimeRegistryAndStableArtifacts(t *testing.T) {
 	renderer, _ := labelrenderer.New(labelrenderer.DefaultLimits())
-	media := printing.MediaSnapshot{PresetID: "test-29x90", Version: 1, WidthMicrometers: 29000, HeightMicrometers: 90000, MarginsMicrometers: printing.Margins{Left: 1546, Right: 1546, Top: 3047, Bottom: 3048}, ResolutionDPI: 300, RasterWidth: 306, RasterHeight: 991, Orientation: printing.OrientationFeed, ColorMode: printing.ColorMonochrome, CutPolicy: printing.CutAfterLabel, DisplayRotation: 270}
+	media, err := (printingprofiles.Catalog{}).ResolvePrinterMedia("brother-ql800", "brother-ql800-29x90", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
 	first, err := printingcatalog.Export(context.Background(), renderer, renderer, []printing.MediaSnapshot{media})
 	if err != nil {
 		t.Fatal(err)
@@ -34,6 +42,27 @@ func TestExportUsesRuntimeRegistryAndStableArtifacts(t *testing.T) {
 		t.Fatal("missing template/options previews")
 	}
 	for _, fixture := range first.Catalog.Examples {
+		for _, name := range []string{fixture.PNG, fixture.DisplayPNG} {
+			image, err := png.Decode(bytes.NewReader(first.Files[name]))
+			if err != nil {
+				t.Fatal(err)
+			}
+			width, height := fixture.WidthPixels, fixture.HeightPixels
+			if name == fixture.DisplayPNG {
+				width, height = fixture.DisplayWidthPixels, fixture.DisplayHeightPixels
+			}
+			if image.Bounds().Dx() != width || image.Bounds().Dy() != height {
+				t.Fatal("Wrong catalog fixture dimensions")
+			}
+			bitmap, err := gozxing.NewBinaryBitmapFromImage(image)
+			if err != nil {
+				t.Fatal(err)
+			}
+			decoded, err := qrcode.NewQRCodeReader().Decode(bitmap, nil)
+			if err != nil || decoded.GetText() != printingcatalog.FixtureURL {
+				t.Fatalf("Invalid documentation QR %s: %v", name, err)
+			}
+		}
 		if len(first.Files[fixture.PNG]) == 0 || len(first.Files[fixture.DisplayPNG]) == 0 || len(first.Files[fixture.PDF]) == 0 {
 			t.Fatal("missing fixture")
 		}

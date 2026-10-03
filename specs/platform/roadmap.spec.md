@@ -1,5 +1,15 @@
 # Roadmap Spec
 
+## Printing catalog delivery candidate
+
+The printer catalog now comes from the executable CLI adapter registration and
+shared first-party media profile; previews use the production API renderer.
+Candidate pages, PNG/PDF originals and an owned-output manifest are generated
+offline and checked in PR/production documentation builds. QR decoding, dimensions,
+deterministic bytes and narrow output ownership are verified. Desktop light and
+phone dark browser checks cover responsive examples and original downloads;
+these do not establish physical printing or native camera behavior.
+
 ## In Progress: Labels, Printers, And CLI — October 3, 2026
 
 Delivered foundations now include human CLI authentication/inventory commands,

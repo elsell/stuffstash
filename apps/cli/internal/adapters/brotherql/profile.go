@@ -1,6 +1,9 @@
 package brotherql
 
-import "github.com/stuffstash/stuff-stash/cli/internal/domain/printing"
+import (
+	"github.com/stuffstash/stuff-stash/cli/internal/domain/printing"
+	"github.com/stuffstash/stuff-stash/printingprofiles"
+)
 
 const (
 	AdapterID       = "brother-ql800"
@@ -14,8 +17,10 @@ const (
 )
 
 func Media() printing.Media {
-	return printing.Media{PresetID: "brother-ql800-29x90", Version: 1, WidthMicrometers: 29000, HeightMicrometers: 89800, Margins: printing.Margins{Left: 1524, Right: 1524, Top: 2963, Bottom: 2963}, ResolutionDPI: 300, RasterWidth: rasterWidth, RasterHeight: rasterHeight, Orientation: "feed", ColorMode: "monochrome", CutPolicy: "after_label", DisplayRotation: 270}
+	m := printingprofiles.BrotherQL800().Media[0]
+	return printing.Media{PresetID: m.ID, Version: m.Version, WidthMicrometers: m.WidthMicrometers, HeightMicrometers: m.HeightMicrometers, Margins: printing.Margins{Left: m.Margins.Left, Right: m.Margins.Right, Top: m.Margins.Top, Bottom: m.Margins.Bottom}, ResolutionDPI: m.ResolutionDPI, RasterWidth: m.RasterWidth, RasterHeight: m.RasterHeight, Orientation: m.Orientation, ColorMode: m.ColorMode, CutPolicy: m.CutPolicy, DisplayRotation: m.DisplayRotation}
 }
 func Descriptor() printing.Descriptor {
-	return printing.Descriptor{ID: AdapterID, Model: Model, Platforms: []string{"linux"}, Transport: "usb-usblp", ContractVersions: []int{1}, Formats: []string{"image/png"}, Media: []printing.Media{Media()}, CompletionEvidence: "printing_completed_then_waiting", Wake: false, PhysicallyVerified: false}
+	p := printingprofiles.BrotherQL800()
+	return printing.Descriptor{ID: p.ID, Model: p.Model, Platforms: p.Platforms, Transport: p.Transport, ContractVersions: []int{1}, Formats: []string{"image/png"}, Media: []printing.Media{Media()}, CompletionEvidence: "printing_completed_then_waiting", Wake: false, PhysicallyVerified: p.PhysicallyVerified}
 }

@@ -34,6 +34,9 @@ pre-commit:
     mobile-ui-structural-check:
       glob: "apps/mobile/src/**/*.{ts,tsx,xml}"
       run: make mobile-ui-structural-check
+    printing-docs:
+      glob: "{apps/api/internal/adapters/labelrenderer/**,apps/api/internal/app/printingcatalog/**,apps/api/cmd/label-catalog/**,apps/cli/internal/adapters/brotherql/**,apps/cli/internal/bootstrap/printers.go,packages/printingprofiles/**,scripts/*printing-docs*,docs/src/content/docs/printing/**,docs/src/assets/printing/generated/**}"
+      run: make printing-docs-check-generated
     docs-build:
       glob: "docs/**"
       run: make docs-build
