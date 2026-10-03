@@ -156,8 +156,28 @@ shared hosted link resolution, and automatic smart-outlet control are deferred.
 - Render QR modules at integer pixel sizes without interpolation, preserve a
   quiet zone of at least four modules, and enforce profile-specific readability.
   Reject content that cannot fit a scannable QR; never crop it to fit.
-- Long titles may wrap and truncate with a visible indication. Support Unicode
-  with a reviewed, pinned redistributable font; text must not overlap the QR.
+- Long titles may wrap and truncate with a visible indication. The initial renderer
+  uses Go Regular from the already pinned `golang.org/x/image v0.41.0`, with its
+  redistribution license. Normalize text to NFC and support its Latin, Greek,
+  and Cyrillic glyph coverage. Reject unsupported glyphs and scripts requiring
+  shaping with a recoverable rendering error; never silently print replacement
+  boxes or misleading unshaped text. Broader fonts/shaping require a reviewed
+  renderer update. Text must not overlap the QR.
+- The Go renderer uses `github.com/boombuler/barcode v1.1.0` for QR encoding;
+  independent decoding acceptance uses `github.com/makiuchi-d/gozxing v0.1.1`.
+  Draw the returned QR matrix at integer scale with an explicit four-module
+  quiet zone. Rasterize text with the existing x/image font adapter.
+- A fixed image-only PDF adapter wraps the production raster with explicit
+  physical page size, printable margins, and disabled image interpolation.
+  Validate each printable physical axis against raster dots and declared DPI,
+  allowing at most one dot of physical rounding error per axis. Reject inconsistent
+  settings rather than stretching square QR modules.
+  It performs no separate text/QR composition and includes no active PDF content.
+  Keep it deterministic; validate its output using an independent PDF renderer.
+- The initial offline `label-catalog` command accepts versioned media descriptors
+  exported by printer adapters and emits template metadata and synthetic fixtures
+  through the production renderer. It does not register printers or contact the
+  API. Candidate fixtures do not establish hardware acceptance.
 - The initial Brother profile uses 29 x 90 mm media and the existing script's
   306 x 991 pixel print raster orientation. These are separate physical and
   printable dimensions, not a general pixel-to-mm conversion rule. Verify the
