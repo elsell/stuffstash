@@ -16,16 +16,12 @@ import { CreateInventoryInvitationCommand, CancelInventoryInvitationCommand, Lis
 const scope: InventorySharingScope = { tenantId: 'tenant', inventoryId: 'inventory', inventoryName: 'Garage', permissions: ['share'] };
 const item: InventoryInvitationSummary = { id: 'one', email: 'old@example.test', relationship: 'viewer', status: 'pending', isExpired: false, expiresAt: '2027-01-01' };
 function cancellationButton(h: MobileRenderHarness, email: string) {
-  return h.byLabel(`Invitation actions for ${email}`);
+  return h.byLabel(`Cancel invitation for ${email}`);
 }
 async function openCancellation(h: MobileRenderHarness, email: string) {
   const command = cancellationButton(h, email);
-  expect(command, 'each pending invitation must have a named row menu').toBeDefined();
+  expect(command, 'each pending invitation must have a contextual cancellation command').toBeDefined();
   await h.press(command);
-  const action = h.all().find(node => node.props.accessibilityRole === 'menuitem' &&
-    node.queryAll(child => child.type === 'Text' && child.children.includes('Cancel invitation')).length > 0);
-  expect(action, 'cancellation belongs inside the row menu').toBeDefined();
-  await h.press(action);
 }
 const settle = async (h: MobileRenderHarness) => { await h.run(() => new Promise(r => setTimeout(r, 10))); };
 it('reuses safe invitation pages and keeps a created secret out of cache', async () => {

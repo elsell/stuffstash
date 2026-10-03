@@ -621,6 +621,7 @@ export const mobileMessages = {
   "mobile.InventoryMapScreen.loadingMap": "Loading map",
   "mobile.InventoryMapScreen.mapUnavailable": "Map unavailable",
   "mobile.InventoryMapScreen.retryMap": "Retry map",
+  "sharing.cancelForEmail": "Cancel invitation for {email}",
   "sharing.heading": "Share {inventoryName}",
   "sharing.createdMetadata": "{email} · {access} · Expires {date}",
   "sharing.invitationMetadata": "{access} · {status} · Expires {date}",
