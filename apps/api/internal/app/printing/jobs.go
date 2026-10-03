@@ -235,7 +235,6 @@ func (s *JobService) Create(ctx context.Context, input CreateJobInput) (label.Jo
 			return label.Job{}, false, apperrors.ErrConflict
 		}
 	}
-	id := job.ID
 	job.Predecessor = input.Predecessor
 	if input.Kind == label.JobPrinterTest {
 		job.Kind = label.JobPrinterTest

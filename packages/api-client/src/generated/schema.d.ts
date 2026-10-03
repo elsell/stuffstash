@@ -2115,6 +2115,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/reprints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID print jobs by job ID reprints */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id-reprints"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/print-settings": {
         parameters: {
             query?: never;
@@ -2184,6 +2201,23 @@ export interface paths {
         head?: never;
         /** Patch tenants by tenant ID inventories by inventory ID printers by printer ID */
         patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id"];
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId}/test-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID printers by printer ID test jobs */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id-test-jobs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/tenants/{tenantId}/inventories/{inventoryId}/restore": {
@@ -3879,6 +3913,7 @@ export interface components {
             id: string;
             kind: string;
             mediaFingerprint: string;
+            predecessor?: string;
             printerId: string;
             requestedBy: string;
             /** Format: int64 */
@@ -11821,6 +11856,48 @@ export interface operations {
             };
         };
     };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id-reprints": {
+        parameters: {
+            query?: never;
+            header: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrintJobSelection"];
+            };
+        };
+        responses: {
+            /** @description Existing print job returned for an identical idempotent retry */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintJob"];
+                };
+            };
+            /** @description Created */
+            201: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintJob"];
+                };
+            };
+        };
+    };
     "get-tenants-by-tenant-id-inventories-by-inventory-id-print-settings": {
         parameters: {
             query?: never;
@@ -12081,6 +12158,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id-test-jobs": {
+        parameters: {
+            query?: never;
+            header: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                printerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrintJobSelection"];
+            };
+        };
+        responses: {
+            /** @description Existing print job returned for an identical idempotent retry */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintJob"];
+                };
+            };
+            /** @description Created */
+            201: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintJob"];
                 };
             };
         };
