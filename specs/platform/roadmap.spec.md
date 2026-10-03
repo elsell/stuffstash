@@ -1,9 +1,14 @@
 # Roadmap Spec
 
-## Specified Next: Labels, Printers, And CLI — October 3, 2026
+## In Progress: Labels, Printers, And CLI — October 3, 2026
 
 The user authorized specification of QR labels/scanning and registered CLI print
-consumers. Design is specified; implementation has not begun. See
+consumers. Design PR #337 is merged; implementation is underway in isolated
+worktrees. The first slice adds public CLI OIDC discovery, separately configured
+audiences, provider-gated device sign-in, and bundled Dex client registration.
+Generated CLI/auth/inventory operations and label rendering are proceeding in
+parallel. Printer queues, connectors, client flows, and release publishing remain
+open; no physical output has been verified. See
 [asset labels](../printing/asset-labels.spec.md),
 [printer integration](../printing/printer-integration.spec.md), and [CLI](cli.spec.md).
 Sequence: contract/security and job-state tests; API label/registration/job slice;

@@ -28,6 +28,10 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	if err != nil {
 		return err
 	}
+	cliAuth, err := buildCLIAuthMetadata(ctx, cfg)
+	if err != nil {
+		return err
+	}
 	authorizer, closeAuthorizer, err := buildAuthorizer(ctx, cfg)
 	if err != nil {
 		return err
@@ -91,6 +95,7 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		MCPHandler: mcpHandler,
 		Archives:   archiveService, ArchiveTransferTimeout: archiveConfig.TransferTimeout,
 		CORSAllowedOrigins: cfg.CORSAllowedOrigins,
+		CLIAuth:            cliAuth,
 		MobileAuth: httpserver.MobileAuthOptions{
 			Issuer:      cfg.OIDCIssuer,
 			ClientID:    cfg.OIDCMobileClientID,

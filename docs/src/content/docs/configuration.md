@@ -51,12 +51,25 @@ and invalid enabled provider settings also fail startup.
 | `STUFF_STASH_OIDC_ISSUER` | empty | OIDC issuer URL when `STUFF_STASH_AUTH_MODE=oidc`. |
 | `STUFF_STASH_OIDC_CLIENT_ID` | empty | Primary expected OIDC audience/client ID. |
 | `STUFF_STASH_OIDC_CLIENT_IDS` | empty | Additional accepted OIDC client IDs, comma-separated. |
+| `STUFF_STASH_OIDC_CLI_CLIENT_ID` | empty | Public CLI client ID. Also added to the API's accepted audiences. |
+| `STUFF_STASH_OIDC_CLI_SCOPES` | `openid,email,profile,offline_access` | Comma-separated scopes requested by CLI sign-in; must include `openid`. |
+| `STUFF_STASH_OIDC_CLI_DEVICE_AUTH_ENABLED` | `false` | Offers device-code sign-in when the provider also advertises support. |
 | `STUFF_STASH_OIDC_MOBILE_CLIENT_ID` | empty | Public native mobile OIDC client ID advertised to the mobile app. |
 | `STUFF_STASH_OIDC_MOBILE_REDIRECT_URI` | `stuffstash://auth/callback` | Native redirect URI advertised to the mobile app. |
 | `STUFF_STASH_OIDC_MOBILE_SCOPES` | `openid,email,profile,offline_access` | Comma-separated scopes requested by mobile sign-in. |
 
 `STUFF_STASH_OIDC_CLIENT_ID` is included in the accepted client ID set even when
 `STUFF_STASH_OIDC_CLIENT_IDS` is also configured.
+
+CLI sign-in settings are published at `/auth/cli/config` when OIDC and a CLI
+client ID are configured. Register a public client with your identity provider.
+Browser sign-in uses PKCE and an ephemeral `127.0.0.1` callback. Enable device
+code support in both your provider and the API for sign-in from a headless computer.
+The provider must issue ID tokens; access tokens alone cannot authenticate to this API.
+
+The bundled Dex configuration includes `stuff-stash-cli-local`. Its omitted
+`redirectURIs` enables Dex's public-client loopback and device-flow handling.
+Configure the matching CLI client ID on the API to use it.
 
 ## API: External Agent Access
 
