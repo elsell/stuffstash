@@ -1241,8 +1241,6 @@ export const webMessages = {
   "web.workspaceAddPresentation.enterAParentNameOrTurnThisOptionOff": "Enter a parent name or turn this option off.",
   "web.workspaceAddPresentation.noPhotos": "No photos",
   "web.workspaceAddPresentation.noImageFormats": "No image formats",
-  "web.workspaceAddPresentation.or": "{value} or {value2}",
-  "web.workspaceAddPresentation.or2": "{value}, or {value2}",
   "web.workspaceAddPresentation.optionalUpTo": "Optional {supportedTypeLabel} up to {maxBytesLabel}.",
   "web.workspaceAddPresentation.remove": "Remove {name}",
   "web.workspaceAddPresentation.garageShelf": "Garage shelf",

@@ -22,7 +22,7 @@ describe('buildFailedVoiceRealtimeState', () => {
       status: 'failed',
       progressLabel: 'Voice failed',
       failureCode: 'provider_readiness',
-      errorMessage: 'Voice provider profiles are not ready: Speech input, Spoken output.'
+      errorMessage: 'Voice provider profiles are not ready: Speech input and Spoken output.'
     });
   });
 

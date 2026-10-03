@@ -457,3 +457,11 @@ one catalog mapping for every supported field type. Keep wire type identifiers,
 authored field names and authored enum options unchanged. Cancelled and revoked
 invitation titles are complete catalog messages, never untranslated status values
 inserted into a sentence. Verify these consumers in the expanded pseudolocale.
+
+### Locale-aware visible lists
+
+Voice readiness capability lists and mobile search-match captions use the shared
+locale list formatter. Search-match captions are a complete catalog template,
+not a translated prefix concatenated with labels. Web supported-photo-format
+guidance uses locale disjunction formatting for two or more formats, preserving
+protocol MIME values and format names. Empty-state guidance stays cataloged.

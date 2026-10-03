@@ -6,7 +6,6 @@ export const mobileMessages = {
   "mobile.AppearancePicker.stuffStashCouldNotSaveTheAppearanceSetting": "Stuff Stash could not save the appearance setting.",
   "mobile.AppearancePicker.appearance": "Appearance",
   "mobile.AppearancePicker.chooseAppearance": "Choose appearance",
-  "mobile.AssetCard.matched": "Matched ",
   "mobile.AssetContainedWorkspace.noMatchingContents": "No matching contents",
   "mobile.AssetContainedWorkspace.tryAnotherNameOrPath": "Try another name or path.",
   "mobile.AssetContainedWorkspace.addToContents": "Add to contents",
