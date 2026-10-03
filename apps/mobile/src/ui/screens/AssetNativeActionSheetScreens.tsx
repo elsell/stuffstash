@@ -1,3 +1,4 @@
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import type { MoveSelectionStatus } from '../components/MoveSelectionList.types';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
@@ -430,7 +431,7 @@ function moveDestinationMatches(
 }
 
 function readableError(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
+  return catalogRecoveryMessage(error, fallback);
 }
 
 function useStyles() {

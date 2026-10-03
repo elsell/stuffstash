@@ -1,3 +1,4 @@
+import { CatalogRecoveryError } from '../shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import {
   ProviderProfileLifecycleAction,
@@ -17,16 +18,16 @@ export class ManageProviderProfileCommand {
     const input = template.input;
     return this.profiles.createProviderProfile({
       ...input,
-      displayName: requireText(input.displayName, t('mobile.ManageProviderProfileCommand.nameTheProviderProfile')),
-      capability: requireText(input.capability, t('mobile.ManageProviderProfileCommand.chooseAProviderCapability')),
-      providerKind: requireText(input.providerKind, t('mobile.ManageProviderProfileCommand.chooseAProviderKind'))
+      displayName: requireText(input.displayName, 'mobile.ManageProviderProfileCommand.nameTheProviderProfile'),
+      capability: requireText(input.capability, 'mobile.ManageProviderProfileCommand.chooseAProviderCapability'),
+      providerKind: requireText(input.providerKind, 'mobile.ManageProviderProfileCommand.chooseAProviderKind')
     });
   }
 
   async replacePromptTemplate(input: UpdateProviderProfileInput): Promise<ProviderProfileSummary> {
-    const promptTemplate = requireText(input.promptTemplate ?? '', t('mobile.ManageProviderProfileCommand.enterAReplacementPromptTemplate'));
+    const promptTemplate = requireText(input.promptTemplate ?? '', 'mobile.ManageProviderProfileCommand.enterAReplacementPromptTemplate');
     return this.profiles.updateProviderProfile({
-      providerProfileId: requireText(input.providerProfileId, t('mobile.ManageProviderProfileCommand.chooseAProviderProfile')),
+      providerProfileId: requireText(input.providerProfileId, 'mobile.ManageProviderProfileCommand.chooseAProviderProfile'),
       promptTemplate
     });
   }
@@ -36,10 +37,10 @@ export class ManageProviderProfileCommand {
   ): Promise<ProviderProfileSummary> {
     const credential = input.purpose === 'server_adc'
       ? undefined
-      : requireText(input.credential ?? '', t('mobile.ManageProviderProfileCommand.enterTheProviderCredential'));
+      : requireText(input.credential ?? '', 'mobile.ManageProviderProfileCommand.enterTheProviderCredential');
 
     return this.profiles.replaceProviderProfileCredential({
-      providerProfileId: requireText(input.providerProfileId, t('mobile.ManageProviderProfileCommand.chooseAProviderProfile')),
+      providerProfileId: requireText(input.providerProfileId, 'mobile.ManageProviderProfileCommand.chooseAProviderProfile'),
       purpose: input.purpose,
       credential
     });
@@ -50,7 +51,7 @@ export class ManageProviderProfileCommand {
     action: ProviderProfileLifecycleAction
   ): Promise<ProviderProfileSummary> {
     return this.profiles.changeProviderProfileLifecycle(
-      requireText(providerProfileId, t('mobile.ManageProviderProfileCommand.chooseAProviderProfile')),
+      requireText(providerProfileId, 'mobile.ManageProviderProfileCommand.chooseAProviderProfile'),
       action
     );
   }
@@ -62,10 +63,10 @@ export class ManageProviderProfileCommand {
   }
 }
 
-function requireText(value: string, message: string): string {
+function requireText(value: string, key: Parameters<typeof t>[0]): string {
   const trimmed = value.trim();
   if (trimmed.length === 0) {
-    throw new Error(message);
+    throw new CatalogRecoveryError(key);
   }
 
   return trimmed;

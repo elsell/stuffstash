@@ -1,3 +1,4 @@
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -214,7 +215,7 @@ function authenticationLabel(value: SettingsViewModel['authenticationMode']): st
 }
 
 function readableError(error: unknown): string {
-  return error instanceof Error ? error.message : t('mobile.SettingsDetailScreens.theActionFailedSafelyTryAgain');
+  return catalogRecoveryMessage(error, t('mobile.SettingsDetailScreens.theActionFailedSafelyTryAgain'));
 }
 
 

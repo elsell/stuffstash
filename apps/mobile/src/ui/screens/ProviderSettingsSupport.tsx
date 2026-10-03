@@ -1,3 +1,4 @@
+import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { isAccessFailure } from '../serverState/isAccessFailure';
@@ -62,5 +63,5 @@ export function ProviderStateView({
 }
 
 export function readableError(error: unknown): string {
-  return error instanceof Error ? error.message : t('mobile.ProviderSettingsSupport.theActionFailedSafely');
+  return catalogRecoveryMessage(error, t('mobile.ProviderSettingsSupport.theActionFailedSafely'));
 }

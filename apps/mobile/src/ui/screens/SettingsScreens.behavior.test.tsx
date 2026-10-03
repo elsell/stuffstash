@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { setScreenFocused, attemptNavigation, dispatchedActions, resetNavigation } from '../../test-support/navigation';
 import { AddProviderProfileScreen, ProviderProfileDetailScreen, ProviderProfileListScreen } from './ProviderProfileScreens';
 import React from 'react';
@@ -490,7 +491,8 @@ it.each(['credential', 'prompt'] as const)('protects the %s replacement draft an
     expect(dispatchedActions()).toEqual([]);
     await harness.run(() => pending.reject(new Error('Try this replacement again')));
     expect(field()?.props.value).toBe('private replacement');
-    const failure = harness.byText('Try this replacement again');
+    expect(harness.allText()).not.toContain('Try this replacement again');
+    const failure = harness.byText(t('mobile.ProviderSettingsSupport.theActionFailedSafely'));
     expect(failure).toBeDefined();
     let ancestor = failure?.parent;
     while (ancestor && ancestor.type !== 'ScrollView') ancestor = ancestor.parent;

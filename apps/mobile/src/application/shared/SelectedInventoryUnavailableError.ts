@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
-export class SelectedInventoryUnavailableError extends Error {
-  constructor() { super(t('mobile.SelectedInventoryUnavailableError.theSelectedStuffStashInventoryIsNoLongerAvailable')); }
+import { CatalogRecoveryError } from './CatalogRecoveryError';
+export class SelectedInventoryUnavailableError extends CatalogRecoveryError {
+  constructor() { super('mobile.SelectedInventoryUnavailableError.theSelectedStuffStashInventoryIsNoLongerAvailable'); }
 }

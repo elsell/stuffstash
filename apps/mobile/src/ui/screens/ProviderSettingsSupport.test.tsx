@@ -14,3 +14,9 @@ it.each(['voice setup', 'listen settings', 'provider profiles', 'provider profil
     await h.press(h.byLabel('Retry')); expect(retries).toBe(1);
   } finally { await h.unmount(); }
 });
+
+it('uses catalog recovery for ordinary provider exceptions', async () => {
+  const { readableError } = await import('./ProviderSettingsSupport');
+  const { t } = await import('../../presentation/localization');
+  expect(readableError(new Error('private provider diagnostic'))).toBe(t('mobile.ProviderSettingsSupport.theActionFailedSafely'));
+});
