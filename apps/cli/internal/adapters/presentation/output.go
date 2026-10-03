@@ -49,6 +49,19 @@ func (o Output) Result(value any) error {
 			}
 		}
 		return o.pagination(v.Pagination)
+	case ports.Result[[]ports.LabelTemplate]:
+		for _, template := range v.Data {
+			if _, err := fmt.Fprintf(o.Stdout, "%s\tv%d\t%s\n", template.ID, template.Version, strconv.Quote(template.Name)); err != nil {
+				return err
+			}
+		}
+		return nil
+	case ports.Result[ports.ResolvedLabel]:
+		_, err := fmt.Fprintf(o.Stdout, "%s\ttenant=%s\tinventory=%s\t%s\n", v.Data.AssetID, v.Data.TenantID, v.Data.InventoryID, v.Data.Lifecycle)
+		return err
+	case ports.LabelFileResult:
+		_, err := fmt.Fprintf(o.Stdout, "Saved %s (%s), sha256=%s\n", strconv.Quote(v.Path), v.Format, v.SHA256)
+		return err
 	case ports.Result[ports.Asset]:
 		return o.asset(v.Data)
 	default:

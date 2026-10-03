@@ -10,6 +10,8 @@ import (
 )
 
 type Runner struct {
+	LabelsAPI   func(string, string) (ports.LabelsAPI, error)
+	LabelFiles  ports.LabelFiles
 	PrintingAPI func(string, string) (ports.HumanPrintingAPI, error)
 	API         func(string, string) (ports.API, error)
 	Auth        ports.Auth
@@ -76,7 +78,16 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 	var result any
-	if isPrintingCommand(o) {
+	if isLabelCommand(o) {
+		if r.LabelsAPI == nil {
+			return ports.Failure("configuration", "label API is unavailable")
+		}
+		labelAPI, labelErr := r.LabelsAPI(o.Server, session.IDToken)
+		if labelErr != nil {
+			return labelErr
+		}
+		result, err = executeLabels(ctx, labelAPI, r.LabelFiles, o)
+	} else if isPrintingCommand(o) {
 		if r.PrintingAPI == nil {
 			return ports.Failure("configuration", "printing API is unavailable")
 		}
@@ -111,7 +122,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	if err != nil {
 		return err
 	}
-	if isPrintingCommand(o) {
+	if isLabelCommand(o) {
+		r.Observer.Event(ctx, "cli.label.command.completed")
+	} else if isPrintingCommand(o) {
 		r.Observer.Event(ctx, "cli.print.command.completed")
 	} else {
 		r.Observer.Event(ctx, "cli.inventory.command.completed")
@@ -121,6 +134,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 func validateCommand(o Options) error {
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
+	}
+	if isLabelCommand(o) {
+		return validateLabelCommand(o)
 	}
 	if !o.PrintLabel && isPrintingCommand(o) {
 		return validatePrintingCommand(o)
