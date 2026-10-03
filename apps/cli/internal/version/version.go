@@ -1,10 +1,12 @@
 package version
 
-import "runtime"
+import (
+	"runtime"
+	"strings"
+)
 
 // Release automation sets these using linker flags. Local builds stay explicit.
-var Tag = "development"
-var Commit = "unknown"
+var Build = "development:unknown"
 
 type Info struct {
 	Version      string `json:"version"`
@@ -15,5 +17,6 @@ type Info struct {
 }
 
 func Current() Info {
-	return Info{Version: Tag, Commit: Commit, OS: runtime.GOOS, Architecture: runtime.GOARCH, USBPrinting: false}
+	tag, commit, _ := strings.Cut(Build, ":")
+	return Info{Version: tag, Commit: commit, OS: runtime.GOOS, Architecture: runtime.GOARCH, USBPrinting: false}
 }

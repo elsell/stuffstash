@@ -16,9 +16,8 @@ output="$(cd "$output" && pwd)"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 export GOWORK=off CGO_ENABLED=0
-(cd "$root/apps/cli" && go mod download all)
 for os in linux darwin windows; do
-  (cd "$root/apps/cli" && GOOS="$os" GOARCH=amd64 go list -buildvcs=false -deps -f '{{if .Module}}{{.Module.Path}}{{end}}' ./cmd/stuffstash)
+  (cd "$root/apps/cli" && GOOS="$os" GOARCH=amd64 go list -mod=readonly -buildvcs=false -deps -f '{{if .Module}}{{.Module.Path}}{{end}}' ./cmd/stuffstash)
 done | sort -u | sed '/^$/d' > "$tmp/module-paths"
 mapfile -t modules < "$tmp/module-paths"
 (cd "$root/apps/cli" && go list -m -json "${modules[@]}") > "$tmp/modules.json"
@@ -49,17 +48,17 @@ for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64; d
   if [[ "$os" == windows ]]; then binary=stuffstash.exe; fi
   directory="$tmp/$os-$arch"
   mkdir -p "$directory"
-  (cd "$root/apps/cli" && GOOS="$os" GOARCH="$arch" go build -buildvcs=false -trimpath \
-    -ldflags="-s -w -X github.com/stuffstash/stuff-stash/cli/internal/version.Tag=$version -X github.com/stuffstash/stuff-stash/cli/internal/version.Commit=$commit" \
+  (cd "$root/apps/cli" && GOOS="$os" GOARCH="$arch" go build -mod=readonly -buildvcs=false -trimpath \
+    -ldflags="-s -w -X github.com/stuffstash/stuff-stash/cli/internal/version.Build=$version:$commit" \
     -o "$directory/$binary" ./cmd/stuffstash)
-  go version -m "$directory/$binary" > "$directory/build-info.txt"
-  python3 - "$directory/build-info.txt" "$version" "$commit" <<'PYVERSION'
+  python3 - "$directory/$binary" "$version" "$commit" <<'PYVERSION'
 from pathlib import Path
 import sys
-text=Path(sys.argv[1]).read_text()
-for field,value in [('Tag',sys.argv[2]),('Commit',sys.argv[3])]:
-    if f'github.com/stuffstash/stuff-stash/cli/internal/version.{field}={value}' not in text:
-        raise SystemExit('release binary missing expected '+field)
+# -trimpath intentionally omits linker flags from Go build metadata. Verify the
+# exact combined provenance value consumed by the version command instead.
+expected=(sys.argv[2]+':'+sys.argv[3]).encode()
+if expected not in Path(sys.argv[1]).read_bytes():
+    raise SystemExit('release binary missing expected tag/commit provenance')
 PYVERSION
   if [[ "$os/$arch" == "$(go env GOOS)/$(go env GOARCH)" ]]; then
     "$directory/$binary" version --json > "$directory/version.json"
