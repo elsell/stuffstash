@@ -245,3 +245,16 @@ lockfiles. CI must validate the combined docs build and API/security suites.
   the standard library and existing shell tooling. Generated files begin with
   the standard generated-code marker, emitted deterministically by the generator
   script. No alternate OpenAPI document or hand-edited transport schema is used.
+
+## Brother Protocol And Linux Transport Sources
+
+- Brother QL-800 raster command reference revision 1.01:
+  <https://download.brother.com/welcome/docp100278/cv_ql800_eng_raster_101.pdf>.
+  Defines USB IDs, the 29 x 90 mm raster, status packets, and print completion.
+- Secondary interoperability reference: `pklaus/brother_ql` v0.9.4, commit
+  `1cfc7e7302bb3c6ac5632cc478d4c028d7c67a92`. This is a reviewed protocol
+  reference, not bundled Python source or a runtime dependency.
+- Linux `usblp` driver source reviewed at v6.14. Kernel deployment versions remain
+  operator-managed; Stuff Stash does not download or replace the host kernel.
+- CLI poll/nonblocking syscall adapter: `golang.org/x/sys v0.39.0`, already pinned
+  transitively by its reviewed credential adapter, now direct for Linux printer I/O.
