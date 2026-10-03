@@ -48,3 +48,17 @@ func TestPrinterProfilesEnforceInventoryScopeWithoutRegisteredHardware(t *testin
 		})
 	}
 }
+
+func coverPrinterProfileScenarios(t *testing.T, coverage executedScenarioCoverage, adversarial bool) {
+	t.Helper()
+	const tenantID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	const inventoryID = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	application := newSeededTestApp(t, seededState{tenants: []seedTenant{{id: tenantID, name: "Home", owner: "owner"}}, inventories: []seedInventory{{id: inventoryID, tenantID: tenantID, name: "Tools", owner: "owner"}}}).WithPrinterCatalog(printingprofiles.Catalog{})
+	token := "Bearer dev:owner"
+	status := http.StatusOK
+	if adversarial {
+		token = "Bearer dev:other"
+		status = http.StatusForbidden
+	}
+	coverage.request(t, NewServer(":0", application), http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/printer-profiles", "/tenants/"+tenantID+"/inventories/"+inventoryID+"/printer-profiles", token, nil, status)
+}
