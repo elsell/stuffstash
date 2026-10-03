@@ -399,3 +399,16 @@ attempt or scope change, and cannot appear from a late completion after departur
 Starting another invitation creation clears the previous one-time result from the
 form, so an older invitation's Copy/Share actions cannot appear as recovery for
 the new attempt. The one-time-link explanation must state this lifetime explicitly.
+
+### Native callback navigation ownership
+
+The exact app-owned `stuffstash://auth/callback` URL belongs to the pending
+Expo AuthSession flow, not to a navigable product screen. Expo Router's native
+intent adapter must suppress navigation for a warm callback and send a cold
+callback to the normal root without retaining query parameters. It must not
+parse, store or exchange authorization codes, authenticate a cold callback, or
+replace AuthSession's original URL event. State and PKCE validation remain owned
+by the existing authentication adapter. Preserve unrelated native/invitation
+links unchanged, including lookalike hosts, schemes and paths. Verify warm and
+cold routing, adversarial lookalikes, existing state/PKCE rejection, and a real
+Android sign-in returning to the app without an unmatched-route screen.
