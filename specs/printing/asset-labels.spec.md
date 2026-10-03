@@ -260,7 +260,9 @@ shared hosted link resolution, and automatic smart-outlet control are deferred.
   the existing asset detail route with normal back navigation. Never stack asset
   navigation inside a camera modal or discard an unrelated unsaved draft.
 - In focused job views poll the API initially; stop on background/unmount and
-  terminal state, back off on failure, and refresh on return. No mandatory
+  terminal state (including a successful cancel or resolution), back off on failure,
+  and refresh on return. Native job reads start at five seconds; consecutive failures
+  double the delay up to sixty seconds, and a successful read resets the delay. No mandatory
   WebSocket/SSE delivery or direct CLI-to-client connection is needed.
 - Accessible status text must accompany color; announce meaningful transitions
   without announcing every poll. Preserve focus, draft choices, large text,
