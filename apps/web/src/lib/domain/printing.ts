@@ -56,10 +56,15 @@ export interface PrintDefaults {
     printOnCreateDefault: boolean;
 }
 export type PrintJobStatus = 'queued' | 'claimed' | 'printing' | 'completed' | 'failed' | 'uncertain' | 'canceled';
+export type ReportedPrintOutcome = 'printed'|'not_printed'|'unknown';
 export interface PrintJob {
     id: string;
     printerId: string;
     assetId?: string;
+    predecessor?:string;
+    attemptOutcome?:string;
+    idleConfirmedAt?:string;
+    resolution?:{reportedOutcome:ReportedPrintOutcome;resolvedBy:string;resolvedAt:string};
     status: PrintJobStatus;
     revision: number;
     copies: number;

@@ -902,3 +902,35 @@ cover inaccessible target, stale generation, and separate review/approval. A
 controlled browser fixture verified 1280px and 390px form layout, keyboard review,
 no narrow horizontal overflow, and explicit success; this is not connected OIDC
 or a physical credential replacement claim.
+
+### Web uncertainty recovery
+
+An uncertain job shows why another print cannot be started. Resolution controls
+appear only for an editor when the latest attempt has connector idle confirmation.
+The inline form requires an explicit observed outcome and acknowledgement that
+physical output remains uncertain. Submission includes the displayed revision;
+an unconfirmed response retains the exact outcome and revision for retry. Status
+refresh remains available. No resolution action automatically creates a reprint.
+
+Resolved jobs display the user's report separately from physical evidence and
+use “Resolved by user — output unconfirmed”, never “Printed” or an ordinary
+hardware-failure label. Show the report's actor/time. The latest attempt's original
+outcome and confirmed-copy count remain unchanged. Controls use existing Select,
+Checkbox, Label and Button primitives within the job row.
+
+Chromium fixture review at 390px and 1280px exercised choosing an outcome,
+acknowledging uncertainty, and the resulting human-resolution status. Stateful
+component tests cover missing idle evidence, viewer permissions, lost responses,
+and retry while preserving physical evidence and creating no new print job.
+
+If an explicit refresh returns a different job revision while resolution remains
+available, discard the previous resolution draft and require a new observed
+outcome and acknowledgement. A failed request alone must not reset or silently
+rebase an acknowledged payload; retries against unchanged state remain exact.
+
+### Browser pairing request projection
+
+The shared browser API adapter must project pairing review and approval scope
+into the contract's tenant and inventory IDs. Rich client inventory objects may
+also carry display names; those fields must not enter the request body. The
+server continues to reject unknown fields rather than weakening its contract.

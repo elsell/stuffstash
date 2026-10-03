@@ -3,7 +3,7 @@ import { onMount } from 'svelte';
 import { t } from '$lib/presentation/localization';
 import { timestampLabel } from '$lib/presentation/timestamp';
 import { readinessLabel, connectorStatusLabel, printingFailureMessage } from '$lib/presentation/printing';
-import { PrintingFailure, type PrintScope, type PrintDefaults, type RegisteredPrinter, type PrintConnector, type LabelTemplate, type PrintJob } from '$lib/domain/printing';
+import { PrintingFailure, type ReportedPrintOutcome, type PrintScope, type PrintDefaults, type RegisteredPrinter, type PrintConnector, type LabelTemplate, type PrintJob } from '$lib/domain/printing';
 import type { PrintingRepository } from '$lib/ports/printingRepository';
 import * as Button from '$lib/components/ui/button/index.js';
 import { Checkbox } from '$lib/components/ui/checkbox/index.js';
@@ -82,6 +82,7 @@ catch (caught) {
 finally {
     busy = false;
 } }
+async function resolve(job:PrintJob,outcome:ReportedPrintOutcome){if(!canPrint||busy)return;busy=true;error='';try{const updated=await repository.resolve(scope,job,outcome);jobs=jobs.map(current=>current.id===updated.id?updated:current);}catch(caught){error=printingFailureMessage(caught);}finally{busy=false;}}
 </script>
 <section class="printing-settings" aria-labelledby="printing-settings-title" aria-busy={busy}>
  <header><h1 id="printing-settings-title">{t('web.Printing.title')}</h1><p>{t('web.Printing.description')}</p></header>
@@ -107,7 +108,7 @@ finally {
    {#if canConfigure}<p>{t('web.Printing.registrationHelp')}</p>{/if}
   </section>
   <section><h2>{t('web.Printing.connectors')}</h2>{#if connectors.length===0}<p>{t('web.Printing.emptyConnectors')}</p>{/if}<ul>{#each connectors as connector(connector.id)}<li><strong>{connector.name}</strong><p>{connectorStatusLabel(connector)}</p><p>{t('web.Printing.lastSeen')}: {connector.lastSeenAt?timestampLabel(connector.lastSeenAt):t('web.Printing.neverSeen')}</p></li>{/each}</ul></section>
-  <section><h2>{t('web.Printing.jobs')}</h2><PrintJobList {jobs} {printers} {scope} {canPrint} {busy} onCancel={cancel}/>{#if nextCursor}<Button.Root variant="outline" disabled={busy} onclick={()=>void moreJobs()}>{t('web.Printing.moreJobs')}</Button.Root>{/if}</section>
+  <section><h2>{t('web.Printing.jobs')}</h2><PrintJobList {jobs} {printers} {scope} {canPrint} {busy} onCancel={cancel} onResolve={resolve}/>{#if nextCursor}<Button.Root variant="outline" disabled={busy} onclick={()=>void moreJobs()}>{t('web.Printing.moreJobs')}</Button.Root>{/if}</section>
  {/if}
 </section>
 <style>.printing-settings{display:grid;gap:var(--space-6);max-width:48rem}.defaults-form{display:grid;gap:var(--space-3);max-width:32rem}.check-row{display:flex;gap:var(--space-3);align-items:center}.section-heading{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;justify-content:space-between}ul{list-style:none;padding:0;display:grid;gap:var(--space-3)}li{border-bottom:1px solid var(--border);padding-block:var(--space-2)}p{color:var(--muted-foreground);margin-block:var(--space-2)}strong,p{overflow-wrap:anywhere}</style>

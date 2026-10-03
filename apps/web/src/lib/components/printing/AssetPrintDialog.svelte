@@ -8,7 +8,7 @@ import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 import { t } from '$lib/presentation/localization';
 import { printingFailureMessage } from '$lib/presentation/printing';
 import type { PrintingRepository, PrintIntents } from '$lib/ports/printingRepository';
-import type { PrintScope, RegisteredPrinter, LabelTemplate, PrintJob } from '$lib/domain/printing';
+import type { ReportedPrintOutcome, PrintScope, RegisteredPrinter, LabelTemplate, PrintJob } from '$lib/domain/printing';
 import PairingChoice from './PairingChoice.svelte';
 import PrintJobList from './PrintJobList.svelte';
 let { scope, assetId, repository, intents, initialJobId, onClose, onRestoreFocus }: {
@@ -123,11 +123,12 @@ finally {
     if (alive)
         busy = false;
 } }
+async function resolve(current:PrintJob,outcome:ReportedPrintOutcome){if(busy)return;busy=true;error='';try{const updated=await repository.resolve(scope,current,outcome);if(alive)job=updated;}catch(caught){if(alive)error=printingFailureMessage(caught);}finally{if(alive)busy=false;}}
 </script>
 <Dialog.Root open onOpenChange={open=>{if(!open)onClose();}}>
  <Dialog.Content onCloseAutoFocus={event=>{if(onRestoreFocus){event.preventDefault();onRestoreFocus();}}}><Dialog.Header><Dialog.Title>{t('web.Printing.printLabel')}</Dialog.Title><Dialog.Description>{t('web.Printing.description')}</Dialog.Description></Dialog.Header>
  {#if error}<p role="alert">{error}</p>{/if}
- {#if job}{#if job.status==='queued'}<p role="status">{t('web.Printing.requestQueued')}</p>{/if}<PrintJobList jobs={[job]} {printers} {scope} canPrint={true} {busy} onCancel={cancel}/><Button variant="outline" disabled={busy} onclick={()=>void refresh()}>{t('web.Printing.refresh')}</Button>{#if ['completed','failed','canceled'].includes(job.status)}<Button onclick={another}>{t('web.Printing.printAgain')}</Button>{/if}
+ {#if job}{#if job.status==='queued'}<p role="status">{t('web.Printing.requestQueued')}</p>{/if}<PrintJobList jobs={[job]} {printers} {scope} canPrint={true} {busy} onCancel={cancel} onResolve={resolve}/><Button variant="outline" disabled={busy} onclick={()=>void refresh()}>{t('web.Printing.refresh')}</Button>{#if ['completed','failed','canceled'].includes(job.status)}<Button onclick={another}>{t('web.Printing.printAgain')}</Button>{/if}
  {:else}
  <PairingChoice id="label-printer" label={t('web.Printing.printer')} value={printerId} options={printers.map(p=>({value:p.id,label:`${p.name} — ${p.media.name}`}))} disabled={busy||locked} onChange={value=>{printerId=value;changed();}}/>
  <PairingChoice id="label-template" label={t('web.Printing.template')} value={templateKey} options={templates.map(p=>({value:`${p.id}:${p.version}`,label:p.name}))} disabled={busy||locked} onChange={value=>{templateKey=value;changed();}}/>
