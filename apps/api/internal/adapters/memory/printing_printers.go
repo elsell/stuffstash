@@ -18,6 +18,9 @@ func clonePrintingPrinter(p printing.Printer) printing.Printer {
 func (s *Store) CreatePrinter(_ context.Context, p printing.Printer, record audit.Record) (printing.Printer, bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if !s.printingInventoryExistsLocked(p.Scope) {
+		return printing.Printer{}, false, ports.ErrPrintNotFound
+	}
 	for _, existing := range s.printingPrinters {
 		if existing.Scope == p.Scope && existing.RequestKey == p.RequestKey {
 			if existing.RequestFingerprint != p.RequestFingerprint {
@@ -66,6 +69,9 @@ func (s *Store) ListPrinters(_ context.Context, scope printing.Scope, limit int,
 func (s *Store) UpdatePrinter(_ context.Context, scope printing.Scope, id printing.PrinterID, revision uint64, change ports.PrinterMutation, makeAudit ports.PrinterAudit, retirement *ports.PrinterRetirement) (printing.Printer, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if !s.printingInventoryExistsLocked(scope) {
+		return printing.Printer{}, ports.ErrPrintNotFound
+	}
 	p, ok := s.printingPrinters[id]
 	if !ok || p.Scope != scope {
 		return printing.Printer{}, ports.ErrPrintNotFound

@@ -6,6 +6,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/pairingcrypto"
 	"github.com/stuffstash/stuff-stash/internal/app/printregistry"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"testing"
@@ -22,6 +23,9 @@ func TestExpiredPendingCredentialCannotReuseReplacementAuthority(t *testing.T) {
 	authorization := memory.NewAuthorizer()
 	secrets := pairingcrypto.Secrets{}
 	scope := printing.Scope{TenantID: "tenant", InventoryID: "inventory"}
+	if err := store.SaveInventory(ctx, inventory.Inventory{ID: "inventory", TenantID: "tenant", LifecycleState: inventory.LifecycleStateActive}); err != nil {
+		t.Fatal(err)
+	}
 	printer := printing.Printer{ID: "printer", Scope: scope, Revision: 1}
 	if _, _, err := store.CreatePrinter(ctx, printer, audit.Record{ID: "printer-created"}); err != nil {
 		t.Fatal(err)

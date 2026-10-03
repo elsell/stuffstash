@@ -324,7 +324,7 @@ func (f *fakeInventoryRepository) UpdateInventoryLifecycle(ctx context.Context, 
 	return f.UpdateInventory(ctx, item, auditRecord)
 }
 
-func (f *fakeInventoryRepository) DeleteInventory(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, auditRecord audit.Record) error {
+func (f *fakeInventoryRepository) DeleteInventory(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, auditRecord audit.Record, effects *ports.InventoryDeletionEffects) error {
 	for index, item := range f.items {
 		if item.ID == inventoryID && item.TenantID.String() == tenantID.String() {
 			f.items = append(f.items[:index], f.items[index+1:]...)

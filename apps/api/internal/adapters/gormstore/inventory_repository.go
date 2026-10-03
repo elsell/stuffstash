@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/gorm"
@@ -81,14 +82,24 @@ func (s Store) UpdateInventoryLifecycle(ctx context.Context, item inventory.Inve
 	})
 }
 
-func (s Store) DeleteInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, auditRecord audit.Record) error {
+func (s Store) DeleteInventory(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, auditRecord audit.Record, effects *ports.InventoryDeletionEffects) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing inventoryModel
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&inventoryModel{ID: inventoryID.String(), TenantID: tenantID.String()}).First(&existing).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ports.ErrForbidden
+			}
+			return err
+		}
 		hasAssets, err := inventoryHasAssets(tx, tenantID, inventoryID)
 		if err != nil {
 			return err
 		}
 		if hasAssets {
 			return ports.ErrForbidden
+		}
+		if err := deleteInventoryPrinting(tx, printing.Scope{TenantID: tenantID.String(), InventoryID: inventoryID.String()}, auditRecord, effects); err != nil {
+			return err
 		}
 		if err := createAuditRecord(tx, auditRecord); err != nil {
 			return err

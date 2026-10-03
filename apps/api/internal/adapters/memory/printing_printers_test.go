@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"testing"
 )
@@ -12,6 +13,7 @@ func TestPrinterMutationIsScopedRevisionCheckedAndAuditAtomic(t *testing.T) {
 	ctx := context.Background()
 	store := NewStore()
 	scope := printing.Scope{TenantID: "tenant", InventoryID: "inventory"}
+	store.inventories["inventory"] = inventory.Inventory{ID: "inventory", TenantID: "tenant", LifecycleState: inventory.LifecycleStateActive}
 	original := printing.Printer{ID: "printer", Scope: scope, Revision: 1, Name: "Garage"}
 	if _, _, err := store.CreatePrinter(ctx, original, audit.Record{ID: "create-audit"}); err != nil {
 		t.Fatal(err)

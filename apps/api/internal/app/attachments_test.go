@@ -375,7 +375,7 @@ func (attachmentInventoryRepository) UpdateInventoryLifecycle(context.Context, i
 	return nil
 }
 
-func (attachmentInventoryRepository) DeleteInventory(context.Context, tenant.ID, inventory.InventoryID, audit.Record) error {
+func (attachmentInventoryRepository) DeleteInventory(context.Context, tenant.ID, inventory.InventoryID, audit.Record, *ports.InventoryDeletionEffects) error {
 	return nil
 }
 

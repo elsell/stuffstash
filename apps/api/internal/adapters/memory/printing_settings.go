@@ -22,6 +22,9 @@ func (s *Store) GetPrintSettings(_ context.Context, scope printing.Scope) (print
 func (s *Store) SavePrintSettings(_ context.Context, next printing.InventoryPrintSettings, expected uint64, destination *printing.SettingsDestination, record audit.Record) (printing.InventoryPrintSettings, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if !s.printingInventoryExistsLocked(next.Scope) {
+		return printing.InventoryPrintSettings{}, ports.ErrPrintNotFound
+	}
 	if !next.ValidReplacement(expected) {
 		return printing.InventoryPrintSettings{}, ports.ErrPrintConflict
 	}

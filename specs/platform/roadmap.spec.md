@@ -13,10 +13,13 @@ claim tokens fence attempts. Browser PKCE and provider-enabled device-code login
 remain available for human commands.
 
 Delivery continues through small PRs in the native GitHub stack. Required CI,
-inventory/tenant deletion cleanup, remaining integration review, and final release
-verification are not complete. Printer retirement now atomically cancels safe
+final stack integration and release verification are not complete. Printer retirement now atomically cancels safe
 pending jobs and clears defaults while preserving started/uncertain evidence.
 Both clients support one-action default printing and custom copy counts.
+Inventory deletion now revokes connectors and preserves printing history through
+tenant deletion. Real PostgreSQL tests verify both creation/deletion race outcomes
+using inventory-before-printer lock ordering; the prior inversion was reproduced
+before the fix.
 Critical tests use faithful stateful fakes; tests that merely repeat implementation
 are outside the delivery goal. Keep parallel implementation in isolated worktrees.
 See [asset labels](../printing/asset-labels.spec.md),

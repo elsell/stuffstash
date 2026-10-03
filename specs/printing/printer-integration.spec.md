@@ -1094,3 +1094,34 @@ synchronization followed by latest desired-state reconciliation, and continued
 outcome/recovery authorization after printer retirement. Connection failure uses
 an unavailable real gRPC endpoint, not a mocked authorization answer. These checks
 prove authorization and API lifecycle behavior, not USB or native-device output.
+
+### Deleting an inventory with printing history
+
+The existing rule that an inventory must contain no assets before deletion stays
+in force. Deletion locks the inventory before connector and printer rows and
+atomically revokes connector credentials/bindings, retires its printers, cancels
+unstarted jobs and clears printing defaults. Started output becomes uncertain;
+existing uncertain evidence and reservations remain intact. Each changed
+connector, printer, job and default is audited with the deleting principal.
+Failure to save any history rolls back deletion and every printing change.
+
+Scoped printing records retain their original tenant/inventory identifiers after
+parent deletion. They are historical tombstones, not accessible registrations;
+consumer credentials are revoked and human operations still require an existing
+inventory. Pending relationship removals remain discoverable by the authorization
+outbox reconciler after deletion. Printer/binding/attempt foreign keys remain;
+only printing references to deletable parent scopes are removed. Deleting the
+now-empty tenant must not erase these retained records. The usual terminal
+retention policy still applies, and uncertain output is never silently purged.
+New printer registration, pairing approval and default writes serialize against
+inventory deletion so a previously authorized request cannot recreate authority
+or defaults after deletion. No new dispatch or self-service recovery rights are
+granted for a deleted scope.
+
+Atomic create-and-print uses the same inventory-before-printer lock order as
+scope deletion. Asset insertion still needs PostgreSQL's inventory foreign-key
+lock, so taking the printer lock first is forbidden even when the inventory was
+already authorized outside the transaction. Production-database concurrency
+coverage controls transaction scheduling while retaining real row locks and
+foreign-key behavior; neither a lock error nor a partially created aggregate is
+an acceptable result of an otherwise valid competing request.

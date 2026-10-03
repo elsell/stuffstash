@@ -55,6 +55,9 @@ func (s *Store) GetPrintPairing(_ context.Context, id printing.PairingID) (print
 func (s *Store) ApprovePrintPairing(_ context.Context, input ports.PairingApproval) (ports.ConnectorRegistration, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if !s.printingInventoryExistsLocked(input.Registration.Connector.Scope) {
+		return ports.ConnectorRegistration{}, ports.ErrPrintNotFound
+	}
 	p, ok := s.printingPairings[input.PairingID]
 	c := input.Registration.Connector
 	if !ok || subtle.ConstantTimeCompare([]byte(p.CodeHash), []byte(input.CodeHash)) != 1 || !p.Approve(c.Scope, c.ID, input.Now) {

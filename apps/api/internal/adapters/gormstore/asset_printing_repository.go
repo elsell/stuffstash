@@ -13,6 +13,11 @@ import (
 func (s Store) CreateAssetWithPrint(ctx context.Context, in ports.PreparedAssetPrint) (result ports.AssetPrintResult, err error) {
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		job := in.Job.Job
+		// Asset insertion takes the inventory FK lock. Match scope deletion's
+		// inventory-before-printer order before acquiring either aggregate lock.
+		if err := lockPrintingInventory(tx, job.Scope); err != nil {
+			return err
+		}
 		if _, err := printerByScope(tx, job.Scope, job.PrinterID); err != nil {
 			return err
 		}

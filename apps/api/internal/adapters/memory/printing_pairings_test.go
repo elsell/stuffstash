@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"sync"
@@ -16,6 +17,7 @@ func TestPairingExchangeIsSingleUseAndPendingGrantsDenyIssuance(t *testing.T) {
 	store := NewStore()
 	now := time.Now().UTC()
 	scope := printing.Scope{TenantID: "tenant", InventoryID: "inventory"}
+	store.inventories["inventory"] = inventory.Inventory{ID: "inventory", TenantID: "tenant", LifecycleState: inventory.LifecycleStateActive}
 	p := printing.Pairing{ID: "pair", State: printing.PairingPending, CodeHash: "code", ExpiresAt: now.Add(time.Minute)}
 	if err := store.CreatePrintPairing(ctx, p); err != nil {
 		t.Fatal(err)

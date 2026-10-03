@@ -1,0 +1,6 @@
+-- Historical tombstones may have missing parents; NOT VALID preserves them while
+-- restoring constraints for new writes. Do not delete physical-output evidence.
+ALTER TABLE printers ADD CONSTRAINT printers_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT NOT VALID, ADD CONSTRAINT printers_inventory_id_fkey FOREIGN KEY (inventory_id) REFERENCES inventories(id) ON DELETE RESTRICT NOT VALID;
+ALTER TABLE print_connectors ADD CONSTRAINT print_connectors_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT NOT VALID, ADD CONSTRAINT print_connectors_inventory_id_fkey FOREIGN KEY (inventory_id) REFERENCES inventories(id) ON DELETE RESTRICT NOT VALID;
+ALTER TABLE print_jobs ADD CONSTRAINT print_jobs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT NOT VALID, ADD CONSTRAINT print_jobs_inventory_id_fkey FOREIGN KEY (inventory_id) REFERENCES inventories(id) ON DELETE RESTRICT NOT VALID;
+ALTER TABLE inventory_print_settings ADD CONSTRAINT inventory_print_settings_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT NOT VALID, ADD CONSTRAINT inventory_print_settings_inventory_id_fkey FOREIGN KEY (inventory_id) REFERENCES inventories(id) ON DELETE RESTRICT NOT VALID;

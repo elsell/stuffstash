@@ -189,7 +189,11 @@ func (a Service) DeleteInventory(ctx context.Context, input UpdateInventoryLifec
 	if err != nil {
 		return err
 	}
-	if err := a.inventoryUnitOfWork.DeleteInventory(ctx, input.TenantID, input.InventoryID, auditRecord); err != nil {
+	if err := a.inventoryUnitOfWork.DeleteInventory(ctx, input.TenantID, input.InventoryID, auditRecord, &ports.InventoryDeletionEffects{
+		Audit: func(action audit.Action, targetType audit.TargetType, targetID string) (audit.Record, error) {
+			return appsupport.NewAuditRecord(a.ids, a.clock, appsupport.AuditRecordInput{Principal: input.Principal, TenantID: input.TenantID, InventoryID: input.InventoryID, Source: input.Source, RequestID: input.RequestID, Action: action, TargetType: targetType, TargetID: targetID})
+		},
+	}); err != nil {
 		if errors.Is(err, ports.ErrConflict) {
 			return apperrors.ErrInvalidInput
 		}

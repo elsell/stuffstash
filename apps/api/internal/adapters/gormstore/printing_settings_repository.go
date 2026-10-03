@@ -27,6 +27,9 @@ func (s Store) SavePrintSettings(ctx context.Context, next printing.InventoryPri
 		return printing.InventoryPrintSettings{}, ports.ErrPrintConflict
 	}
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := lockPrintingInventory(tx, next.Scope); err != nil {
+			return err
+		}
 		// Lock order is destination printer, then settings. This fences retirement or
 		// media changes without moving settings state into the printer aggregate.
 		if next.DefaultPrinterID != "" {
