@@ -64,10 +64,9 @@ skip it unless you already use VoiceOver or TalkBack or want to try it.
 
 ## 4. Return cancellation after the API fix is deployed
 
-Status: reported failure reproduced against PostgreSQL; fix passes backend
-regression tests, deployment and device retest pending. Wait for confirmation that
-the API fix is deployed before trying this. No new iPhone build is required for
-the backend correction.
+Status: the reported failure was reproduced against PostgreSQL. The fix passed
+backend regression tests and is deployed to Paul in API v0.28.26. The device
+retest below remains unverified. No new iPhone build is required.
 
 - [ ] With a checked-out test item, tap Return on Home, then Cancel return in the
   Return details sheet.

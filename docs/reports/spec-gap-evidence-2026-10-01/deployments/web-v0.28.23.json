@@ -1,0 +1,20 @@
+{
+  "tag": "v0.28.23",
+  "source": "174b20cc0faea12c1ad84ea0d6067938e192f2c1",
+  "web": "ghcr.io/elsell/stuffstash-web@sha256:94aa709c4339ae900908900318e819dd0301fa58729daffda0808c738af55223",
+  "releaseURL": "https://github.com/elsell/stuffstash/releases/tag/v0.28.23",
+  "rollout": {
+    "release": "v0.28.23",
+    "releaseSource": "174b20cc0faea12c1ad84ea0d6067938e192f2c1",
+    "infraCommit": "d90b4000233b9764686e11cf4bdcc40ff79f7e19",
+    "webImage": "ghcr.io/elsell/stuffstash-web@sha256:94aa709c4339ae900908900318e819dd0301fa58729daffda0808c738af55223",
+    "scope": "web-only rollout; not authenticated acceptance",
+    "webHTTP": 200,
+    "apiHTTP": 200,
+    "fluxRevision": "master@sha1:d90b4000233b9764686e11cf4bdcc40ff79f7e19",
+    "updatedReplicas": 1,
+    "availableReplicas": 1,
+    "outcome": "ready"
+  },
+  "outcome": "deployed"
+}
