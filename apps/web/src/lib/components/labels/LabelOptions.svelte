@@ -3,6 +3,9 @@
   import {t} from '$lib/presentation/localization';
   import type {LabelWorkspace} from '$lib/ports/labels';
   import type {LabelScope,LabelCatalog,LabelChoice,LabelArtifact} from '$lib/domain/label';
+  import {Label} from '$lib/components/ui/label/index.js';
+  import {Checkbox} from '$lib/components/ui/checkbox/index.js';
+  import * as Select from '$lib/components/ui/select/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
   let {workspace,scope} : {workspace:LabelWorkspace;scope:LabelScope}=$props();
   let catalog=$state<LabelCatalog|null>(null),choice=$state<LabelChoice|null>(null),artifact=$state<LabelArtifact|null>(null);
@@ -33,9 +36,17 @@
   function selectTemplate(value:string){if(!choice||!catalog)return;const template=catalog.templates.find(v=>v.id===value);if(template){choice={...choice,templateId:template.id,templateVersion:template.version};void render('png');}}
 </script>
 {#if catalog && choice}
-  <label>{t('labels.web.size')}<select value={choice.profileId} onchange={event=>{if(choice){choice={...choice,profileId:event.currentTarget.value};void render('png');}}} disabled={catalog.profiles.length===1}>{#each catalog.profiles as profile}<option value={profile.id}>{profile.name}</option>{/each}</select></label>
-  <label>{t('labels.web.layout')}<select value={choice.templateId} onchange={event=>selectTemplate(event.currentTarget.value)}>{#each catalog.templates as template}<option value={template.id}>{template.name}</option>{/each}</select></label>
-  <label><input type="checkbox" checked={choice.showReference} onchange={event=>{if(choice){choice={...choice,showReference:event.currentTarget.checked};void render('png');}}}/>{t('labels.web.reference')}</label>
+  <Label for="label-size">{t('labels.web.size')}</Label>
+  <Select.Root type="single" value={choice.profileId} onValueChange={value=>{if(choice){choice={...choice,profileId:value};void render('png');}}} disabled={catalog.profiles.length===1}>
+    <Select.Trigger id="label-size" class="w-full">{catalog.profiles.find(profile=>profile.id===choice?.profileId)?.name}</Select.Trigger>
+    <Select.Content>{#each catalog.profiles as profile}<Select.Item value={profile.id} label={profile.name}>{profile.name}</Select.Item>{/each}</Select.Content>
+  </Select.Root>
+  <Label for="label-layout">{t('labels.web.layout')}</Label>
+  <Select.Root type="single" value={choice.templateId} onValueChange={selectTemplate}>
+    <Select.Trigger id="label-layout" class="w-full">{catalog.templates.find(template=>template.id===choice?.templateId)?.name}</Select.Trigger>
+    <Select.Content>{#each catalog.templates as template}<Select.Item value={template.id} label={template.name}>{template.name}</Select.Item>{/each}</Select.Content>
+  </Select.Root>
+  <Label class="flex items-center gap-2"><Checkbox checked={choice.showReference} onchange={event=>{if(choice){choice={...choice,showReference:event.currentTarget.checked};void render('png');}}}/>{t('labels.web.reference')}</Label>
 {/if}
 {#if busy}<p role="status">{t('labels.web.loading')}</p>{/if}
 {#if error}<p role="alert">{error}</p><Button.Root onclick={()=>void initialize()}>{t('labels.web.retry')}</Button.Root>{/if}
@@ -45,4 +56,4 @@
   <Button.Root variant="outline" disabled={!choice||busy} onclick={()=>void render('pdf','download')}>{t('labels.web.pdf')}</Button.Root>
   <Button.Root variant="outline" disabled={!choice||busy} onclick={()=>void render('pdf','print')}>{t('labels.web.print')}</Button.Root>
 </div><p class="text-sm text-muted-foreground">{t('labels.web.actualSize')}</p>
-<style>.label-preview{display:grid;place-items:center;overflow:hidden;height:180px;background:white;border:1px solid #ddd}.label-preview img{height:300px;max-width:100%;image-rendering:pixelated}select{display:block;width:100%;padding:.5rem;border:1px solid currentColor;border-radius:.4rem}</style>
+<style>.label-preview{display:grid;place-items:center;overflow:hidden;height:180px;background:white;border:1px solid #ddd}.label-preview img{height:300px;max-width:100%;image-rendering:pixelated}</style>

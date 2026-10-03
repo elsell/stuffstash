@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {Label} from '$lib/components/ui/label/index.js';
   import {onDestroy,onMount} from 'svelte';
   import {t} from '$lib/presentation/localization';
   import type {LabelWorkspace} from '$lib/ports/labels';
@@ -27,7 +28,7 @@
 <video bind:this={video!} muted playsinline aria-label={t('labels.web.scan')} class="w-full rounded-md"></video>
 <Button.Root variant="outline" disabled={busy} onclick={()=>void startCamera()}>{t('labels.web.camera')}</Button.Root>
 <form onsubmit={event=>{event.preventDefault();void open(value);}} class="grid gap-3">
-  <label for="label-link">{t('labels.web.paste')}</label><Input id="label-link" bind:value autocomplete="off" autocapitalize="off" spellcheck="false" maxlength={4096}/>
+  <Label for="label-link">{t('labels.web.paste')}</Label><Input id="label-link" bind:value autocomplete="off" autocapitalize="off" spellcheck="false" maxlength={4096}/>
   <Button.Root type="submit" disabled={busy||!value}>{t('labels.web.open')}</Button.Root>
 </form>
 {#if busy}<p role="status">{t('labels.web.resolving')}</p>{/if}
