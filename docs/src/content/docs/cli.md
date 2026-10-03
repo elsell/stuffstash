@@ -284,3 +284,20 @@ contains an old hostname. It checks the instance identity and access before
 returning the asset, tenant, and inventory IDs. It never sends your credentials
 to the hostname printed in the QR code. Unlike scoped rendering, resolution does
 not require a selected tenant or inventory.
+
+### Update the loaded label size
+
+Use your human login with permission to configure the inventory:
+
+```sh
+stuffstash printers configure PRINTER_ID --label-size brother-ql800-29x90
+```
+
+The command selects a supported preset for the registered printer. Initially,
+only the Brother QL-800's 29 × 90 mm stock is supported. It preserves the printer's
+name and other settings and works while the printer is offline. The connector
+reads the updated setting from the server; its restricted credential cannot edit it.
+
+If another person changes the registration meanwhile, the command reports a
+conflict. Inspect the current printer before trying again. Updating stock never
+resizes labels already queued: jobs keep their original media requirements.

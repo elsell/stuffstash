@@ -12,7 +12,7 @@ func (c *Client) PrintDefaults(ctx context.Context, s ports.Scope) (ports.Invent
 	return ports.InventoryPrintDefaults{PrinterID: r.Data.DefaultPrinterId.GetOrEmpty(), TemplateID: r.Data.Template.Id, TemplateVersion: uint32(r.Data.Template.Version), ShowReference: r.Data.Template.Options.ShowReference}, err
 }
 func humanPrinter(p generated.Printer) ports.RegisteredPrinter {
-	return ports.RegisteredPrinter{MediaName: p.Media.Name, MediaPreset: p.Media.PresetId, ID: p.Id, Name: p.Name, Readiness: p.Readiness, Retired: p.Retired, MediaFingerprint: p.MediaFingerprint}
+	return ports.RegisteredPrinter{AdapterID: p.AdapterId, Revision: uint64(p.Revision), MediaName: p.Media.Name, MediaPreset: p.Media.PresetId, ID: p.Id, Name: p.Name, Readiness: p.Readiness, Retired: p.Retired, MediaFingerprint: p.MediaFingerprint}
 }
 func (c *Client) RegisteredPrinter(ctx context.Context, s ports.Scope, id string) (ports.RegisteredPrinter, error) {
 	r, err := read[generated.SuccessEnvelopePrinter](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId(ctx, s.Tenant, s.Inventory, id, nil))

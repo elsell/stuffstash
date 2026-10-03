@@ -99,6 +99,7 @@ const Help = `Stuff Stash CLI
   stuffstash labels resolve LABEL_URL
   stuffstash labels print ASSET_ID [--printer ID --template ID --template-version N]
   stuffstash printers list
+  stuffstash printers configure PRINTER_ID --label-size PRESET_ID
   stuffstash printers test PRINTER_ID
   stuffstash print-jobs list [--printer ID]
   stuffstash print-jobs show JOB_ID

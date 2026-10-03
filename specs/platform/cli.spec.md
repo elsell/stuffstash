@@ -189,6 +189,13 @@ stuffstash print-jobs reprint <job-id>
   connector credential with the server. A restart reuses this registration.
 - Add `stuffstash printers configure <printer-id> --label-size <supported-size>`
   as a human-authorized, revision-checked update of the same registration.
+  The label-size argument is an exact preset ID from the authenticated profile
+  catalog for that printer's adapter. Fetch the current registration, resolve one
+  supported preset version, then PATCH only revision, preset ID, and preset version.
+  Preserve name, retirement state, adapter, and connector assignments. Unsupported
+  or ambiguous presets fail without mutation; a stale revision fails without an
+  automatic overwrite/retry. Offline readiness does not block configuration.
+  Initial support remains only `brother-ql800-29x90` version 1.
   Web/mobile printer settings expose the same edit. Worker credentials cannot
   change media settings; they retrieve and apply the server's configured snapshot.
   No automatic roll detection, multiple saved-roll UI, or recurrent confirmation

@@ -46,6 +46,10 @@ func validatePrintingCommand(o Options) error {
 	}
 	n := len(o.Command)
 	switch o.Command[0] + " " + o.Command[1] {
+	case "printers configure":
+		if n == 3 && o.LabelSize != "" {
+			return nil
+		}
 	case "printers list", "print-jobs list":
 		if n == 2 {
 			return nil
@@ -59,6 +63,8 @@ func validatePrintingCommand(o Options) error {
 }
 func executePrinting(ctx context.Context, api ports.HumanPrintingAPI, o Options) (any, error) {
 	switch o.Command[0] + " " + o.Command[1] {
+	case "printers configure":
+		return configurePrinter(ctx, api, o)
 	case "printers list":
 		return api.RegisteredPrinters(ctx, o.Scope, o.Page)
 	case "print-jobs list":

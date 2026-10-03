@@ -16,7 +16,13 @@ type LabelPrintSelection struct {
 	ShowReference                                   bool
 	Copies                                          int
 }
+type PrinterMediaPreset struct {
+	ID      string
+	Version uint32
+}
 type RegisteredPrinter struct {
+	AdapterID        string `json:"adapterId"`
+	Revision         uint64 `json:"revision"`
 	MediaName        string `json:"mediaName"`
 	MediaPreset      string `json:"mediaPreset"`
 	ID               string `json:"id"`
@@ -48,6 +54,8 @@ type PrintSelectionSource interface {
 	RegisteredPrinter(context.Context, Scope, string) (RegisteredPrinter, error)
 }
 type HumanPrintingAPI interface {
+	PrinterMediaPresets(context.Context, Scope, string) ([]PrinterMediaPreset, error)
+	ConfigurePrinterMedia(context.Context, Scope, string, uint64, PrinterMediaPreset) (Result[RegisteredPrinter], error)
 	PrintSelectionSource
 	RegisteredPrinters(context.Context, Scope, Page) (Result[[]RegisteredPrinter], error)
 	PrintJobs(context.Context, Scope, Page, string) (Result[[]PrintJobSummary], error)
