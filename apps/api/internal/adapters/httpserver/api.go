@@ -16,6 +16,7 @@ import (
 	evaluationcaseroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/evaluationcases/routes"
 	evaluationrunroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/evaluationruns/routes"
 	exportroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/exports/routes"
+	identitydto "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/identity/dto"
 	identityroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/identity/routes"
 	importroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/imports/routes"
 	inventoryroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/inventories/routes"
@@ -29,12 +30,13 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/app/dataportability"
 )
 
-func registerRoutes(api huma.API, application app.App, archives *dataportability.ArchiveService, archiveTimeout time.Duration) {
+func registerRoutes(api huma.API, application app.App, archives *dataportability.ArchiveService, archiveTimeout time.Duration, cliAuth *identitydto.CLIAuthMetadata) {
 	archiveroutes.Register(api, application, archives, archiveTimeout)
 	exportroutes.Register(api, application)
 	notificationroutes.Register(api, application)
 	clienttelemetryroutes.Register(api, application)
 	identityroutes.Register(api, application)
+	identityroutes.RegisterCLIAuth(api, cliAuth)
 	tenantroutes.Register(api, application)
 	inventoryroutes.Register(api, application)
 	customassettyperoutes.Register(api, application)

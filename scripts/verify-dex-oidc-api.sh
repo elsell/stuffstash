@@ -11,6 +11,7 @@ dex_base_url="http://localhost:${dex_port}/dex"
 client_id="stuff-stash-local"
 client_secret="stuff-stash-local-secret"
 mobile_client_id="stuff-stash-mobile-local"
+cli_client_id="stuff-stash-cli-local"
 wrong_audience_client_id="stuff-stash-wrong-audience"
 wrong_audience_client_secret="stuff-stash-wrong-audience-secret"
 
@@ -32,6 +33,7 @@ compose() {
     STUFF_STASH_OIDC_ISSUER=http://dex:5556/dex \
     STUFF_STASH_OIDC_CLIENT_ID="$client_id" \
     STUFF_STASH_OIDC_CLIENT_IDS="${client_id},stuff-stash-web-local,${mobile_client_id}" \
+    STUFF_STASH_OIDC_CLI_CLIENT_ID="${cli_client_id}" \
     STUFF_STASH_OIDC_MOBILE_CLIENT_ID="${mobile_client_id}" \
     STUFF_STASH_OIDC_MOBILE_REDIRECT_URI=stuffstash://auth/callback \
     STUFF_STASH_OIDC_MOBILE_SCOPES=openid,email,profile,offline_access \
@@ -134,6 +136,7 @@ echo "requesting Dex ID tokens"
 owner_token="$(request_token owner@example.com)"
 viewer_token="$(request_token viewer@example.com)"
 mobile_owner_token="$(request_public_client_token owner@example.com "$mobile_client_id")"
+cli_owner_token="$(request_public_client_token owner@example.com "$cli_client_id")"
 wrong_audience_token="$(request_token owner@example.com "$wrong_audience_client_id" "$wrong_audience_client_secret")"
 
 echo "starting migration and API in OIDC mode"
@@ -151,6 +154,7 @@ assert_status 401 "malformed OIDC bearer token" "Authorization: Bearer not-a-jwt
 assert_status 401 "unsigned OIDC token" "Authorization: Bearer eyJhbGciOiJub25lIn0.eyJpc3MiOiJodHRwOi8vZGV4OjU1NTYvZGV4Iiwic3ViIjoib3duZXIiLCJhdWQiOiJzdHVmZi1zdGFzaC1sb2NhbCIsImV4cCI6NDEwMjQ0NDgwMH0."
 assert_status 401 "wrong-audience OIDC token" "Authorization: Bearer ${wrong_audience_token}"
 assert_status 200 "mobile-audience OIDC token" "Authorization: Bearer ${mobile_owner_token}"
+assert_status 200 "CLI-audience OIDC token" "Authorization: Bearer ${cli_owner_token}"
 
 echo "running full API user-flow verification with Dex tokens"
 STUFF_STASH_VERIFY_BASE_URL="$base_url" \

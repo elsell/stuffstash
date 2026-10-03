@@ -9,6 +9,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
+	identitydto "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/identity/dto"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/app/dataportability"
@@ -27,6 +28,7 @@ type Options struct {
 	MCPHandler                   http.Handler
 	CORSAllowedOrigins           []string
 	MobileAuth                   MobileAuthOptions
+	CLIAuth                      *identitydto.CLIAuthMetadata
 	MaxJSONBodyBytes             int64
 	RateLimitDisabled            bool
 	RateLimiter                  ports.RateLimiter
@@ -71,7 +73,7 @@ func NewServerWithOptions(addr string, application app.App, options Options) *ht
 	}
 
 	api := humago.New(mux, config)
-	registerRoutes(api, application, options.Archives, options.ArchiveTransferTimeout)
+	registerRoutes(api, application, options.Archives, options.ArchiveTransferTimeout, options.CLIAuth)
 
 	maxJSONBodyBytes := options.MaxJSONBodyBytes
 	if maxJSONBodyBytes <= 0 {

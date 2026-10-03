@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/auth/cli/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get auth cli config */
+        get: operations["get-cli-auth-config"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/client-telemetry": {
         parameters: {
             query?: never;
@@ -2105,6 +2122,18 @@ export interface components {
             /** Format: int64 */
             toolCalls: number;
         };
+        CLIAuthMetadata: {
+            clientId: string;
+            issuer: string;
+            loginMethods: string[] | null;
+            loopbackRedirect: components["schemas"]["CLILoopbackRedirect"];
+            scopes: string[] | null;
+        };
+        CLILoopbackRedirect: {
+            ephemeralPort: boolean;
+            host: string;
+            pathPrefix: string;
+        };
         CheckedOutAssetResponse: {
             asset: components["schemas"]["AssetResponse"];
             checkout: components["schemas"]["CurrentCheckout"];
@@ -3193,6 +3222,16 @@ export interface components {
             data: components["schemas"]["AttachmentResponse"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeCLIAuthMetadata: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeCLIAuthMetadata.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["CLIAuthMetadata"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeCreatedInvitationResponse: {
             /**
              * Format: uri
@@ -3930,6 +3969,36 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    "get-cli-auth-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeCLIAuthMetadata"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "post-client-telemetry": {
         parameters: {
             query?: never;

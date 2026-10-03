@@ -343,3 +343,20 @@ mandate for one test per bullet or exhaustive combinations. Do not write tests
 that repeat generated code, constants, types, or implementation statements already
 codified by the code. Preserve required checks and review, use behavioral fakes,
 and resolve integration defects rather than expanding low-value test coverage.
+
+### First API Authentication Prerequisite Slice
+
+Public CLI discovery uses `STUFF_STASH_OIDC_CLI_CLIENT_ID`,
+`STUFF_STASH_OIDC_CLI_SCOPES` (default `openid,email,profile,offline_access`), and
+`STUFF_STASH_OIDC_CLI_DEVICE_AUTH_ENABLED` (default false). A configured CLI client
+is added explicitly to accepted OIDC audiences. Missing client or non-OIDC mode
+returns unavailable metadata, without affecting existing mobile sign-in.
+
+`GET /auth/cli/config` returns the standard envelope with `issuer`, `clientId`,
+`scopes`, `loginMethods` (`authorization_code`, optionally `device_code`), and
+`loopbackRedirect: {host: "127.0.0.1", pathPrefix: "/callback/", ephemeralPort: true}`.
+Device login is advertised only when operator-enabled and discovered from the
+configured issuer. Discovery failure is a startup/configuration error when CLI
+OIDC is enabled; never advertise guessed provider capabilities. Bundled Dex uses
+a separate public CLI client whose empty redirect list permits Dex's supported
+loopback/device authorization policy. These values are public, never secrets.

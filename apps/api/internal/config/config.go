@@ -26,6 +26,9 @@ const (
 	envOIDCIssuer                         = "STUFF_STASH_OIDC_ISSUER"
 	envOIDCClientID                       = "STUFF_STASH_OIDC_CLIENT_ID"
 	envOIDCClientIDs                      = "STUFF_STASH_OIDC_CLIENT_IDS"
+	envOIDCCLIClientID                    = "STUFF_STASH_OIDC_CLI_CLIENT_ID"
+	envOIDCCLIScopes                      = "STUFF_STASH_OIDC_CLI_SCOPES"
+	envOIDCCLIDeviceAuthEnabled           = "STUFF_STASH_OIDC_CLI_DEVICE_AUTH_ENABLED"
 	envOIDCMobileClientID                 = "STUFF_STASH_OIDC_MOBILE_CLIENT_ID"
 	envOIDCMobileRedirectURI              = "STUFF_STASH_OIDC_MOBILE_REDIRECT_URI"
 	envOIDCMobileScopes                   = "STUFF_STASH_OIDC_MOBILE_SCOPES"
@@ -160,6 +163,9 @@ type Config struct {
 	OIDCIssuer                       string
 	OIDCClientID                     string
 	OIDCClientIDs                    []string
+	OIDCCLIClientID                  string
+	OIDCCLIScopes                    []string
+	OIDCCLIDeviceAuthEnabled         bool
 	OIDCMobileClientID               string
 	OIDCMobileRedirectURI            string
 	OIDCMobileScopes                 []string
@@ -241,6 +247,9 @@ func Load() Config {
 		OIDCIssuer:                       os.Getenv(envOIDCIssuer),
 		OIDCClientID:                     os.Getenv(envOIDCClientID),
 		OIDCClientIDs:                    oidcClientIDs(),
+		OIDCCLIClientID:                  strings.TrimSpace(os.Getenv(envOIDCCLIClientID)),
+		OIDCCLIScopes:                    oidcCLIScopes(),
+		OIDCCLIDeviceAuthEnabled:         boolEnvOrDefault(envOIDCCLIDeviceAuthEnabled, false),
 		OIDCMobileClientID:               strings.TrimSpace(os.Getenv(envOIDCMobileClientID)),
 		OIDCMobileRedirectURI:            envOrDefault(envOIDCMobileRedirectURI, defaultOIDCMobileRedirectURI),
 		OIDCMobileScopes:                 oidcMobileScopes(),
@@ -314,6 +323,7 @@ func oidcClientIDs() []string {
 	clientIDs := stringListEnv(envOIDCClientIDs)
 	clientIDs = prependUniqueClientID(clientIDs, strings.TrimSpace(os.Getenv(envOIDCClientID)))
 	clientIDs = appendUniqueClientID(clientIDs, strings.TrimSpace(os.Getenv(envOIDCMobileClientID)))
+	clientIDs = appendUniqueClientID(clientIDs, strings.TrimSpace(os.Getenv(envOIDCCLIClientID)))
 	return clientIDs
 }
 
