@@ -19,6 +19,7 @@ import (
 )
 
 type App struct {
+	printJobs                    *printingapp.JobService
 	labels                       *printingapp.LabelService
 	printerRepository            ports.PrinterRepository
 	printerCatalog               ports.PrinterCatalog

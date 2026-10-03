@@ -40,6 +40,10 @@ func (id PrincipalID) String() string {
 type Action string
 
 const (
+	ActionPrintJobQueued                            Action = "print_job.queued"
+	ActionPrintJobViewed                            Action = "print_job.viewed"
+	ActionPrintJobsListed                           Action = "print_job.listed"
+	ActionPrintJobCanceled                          Action = "print_job.canceled"
 	ActionLabelProvisioned                          Action = "label.provisioned"
 	ActionLabelViewed                               Action = "label.viewed"
 	ActionLabelResolved                             Action = "label.resolved"
@@ -164,7 +168,7 @@ const (
 func NewAction(value string) (Action, bool) {
 	action := Action(strings.TrimSpace(value))
 	switch action {
-	case ActionPrinterRegistered, ActionPrinterViewed, ActionPrintersListed, ActionPrinterUpdated, ActionLabelProvisioned, ActionLabelViewed, ActionLabelResolved, ActionLabelRendered, ActionLabelContentDownloaded, ActionLabelTemplatesListed, ActionArchiveJobViewed, ActionArchiveJobCreated, ActionArchiveJobUpdated, ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
+	case ActionPrintJobQueued, ActionPrintJobViewed, ActionPrintJobsListed, ActionPrintJobCanceled, ActionPrinterRegistered, ActionPrinterViewed, ActionPrintersListed, ActionPrinterUpdated, ActionLabelProvisioned, ActionLabelViewed, ActionLabelResolved, ActionLabelRendered, ActionLabelContentDownloaded, ActionLabelTemplatesListed, ActionArchiveJobViewed, ActionArchiveJobCreated, ActionArchiveJobUpdated, ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
 		ActionTenantViewed,
 		ActionTenantListed,
 		ActionTenantUpdated,
@@ -299,6 +303,7 @@ func (s Source) String() string {
 type TargetType string
 
 const (
+	TargetPrintJob                   TargetType = "print_job"
 	TargetArchiveJob                 TargetType = "archive_job"
 	TargetNotificationDevice         TargetType = "notification_device"
 	TargetNotification               TargetType = "notification"
@@ -324,7 +329,7 @@ const (
 func NewTargetType(value string) (TargetType, bool) {
 	targetType := TargetType(strings.TrimSpace(value))
 	switch targetType {
-	case TargetArchiveJob, TargetNotificationDevice, TargetNotification, TargetNotificationPreferences, TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAssetTag, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob, TargetConversationWorkflow, TargetConversationEvaluationCase, TargetConversationEvaluationRun:
+	case TargetPrintJob, TargetArchiveJob, TargetNotificationDevice, TargetNotification, TargetNotificationPreferences, TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAssetTag, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob, TargetConversationWorkflow, TargetConversationEvaluationCase, TargetConversationEvaluationRun:
 		return targetType, true
 	default:
 		return "", false
