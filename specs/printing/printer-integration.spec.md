@@ -934,3 +934,29 @@ The shared browser API adapter must project pairing review and approval scope
 into the contract's tenant and inventory IDs. Rich client inventory objects may
 also carry display names; those fields must not enter the request body. The
 server continues to reject unknown fields rather than weakening its contract.
+
+### Native uncertain-job acknowledgement
+
+The existing job-detail screen keeps uncertainty recovery in place: a native
+single-choice picker asks whether a label printed, did not print, or cannot be
+confirmed. No outcome is preselected. A separate native acknowledgement switch
+states that the physical outcome remains unconfirmed. The explicit Resolve job
+command requires editor permission, both choices, and idle confirmation on the
+latest attempt. Without that confirmation, explain that the serving connector
+must first report the printer idle; older attempt evidence never enables recovery.
+
+Submit the displayed job revision and selected report through the printing port.
+While a response is ambiguous, retain and retry the exact acknowledgement; prevent
+selection changes until fresh status resolves it. Report failure inline and allow
+refresh. Successful acknowledgement displays the human report and preserved
+uncertainty, never a confirmed completion or automatic reprint. Native controls
+reuse the existing picker, switch, command button, and job-detail navigation.
+Actual layout and assistive navigation remain recorded device follow-ups.
+
+A pending native acknowledgement remains bound to its original attempt and job
+revision during polling or an ambiguous retry. An explicit Refresh status read
+that confirms a different current revision or latest attempt discards that old
+intent and clears both the outcome choice and acknowledgement. The user must
+make both choices again; the client never rebases an old acknowledgement onto a
+new attempt. Refreshing the same revision retains the exact pending payload,
+including when the loading state temporarily unmounts the controls.

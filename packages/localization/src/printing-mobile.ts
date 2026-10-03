@@ -58,5 +58,16 @@ export const printingMobileMessages = {
   'printing.mobile.status.failed': 'Failed',
   'printing.mobile.status.canceled': 'Canceled',
   'printing.mobile.status.uncertain': 'Output uncertain',
-  'printing.mobile.status.unknown': 'Status unavailable'
+  'printing.mobile.status.unknown': 'Status unavailable',
+  'printing.mobile.outcome': 'What happened at the printer?',
+  'printing.mobile.outcome.choose': 'Choose an outcome',
+  'printing.mobile.outcome.printed': 'A label printed',
+  'printing.mobile.outcome.not_printed': 'No label printed',
+  'printing.mobile.outcome.unknown': 'I cannot tell',
+  'printing.mobile.acknowledge': 'I understand the print outcome remains unconfirmed',
+  'printing.mobile.resolve': 'Resolve job',
+  'printing.mobile.resolveRetry': 'Retry acknowledgement',
+  'printing.mobile.waitingForIdle': 'The connector must confirm the printer is idle before this job can be resolved. Check the printer and its connection, then refresh.',
+  'printing.mobile.resolved': 'Uncertainty acknowledged',
+  'printing.mobile.resolvedDetail': 'Your report was saved. Physical completion was not confirmed. Another label requires a separate reprint request.',
 } as const;

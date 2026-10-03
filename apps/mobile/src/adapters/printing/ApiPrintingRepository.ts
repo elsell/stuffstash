@@ -1,6 +1,6 @@
 import { PrintRequestRejected } from '../../application/printing/PrintSubmission';
 import { PrintingClient, LabelsClient, StuffStashAPIError } from '@stuff-stash/api-client';
-import type { PrintCatalog, PrintJob, PrintScope, PrintSelection, PrintSettings, PrintTemplate, PrintingRepository, RegisteredPrinter } from '../../application/printing/PrintingWorkspace';
+import type { PrintCatalog, PrintJob, PrintOutcome, PrintScope, PrintSelection, PrintSettings, PrintTemplate, PrintingRepository, RegisteredPrinter } from '../../application/printing/PrintingWorkspace';
 import { assertReadActive } from '../../application/shared/ReadRequest';
 import { labelBlobBytes } from '../labels/LabelBlobBytes';
 
@@ -43,11 +43,13 @@ export class ApiPrintingRepository implements PrintingRepository {
   }
   async job(scope: PrintScope, jobId: string, signal: AbortSignal) { const job = await this.client.job(scope, jobId); assertReadActive(signal); return mapJob(job); }
   async jobs(scope: PrintScope, signal: AbortSignal) { const page = await this.client.jobs(scope); assertReadActive(signal); return page.items.map(mapJob); }
+  async resolve(scope: PrintScope, job: PrintJob, outcome: PrintOutcome) { return mapJob(await this.client.resolve(scope, job.id, { revision: job.revision, acknowledgeUncertainty: true, reportedOutcome: outcome })); }
   async cancel(scope: PrintScope, job: PrintJob) { return mapJob(await this.client.cancel(scope, job.id, job.revision)); }
 }
 function mapSettings(value: WireSettings): PrintSettings { return { revision: value.revision, defaultPrinterId: value.defaultPrinterId, printOnCreateDefault: value.printOnCreateDefault,
   template: { id: value.template.id, version: value.template.version, showReference: value.template.options.showReference } }; }
 function mapJob(value: WireJob): PrintJob { return { id: value.id, assetId: value.assetId, printerId: value.printerId, status: value.status, revision: value.revision, copies: value.copies,
+  latestAttemptId: value.attempts?.at(-1)?.id, idleConfirmed: !!value.attempts?.at(-1)?.idleConfirmedAt, resolution: value.resolution ? { reportedOutcome: reportedOutcome(value.resolution.reportedOutcome) } : undefined,
   completedCopies: Math.max(0, ...(value.attempts ?? []).map(attempt => attempt.completedCopies)) }; }
 async function allPages<T>(read: (cursor?: string) => Promise<{ items: T[]; nextCursor?: string }>, signal: AbortSignal) {
   const items: T[] = []; const seen = new Set<string>(); let cursor: string | undefined;
@@ -56,3 +58,5 @@ async function allPages<T>(read: (cursor?: string) => Promise<{ items: T[]; next
   } while (cursor);
   return items;
 }
+
+function reportedOutcome(value: string): PrintOutcome { return value === "printed" || value === "not_printed" ? value : "unknown"; }
