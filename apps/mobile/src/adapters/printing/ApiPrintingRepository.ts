@@ -1,4 +1,5 @@
-import { PrintingClient, LabelsClient } from '@stuff-stash/api-client';
+import { PrintRequestRejected } from '../../application/printing/PrintSubmission';
+import { PrintingClient, LabelsClient, StuffStashAPIError } from '@stuff-stash/api-client';
 import type { PrintCatalog, PrintJob, PrintScope, PrintSelection, PrintSettings, PrintTemplate, PrintingRepository, RegisteredPrinter } from '../../application/printing/PrintingWorkspace';
 import { assertReadActive } from '../../application/shared/ReadRequest';
 import { labelBlobBytes } from '../labels/LabelBlobBytes';
@@ -36,8 +37,9 @@ export class ApiPrintingRepository implements PrintingRepository {
     return { fingerprint: rendered.selectionFingerprint, file: { bytes, format: 'png' as const, width: rendered.widthPixels, height: rendered.heightPixels, rotation: rendered.displayRotation } };
   }
   async submit(scope: PrintScope, assetId: string, selection: PrintSelection, key: string) {
-    return mapJob(await this.client.createJob(scope, assetId, { printerId: selection.printerId, expectedMediaFingerprint: selection.mediaFingerprint, copies: selection.copies,
-      templateId: selection.template.id, templateVersion: selection.template.version, templateOptions: { showReference: selection.template.showReference }, previewFingerprint: selection.previewFingerprint }, key));
+    try { return mapJob(await this.client.createJob(scope, assetId, { printerId: selection.printerId, expectedMediaFingerprint: selection.mediaFingerprint, copies: selection.copies,
+      templateId: selection.template.id, templateVersion: selection.template.version, templateOptions: { showReference: selection.template.showReference }, previewFingerprint: selection.previewFingerprint }, key)); }
+    catch (error) { if (error instanceof StuffStashAPIError && [400, 409, 422].includes(error.status)) throw new PrintRequestRejected(); throw error; }
   }
   async job(scope: PrintScope, jobId: string, signal: AbortSignal) { const job = await this.client.job(scope, jobId); assertReadActive(signal); return mapJob(job); }
   async jobs(scope: PrintScope, signal: AbortSignal) { const page = await this.client.jobs(scope); assertReadActive(signal); return page.items.map(mapJob); }

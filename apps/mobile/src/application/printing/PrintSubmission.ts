@@ -1,7 +1,8 @@
 import type { PrintScope, PrintSelection, PrintingRepository } from './PrintingWorkspace';
+export class PrintRequestRejected extends Error { constructor() { super('Print request was not accepted'); } }
 /** Owns a single explicit print intent, including retries after an unknown response. */
 export class PrintSubmission {
-  private request?: { identity: string; key: string; selection: PrintSelection; scope: PrintScope; assetId: string };
+  private request?: { identity: string; key: string; selection: PrintSelection; scope: PrintScope; assetId: string; ambiguous: boolean };
   private running = false;
   constructor(private readonly repository: Pick<PrintingRepository, 'submit'>, private readonly newKey: () => string) {}
   get selection() { return this.request?.selection; }
@@ -14,9 +15,14 @@ export class PrintSubmission {
     if (this.running) throw new Error('Print submission in progress');
     const identity = JSON.stringify([scope.tenantId, scope.inventoryId, assetId, selection]);
     if (this.request && this.request.identity !== identity) throw new Error('Resolve the submitted request before changing it');
-    this.request ??= { identity, key: this.newKey(), selection: { ...selection, template: { ...selection.template } }, scope: { ...scope }, assetId };
+    this.request ??= { identity, key: this.newKey(), selection: { ...selection, template: { ...selection.template } }, scope: { ...scope }, assetId, ambiguous: false };
     this.running = true;
     try { return await this.repository.submit(scope, assetId, this.request.selection, this.request.key); }
+    catch (error) {
+      if (error instanceof PrintRequestRejected && !this.request.ambiguous) this.request = undefined;
+      else this.request.ambiguous = true;
+      throw error;
+    }
     finally { this.running = false; }
   }
 }

@@ -65,6 +65,7 @@ export function AssetPrintScreen({ workspace, scope, assetId, onQueued }: { read
       {preview ? <View style={{ alignSelf: 'center', width, height, overflow: 'hidden', backgroundColor: '#fff' }}><Image accessibilityLabel={t('printing.mobile.previewAlt')} accessible source={{ uri: preview.uri }} resizeMode="contain"
         style={{ position: 'absolute', width: rotated ? height : width, height: rotated ? width : height, left: rotated ? (width - height) / 2 : 0, top: rotated ? (height - width) / 2 : 0, transform: [{ rotate: `${preview.file.rotation}deg` }] }} /></View> : null}
       {failed ? <Text accessibilityRole="alert" style={styles.errorMessage}>{t(submission.current.locked ? 'printing.mobile.unknownSubmission' : 'printing.mobile.unavailable')}</Text> : null}
+      {failed && !submission.current.locked ? <NativeCommandButton label={t('printing.mobile.refresh')} disabled={busy} onPress={task.reload} /> : null}
       <NativeCommandButton label={t(submission.current.locked ? 'printing.mobile.retry' : 'printing.mobile.print')} prominence="primary" disabled={busy || (!submission.current.locked && (!preview || !printer))} onPress={() => void submit()} />
     </> : null}
   </ScrollView>;

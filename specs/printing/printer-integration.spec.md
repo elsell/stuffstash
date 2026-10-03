@@ -803,3 +803,9 @@ creation remains a separate explicit action and never inherits item printing.
 Critical checks use stateful printer/job/settings fakes for lost responses,
 revision conflict, permission loss and scope/route cancellation. Actual native
 layout, accessibility and USB operation remain device checklist follow-ups.
+
+A first definitive validation/conflict rejection of a manual print request unlocks
+its selection for correction and discards that unused request key. Network errors,
+server failures and any other ambiguous outcome retain the immutable intent. Once
+any attempt was ambiguous, a later rejection cannot prove that an earlier attempt
+did not enqueue: keep the original key and payload until success is recovered.
