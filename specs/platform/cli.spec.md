@@ -450,6 +450,14 @@ Release publication retains the release ID returned by draft creation and refres
 that resource directly while uploading and verifying assets. It does not depend
 on a newly created draft immediately appearing in the release collection. Remote
 read failures still fail closed; no unverified asset or release is advertised.
+Release command failures must retain bounded GitHub CLI/API diagnostics (including
+HTTP status and validation details) rather than only a subprocess exit code.
+Diagnostics omit request bodies and redact available GitHub credentials. Draft
+creation is never blindly retried: if its response is lost, the run fails clearly
+and a repair run discovers the existing draft and verifies the original bytes
+before publishing. A failed creation with no remote draft leaves no assets or
+stable download metadata behind.
+
 ### Worker journal and local device reservation
 
 The Linux print worker holds a nonblocking OS lock on the actual resolved USB
