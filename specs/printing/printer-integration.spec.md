@@ -1084,3 +1084,13 @@ entire retirement. Started or uncertain attempts and their printer reservation
 remain intact for reconciliation; retirement never reports them as canceled or
 safe to replay. Settings revisions advance when their default is cleared, so an
 older settings form cannot silently restore the retired destination.
+
+### Real authorization lifecycle acceptance
+
+The HTTP integration suite also runs against the pinned real SpiceDB service with
+stateful in-memory persistence. It verifies initiating-user permission loss
+between claim/start, credential rotation without privilege expansion, failed
+synchronization followed by latest desired-state reconciliation, and continued
+outcome/recovery authorization after printer retirement. Connection failure uses
+an unavailable real gRPC endpoint, not a mocked authorization answer. These checks
+prove authorization and API lifecycle behavior, not USB or native-device output.
