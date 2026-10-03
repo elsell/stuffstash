@@ -81,7 +81,15 @@ class GitHub:
         return self.api('commits/' + tag)['sha']
 
     def create(self, plan, root):
-        self.run('release', 'create', plan['tag'], '--repo', self.repo, '--draft', '--verify-tag', '--target', plan['commit'], '--title', plan['tag'], '--notes-file', str(root / 'release-notes.md'))
+        body = dict(tag_name=plan['tag'], target_commitish=plan['commit'],
+                    name=plan['tag'], body=(root / 'release-notes.md').read_text(), draft=True)
+        result = subprocess.run(['gh', 'api', '--method', 'POST',
+                                 f'repos/{self.repo}/releases', '--input', '-'],
+                                input=json.dumps(body), text=True, capture_output=True, check=True)
+        return json.loads(result.stdout)
+
+    def refresh(self, release):
+        return self.api('releases/' + str(release['id']))
 
     def download(self, asset, target):
         # Use the authenticated API asset identifier, never an untrusted URL.
@@ -101,8 +109,7 @@ def publish(root, remote):
         raise ValueError('Release tag does not point at the original build commit')
     release = remote.find(plan['tag'])
     if release is None:
-        remote.create(plan, root)
-        release = remote.find(plan['tag'])
+        release = remote.create(plan, root)
     if release['prerelease']:
         raise ValueError('Refusing to replace a prerelease')
     assets = {asset['name']: asset for asset in release['assets']}
@@ -111,7 +118,7 @@ def publish(root, remote):
         if name not in assets:
             remote.upload(plan['tag'], root / name)
         # Fresh read also resolves a previous upload whose response was lost.
-        current = remote.find(plan['tag'])
+        current = remote.refresh(release)
         matches = [item for item in current['assets'] if item['name'] == name]
         if len(matches) != 1:
             raise ValueError('Missing or duplicated remote asset: ' + name)
@@ -122,7 +129,7 @@ def publish(root, remote):
                 raise ValueError('Published bytes differ; refusing overwrite: ' + name)
     if release['draft']:
         remote.publish(plan['tag'])
-    current = remote.find(plan['tag'])
+    current = remote.refresh(release)
     if current['draft'] or current['prerelease'] or not current.get('published_at'):
         raise ValueError('Release is not published stable')
     if remote.newer_stable(plan['tag']):
