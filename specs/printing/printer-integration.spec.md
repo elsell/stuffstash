@@ -629,3 +629,16 @@ job and attempt metadata may be removed after the terminal history lifetime,
 measured from its last state transition; audit history remains. The request
 idempotency window ends when that terminal job is removed. Cleanup uses the same
 printer lock as claims and state changes and rechecks eligibility under the lock.
+
+### Human health projection
+
+Connector list/detail responses expose server-computed `availability` (`online`,
+`offline`, or `unknown`) separately from registration state and authorization
+pending. Availability uses the injected API clock and configured heartbeat age;
+an active connector is online only while its credential and heartbeat are fresh.
+Never-heartbeated registrations are unknown; revoked, expired, future-dated, and
+stale connections are offline. This is connection health, not printer readiness
+or an authorization grant. Printer responses also expose the safe readiness
+reason and report timestamp selected by the existing authorized health projection.
+Unknown/stale printer health has no current reason or timestamp. Clients refresh
+these projections and do not invent their own stale thresholds.

@@ -2727,6 +2727,8 @@ export interface components {
         };
         Connector: {
             authorizationPending: boolean;
+            /** @enum {string} */
+            availability: "online" | "offline" | "unknown";
             /** Format: int64 */
             generation: number;
             id: string;
@@ -3936,6 +3938,9 @@ export interface components {
             mediaFingerprint: string;
             name: string;
             readiness: string;
+            readinessReason?: string;
+            /** Format: date-time */
+            reportedAt?: string;
             retired: boolean;
             /** Format: int64 */
             revision: number;

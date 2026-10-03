@@ -7,11 +7,14 @@ import (
 )
 
 func Connector(c printing.Connector) dto.Connector {
-	return dto.Connector{Generation: c.Generation, PrinterIDs: []string{}, ID: string(c.ID), Name: c.Name, State: string(c.State), AuthorizationPending: c.Generation != c.SyncedGeneration, LastSeenAt: c.LastSeenAt}
+	return dto.Connector{Availability: string(printing.ConnectorUnknown), Generation: c.Generation, PrinterIDs: []string{}, ID: string(c.ID), Name: c.Name, State: string(c.State), AuthorizationPending: c.Generation != c.SyncedGeneration, LastSeenAt: c.LastSeenAt}
 }
 
 func ConnectorRegistration(r ports.ConnectorRegistration) dto.Connector {
 	result := Connector(r.Connector)
+	if r.Availability != "" {
+		result.Availability = string(r.Availability)
+	}
 	for _, b := range r.Bindings {
 		if !b.Revoked {
 			result.PrinterIDs = append(result.PrinterIDs, string(b.PrinterID))

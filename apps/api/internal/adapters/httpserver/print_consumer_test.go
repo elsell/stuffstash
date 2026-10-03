@@ -54,6 +54,20 @@ func coverPrintConsumerScenarios(t *testing.T, coverage executedScenarioCoverage
 	token := "Bearer " + credential.Credential
 	requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", token, map[string]any{"sessionId": "session-for-printing"}), 200)
 	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "ready"}), 200)
+	connectorPath := labelPrefix + "/print-connectors/" + string(credential.Connector.ID)
+	health := performRequest(server, "GET", connectorPath, "Bearer dev:owner", nil)
+	requireStatus(t, health, 200)
+	if labelResponseData(t, health.Body.Bytes())["availability"] != "online" {
+		t.Fatal("fresh connector not online", health.Body.String())
+	}
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "unavailable", "reason": "paper_empty"}), 200)
+	printerHealth := performRequest(server, "GET", labelPrefix+"/printers/"+string(p.ID), "Bearer dev:owner", nil)
+	requireStatus(t, printerHealth, 200)
+	healthData := labelResponseData(t, printerHealth.Body.Bytes())
+	if healthData["readiness"] != "unavailable" || healthData["readinessReason"] != "paper_empty" || healthData["reportedAt"] == nil {
+		t.Fatal("printer attention details absent", printerHealth.Body.String())
+	}
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "ready"}), 200)
 	asset := performRequest(server, "POST", labelPrefix+"/assets", "Bearer dev:owner", map[string]any{"title": "Tools", "kind": "container"})
 	requireStatus(t, asset, 201)
 	assetID := decodeAsset(t, asset).Data.ID
@@ -187,6 +201,19 @@ func coverPrintConsumerScenarios(t *testing.T, coverage executedScenarioCoverage
 	requireStatus(t, canceled, 200)
 	if labelResponseData(t, canceled.Body.Bytes())["status"] != "canceled" {
 		t.Fatal("revoked initiator left dispatchable work")
+	}
+
+	clock.now = clock.now.Add(2 * time.Minute)
+	health = performRequest(server, "GET", connectorPath, "Bearer dev:owner", nil)
+	requireStatus(t, health, 200)
+	if labelResponseData(t, health.Body.Bytes())["availability"] != "offline" {
+		t.Fatal("stale heartbeat still online", health.Body.String())
+	}
+	printerHealth = performRequest(server, "GET", labelPrefix+"/printers/"+string(p.ID), "Bearer dev:owner", nil)
+	requireStatus(t, printerHealth, 200)
+	healthData = labelResponseData(t, printerHealth.Body.Bytes())
+	if healthData["readiness"] != "unknown" || healthData["reportedAt"] != nil || healthData["readinessReason"] != nil {
+		t.Fatal("stale printer health presented as current", printerHealth.Body.String())
 	}
 
 	for _, operation := range []string{
