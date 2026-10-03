@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import { t } from '$lib/presentation/localization';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { tick } from 'svelte';
@@ -171,7 +172,7 @@
       }
       handleOpenChange(false);
     } catch (caught) {
-      createError = caught instanceof Error ? caught.message : t('web.WorkspaceContextSwitcher.couldNotCreateWorkspace');
+      createError = safeWorkspaceErrorMessage(caught, t('web.WorkspaceContextSwitcher.couldNotCreateWorkspace'));
     } finally {
       creating = false;
     }

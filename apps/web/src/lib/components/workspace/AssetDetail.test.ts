@@ -1115,7 +1115,8 @@ it('saves a date-only edit and preserves explicit clearing after a failed save',
   clickFirst('Save');
   await flush();
   expect(drafts[0].expiration).toBeNull();
-  expect(document.body.textContent).toContain('Try again');
+  expect(document.body.textContent).toContain('Unable to save asset.');
+  expect(document.body.textContent).not.toContain('Try again');
   expect((requiredElement('#edit-asset-expiration') as HTMLInputElement).value).toBe('');
   clickFirst('Exact date');
   await flush();

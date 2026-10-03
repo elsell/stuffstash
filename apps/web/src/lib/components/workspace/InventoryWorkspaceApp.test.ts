@@ -632,6 +632,41 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('preserves safe validation through the parent into inventory creation', async () => {
+    class ValidationRepository extends SeededInventoryRepository {
+      override async createInventory(): Promise<WorkspaceData> {
+        throw Object.assign(new Error('Choose another inventory name.'), { safeForUser: true });
+      }
+    }
+    const authorizedSeed = structuredClone(seed);
+    authorizedSeed.tenants[0].access.permissions.push('create_inventory');
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household', new ValidationRepository(authorizedSeed));
+    const trigger = document.body.querySelector<HTMLButtonElement>('.context-trigger');
+    expect(trigger).not.toBeNull();
+    trigger!.click();
+    await tick();
+    buttonContaining('New inventory').click();
+    await tick();
+    setInputValue(inputWithLabel('Inventory name'), 'Tools');
+    buttonContaining('Create inventory').click();
+    await waitFor(() => expect(document.body.querySelector('.form-error')?.textContent).toContain('Choose another inventory name.'));
+    expect(inputWithLabel('Inventory name').value).toBe('Tools');
+  });
+
+  it('preserves safe validation through the parent into asset editing', async () => {
+    class ValidationRepository extends SeededInventoryRepository {
+      override async updateAsset(): Promise<Asset> {
+        throw Object.assign(new Error('This item changed. Review its name before saving.'), { safeForUser: true });
+      }
+    }
+    await mountWorkspace('/tenants/tenant-home/inventories/inventory-household/assets/asset-home/edit', new ValidationRepository(structuredClone(seed)));
+    await waitFor(() => expect(document.body.querySelector('#edit-asset-title')).not.toBeNull());
+    setInputValue(document.body.querySelector<HTMLInputElement>('#edit-asset-title')!, 'Updated item');
+    (await waitForSaveButton()).click();
+    await waitFor(() => expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('This item changed. Review its name before saving.'));
+    expect(document.body.querySelector<HTMLInputElement>('#edit-asset-title')?.value).toBe('Updated item');
+  });
+
   it('keeps private creation diagnostics out of workspace setup recovery', async () => {
     class FailingSetupRepository extends SeededInventoryRepository {
       override async createTenantWithInventory(): Promise<WorkspaceData> {
