@@ -80,7 +80,7 @@ func returnAssetInTx(tx *gorm.DB, expectedCurrent asset.Checkout, returned asset
 	if !ok {
 		return fmt.Errorf("invalid asset checkout row %q", model.ID)
 	}
-	if !asset.CheckoutsEquivalentForStaleCheck(current, expectedCurrent) {
+	if !checkoutsEquivalentForStorage(tx, current, expectedCurrent) {
 		return ports.ErrConflict
 	}
 	if current.State != asset.CheckoutStateOpen || returned.ID != current.ID || returned.TenantID != current.TenantID || returned.InventoryID != current.InventoryID || returned.AssetID != current.AssetID || returned.State != asset.CheckoutStateReturned || returned.ReturnedAt.IsZero() || returned.ReturnedByPrincipal == "" {
@@ -109,7 +109,7 @@ func (s Store) UpdateAssetCheckoutReturnDetails(ctx context.Context, expectedCur
 		if !ok {
 			return fmt.Errorf("invalid asset checkout row %q", model.ID)
 		}
-		if !asset.CheckoutsEquivalentForStaleCheck(current, expectedCurrent) {
+		if !checkoutsEquivalentForStorage(tx, current, expectedCurrent) {
 			return ports.ErrConflict
 		}
 		if current.State != asset.CheckoutStateReturned || updated.ID != current.ID || updated.TenantID != current.TenantID || updated.InventoryID != current.InventoryID || updated.AssetID != current.AssetID || updated.State != asset.CheckoutStateReturned || updated.ReturnedAt.IsZero() || updated.ReturnedByPrincipal == "" {

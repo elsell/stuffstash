@@ -652,3 +652,21 @@ the originating scope. Keep the existing synchronous pending lock until settleme
 fresh commands work afterward. Lifecycle confirmation callbacks are single-use and
 must not submit after their originating visit ends. Native confirmation/Back and
 blur/refocus must be checked separately from mounted behavior tests.
+
+
+## PostgreSQL cancellation timestamp fidelity
+
+Cancel return must reopen the same checkout through its undoable operation after
+normal PostgreSQL persistence. PostgreSQL stores timestamps at microsecond
+precision while existing JSON undo snapshots may retain nanoseconds. The GORM
+adapter must compare checkout timestamps at PostgreSQL storage precision when
+checking whether an undo/redo snapshot is stale, including legacy snapshots.
+Other checkout fields, tenant/inventory scope and operation-state checks remain
+exact. A real later edit or checkout must still prevent stale undo; timestamp
+normalization must not bypass concurrency checks. SQLite and domain comparisons
+retain their existing precision.
+
+Regression coverage must use real PostgreSQL, non-microsecond-aligned return
+times, cancel/redo, and a later return-details edit that still rejects undo.
+Existing adversarial undo endpoint coverage remains required. Device cancellation
+verification goes on the user checklist and does not gate release.

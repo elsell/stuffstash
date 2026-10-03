@@ -137,6 +137,13 @@ These instructions are binding for all agents and contributors working in this r
 
 ## Testing
 
+- Collect tests requiring the user's device or judgment in
+  `docs/reports/user-testing-checklist.md`; keep steps, expected outcomes and status
+  together. Do not repeatedly request the same test or block implementation,
+  merging, release, or the active goal on pending user testing. Keep unperformed
+  checks explicitly unverified; retain required automated checks and known defects.
+
+
 - Always use test-driven development.
 - Write the failing test first, then implement the smallest correct behavior, then refactor.
 - Tests must verify real functionality and meaningful behavior.
