@@ -789,10 +789,6 @@
       "candidates": 1
     },
     {
-      "file": "apps/web/src/lib/application/workspaceAssetWorkflow.ts",
-      "candidates": 1
-    },
-    {
       "file": "apps/web/src/lib/components/ui/alert-dialog/alert-dialog-content.svelte",
       "candidates": 1
     },

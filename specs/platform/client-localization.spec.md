@@ -402,3 +402,12 @@ conversation case/outcome/operation summaries through typed catalog mappings.
 Reuse the same mappings in expected and observed summaries, including forbidden
 and executed operation lists. Keep wire enums, fixture IDs, authored names and
 technical verdict codes unchanged; localization must not change evaluator inputs.
+
+### Web item creation recovery
+
+Creation and post-save refresh failures use cataloged recovery for ordinary
+exceptions through safeWorkspaceErrorMessage. Preserve explicitly safe server
+validation and user names. Saved items, created parents and tags must survive
+failures without duplicate creation. Unavailable tag creation uses an explicitly
+safe cataloged message. Verify initial failure, partial success and unavailable
+tag capability through the real workflow; preserve pseudo-localization.

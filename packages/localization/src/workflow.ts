@@ -256,6 +256,7 @@ export const workflowMessages = {
   "progress.navigation.upcoming": "Go to {step}, not started step",
   "progress.navigation.described": "{label}. {description}",
   "sharing.invitation.message": "You’re invited to {inventory} in Stuff Stash.\n\n{link}",
+  "recovery.tagCreationUnavailable": "Tag creation is unavailable. Choose an existing tag or try again later.",
   "recovery.uploadConfiguration": "Could not start the upload. Check your server settings and try again.",
   "recovery.uploadFailed": "Could not upload the file. Try again.",
   "recovery.uploadContentUnavailable": "This file is no longer available. Choose it again.",

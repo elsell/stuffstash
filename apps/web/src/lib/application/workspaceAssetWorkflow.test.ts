@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import { describe, expect, it } from 'vitest';
 import type {
   AddAssetDraft,
@@ -307,8 +308,32 @@ describe('workspace asset workflow', () => {
     });
 
     expect(result.saveResult).toEqual({ saved: false, createdParentId: 'parent-one' });
-    expect(result.error).toBe('Created Garage bin, but could not save Tape measure. Create failed.');
+    expect(result.error).toBe(t('web.workspaceAssetWorkflow.createdButCouldNotSave', { title: 'Garage bin', title2: 'Tape measure', failure: t('web.workspaceAssetWorkflow.actionFailed') }));
     expect(result.data.assets.map((item) => item.id)).toEqual(['parent-one']);
+  });
+
+  it('replaces internal creation errors but preserves safe validation', async () => {
+    for (const failure of [new Error('RAW_SENTINEL private detail'), safeUploadError('Choose another item name.')]) {
+      const repository = fakeRepository({ createdAssets: [], createFailureAfter: 0, createFailure: failure });
+      const result = await createAssetWorkflow(repository, workspaceData(), inventory, {
+        kind: 'item', title: 'Tape measure', description: '', parentAssetId: null, customFields: {}, photos: []
+      });
+      expect(result.saveResult).toEqual({ saved: false });
+      expect(result.closeAdd).toBe(false);
+      expect(result.error).toBe('safeForUser' in failure ? failure.message : t('web.workspaceAssetWorkflow.actionFailed'));
+      expect(result.error).not.toContain('RAW_SENTINEL');
+    }
+  });
+
+  it('uses cataloged recovery when tag creation is unavailable', async () => {
+    const { createAssetTag: unused, ...repository } = fakeRepository({ createdAssets: [] });
+    const result = await createAssetWorkflow(repository, workspaceData(), inventory, {
+      kind: 'item', title: 'Tape measure', description: '', parentAssetId: null,
+      customFields: {}, newTags: [{ displayName: 'Workshop' }], photos: []
+    });
+    expect(result.saveResult).toEqual({ saved: false });
+    expect(result.closeAdd).toBe(false);
+    expect(result.error).toBe(t('recovery.tagCreationUnavailable'));
   });
 
   it('keeps inline-created tags visible when asset creation fails', async () => {
@@ -402,7 +427,7 @@ describe('workspace asset workflow', () => {
 
     expect(result.saveResult).toEqual({ saved: true });
     expect(result.closeAdd).toBe(true);
-    expect(result.error).toBe('Saved Tape measure, but could not refresh the active view. Refresh failed.');
+    expect(result.error).toBe(t('web.workspaceAssetWorkflow.savedButCouldNotRefreshTheActiveView', { title: 'Tape measure', failure: t('web.workspaceAssetWorkflow.actionFailed') }));
     expect(result.selectedAsset?.id).toBe('asset-one');
     expect(result.route).toMatchObject({ mode: 'asset', assetId: 'asset-one' });
   });
@@ -424,7 +449,7 @@ describe('workspace asset workflow', () => {
 
     expect(result.saveResult).toEqual({ saved: true });
     expect(result.closeAdd).toBe(true);
-    expect(result.error).toBe('Saved Garage shelf, but could not refresh the active view. Refresh failed.');
+    expect(result.error).toBe(t('web.workspaceAssetWorkflow.savedButCouldNotRefreshTheActiveView', { title: 'Garage shelf', failure: t('web.workspaceAssetWorkflow.actionFailed') }));
     expect(result.mode).toBe('location');
     expect(result.selectedAsset?.id).toBe('location-one');
     expect(result.route).toMatchObject({ mode: 'location', locationId: 'location-one' });
@@ -449,7 +474,7 @@ describe('workspace asset workflow', () => {
 
     expect(result.saveResult).toEqual({ saved: true });
     expect(result.message).toBe('Saved Tape measure in Garage bin with 1 photo upload.');
-    expect(result.error).toBe('Saved Tape measure, but could not refresh the active view. Refresh failed.');
+    expect(result.error).toBe(t('web.workspaceAssetWorkflow.savedButCouldNotRefreshTheActiveView', { title: 'Tape measure', failure: t('web.workspaceAssetWorkflow.actionFailed') }));
     expect(result.selectedAsset?.photo).toMatchObject({ id: 'photo-one', assetId: 'asset-one', url: 'blob:front' });
     expect(result.route).toMatchObject({ mode: 'asset', assetId: 'asset-one' });
   });
@@ -487,6 +512,7 @@ function fakeRepository({
   uploadFailureError = new Error('Upload failed.'),
   failedUploadIndexes = [],
   createFailureAfter,
+  createFailure = new Error('Create failed.'),
   createdTags = [],
   selectedLifecycleData,
   selectLifecycleFailure = false,
@@ -498,6 +524,7 @@ function fakeRepository({
   uploadFailureError?: Error;
   failedUploadIndexes?: number[];
   createFailureAfter?: number;
+  createFailure?: Error;
   createdTags?: AssetTag[];
   selectedLifecycleData?: WorkspaceData;
   selectLifecycleFailure?: boolean;
@@ -518,7 +545,7 @@ function fakeRepository({
     async createAsset(_tenantId: string, _inventoryId: string, draft: AddAssetDraft): Promise<Asset> {
       onCreateAsset?.(draft);
       if (createFailureAfter !== undefined && createCount >= createFailureAfter) {
-        throw new Error('Create failed.');
+        throw createFailure;
       }
       const created = createdAssets[createCount];
       createCount += 1;

@@ -1,4 +1,5 @@
 import { t } from '$lib/presentation/localization';
+import { safeWorkspaceErrorMessage } from './workspaceSafeError';
 import type {
   AddAssetDraft,
   AddAssetSaveResult,
@@ -114,7 +115,7 @@ export async function createAssetWorkflow(
   } catch (caught) {
     if (createdAsset) {
       const selectedAsset = savedAsset ?? createdAsset;
-      const failure = caught instanceof Error ? caught.message : t('web.workspaceAssetWorkflow.actionFailed');
+      const failure = safeWorkspaceErrorMessage(caught, t('web.workspaceAssetWorkflow.actionFailed'));
       return {
         data: dataWithTags(data, createdTags),
         saveResult: { saved: true },
@@ -130,7 +131,7 @@ export async function createAssetWorkflow(
       createdParent && data.context.assetLifecycleState === 'active' && !data.assets.some((asset) => asset.id === createdParent?.id)
         ? { ...dataWithTags(data, createdTags), assets: [createdParent, ...data.assets] }
         : dataWithTags(data, createdTags);
-    const failure = caught instanceof Error ? caught.message : t('web.workspaceAssetWorkflow.actionFailed');
+    const failure = safeWorkspaceErrorMessage(caught, t('web.workspaceAssetWorkflow.actionFailed'));
     return {
       data: nextData,
       saveResult: createdParent ? { saved: false, createdParentId: createdParent.id } : { saved: false },
@@ -148,7 +149,7 @@ async function createPendingTags(
 ): Promise<AssetTag[]> {
   const created: AssetTag[] = [];
   if (pendingTags.length > 0 && !repository.createAssetTag) {
-    throw new Error('Tag creation is unavailable.');
+    throw new TagCreationUnavailableError();
   }
   for (const tag of pendingTags) {
     created.push(await repository.createAssetTag!(data.context.selectedTenantId, inventory.id, tag));
@@ -305,4 +306,9 @@ function safeUploadFailureReason(caught: unknown): string {
 
 function isSafeUserError(caught: unknown): boolean {
   return typeof caught === 'object' && caught !== null && (caught as { safeForUser?: unknown }).safeForUser === true;
+}
+
+class TagCreationUnavailableError extends Error {
+  readonly safeForUser = true;
+  constructor() { super(t('recovery.tagCreationUnavailable')); }
 }
