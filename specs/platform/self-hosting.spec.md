@@ -116,3 +116,14 @@ cancel-in-progress false does not provide a durable multi-batch queue.
 A push changing only .env.example must not start the product release workflow.
 Image-pin maintenance still runs CI and branch protection, but must not replace
 a pending product release merely to discover that no release is needed.
+
+## Label and connector public address
+
+The self-host API defaults `STUFF_STASH_PUBLIC_WEB_BASE_URL` to the configured
+HTTPS `STUFF_STASH_WEB_ORIGIN`, so label links and connector approval URLs work
+without a second address setting. An explicit public-web override remains
+supported. `STUFF_STASH_LABEL_BASE_URL` may independently choose a stable label
+address through the existing environment file. Operators explicitly run
+`labels bootstrap-instance` once after migrations; repeated execution preserves
+the persisted identity. Operating guidance must explain this setup, registered
+USB printing, and backup/address-change behavior without obsolete API-only claims.

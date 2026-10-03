@@ -241,25 +241,26 @@ completed jobs alone. These commands use the container's database credentials an
 write operational logs to stderr. The command entrypoint is covered by CI; the
 Compose examples have not yet been exercised against a released image.
 
-## Initialize label identities (development builds)
+## Set up labels and printing
 
 After setup, open an item's, container's, or location's **More → Label options**
 to preview and save a PNG or PDF. The initial size is 29 × 90 mm; choose QR with
 title or QR only independently. Print the PDF at **actual size / 100%** using your
 system print controls. Saving a file or opening printing does not confirm that a
-physical label printed. Direct USB delivery is separate work in progress.
+physical label printed. For direct printing, register the Brother QL-800 USB
+printer on its Linux computer with 29 × 90 mm labels. See [printer setup](../printing/setup/).
 
 Use **Browse → Scan label** to open a label with the camera, or paste its link if
 camera access is unavailable. Labels require sign-in and current inventory access;
 they do not make items public. An ordinary camera opens the web sign-in page,
 which also offers **Open in Stuff Stash** for self-hosted domains without app links.
 
-Give the API an HTTPS `STUFF_STASH_PUBLIC_WEB_BASE_URL`, or set
-`STUFF_STASH_LABEL_BASE_URL` to a separate stable address. Include any path
-prefix. Pass these values to the API process through your deployment's
-environment configuration; the current Compose file does not forward them
-from `.env` automatically. Printed URLs require the corresponding web landing
-route, which is not included in this API-only slice.
+The self-host Compose configuration uses `STUFF_STASH_WEB_ORIGIN` for label
+links and connector approval pages. To use another HTTPS web address, set
+`STUFF_STASH_PUBLIC_WEB_BASE_URL` in `.env`. You can separately set
+`STUFF_STASH_LABEL_BASE_URL` to a stable HTTPS address, including any path prefix;
+it must route to the web app's label landing page. Recreate the API container
+after changing these settings.
 
 After applying database migrations, initialize the instance identity once:
 
@@ -274,6 +275,6 @@ preserve label links. An ordinary camera still needs the printed hostname to
 remain reachable after an address change.
 
 Downloads require current inventory access and expire after one hour by default.
-See [label configuration](../configuration/#api-labels-development-builds).
+See [label configuration](../configuration/#api-labels).
 The bootstrap command has been verified with persistent SQLite; this Compose
 example has not yet been exercised against a released image.
