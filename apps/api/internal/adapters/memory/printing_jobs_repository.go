@@ -152,6 +152,11 @@ func (s *Store) UpdatePrintJob(_ context.Context, input ports.PrintJobUpdate) (p
 	if j.ID != before.ID || j.Scope != before.Scope || j.PrinterID != before.PrinterID {
 		return printing.Job{}, ports.ErrConflict
 	}
+	if before.Status != printing.JobPrinting && j.Status == printing.JobPrinting && input.StartReportMaxAge > 0 {
+		if input.Authority == nil || !s.printingDispatchReadyLocked(*input.Authority, input.Now, input.StartReportMaxAge) {
+			return printing.Job{}, ports.ErrConflict
+		}
+	}
 	if before.Status != printing.JobPrinting && j.Status == printing.JobPrinting && (p.Retired || p.MediaFingerprint != j.MediaFingerprint) {
 		return printing.Job{}, ports.ErrConflict
 	}

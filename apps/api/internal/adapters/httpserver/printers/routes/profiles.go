@@ -12,6 +12,7 @@ import (
 
 func Register(api huma.API, application app.App) {
 	registerPrinters(api, application)
+	registerPrintSettings(api, application)
 	registerPairings(api, application)
 	registerConnectors(api, application)
 	registerConsumerPrinters(api, application)

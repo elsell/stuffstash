@@ -17,6 +17,7 @@ import (
 )
 
 type Store struct {
+	printSettings           map[printing.Scope]printing.InventoryPrintSettings
 	printingJobContents     map[printing.JobID][]byte
 	labelInstance           printing.InstanceID
 	labelRenders            map[printing.RenderID]printing.LabelRender
