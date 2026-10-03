@@ -79,6 +79,7 @@ export const webMessages = {
   "web.Printing.waitingPrinter": "Waiting for the printer. Check its power, USB connection, and label roll.",
   "web.Printing.uncertainHelp": "Check the physical printer before requesting another label. This job may have printed and needs manual resolution.",
   "web.Printing.openAsset": "Open asset to print again",
+  "web.Printing.statusRefreshFailed": "Print status could not be refreshed. Retrying automatically.",
   "web.Printing.mediaDimensions": "{width} × {height} mm",
   "web.Printing.computerOnline": "Computer online",
   "web.Printing.computerOffline": "Computer offline",

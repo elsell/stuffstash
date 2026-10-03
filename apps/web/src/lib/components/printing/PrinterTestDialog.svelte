@@ -9,8 +9,11 @@ import {labelMediaName,printingFailureMessage} from '$lib/presentation/printing'
 import {PrintingFailure,type PrintScope,type RegisteredPrinter,type LabelTemplate,type PrintJob,type ReportedPrintOutcome} from '$lib/domain/printing';
 import type {PrintingRepository,PrintIntents} from '$lib/ports/printingRepository';
 import PairingChoice from './PairingChoice.svelte';
+import PrintStatusPolling from './PrintStatusPolling.svelte';
+import {printJobNeedsPolling} from '$lib/application/printing/polling';
+import type {PrintPollingRuntime} from '$lib/ports/printPolling';
 import PrintJobList from './PrintJobList.svelte';
-let {scope,printerId,repository,intents,onClose,onRestoreFocus}:{scope:PrintScope;printerId:string;repository:PrintingRepository;intents:PrintIntents;onClose:()=>void;onRestoreFocus:()=>void}=$props();
+let {scope,printerId,repository,intents,pollingRuntime,onClose,onRestoreFocus}:{scope:PrintScope;printerId:string;repository:PrintingRepository;intents:PrintIntents;onClose:()=>void;onRestoreFocus:()=>void;pollingRuntime?:PrintPollingRuntime}=$props();
 let request=$state(untrack(()=>intents.forPrinterTest(scope,printerId)));
 let printer=$state<RegisteredPrinter|null>(null),templates=$state<LabelTemplate[]>([]),templateKey=$state(''),showReference=$state(true);
 let busy=$state(true),locked=$state(untrack(()=>request.locked)),job=$state<PrintJob|null>(untrack(()=>request.result)),error=$state('');
@@ -31,7 +34,7 @@ async function load(){
 }
 async function run(operation:()=>Promise<PrintJob>){
  if(busy)return;busy=true;error='';
- try{const result=await operation();if(alive)job=result;}
+ try{const result=await operation();if(alive){job=result;pollError=false;}}
  catch(caught){if(alive)error=printingFailureMessage(caught);}
  finally{if(alive){busy=false;locked=request.locked;}}
 }
@@ -48,11 +51,21 @@ function another(){
 }
 async function resolve(current:PrintJob,outcome:ReportedPrintOutcome){await run(()=>repository.resolve(scope,current,outcome));}
 async function cancel(current:PrintJob){await run(()=>repository.cancel(scope,current));}
+let pollError=$state(false);
+async function pollJob(signal:AbortSignal){
+    if(!job)throw new PrintingFailure('invalid');
+    return repository.job(scope,job.id,signal);
+}
+function receiveJob(updated:PrintJob){
+    if(!busy&&job?.id===updated.id&&updated.revision>=job.revision){job=updated;pollError=false;}
+}
 </script>
+<PrintStatusPolling identity={JSON.stringify([scope.tenantId,scope.inventoryId,job?.id])} enabled={!busy&&printJobNeedsPolling(job)} read={pollJob} publish={receiveJob} failed={()=>{if(!busy)pollError=true;}} runtime={pollingRuntime}/>
 <Dialog.Root open onOpenChange={open=>{if(!open)onClose();}}>
  <Dialog.Content onCloseAutoFocus={event=>{event.preventDefault();onRestoreFocus();}}>
   <Dialog.Header><Dialog.Title>{t('web.Printing.testLabel')}</Dialog.Title><Dialog.Description>{t('web.Printing.testDescription')}</Dialog.Description></Dialog.Header>
   {#if error}<p role="alert">{error}</p>{/if}
+ {#if pollError}<p role="status">{t('web.Printing.statusRefreshFailed')}</p>{/if}
   {#if printer}<p><strong>{printer.name}</strong> · {labelMediaName(printer.media)}</p>{/if}
   {#if job}
    {#if job.status==='queued'}<p role="status">{t('web.Printing.requestQueued')}</p>{/if}

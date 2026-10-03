@@ -478,3 +478,24 @@ bootstrapped, with no asset or job committed. Authentication and inventory
 creation authorization still run first: anonymous and unrelated principals must
 not learn instance readiness by bypassing access checks. After the operator
 bootstraps the identity, the same authorized create command can succeed.
+### Web visible job polling
+
+While an inventory's printing view is visible, refresh job and printer/connector
+status without reloading editable defaults or clearing paginated history. Detail
+dialogs poll only while their job is nonterminal, including uncertain jobs awaiting
+idle confirmation. Stop polling while hidden, during a foreground command, behind
+a child printing dialog, or on teardown; refresh promptly when visible again.
+Use the existing conversation UI cadence: two seconds between successful reads,
+exponential error backoff capped at thirty seconds. Timer/visibility scheduling is
+an injected port with a browser adapter and controlled clock fake. Permit one
+outstanding poll per view, abort reads when the view stops, and fence late results
+across visibility, identity, foreground actions and teardown. Background failures
+use a separate recoverable status message without replacing a user's draft/error.
+Do not reset resolution choices on unchanged revisions or announce unchanged
+status on every poll.
+
+Controlled timer and repository fakes verify hidden pause, visible return, late
+response fencing after view replacement, no overlapping reads, error backoff,
+terminal stop, and preservation of an unsaved inventory default. A Chromium
+fixture confirms queued-to-printed updates without pressing Refresh. This is
+client status evidence, not physical printer verification.

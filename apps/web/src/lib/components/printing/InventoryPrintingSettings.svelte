@@ -9,14 +9,18 @@ import * as Button from '$lib/components/ui/button/index.js';
 import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 import { Label } from '$lib/components/ui/label/index.js';
 import PairingChoice from './PairingChoice.svelte';
+import PrintStatusPolling from './PrintStatusPolling.svelte';
+import {printJobNeedsPolling} from '$lib/application/printing/polling';
+import type {PrintPollingRuntime} from '$lib/ports/printPolling';
 import PrintJobList from './PrintJobList.svelte';
 import PrinterSettingsDialog from './PrinterSettingsDialog.svelte';
 import PrinterTestDialog from './PrinterTestDialog.svelte';
 import AssetPrintDialog from './AssetPrintDialog.svelte';
-let { scope, repository, intents, canConfigure, canPrint }: {
+let { scope, repository, intents, pollingRuntime, canConfigure, canPrint }: {
     scope: PrintScope;
     repository: PrintingRepository;
     intents?: PrintIntents;
+    pollingRuntime?:PrintPollingRuntime;
     canConfigure: boolean;
     canPrint: boolean;
 } = $props();
@@ -58,6 +62,7 @@ async function refresh() { busy = true; error = ''; try {
     const page = await repository.jobs(scope);
     jobs = page.items;
     nextCursor = page.nextCursor;
+    pollError=false;
 }
 catch (caught) {
     error = printingFailureMessage(caught);
@@ -82,6 +87,7 @@ async function moreJobs() { if (!nextCursor || busy)
     const page = await repository.jobs(scope, nextCursor);
     jobs = [...jobs, ...page.items];
     nextCursor = page.nextCursor;
+    pollError=false;
 }
 catch (caught) {
     error = printingFailureMessage(caught);
@@ -101,10 +107,29 @@ finally {
     busy = false;
 } }
 async function resolve(job:PrintJob,outcome:ReportedPrintOutcome){if(!canPrint||busy)return;busy=true;error='';try{const updated=await repository.resolve(scope,job,outcome);jobs=jobs.map(current=>current.id===updated.id?updated:current);}catch(caught){error=printingFailureMessage(caught);}finally{busy=false;}}
+let pollError=$state(false);
+async function pollStatus(signal:AbortSignal){
+    const capturedScope={...scope};const displayedJobs=[...jobs];
+    const [currentPrinters,currentConnectors,page]=await Promise.all([repository.printers(capturedScope,signal),repository.connectors(capturedScope,signal),repository.jobs(capturedScope,undefined,signal)]);
+    signal.throwIfAborted();
+    const ids=new Set(page.items.map(j=>j.id));
+    const older=await Promise.all(displayedJobs.filter(j=>!ids.has(j.id)&&printJobNeedsPolling(j)).map(j=>repository.job(capturedScope,j.id,signal)));
+    return {currentPrinters,currentConnectors,page,older};
+}
+function receiveStatus(value:Awaited<ReturnType<typeof pollStatus>>){
+    if(busy)return;pollError=false;
+    printers=value.currentPrinters.map(p=>{const current=printers.find(c=>c.id===p.id);return current&&current.revision>p.revision?current:p;});
+    connectors=value.currentConnectors;
+    const old=new Map(jobs.map(j=>[j.id,j]));
+    const refreshed=[...value.page.items,...value.older].map(j=>{const current=old.get(j.id);return current&&current.revision>j.revision?current:j;});
+    const ids=new Set(refreshed.map(j=>j.id));jobs=[...refreshed,...jobs.filter(j=>!ids.has(j.id))];
+}
 </script>
+<PrintStatusPolling identity={JSON.stringify([scope.tenantId,scope.inventoryId])} enabled={!busy&&Boolean(draft)&&!editing&&!testPrinterId&&!reprint} read={pollStatus} publish={receiveStatus} failed={()=>{if(!busy)pollError=true;}} runtime={pollingRuntime}/>
 <section class="printing-settings" aria-labelledby="printing-settings-title" aria-busy={busy}>
  <header><h1 id="printing-settings-title">{t('web.Printing.title')}</h1><p>{t('web.Printing.description')}</p></header>
  {#if error}<p role="alert">{error}</p>{/if}
+ {#if pollError}<p role="status">{t('web.Printing.statusRefreshFailed')}</p>{/if}
  {#if !draft}{#if busy}<p role="status">{t('web.Printing.loading')}</p>{:else}<Button.Root onclick={()=>void load()}>{t('web.Printing.reload')}</Button.Root>{/if}
  {:else}
   <section><h2>{t('web.Printing.defaults')}</h2>

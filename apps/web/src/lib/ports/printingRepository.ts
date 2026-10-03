@@ -1,7 +1,7 @@
 import type { ReportedPrintOutcome, PrinterMediaChoice, LabelTemplate, PrintDefaults, PrintScope, RegisteredPrinter, PrintConnector, PrintJob, PrintPage, LabelSelection, LabelPreview, LabelMedia } from '$lib/domain/printing';
 export interface PrintingRepository {
-    printers(scope: PrintScope): Promise<RegisteredPrinter[]>;
-    connectors(scope: PrintScope): Promise<PrintConnector[]>;
+    printers(scope: PrintScope, signal?: AbortSignal): Promise<RegisteredPrinter[]>;
+    connectors(scope: PrintScope, signal?: AbortSignal): Promise<PrintConnector[]>;
     mediaProfiles(scope: PrintScope): Promise<PrinterMediaChoice[]>;
     templates(scope: PrintScope): Promise<LabelTemplate[]>;
     settings(scope: PrintScope): Promise<PrintDefaults>;
@@ -11,8 +11,8 @@ export interface PrintingRepository {
     createJob(scope: PrintScope, assetId: string, selection: LabelSelection, previewFingerprint: string, key: string): Promise<PrintJob>;
     reprint(scope: PrintScope, predecessor: string, selection: LabelSelection, previewFingerprint: string, key: string): Promise<PrintJob>;
     testPrinter(scope: PrintScope, printerId: string, selection: LabelSelection, key: string): Promise<PrintJob>;
-    job(scope: PrintScope, id: string): Promise<PrintJob>;
-    jobs(scope: PrintScope, cursor?: string): Promise<PrintPage<PrintJob>>;
+    job(scope: PrintScope, id: string, signal?: AbortSignal): Promise<PrintJob>;
+    jobs(scope: PrintScope, cursor?: string, signal?: AbortSignal): Promise<PrintPage<PrintJob>>;
     resolve(scope:PrintScope,job:PrintJob,outcome:ReportedPrintOutcome):Promise<PrintJob>;
     cancel(scope: PrintScope, job: PrintJob): Promise<PrintJob>;
 }

@@ -6,8 +6,8 @@ type Schema=components['schemas'];
 export class PrintingClient {
  private readonly transport;
  constructor(options:StuffStashClientOptions){this.transport=createAuthenticatedTransport(options);}
- async printers(scope:PrintScope,cursor?:string){return page(await this.transport.GET('/tenants/{tenantId}/inventories/{inventoryId}/printers',{params:{path:scope,query:{limit:100,cursor}}}));}
- async connectors(scope:PrintScope,cursor?:string){return page(await this.transport.GET('/tenants/{tenantId}/inventories/{inventoryId}/print-connectors',{params:{path:scope,query:{limit:100,cursor}}}));}
+ async printers(scope:PrintScope,cursor?:string,signal?:AbortSignal){return page(await this.transport.GET('/tenants/{tenantId}/inventories/{inventoryId}/printers',{signal,params:{path:scope,query:{limit:100,cursor}}}));}
+ async connectors(scope:PrintScope,cursor?:string,signal?:AbortSignal){return page(await this.transport.GET('/tenants/{tenantId}/inventories/{inventoryId}/print-connectors',{signal,params:{path:scope,query:{limit:100,cursor}}}));}
  async templates(scope:PrintScope){return unwrap(await this.transport.GET('/tenants/{tenantId}/inventories/{inventoryId}/label-templates',{params:{path:scope}}))??[];}
  async settings(scope:PrintScope){return unwrap(await this.transport.GET('/tenants/{tenantId}/inventories/{inventoryId}/print-settings',{params:{path:scope}}));}
  async saveSettings(scope:PrintScope,input:Schema['InventoryPrintSettings']){return unwrap(await this.transport.PUT('/tenants/{tenantId}/inventories/{inventoryId}/print-settings',{params:{path:scope},body:input}));}
@@ -20,8 +20,8 @@ export class PrintingClient {
   return data;
  }
  async createJob(scope:PrintScope,assetId:string,input:Schema['PrintJobSelection'],key:string){return unwrap(await this.transport.POST('/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/print-jobs',{params:{path:{...scope,assetId},header:{'Idempotency-Key':key}},body:input}));}
- async job(scope:PrintScope,jobId:string){return unwrap(await this.transport.GET('/tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}',{params:{path:{...scope,jobId}}}));}
- async jobs(scope:PrintScope,cursor?:string){return page(await this.transport.GET('/tenants/{tenantId}/inventories/{inventoryId}/print-jobs',{params:{path:scope,query:{limit:25,cursor}}}));}
+ async job(scope:PrintScope,jobId:string,signal?:AbortSignal){return unwrap(await this.transport.GET('/tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}',{signal,params:{path:{...scope,jobId}}}));}
+ async jobs(scope:PrintScope,cursor?:string,signal?:AbortSignal){return page(await this.transport.GET('/tenants/{tenantId}/inventories/{inventoryId}/print-jobs',{signal,params:{path:scope,query:{limit:25,cursor}}}));}
  async resolve(scope:PrintScope,jobId:string,input:Schema['PrintJobResolutionRequest']){return unwrap(await this.transport.POST('/tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/resolution',{params:{path:{...scope,jobId}},body:input}));}
  async reprint(scope:PrintScope,jobId:string,input:Schema['PrintJobSelection'],key:string){return unwrap(await this.transport.POST('/tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/reprints',{params:{path:{...scope,jobId},header:{'Idempotency-Key':key}},body:input}));}
  async testJob(scope:PrintScope,printerId:string,input:Schema['PrintJobSelection'],key:string){return unwrap(await this.transport.POST('/tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId}/test-jobs',{params:{path:{...scope,printerId},header:{'Idempotency-Key':key}},body:input}));}
