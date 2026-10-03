@@ -31,7 +31,7 @@ func (s Store) GetPrintJob(ctx context.Context, scope printing.Scope, id printin
 	return m.domain()
 }
 func (s Store) ListPrintJobs(ctx context.Context, scope printing.Scope, printer printing.PrinterID, limit int, after string) ([]printing.Job, error) {
-	if scope.TenantID == "" || scope.InventoryID == "" || limit < 1 || limit > 100 {
+	if scope.TenantID == "" || scope.InventoryID == "" || limit < 1 || limit > 101 {
 		return nil, ports.ErrConflict
 	}
 	q := scopedPrintJobs(s.db.WithContext(ctx), scope).Where(clause.Gt{Column: "id", Value: after})
@@ -92,7 +92,7 @@ func (s Store) CreatePrintJob(ctx context.Context, input ports.PrintJobCreate) (
 		if input.Audit.ID == "" || string(input.Audit.TenantID) != j.Scope.TenantID || string(input.Audit.InventoryID) != j.Scope.InventoryID || input.Audit.TargetID != string(j.ID) {
 			return ports.ErrConflict
 		}
-		model, e := printJobModel(j, input.RequestFingerprint)
+		model, e := printJobModel(j, input.RequestFingerprint, input.Content)
 		if e != nil {
 			return e
 		}

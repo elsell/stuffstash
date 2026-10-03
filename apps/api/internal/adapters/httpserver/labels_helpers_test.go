@@ -22,6 +22,10 @@ const labelOtherInventory = "01ARZ3NDEKTSV4RRFFQ69G5FAX"
 const labelPrefix = "/tenants/" + labelTenant + "/inventories/" + labelInventory
 
 func labelTestServer(t *testing.T, clocks ...ports.Clock) (*http.Server, *memory.Store, *memory.Authorizer) {
+	application, store, az := labelTestApplication(t, clocks...)
+	return NewServer(":0", application), store, az
+}
+func labelTestApplication(t *testing.T, clocks ...ports.Clock) (app.App, *memory.Store, *memory.Authorizer) {
 	t.Helper()
 	ctx := context.Background()
 	store := memory.NewStore()
@@ -37,7 +41,7 @@ func labelTestServer(t *testing.T, clocks ...ports.Clock) (*http.Server, *memory
 		t.Fatal(err)
 	}
 	application := app.New(app.Dependencies{Labels: svc, Observer: &fakeObserver{}, Auth: auth.NewLocalDevAuthenticator(), Authorizer: az, Users: store, Tenants: store, TenantUnitOfWork: store, Inventories: store, InventoryUnitOfWork: store, InventoryAccess: store, InventoryAccessUnitOfWork: store, Assets: store, AssetUnitOfWork: store, AssetTags: store, AssetTagUnitOfWork: store, Checkouts: store, Undoables: store, CustomAssetTypes: store, CustomFields: store, Audit: store, Outbox: store})
-	return NewServer(":0", application), store, az
+	return application, store, az
 }
 func labelResponseData(t *testing.T, resBody []byte) map[string]any {
 	t.Helper()

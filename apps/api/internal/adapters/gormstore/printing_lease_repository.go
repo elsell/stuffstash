@@ -36,7 +36,7 @@ func (s Store) RenewPrintJob(ctx context.Context, in ports.PrintLeaseRenewal) (r
 		if e = j.Renew(in.Owner, in.Now, in.Lease, in.Revision); e != nil {
 			return e
 		}
-		model, e := printJobModel(j, before.RequestFingerprint)
+		model, e := printJobModel(j, before.RequestFingerprint, before.ArtifactContent)
 		if e != nil {
 			return e
 		}

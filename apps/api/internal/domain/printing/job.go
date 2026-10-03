@@ -31,6 +31,7 @@ var (
 )
 
 type Artifact struct {
+	ExpiresAt                 time.Time
 	Key, SHA256, ContentType  string
 	ByteLength                int64
 	WidthPixels, HeightPixels int

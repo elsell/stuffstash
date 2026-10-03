@@ -1169,6 +1169,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/print-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID assets by asset ID print jobs */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-print-jobs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore": {
         parameters: {
             query?: never;
@@ -1723,6 +1740,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/print-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID print jobs */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID print jobs by job ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/cancellation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID print jobs by job ID cancellation */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id-cancellation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/printer-profiles": {
         parameters: {
             query?: never;
@@ -1738,6 +1806,42 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/printers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID printers */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-printers"];
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID printers */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-printers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID printers by printer ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID printers by printer ID */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id"];
         trace?: never;
     };
     "/tenants/{tenantId}/inventories/{inventoryId}/restore": {
@@ -3215,6 +3319,81 @@ export interface components {
             email?: string;
             id: string;
         };
+        PrintJob: {
+            assetId?: string;
+            attempts: components["schemas"]["PrintJobAttempt"][] | null;
+            /** Format: int64 */
+            copies: number;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            kind: string;
+            mediaFingerprint: string;
+            printerId: string;
+            requestedBy: string;
+            /** Format: int64 */
+            revision: number;
+            status: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        PrintJobAttempt: {
+            /** Format: date-time */
+            claimedAt: string;
+            /** Format: int64 */
+            completedCopies: number;
+            connectorId: string;
+            id: string;
+            /** Format: date-time */
+            leaseExpiresAt: string;
+            outcome: string;
+            reason: string;
+            /** Format: date-time */
+            settledAt?: string;
+            /** Format: date-time */
+            startedAt?: string;
+        };
+        PrintJobRevision: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/PrintJobRevision.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            revision: number;
+        };
+        PrintJobSelection: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/PrintJobSelection.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            copies: number;
+            expectedMediaFingerprint: string;
+            previewFingerprint?: string;
+            printerId: string;
+            templateId: string;
+            templateOptions: components["schemas"]["PrintJobTemplateOptions"];
+            /** Format: int32 */
+            templateVersion: number;
+        };
+        PrintJobTemplateOptions: {
+            showReference: boolean;
+        };
+        Printer: {
+            adapterId: string;
+            id: string;
+            media: components["schemas"]["MediaProfile"];
+            mediaFingerprint: string;
+            name: string;
+            readiness: string;
+            retired: boolean;
+            /** Format: int64 */
+            revision: number;
+        };
         PrinterProfile: {
             adapterId: string;
             media: components["schemas"]["MediaProfile"][] | null;
@@ -3294,6 +3473,19 @@ export interface components {
             token: string;
             /** @enum {string} */
             transport: "apns" | "fcm";
+        };
+        RegisterPrinterBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/RegisterPrinterBody.json
+             */
+            readonly $schema?: string;
+            adapterId: string;
+            name: string;
+            presetId: string;
+            /** Format: int32 */
+            presetVersion: number;
         };
         RenderInputBody: {
             /**
@@ -3814,6 +4006,26 @@ export interface components {
             data: components["schemas"]["NotificationResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListPrintJob: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListPrintJob.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["PrintJob"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeListPrinter: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListPrinter.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["Printer"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeListPrinterProfile: {
             /**
              * Format: uri
@@ -3912,6 +4124,26 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["PrincipalResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopePrintJob: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopePrintJob.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["PrintJob"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopePrinter: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopePrinter.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["Printer"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeProviderProfileResponse: {
@@ -4150,6 +4382,21 @@ export interface components {
              * @description New invitation expiration timestamp
              */
             expiresAt: string;
+        };
+        UpdatePrinterBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/UpdatePrinterBody.json
+             */
+            readonly $schema?: string;
+            name?: string;
+            presetId?: string;
+            /** Format: int32 */
+            presetVersion?: number;
+            retired?: boolean;
+            /** Format: int64 */
+            revision: number;
         };
         UpdateProviderProfileBody: {
             /**
@@ -8204,6 +8451,48 @@ export interface operations {
             };
         };
     };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-print-jobs": {
+        parameters: {
+            query?: never;
+            header: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrintJobSelection"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintJob"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-restore": {
         parameters: {
             query?: never;
@@ -9903,6 +10192,124 @@ export interface operations {
             };
         };
     };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs": {
+        parameters: {
+            query?: {
+                printerId?: string;
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListPrintJob"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintJob"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id-cancellation": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrintJobRevision"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintJob"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     "get-tenants-by-tenant-id-inventories-by-inventory-id-printer-profiles": {
         parameters: {
             query?: never;
@@ -9924,6 +10331,160 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeListPrinterProfile"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-printers": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListPrinter"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-printers": {
+        parameters: {
+            query?: never;
+            header: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterPrinterBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrinter"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                printerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrinter"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                printerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePrinterBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrinter"];
                 };
             };
             /** @description Error */

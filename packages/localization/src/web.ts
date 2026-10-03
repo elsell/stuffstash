@@ -1,5 +1,10 @@
 /** web presentation messages. */
 export const webMessages = {
+ "audit.action.print_job.queued": "Label queued",
+ "audit.action.print_job.viewed": "Print job viewed",
+ "audit.action.print_job.listed": "Print jobs viewed",
+ "audit.action.print_job.canceled": "Print job canceled",
+ "audit.target.print_job": "Print job",
   "audit.action.printer.registered": "Printer registered",
   "audit.action.printer.viewed": "Printer viewed",
   "audit.action.printer.listed": "Printers viewed",

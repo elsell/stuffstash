@@ -524,3 +524,13 @@ Lease renewal uses a dedicated repository command, under the same connector,
 binding, printer and job locks, that can change only the current owned attempt
 lease and job revision/timestamp. It does not emit a history record and cannot
 be used as a general mutation or audit bypass.
+
+The initial queue stores bounded rendered PNG bytes with the job in the same
+transaction, so an acknowledged queued job never refers to an uncommitted or
+mutable render. This is separate from short-lived download previews. Runtime
+configuration controls maximum copies (default 20), artifact bytes (default 1 MiB),
+artifact lifetime (default 7 days), terminal history lifetime (default 30 days),
+claim lease (default 60 seconds), and readiness freshness (default 90 seconds).
+Expiry removes private artifact bytes while preserving job/attempt metadata and
+safe audit history; an expired artifact cannot be started or downloaded. An
+uncertain reservation is never removed by retention cleanup.

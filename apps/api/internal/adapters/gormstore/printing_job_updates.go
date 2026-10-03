@@ -36,7 +36,7 @@ func savePrintJobChange(tx *gorm.DB, before printingJobModel, j printing.Job, p 
 	if err = validatePrintJobAudit(record, j); err != nil {
 		return err
 	}
-	model, err := printJobModel(j, before.RequestFingerprint)
+	model, err := printJobModel(j, before.RequestFingerprint, before.ArtifactContent)
 	if err != nil {
 		return err
 	}

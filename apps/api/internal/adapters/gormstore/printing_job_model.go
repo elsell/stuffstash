@@ -9,6 +9,8 @@ import (
 // Indexed routing columns remain separate from the immutable rendering snapshot
 // and attempt evidence. The aggregate is written only under the printer lock.
 type printingJobModel struct {
+	ArtifactContent      []byte
+	ArtifactExpiresAt    time.Time
 	ID                   string `gorm:"primaryKey;size:26"`
 	TenantID             string `gorm:"not null;uniqueIndex:idx_print_job_request,priority:1;index:idx_print_job_queue,priority:1"`
 	InventoryID          string `gorm:"not null;uniqueIndex:idx_print_job_request,priority:2;index:idx_print_job_queue,priority:2"`
@@ -29,7 +31,7 @@ func (m printingJobModel) domain() (printing.Job, error) {
 	err := json.Unmarshal(m.Snapshot, &j)
 	return j, err
 }
-func printJobModel(j printing.Job, fingerprint string) (printingJobModel, error) {
+func printJobModel(j printing.Job, fingerprint string, content []byte) (printingJobModel, error) {
 	data, err := json.Marshal(j)
-	return printingJobModel{ID: string(j.ID), TenantID: j.Scope.TenantID, InventoryID: j.Scope.InventoryID, PrinterID: string(j.PrinterID), RequestedBy: j.RequestedBy, IdempotencyKey: j.IdempotencyKey, Status: string(j.Status), MediaFingerprint: j.MediaFingerprint, RequestFingerprint: fingerprint, Revision: j.Revision, Snapshot: data, CreatedAt: j.CreatedAt, UpdatedAt: j.UpdatedAt}, err
+	return printingJobModel{ArtifactContent: content, ArtifactExpiresAt: j.Artifact.ExpiresAt, ID: string(j.ID), TenantID: j.Scope.TenantID, InventoryID: j.Scope.InventoryID, PrinterID: string(j.PrinterID), RequestedBy: j.RequestedBy, IdempotencyKey: j.IdempotencyKey, Status: string(j.Status), MediaFingerprint: j.MediaFingerprint, RequestFingerprint: fingerprint, Revision: j.Revision, Snapshot: data, CreatedAt: j.CreatedAt, UpdatedAt: j.UpdatedAt}, err
 }

@@ -28,7 +28,7 @@ func (s *Store) GetPrintJob(_ context.Context, scope printing.Scope, id printing
 func (s *Store) ListPrintJobs(_ context.Context, scope printing.Scope, printer printing.PrinterID, limit int, after string) ([]printing.Job, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	if scope.TenantID == "" || scope.InventoryID == "" || limit < 1 || limit > 100 {
+	if scope.TenantID == "" || scope.InventoryID == "" || limit < 1 || limit > 101 {
 		return nil, ports.ErrConflict
 	}
 	result := []printing.Job{}
@@ -93,6 +93,10 @@ func (s *Store) CreatePrintJob(_ context.Context, input ports.PrintJobCreate) (p
 		s.printingJobs = map[printing.JobID]printing.Job{}
 		s.printingJobFingerprints = map[printing.JobID]string{}
 	}
+	if s.printingJobContents == nil {
+		s.printingJobContents = map[printing.JobID][]byte{}
+	}
+	s.printingJobContents[j.ID] = slices.Clone(input.Content)
 	s.printingJobs[j.ID] = clonePrintJob(j)
 	s.printingJobFingerprints[j.ID] = input.RequestFingerprint
 	s.auditRecords[input.Audit.ID] = input.Audit

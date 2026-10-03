@@ -17,6 +17,7 @@ type PrintJobAudit func(before, after printing.Job) (audit.Record, error)
 type PrintJobMutation func(job *printing.Job, printer printing.Printer) error
 
 type PrintJobCreate struct {
+	Content            []byte
 	Job                printing.Job
 	PrinterRevision    uint64
 	RequestFingerprint string
@@ -52,6 +53,8 @@ type PrintLeaseRenewal struct {
 }
 
 type PrintJobRepository interface {
+	FindPrintJobRequest(context.Context, printing.Scope, string, string) (printing.Job, string, error)
+	GetPrintJobContent(context.Context, printing.Scope, printing.JobID, time.Time) ([]byte, error)
 	RenewPrintJob(context.Context, PrintLeaseRenewal) (printing.Job, error)
 	CreatePrintJob(context.Context, PrintJobCreate) (printing.Job, bool, error)
 	GetPrintJob(context.Context, printing.Scope, printing.JobID) (printing.Job, error)

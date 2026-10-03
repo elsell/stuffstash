@@ -30,12 +30,19 @@ func TestPrintingQueuePersistsIdempotencyAndRollsBackAuditFailure(t *testing.T) 
 	if err = s.db.Create(&p).Error; err != nil {
 		t.Fatal(err)
 	}
-	job := printing.Job{ID: "job", Scope: scope, PrinterID: "printer", Status: printing.JobQueued, Revision: 1, Copies: 1, MediaFingerprint: "media", RequestedBy: "human", IdempotencyKey: "request", CreatedAt: time.Now().UTC()}
+	job := printing.Job{Artifact: printing.Artifact{ExpiresAt: time.Now().Add(time.Hour)}, ID: "job", Scope: scope, PrinterID: "printer", Status: printing.JobQueued, Revision: 1, Copies: 1, MediaFingerprint: "media", RequestedBy: "human", IdempotencyKey: "request", CreatedAt: time.Now().UTC()}
 	record := auditRecord(t, "queue-created", "tenant", "inventory", audit.ActionAssetCreated)
 	record.TargetID = "job"
-	input := ports.PrintJobCreate{Job: job, PrinterRevision: 1, RequestFingerprint: "first", Audit: record}
+	input := ports.PrintJobCreate{Content: []byte("immutable-render"), Job: job, PrinterRevision: 1, RequestFingerprint: "first", Audit: record}
 	if _, created, err := s.CreatePrintJob(ctx, input); err != nil || !created {
 		t.Fatalf("create: %v %v", created, err)
+	}
+	content, err := s.GetPrintJobContent(ctx, scope, job.ID, time.Now())
+	if err != nil || string(content) != "immutable-render" {
+		t.Fatalf("artifact commit: %v", err)
+	}
+	if _, err = s.GetPrintJobContent(ctx, scope, job.ID, time.Now().Add(2*time.Hour)); !errors.Is(err, ports.ErrPrintJobNotFound) {
+		t.Fatalf("expired content accessible: %v", err)
 	}
 	// Replay survives a restart and later printer configuration changes.
 	s = NewStore(s.db)
