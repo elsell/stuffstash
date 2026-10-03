@@ -15,15 +15,15 @@
   const printing=getContext<PrintingWorkspace|undefined>(printingWorkspaceContext);
   const labels=$derived(getLabels?.()??null);
   const printable=$derived(canPrint&&Boolean(printing));
-  let action=$state<'download'|'print'|'status'|null>(null);
+  let action=$state<'download'|'print'|'options'|'status'|null>(null);
   let menuOpen=$state(false);
   let trigger=$state<HTMLButtonElement|null>(null);
   $effect(()=>{
     if(disabled){menuOpen=false;action=null;}
     if(action==='download'&&!labels)action=null;
-    if((action==='print'||action==='status')&&!printable)action=null;
+    if((action==='print'||action==='options'||action==='status')&&!printable)action=null;
   });
-  function select(next:'download'|'print'|'status'){
+  function select(next:'download'|'print'|'options'|'status'){
     if(disabled||(next==='download'?!labels:!printable))return;
     action=next;
   }
@@ -38,12 +38,12 @@
       {#if printable&&recentJobId}<DropdownMenu.Item {disabled} onSelect={()=>select('status')}>{t('web.Printing.viewCreatedJob')}</DropdownMenu.Item>{/if}
     </DropdownMenu.Content>
   </DropdownMenu.Root>
-  {#if labels}
+  {#if labels&&action==='download'}
     <WorkspaceTaskSheet open={action==='download'} title={t('labels.web.options')} onOpenChange={open=>{if(!open)action=null;}} onCloseAutoFocus={restoreFocus}>
-      {#if action==='download'}{#key labels}<LabelOptions workspace={labels} {scope}/>{/key}{/if}
+      {#key labels}<LabelOptions workspace={labels} {scope} onPrinterOptions={printable?()=>select('options'):undefined}/>{/key}
     </WorkspaceTaskSheet>
   {/if}
-  {#if (action==='print'||action==='status')&&printable&&printing}
-    <AssetPrintDialog scope={{tenantId:scope.tenantId,inventoryId:scope.inventoryId}} assetId={scope.assetId} initialJobId={action==='status'?recentJobId:undefined} repository={printing.repository} intents={printing.intents} onRestoreFocus={restoreFocus} onClose={()=>{action=null;}}/>
+  {#if (action==='print'||action==='options'||action==='status')&&printable&&printing}
+    <AssetPrintDialog quickDefault={action==='print'} scope={{tenantId:scope.tenantId,inventoryId:scope.inventoryId}} assetId={scope.assetId} initialJobId={action==='status'?recentJobId:undefined} repository={printing.repository} intents={printing.intents} onRestoreFocus={restoreFocus} onClose={()=>{action=null;}}/>
   {/if}
 {/if}

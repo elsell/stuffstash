@@ -91,3 +91,13 @@ it('retains a linked reprint after dismissal and lost response without duplicati
  const reopened=intents.forReprint(repo.scope,'asset',job.id);expect(reopened).toBe(request);expect(reopened.locked).toBe(true);const successor=await reopened.submit();expect(successor.predecessor).toBe(job.id);expect(repo.queued.size).toBe(2);expect(key).toBe(2);
  repo.canPrint=false;const denied=intents.forReprint(repo.scope,'asset',successor.id);await expect(denied.preview(selection,printer.media)).rejects.toMatchObject({kind:'denied'});
 });
+
+it('queues a default without a preview and retains its exact intent after a lost response', async () => {
+ const repo=new FakePrintingRepository(); const request=new ManualPrintRequest(repo,repo.scope,'asset','quick');
+ const p=repo.destinations[0];const selection={printerId:p.id,expectedMediaFingerprint:p.mediaFingerprint,templateId:'qr-title',templateVersion:1,showReference:true,copies:1};
+ repo.loseNextJobResponse=true;
+ await expect(request.submitDefault(selection)).rejects.toThrow();
+ expect(request.rendered).toBeNull();expect(request.locked).toBe(true);
+ await expect(request.submitDefault({...selection,copies:2})).rejects.toThrow();
+ await request.submit();expect(repo.queued.size).toBe(1);expect([...repo.queued.values()][0].copies).toBe(1);
+});

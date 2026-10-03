@@ -242,7 +242,7 @@ stuffstash print-jobs reprint <job-id>
   status, claim/recovery, and artifact endpoints, uses a Go SDK automatically
   generated from the same Huma-produced OpenAPI artifact used by web/mobile:
   `packages/api-client/openapi.json`. The existing client there is TypeScript;
-  a Go SDK does not yet exist. No separately hand-maintained Go API schema or
+  the Go SDK now uses that same contract. No separately hand-maintained Go API schema or
   endpoint/DTO layer is permitted.
 - Generate the Go SDK into `apps/cli/internal/adapters/httpapi/generated` with a
   reviewed pinned generator recorded in the tooling spec before implementation.
@@ -276,8 +276,12 @@ stuffstash print-jobs reprint <job-id>
 - Physical printing and scan checks remain explicitly unverified until performed.
   Collect user-device checks in `docs/reports/user-testing-checklist.md` during
   implementation; do not repeatedly request them or block unrelated release work.
-- Current evidence is read-only inspection of the old script on Paul, not a new
-  print, current-device discovery, or completed connector implementation.
+- The connector and Linux USB adapter are implemented. Stateful protocol,
+  journal, and worker tests verify recovery without duplicate submission. Real
+  Dex browser PKCE and device-code login have been exercised against the API;
+  these checks do not establish physical printer or scan behavior. Read-only
+  discovery on Paul found no currently attached Brother device. Physical
+  printing and scanning remain on the user-testing checklist.
 
 ## Generated First-Party Printer Documentation
 

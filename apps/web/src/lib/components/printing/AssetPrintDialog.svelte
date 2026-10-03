@@ -14,12 +14,13 @@ import PrintStatusPolling from './PrintStatusPolling.svelte';
 import {printJobNeedsPolling} from '$lib/application/printing/polling';
 import type {PrintPollingRuntime} from '$lib/ports/printPolling';
 import PrintJobList from './PrintJobList.svelte';
-let { scope, assetId, repository, intents, initialJobId, predecessor, pollingRuntime, onClose, onRestoreFocus }: {
+let { scope, assetId, repository, intents, initialJobId, predecessor, quickDefault = false, pollingRuntime, onClose, onRestoreFocus }: {
     scope: PrintScope;
     assetId: string;
     repository: PrintingRepository;
     intents: PrintIntents;
     initialJobId?:string;
+    quickDefault?:boolean;
     predecessor?:string;
     pollingRuntime?:PrintPollingRuntime;
     onClose: () => void;
@@ -54,6 +55,16 @@ async function load() { try {
         showReference = selection.showReference;
         copies = selection.copies;
     }
+    if (quickDefault && !initialJobId && !predecessor && !job && !selection && !request.locked) {
+        const destination=printers.find(p=>p.id===printerId);
+        const layout=templates.find(p=>`${p.id}:${p.version}`===templateKey);
+        if(destination && layout){
+            try {
+                job=await request.submitDefault({printerId:destination.id,expectedMediaFingerprint:destination.mediaFingerprint,templateId:layout.id,templateVersion:layout.version,showReference,copies:1});
+            } finally { if(alive)locked=request.locked; }
+        }
+    }
+    if (!alive) return;
     if (request.rendered) {
         rotation = request.rendered.displayRotation;
         previewUrl = URL.createObjectURL(request.rendered.bytes);
@@ -155,7 +166,7 @@ function receiveJob(updated:PrintJob){
  <div><Label for="label-copies">{t('web.Printing.copies')}</Label><Input id="label-copies" type="number" min="1" step="1" bind:value={copies} oninput={changed} disabled={busy||locked}/></div>
  {#if previewUrl && printer}<figure><svg role="img" aria-label={t('web.Printing.previewAlt')} viewBox={`0 0 ${rotation%180?printer.media.rasterHeight:printer.media.rasterWidth} ${rotation%180?printer.media.rasterWidth:printer.media.rasterHeight}`}><image href={previewUrl} width={printer.media.rasterWidth} height={printer.media.rasterHeight} transform={rotation===90?`translate(${printer.media.rasterHeight} 0) rotate(90)`:rotation===180?`translate(${printer.media.rasterWidth} ${printer.media.rasterHeight}) rotate(180)`:rotation===270?`translate(0 ${printer.media.rasterWidth}) rotate(270)`:undefined}/></svg></figure>{/if}
  {#if locked}<p role="status">{t('web.Printing.requestUnknown')}</p>{/if}
- <Dialog.Footer>{#if !locked}<Button variant="outline" disabled={busy||!printer||!template||!Number.isInteger(copies)||copies<1} onclick={()=>void preview()}>{t('web.Printing.preview')}</Button>{/if}<Button disabled={busy||!previewUrl} onclick={()=>void submit()}>{t(locked?'web.Printing.retryRequest':'web.Printing.printLabel')}</Button></Dialog.Footer>
+ <Dialog.Footer>{#if !locked}<Button variant="outline" disabled={busy||!printer||!template||!Number.isInteger(copies)||copies<1} onclick={()=>void preview()}>{t('web.Printing.preview')}</Button>{/if}<Button disabled={busy||(!previewUrl&&!locked)} onclick={()=>void submit()}>{t(locked?'web.Printing.retryRequest':'web.Printing.printLabel')}</Button></Dialog.Footer>
  {/if}
  </Dialog.Content>
 </Dialog.Root>
