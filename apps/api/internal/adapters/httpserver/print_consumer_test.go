@@ -28,7 +28,7 @@ func coverPrintConsumerScenarios(t *testing.T, coverage executedScenarioCoverage
 	ctx := context.Background()
 	clock := &labelTestClock{now: time.Now().UTC()}
 	application, store, az := labelTestApplication(t, clock)
-	application = application.WithPrinterRegistry(store, printingprofiles.Catalog{}).WithPrintJobs(store, printingapp.JobConfig{MaxCopies: 20, MaxArtifactBytes: 1000000, ArtifactTTL: time.Hour, Lease: 5 * time.Second, ReadinessMaxAge: time.Minute}).WithPrintConnectors(store, az, pairingcrypto.Secrets{}, printregistry.ConnectorPolicy{PublicWebBaseURL: "https://example.test", PairingLifetime: time.Minute, CredentialLifetime: time.Hour, ActivationLifetime: time.Minute, AuthorizationTimeout: time.Second, ReportMaxAge: time.Minute})
+	application = application.WithPrinterRegistry(store, printingprofiles.Catalog{}).WithPrintJobs(store, printingapp.JobConfig{MaxCopies: 20, MaxArtifactBytes: 1000000, ArtifactTTL: time.Hour, Lease: 5 * time.Second, ReadinessMaxAge: time.Second}).WithPrintConnectors(store, az, pairingcrypto.Secrets{}, printregistry.ConnectorPolicy{PublicWebBaseURL: "https://example.test", PairingLifetime: time.Minute, CredentialLifetime: time.Hour, ActivationLifetime: time.Minute, AuthorizationTimeout: time.Second, ReportMaxAge: time.Minute})
 	actor := printregistry.Actor{Principal: identity.Principal{ID: "owner"}, Scope: printing.Scope{TenantID: labelTenant, InventoryID: labelInventory}}
 	p, _, err := application.PrinterRegistry().Register(ctx, printregistry.RegisterPrinter{Actor: actor, Name: "Garage", RequestKey: "printer", AdapterID: "brother-ql800", PresetID: "brother-ql800-29x90", PresetVersion: 1})
 	if err != nil {
@@ -53,6 +53,20 @@ func coverPrintConsumerScenarios(t *testing.T, coverage executedScenarioCoverage
 	server := NewServer(":0", application)
 	token := "Bearer " + credential.Credential
 	requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", token, map[string]any{"sessionId": "session-for-printing"}), 200)
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "ready"}), 200)
+	connectorPath := labelPrefix + "/print-connectors/" + string(credential.Connector.ID)
+	health := performRequest(server, "GET", connectorPath, "Bearer dev:owner", nil)
+	requireStatus(t, health, 200)
+	if labelResponseData(t, health.Body.Bytes())["availability"] != "online" {
+		t.Fatal("fresh connector not online", health.Body.String())
+	}
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "unavailable", "reason": "paper_empty"}), 200)
+	printerHealth := performRequest(server, "GET", labelPrefix+"/printers/"+string(p.ID), "Bearer dev:owner", nil)
+	requireStatus(t, printerHealth, 200)
+	healthData := labelResponseData(t, printerHealth.Body.Bytes())
+	if healthData["readiness"] != "unavailable" || healthData["readinessReason"] != "paper_empty" || healthData["reportedAt"] == nil {
+		t.Fatal("printer attention details absent", printerHealth.Body.String())
+	}
 	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "ready"}), 200)
 	asset := performRequest(server, "POST", labelPrefix+"/assets", "Bearer dev:owner", map[string]any{"title": "Tools", "kind": "container"})
 	requireStatus(t, asset, 201)
@@ -117,6 +131,14 @@ func coverPrintConsumerScenarios(t *testing.T, coverage executedScenarioCoverage
 		t.Fatal("authorization outage allowed start")
 	}
 	az.SetPrintingAvailable(true)
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "unavailable"}), 200)
+	requireStatus(t, performRequest(server, "POST", path+"/start", token, proof), 409)
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "ready"}), 200)
+	clock.now = clock.now.Add(2 * time.Second)
+	requireStatus(t, performRequest(server, "POST", path+"/start", token, proof), 409)
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", token, map[string]any{"sessionId": "session-for-printing"}), 200)
+	requireStatus(t, performRequest(server, "POST", path+"/start", token, proof), 409)
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "ready"}), 200)
 	started := performRequest(server, "POST", path+"/start", token, proof)
 	requireStatus(t, started, 200)
 	view := performRequest(server, "GET", "/print-consumer/attempts/attempt-for-printing", token, nil)
@@ -168,6 +190,8 @@ func coverPrintConsumerScenarios(t *testing.T, coverage executedScenarioCoverage
 		t.Fatal(result.Body.String())
 	}
 	requireStatus(t, performRequest(server, "POST", "/print-consumer/attempts/attempt-after-restart/reconciliation", token, reconciliation), 200)
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/heartbeat", token, map[string]any{"sessionId": "session-for-printing"}), 200)
+	requireStatus(t, performRequest(server, "POST", "/print-consumer/printer-reports", token, map[string]any{"printerId": p.ID, "state": "ready"}), 200)
 	// Losing the initiating editor's grant cancels unstarted output.
 	editor := identity.Principal{ID: "editor"}
 	if err = az.GrantInventoryEditor(ctx, editor, labelTenant, labelInventory); err != nil {
@@ -187,6 +211,19 @@ func coverPrintConsumerScenarios(t *testing.T, coverage executedScenarioCoverage
 	requireStatus(t, canceled, 200)
 	if labelResponseData(t, canceled.Body.Bytes())["status"] != "canceled" {
 		t.Fatal("revoked initiator left dispatchable work")
+	}
+
+	clock.now = clock.now.Add(2 * time.Minute)
+	health = performRequest(server, "GET", connectorPath, "Bearer dev:owner", nil)
+	requireStatus(t, health, 200)
+	if labelResponseData(t, health.Body.Bytes())["availability"] != "offline" {
+		t.Fatal("stale heartbeat still online", health.Body.String())
+	}
+	printerHealth = performRequest(server, "GET", labelPrefix+"/printers/"+string(p.ID), "Bearer dev:owner", nil)
+	requireStatus(t, printerHealth, 200)
+	healthData = labelResponseData(t, printerHealth.Body.Bytes())
+	if healthData["readiness"] != "unknown" || healthData["reportedAt"] != nil || healthData["readinessReason"] != nil {
+		t.Fatal("stale printer health presented as current", printerHealth.Body.String())
 	}
 
 	for _, operation := range []string{
