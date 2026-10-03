@@ -219,3 +219,14 @@ explain fixed test content without pretending to preview an asset. Verify viewer
 accounts cannot issue either command. Check back navigation, narrow/enlarged text,
 and VoiceOver/TalkBack. Status: source and controlled-fake checks only; native
 runtime and physical output remain unverified.
+
+For mobile printer media settings, open Inventory Settings → Printers as a
+configurator. Check the native label-size picker lists only the supported Brother
+29 × 90 mm stock. Save while USB is disconnected; configuration must succeed
+without claiming the printer is ready. Make a concurrent edit in another client,
+then save the stale mobile draft: it must show a failure and require an explicit
+reload instead of overwriting. Change an inventory default without saving, save a
+label size, and confirm that unsaved default remains intact. Viewers must see the
+size without edit controls. Queued labels retain their original media. Check
+picker/back behavior and enlarged text on native devices; status remains
+unverified beyond source and stateful-fake checks.

@@ -24,3 +24,9 @@ export function connectorAvailability(state: string) {
 export function printerAttention(reason?: string) {
   switch (reason) { case 'paper_empty': return t('printing.mobile.paperEmpty'); case 'cover_open': return t('printing.mobile.coverOpen'); case 'device_busy': return t('printing.mobile.deviceBusy'); case 'hardware_error': return t('printing.mobile.hardwareError'); default: return undefined; }
 }
+
+export function mediaSizeLabel(name: string, media: { readonly widthMicrometers: number; readonly heightMicrometers: number }) {
+  if (name.trim()) return name;
+  if (!(media.widthMicrometers > 0) || !(media.heightMicrometers > 0) || !Number.isFinite(media.widthMicrometers) || !Number.isFinite(media.heightMicrometers)) return t('printing.mobile.sizeUnavailable');
+  return t('labels.mobile.sizeValue', { width: (media.widthMicrometers / 1000).toLocaleString(), height: (media.heightMicrometers / 1000).toLocaleString() });
+}

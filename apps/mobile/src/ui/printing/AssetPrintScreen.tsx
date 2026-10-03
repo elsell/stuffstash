@@ -7,7 +7,7 @@ import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { AppSwitchField } from '../components/AppSwitchField';
 import { SettingsLoadingRow, useSettingsListStyles } from '../screens/SettingsList';
-import { printerReadiness } from './PrintingStatus';
+import { mediaSizeLabel, printerReadiness } from './PrintingStatus';
 import { usePrintingTask } from './usePrintingTask';
 type Preview = { uri: string; release(): void; file: LabelFile; fingerprint: string };
 export function AssetPrintScreen({ workspace, scope, assetId, predecessorId, diagnostic = false, onQueued }: { readonly workspace: PrintingWorkspace; readonly scope: PrintScope; readonly assetId: string; readonly predecessorId?: string; readonly diagnostic?: boolean; readonly onQueued: (id: string) => void }) {
@@ -54,7 +54,7 @@ export function AssetPrintScreen({ workspace, scope, assetId, predecessorId, dia
     {catalog && !catalog.printers.some(item => !item.retired) ? <Text style={{ color: palette.text }}>{t('printing.mobile.empty')}</Text> : null}
     {catalog && template ? <>
       <SettingsPickerRow label={t('printing.mobile.printer')} accessibilityLabel={t('printing.mobile.printer')} value={printerId} disabled={locked}
-        options={[{ value: '', label: t('printing.mobile.none') }, ...catalog.printers.filter(item => !item.retired).map(item => ({ value: item.id, label: `${item.name} · ${item.mediaName}` }))]}
+        options={[{ value: '', label: t('printing.mobile.none') }, ...catalog.printers.filter(item => !item.retired).map(item => ({ value: item.id, label: `${item.name} · ${mediaSizeLabel(item.mediaName, item.media)}` }))]}
         onChange={id => { if (!locked) { clearPreview(); setPrinterId(id); } }} />
       {printer ? <Text style={{ color: palette.textMuted }}>{printerReadiness(printer.readiness)}</Text> : null}
       <SettingsPickerRow label={t('printing.mobile.template')} accessibilityLabel={t('printing.mobile.template')} value={`${template.id}/${template.version}`} disabled={locked}

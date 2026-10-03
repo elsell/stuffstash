@@ -1,3 +1,4 @@
+import { PrinterMediaSettings } from './PrinterMediaSettings';
 import { PrinterTestCommand } from './PrinterTestCommand';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
@@ -7,16 +8,16 @@ import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { AppSwitchField } from '../components/AppSwitchField';
 import { SettingsLoadingRow, SettingsNavigationRow, SettingsSection, SettingsValueRow, useSettingsListStyles } from '../screens/SettingsList';
-import { connectorState, connectorAvailability, printerAttention, printerReadiness, printJobStatus } from './PrintingStatus';
+import { mediaSizeLabel, connectorState, connectorAvailability, printerAttention, printerReadiness, printJobStatus } from './PrintingStatus';
 import { usePrintingTask } from './usePrintingTask';
 
 export function PrinterSettingsScreen({ workspace, scope, canConfigure, canPrint = false, onJob }: { readonly workspace: PrintingWorkspace; readonly scope: PrintScope; readonly canConfigure: boolean; readonly canPrint?: boolean; readonly onJob: (id: string) => void }) {
   const { palette, styles } = useSettingsListStyles();
   const load = useCallback(async (signal: AbortSignal) => ({ catalog: await workspace.repository.catalog(scope, signal), jobs: await workspace.repository.jobs(scope, signal) }), [workspace, scope.tenantId, scope.inventoryId]);
   const task = usePrintingTask(load, `${scope.tenantId}/${scope.inventoryId}`);
-  const [draft, setDraft] = useState<PrintSettings>(); const [saving, setSaving] = useState(false); const running = useRef(false);
+  const [draft, setDraft] = useState<PrintSettings>(); const [committedSettings, setCommittedSettings] = useState<PrintSettings>(); const [saving, setSaving] = useState(false); const running = useRef(false);
   const [saveState, setSaveState] = useState<'idle' | 'saved' | 'failed'>('idle');
-  useEffect(() => { setDraft(task.data?.catalog.settings); setSaveState('idle'); }, [task.data]);
+  useEffect(() => { setDraft(task.data?.catalog.settings); setCommittedSettings(task.data?.catalog.settings); setSaveState('idle'); }, [task.data?.catalog.settings]);
   const catalog = task.data?.catalog;
   const editable = canConfigure && !saving;
   const change = (next: PrintSettings) => { if (editable && !running.current) { setDraft(next); setSaveState('idle'); } };
@@ -24,7 +25,7 @@ export function PrinterSettingsScreen({ workspace, scope, canConfigure, canPrint
     const owner = task.lifetime.current;
     if (!owner || owner.signal.aborted || !draft || !canConfigure || running.current) return;
     running.current = true; setSaving(true); setSaveState('idle');
-    try { const saved = await workspace.repository.saveSettings(scope, draft); if (!owner.signal.aborted) { setDraft(saved); setSaveState('saved'); } }
+    try { const saved = await workspace.repository.saveSettings(scope, draft); if (!owner.signal.aborted) { setDraft(saved); setCommittedSettings(saved); setSaveState('saved'); } }
     catch { if (!owner.signal.aborted) setSaveState('failed'); }
     finally { running.current = false; setSaving(false); }
   };
@@ -34,7 +35,7 @@ export function PrinterSettingsScreen({ workspace, scope, canConfigure, canPrint
     {catalog && draft ? <>
       <SettingsSection title={t('printing.mobile.defaults')}>
         <SettingsPickerRow label={t('printing.mobile.printer')} accessibilityLabel={t('printing.mobile.printer')} value={draft.defaultPrinterId ?? ''} disabled={!editable}
-          options={[{ value: '', label: t('printing.mobile.none') }, ...catalog.printers.filter(printer => !printer.retired).map(printer => ({ value: printer.id, label: `${printer.name} · ${printer.mediaName}` }))]}
+          options={[{ value: '', label: t('printing.mobile.none') }, ...catalog.printers.filter(printer => !printer.retired).map(printer => ({ value: printer.id, label: `${printer.name} · ${mediaSizeLabel(printer.mediaName, printer.media)}` }))]}
           onChange={id => change({ ...draft, defaultPrinterId: id || null, printOnCreateDefault: !!id && draft.printOnCreateDefault })} />
         <SettingsPickerRow label={t('printing.mobile.template')} accessibilityLabel={t('printing.mobile.template')} value={`${draft.template.id}/${draft.template.version}`} disabled={!editable}
           options={catalog.templates.map(template => ({ value: `${template.id}/${template.version}`, label: template.name }))}
@@ -47,8 +48,10 @@ export function PrinterSettingsScreen({ workspace, scope, canConfigure, canPrint
       {saveState === 'failed' ? <NativeCommandButton label={t('printing.mobile.reload')} disabled={saving} onPress={task.reload} /> : null}
       {!catalog.printers.length ? <Text style={{ color: palette.textMuted }}>{t('printing.mobile.empty')}</Text> : null}
       {catalog.printers.map(printer => <SettingsSection key={printer.id} title={printer.name} footer={printer.retired ? t('printing.mobile.retired') : printerReadiness(printer.readiness)}>
-        <SettingsValueRow label={t('labels.mobile.size')} value={printer.mediaName} />
-        {canPrint ? <PrinterTestCommand workspace={workspace} scope={scope} printer={printer} template={catalog.settings.template} lifetime={task.lifetime} onQueued={onJob} /> : null}
+        {canConfigure ? <PrinterMediaSettings workspace={workspace} scope={scope} printer={printer} onReload={task.reload}
+          onSaved={next => task.setData(current => current ? { ...current, catalog: { ...current.catalog, printers: current.catalog.printers.map(value => value.id === next.id ? next : value) } } : current)} />
+          : <SettingsValueRow label={t('labels.mobile.size')} value={mediaSizeLabel(printer.mediaName, printer.media)} />}
+        {canPrint ? <PrinterTestCommand workspace={workspace} scope={scope} printer={printer} template={(committedSettings ?? catalog.settings).template} lifetime={task.lifetime} onQueued={onJob} /> : null}
         {printerAttention(printer.readinessReason) ? <Text style={{ padding: 16, color: palette.text }}>{printerAttention(printer.readinessReason)}</Text> : null}
         {printer.reportedAt ? <Text style={{ paddingHorizontal: 16, color: palette.textMuted }}>{t('printing.mobile.reportedAt', { time: new Date(printer.reportedAt).toLocaleString() })}</Text> : null}
         {catalog.connectors.filter(connector => connector.printerIds.includes(printer.id)).map(connector => <View key={connector.id} style={{ padding: 16, gap: 4 }}>

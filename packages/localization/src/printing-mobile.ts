@@ -75,4 +75,11 @@ export const printingMobileMessages = {
   'printing.mobile.diagnostic': 'This prints the fixed Stuff Stash test label. Its QR code is a diagnostic example, not an inventory item.',
   'printing.mobile.testLabel': 'Print test label',
   'printing.mobile.retryTest': 'Retry test label',
+  'printing.mobile.saveSize': 'Save label size',
+  'printing.mobile.sizeSaved': 'Label size saved',
+  'printing.mobile.sizeFailed': 'Could not save the label size. Reload printer settings to check for changes before trying again.',
+  'printing.mobile.reloadPrinter': 'Reload printer settings',
+  'printing.mobile.reloadSizes': 'Reload label sizes',
+  'printing.mobile.noSizes': 'No supported label sizes are available for this printer.',
+  'printing.mobile.sizeUnavailable': 'Label size unavailable',
 } as const;
