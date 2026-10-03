@@ -252,6 +252,19 @@ If the response is lost, retry the same command with that key using
 `--idempotency-key`; keep its arguments unchanged. A changed request conflicts
 instead of silently printing another label. Use `--json` for structured output.
 
+To replace a connector credential, use the same server and connector credential
+store as the worker:
+
+```sh
+stuffstash connectors print rotate --connector CONNECTOR_ID
+```
+
+Open the printed link and approve replacement for that existing connector. The
+CLI keeps its current credential until a matching replacement is received and
+saved. If activation fails after saving, run `connectors print run` with the same
+connector to retry activation. A rotation does not create a new printer or change
+its label size. Stop the old worker and restart it after rotation so it loads the
+new credential; existing uncertain jobs still require their normal recovery.
 ### Save or resolve a label
 
 You can save labels without running a USB connector:

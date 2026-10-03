@@ -28,7 +28,7 @@ func (p *Pairing) Start(ctx context.Context, in ports.PairingRequest) (ports.Pai
 	for _, v := range in.Candidates {
 		candidates = append(candidates, generated.PairingCandidate{Id: v.ID, Name: v.Name, AdapterId: v.AdapterID, DeviceId: v.DeviceID})
 	}
-	response, err := read[generated.SuccessEnvelopePairingStarted](p.client.sdk.PostPrintConnectorPairings(ctx, generated.BeginPairingInputBody{Name: in.Name, PublicKey: in.PublicKey, Candidates: nullable.NewNullableWithValue(candidates)}))
+	response, err := read[generated.SuccessEnvelopePairingStarted](p.client.sdk.PostPrintConnectorPairings(ctx, generated.BeginPairingInputBody{Rotation: &in.Rotation, Name: in.Name, PublicKey: in.PublicKey, Candidates: nullable.NewNullableWithValue(candidates)}))
 	if err != nil {
 		return ports.PairingChallenge{}, err
 	}

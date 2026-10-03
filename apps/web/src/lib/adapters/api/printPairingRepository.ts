@@ -27,8 +27,14 @@ export class ApiPrintPairingRepository implements PrintPairingRepository {
     async review(pairingId: string, scope: PairingInventory, code: string): Promise<PairingReview> {
         return guarded(async () => {
             const value = await this.client.review(pairingId, scope, code);
-            return { id: value.id, name: value.name, fingerprint: value.publicKeyFingerprint, candidates: (value.candidates ?? []).map(c => ({ id: c.id, name: c.name, adapterId: c.adapterId })) };
+            return { rotation: value.rotation, id: value.id, name: value.name, fingerprint: value.publicKeyFingerprint, candidates: (value.candidates ?? []).map(c => ({ id: c.id, name: c.name, adapterId: c.adapterId })) };
         });
+    }
+    async connector(scope:PairingInventory,id:string){
+        return guarded(async()=>{const value=await this.client.connector(scope,id);return {id:value.id,name:value.name,generation:value.generation};});
+    }
+    async rotate(pairingId:string,scope:PairingInventory,code:string,connectorId:string,generation:number):Promise<void>{
+        await guarded(()=>this.client.rotate(pairingId,scope,code,connectorId,generation));
     }
     async setup(scope: PairingInventory): Promise<PairingSetup> {
         return guarded(async () => {

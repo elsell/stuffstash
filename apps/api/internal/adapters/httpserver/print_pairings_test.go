@@ -69,7 +69,7 @@ func runPrintPairingHTTP(t *testing.T) {
 	badReview := performRequest(server, http.MethodPost, path+"/review", "Bearer dev:other", map[string]any{"userCode": pair.Data.UserCode, "tenantId": tid, "inventoryId": iid})
 	requireStatus(t, badReview, http.StatusForbidden)
 	badCreate := performRequest(server, http.MethodPost, "/print-connector-pairings", "", map[string]any{"name": "Malformed", "publicKey": "", "candidates": []any{}})
-	requireStatus(t, badCreate, http.StatusUnprocessableEntity)
+	requireStatus(t, badCreate, http.StatusBadRequest)
 	auth.SetPrintingAvailable(false)
 	approve := performRequest(server, http.MethodPost, path+"/approval", "Bearer dev:owner", body)
 	if approve.Code != http.StatusOK {
@@ -134,7 +134,7 @@ func runPrintPairingHTTP(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	rotationPair := performRequest(server, http.MethodPost, "/print-connector-pairings", "", map[string]any{"name": "Replacement key", "publicKey": base64.StdEncoding.EncodeToString(nextPublic), "candidates": []map[string]string{{"id": "usb-one", "name": "Brother", "adapterId": "brother-ql800", "deviceId": "protected-usb-path"}}})
+	rotationPair := performRequest(server, http.MethodPost, "/print-connector-pairings", "", map[string]any{"name": "Replacement key", "publicKey": base64.StdEncoding.EncodeToString(nextPublic), "rotation": true, "candidates": []map[string]string{}})
 	requireStatus(t, rotationPair, http.StatusCreated)
 	var nextPair struct {
 		Data struct{ ID, PollToken, UserCode string }
@@ -142,6 +142,13 @@ func runPrintPairingHTTP(t *testing.T) {
 	if err := json.Unmarshal(rotationPair.Body.Bytes(), &nextPair); err != nil {
 		t.Fatal(err)
 	}
+	rotationReview := performRequest(server, http.MethodPost, "/print-connector-pairings/"+nextPair.Data.ID+"/review", "Bearer dev:owner", map[string]any{"userCode": nextPair.Data.UserCode, "tenantId": tid, "inventoryId": iid})
+	requireStatus(t, rotationReview, http.StatusOK)
+	if !strings.Contains(rotationReview.Body.String(), `"rotation":true`) {
+		t.Fatal("rotation review lost purpose")
+	}
+	wrongApproval := performRequest(server, http.MethodPost, "/print-connector-pairings/"+nextPair.Data.ID+"/approval", "Bearer dev:owner", map[string]any{"userCode": nextPair.Data.UserCode, "tenantId": tid, "inventoryId": iid, "bindings": []map[string]string{{"candidateId": "invented", "printerId": "invented"}}})
+	requireStatus(t, wrongApproval, http.StatusBadRequest)
 	rotationPath := "/tenants/" + tid + "/inventories/" + iid + "/print-connectors/" + credential.Data.ConnectorID + "/credential-rotation"
 	rotationBody := map[string]any{"generation": 1, "pairingId": nextPair.Data.ID, "userCode": nextPair.Data.UserCode}
 	rejectedRotation := performRequest(server, http.MethodPost, rotationPath, "Bearer dev:other", rotationBody)

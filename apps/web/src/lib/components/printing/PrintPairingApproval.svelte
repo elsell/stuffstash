@@ -36,7 +36,7 @@
     event.preventDefault();if(busy||!canReview)return;busy=true;failure=null;review=null;
     try{
       const reviewed=await repository.review(pairingId,scope,code.trim().toUpperCase());
-      if(reviewed.id!==pairingId)throw new PairingFailure('invalid');
+      if(reviewed.id!==pairingId||reviewed.rotation===true)throw new PairingFailure('invalid');
       setup=await repository.setup(scope);review=reviewed;
       selections=reviewed.candidates.map(c=>({candidateId:c.id,destination:'',name:c.name,mediaKey:'',idempotencyKey:crypto.randomUUID()}));
       await tick();reviewHeading?.focus();

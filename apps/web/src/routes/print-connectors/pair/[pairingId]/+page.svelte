@@ -4,7 +4,8 @@
  import { getStoredSession, startSignIn } from '$lib/auth';
  import { loadRuntimeConfig, type RuntimeConfig } from '$lib/runtimeConfig';
  import { ApiPrintPairingRepository } from '$lib/adapters/api/printPairingRepository';
- import type { PrintPairingRepository } from '$lib/ports/printPairingRepository';
+ import {rotationIntent,pairingReturnPath} from '$lib/application/printing/rotationIntent';
+ import PrintRotationApproval from '$lib/components/printing/PrintRotationApproval.svelte';
  import PrintPairingApproval from '$lib/components/printing/PrintPairingApproval.svelte';
  import AuthBrand from '$lib/components/auth/AuthBrand.svelte';
  import * as Button from '$lib/components/ui/button/index.js';
@@ -12,11 +13,12 @@
  import { t } from '$lib/presentation/localization';
 
  let config=$state<RuntimeConfig|null>(null);
- let repository=$state<PrintPairingRepository|null>(null);
+ let repository=$state<ApiPrintPairingRepository|null>(null);
  let loading=$state(true);
  let failed=$state(false);
  let signingIn=$state(false);
  const pairingId=$derived(page.params.pairingId??'');
+ const rotation=$derived(rotationIntent(page.url.searchParams));
  onMount(()=>{void initialize();});
  async function initialize(){
   loading=true;failed=false;
@@ -24,14 +26,16 @@
   catch{failed=true;}finally{loading=false;}
  }
  async function signIn(){
-  if(!config||signingIn)return;signingIn=true;
-  try{await startSignIn(config,window.location,window.sessionStorage,window.history,`/print-connectors/pair/${encodeURIComponent(pairingId)}`);}
+  if(!config||signingIn||rotation===null)return;signingIn=true;
+  try{await startSignIn(config,window.location,window.sessionStorage,window.history,pairingReturnPath(pairingId,rotation));}
   catch{failed=true;}finally{signingIn=false;}
  }
 </script>
 <svelte:head><title>{t('web.PrintPairing.pageTitle')}</title></svelte:head>
-{#if repository}
- {#key pairingId}<PrintPairingApproval {pairingId} {repository} onSignIn={signIn}/>{/key}
+{#if rotation===null}
+ <main class="pairing-entry"><p role="alert">{t('web.PrintPairing.invalid')}</p></main>
+{:else if repository}
+ {#key `${pairingId}:${page.url.search}`}{#if rotation}<PrintRotationApproval {pairingId} {repository} target={rotation} onSignIn={signIn}/>{:else}<PrintPairingApproval {pairingId} {repository} onSignIn={signIn}/>{/if}{/key}
 {:else}
  <main class="pairing-entry"><Card.Root class="pairing-entry-card">
   <Card.Header><AuthBrand/><Card.Title role="heading" aria-level={1}>{t('web.PrintPairing.title')}</Card.Title></Card.Header>

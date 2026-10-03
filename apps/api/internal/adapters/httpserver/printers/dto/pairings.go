@@ -13,9 +13,10 @@ type PairingCandidate struct {
 }
 type BeginPairingInput struct {
 	Body struct {
+		Rotation   bool               `json:"rotation,omitempty"`
 		Name       string             `json:"name" minLength:"1" maxLength:"100"`
 		PublicKey  []byte             `json:"publicKey"`
-		Candidates []PairingCandidate `json:"candidates" minItems:"1" maxItems:"16"`
+		Candidates []PairingCandidate `json:"candidates" maxItems:"16"`
 	}
 }
 type PairingStarted struct {
@@ -163,6 +164,7 @@ type PublicPairingCandidate struct {
 	AdapterID string `json:"adapterId"`
 }
 type PairingReview struct {
+	Rotation             bool                     `json:"rotation"`
 	ID                   string                   `json:"id"`
 	Name                 string                   `json:"name"`
 	PublicKeyFingerprint string                   `json:"publicKeyFingerprint"`

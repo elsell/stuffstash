@@ -881,3 +881,24 @@ Cleanup removes handshake hashes, public keys, and discovered candidate snapshot
 it never deletes connector registrations, credentials, bindings, jobs, or audit
 history. Unexpired pairings remain usable. No additional retention interval is
 needed because expired handshake credentials are already unusable.
+
+### Browser credential replacement approval
+
+A pairing URL with the public tenant, inventory, and connector identifiers opens
+an existing-connector replacement task. Partial or invalid targeting fails closed;
+it never falls back to new registration. Preserve the exact target through sign-in.
+The page finds the authorized inventory, reads that connector, and displays both
+before requesting the pairing code. Review must identify a rotation-only pairing.
+Explicit approval sends the reviewed connector generation and pairing/code to the
+existing scoped credential-rotation API. No printer creation, discovery, or media
+selection occurs. A conflict retains the task for review again; permission loss
+cannot turn this into a different inventory or connector. Show success only after
+the API confirms approval. Credentials remain private to the CLI exchange.
+
+The replacement form reuses the existing authentication Card, labeled Input, and
+Button primitives. The named connector and inventory remain visible while entering
+the code, reviewing its fingerprint, and explicitly approving. Source/fake checks
+cover inaccessible target, stale generation, and separate review/approval. A
+controlled browser fixture verified 1280px and 390px form layout, keyboard review,
+no narrow horizontal overflow, and explicit success; this is not connected OIDC
+or a physical credential replacement claim.

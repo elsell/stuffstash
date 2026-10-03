@@ -21,6 +21,12 @@ export class PrintPairingClient {
             params: { path: { pairingId } }, body: { ...scope, userCode, bindings }
         }));
     }
+    async connector(scope:PairingScope,connectorId:string){
+        return unwrap(await this.transport.GET('/tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}',{params:{path:{...scope,connectorId}}}));
+    }
+    async rotate(pairingId:string,scope:PairingScope,userCode:string,connectorId:string,generation:number){
+        return unwrap(await this.transport.POST('/tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}/credential-rotation',{params:{path:{...scope,connectorId}},body:{pairingId,userCode,generation}}));
+    }
     async printers(scope: PairingScope, cursor?: string) {
         const result = await this.transport.GET('/tenants/{tenantId}/inventories/{inventoryId}/printers', {
             params: { path: scope, query: { limit: 100, cursor } }

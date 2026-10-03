@@ -40,7 +40,7 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		return exit(output, err)
 	}
 	options.Server = oidcauth.CanonicalServer(options.Server)
-	if len(options.Command) == 3 && options.Command[0] == "connectors" && options.Command[1] == "print" && options.Command[2] == "register" {
+	if len(options.Command) == 3 && options.Command[0] == "connectors" && options.Command[1] == "print" && (options.Command[2] == "register" || options.Command[2] == "rotate") {
 		return exit(output, registerPrintConnector(ctx, options, getenv, output))
 	}
 	if len(options.Command) == 3 && options.Command[0] == "connectors" && options.Command[1] == "print" && options.Command[2] == "run" {
@@ -108,6 +108,7 @@ const Help = `Stuff Stash CLI
   stuffstash printers discover
   stuffstash printers catalog [--json]
   stuffstash connectors print register --name NAME
+  stuffstash connectors print rotate --connector ID
   stuffstash connectors print run --connector ID [--journal-dir PATH]
 
 Context: --server, --tenant, --inventory or STUFF_STASH_CLI_SERVER,

@@ -7,6 +7,7 @@ import (
 
 type PairingCandidate struct{ ID, Name, AdapterID, DeviceID string }
 type PairingRequest struct {
+	Rotation   bool
 	Name       string
 	PublicKey  []byte
 	Candidates []PairingCandidate

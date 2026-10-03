@@ -1741,6 +1741,7 @@ type BeginPairingInputBody struct {
 	Candidates nullable.Nullable[[]PairingCandidate] `json:"candidates"`
 	Name       string                                `json:"name"`
 	PublicKey  []byte                                `json:"publicKey"`
+	Rotation   *bool                                 `json:"rotation,omitempty"`
 }
 
 // Budget defines model for Budget.
@@ -2952,6 +2953,7 @@ type PairingReview struct {
 	Id                   string                                      `json:"id"`
 	Name                 string                                      `json:"name"`
 	PublicKeyFingerprint string                                      `json:"publicKeyFingerprint"`
+	Rotation             bool                                        `json:"rotation"`
 }
 
 // PairingStarted defines model for PairingStarted.

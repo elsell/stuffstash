@@ -2782,6 +2782,7 @@ export interface components {
             candidates: components["schemas"]["PairingCandidate"][] | null;
             name: string;
             publicKey: string;
+            rotation?: boolean;
         };
         Budget: {
             /** Format: int64 */
@@ -3854,6 +3855,7 @@ export interface components {
             id: string;
             name: string;
             publicKeyFingerprint: string;
+            rotation: boolean;
         };
         PairingStarted: {
             /** Format: date-time */
