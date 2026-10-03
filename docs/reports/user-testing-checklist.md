@@ -90,6 +90,16 @@ Known issue [#239](https://github.com/elsell/stuffstash/issues/239) remains open
 
 Evidence: [bounded native results](spec-gap-evidence-2026-10-01/sharing-direct-confirmation/README.md).
 
+## 6. Voice after the origin configuration correction
+
+Status: the reported voice request was rejected with HTTP403 before session
+creation. Infra commit 07396de adds the exact public API origin behind TLS
+termination. No app update is required. Authenticated speech remains unverified.
+
+- [ ] Reopen Conversation and speak a short inventory question.
+  **Expected:** it connects and responds without the connection-interrupted error.
+  If it fails, note the time so the server request can be correlated.
+
 ## Judgments awaiting your preference
 
 These are decisions, not failed tests, and do not block other work.

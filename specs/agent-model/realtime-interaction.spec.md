@@ -178,3 +178,17 @@ Critical boundary tests cover permitted origin and authenticated text success,
 invalid/absent credentials, rejected origins before upgrade, authentication-frame
 limits and timeout, cross-tenant scope, and no provider calls before authorization.
 Existing action-plan authorization and idempotency tests remain applicable.
+
+### Native origins behind TLS termination
+
+A TLS-terminating deployment must explicitly include both its browser frontend
+origin and its public HTTPS API origin in the configured origin allowlist.
+React Native WebSockets can send the API origin even with bearer-header
+authentication. The backend sees HTTP after TLS termination, so its direct
+same-origin comparison cannot infer that public HTTPS origin. Do not trust
+forwarded headers or bypass origin validation to repair this deployment mismatch.
+
+Validate the deployed boundary: API and frontend origins without credentials
+reach authentication (401), while an unrelated origin remains forbidden (403),
+including with a forged bearer. Then verify the authenticated native workflow
+separately. Restart/reconcile the API when changing environment-backed origins.
