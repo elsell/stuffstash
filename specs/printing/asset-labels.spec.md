@@ -499,3 +499,33 @@ response fencing after view replacement, no overlapping reads, error backoff,
 terminal stop, and preservation of an unsaved inventory default. A Chromium
 fixture confirms queued-to-printed updates without pressing Refresh. This is
 client status evidence, not physical printer verification.
+
+### Native Primary Creation And Quick Printing
+
+The all-kind print-choice requirement applies to primary capture forms. Native
+`/add` currently has one primary Add item task, with its print switch. As specified
+by the mobile capture contract, new non-location assets start as items and become
+containers through containment; printing must not introduce a kind picker. The
+New place task inside Add and the location/container creation inside Move are
+secondary destination tasks, not separate primary capture forms. They never
+inherit another draft's print choice. Any primary location/container capture form
+must expose its own explicit print choice; this requirement is unchanged.
+
+Native More → Print label is one explicit one-copy request using the compatible
+inventory default. It validates current content/media through server rendering,
+then queues without requiring a preview confirmation. Missing/retired defaults or
+incompatible rendering open the options task without enqueueing. Failed delivery
+retains the original request key and payload for an explicit retry; returning to
+a task or refreshing settings does not issue another request automatically.
+Label options offers editors a Print options task for custom printer/template
+selection and preview; viewers retain download access only. Scope cancellation
+before submission stops the quick request. Cancellation after submission retains
+its recovery identity and never implies that enqueueing was undone.
+
+Native custom print/reprint options expose a positive whole-number copy input.
+The API's configured maximum remains authoritative; do not hard-code its default
+as a client limit. Reject empty, fractional, nonnumeric or nonrepresentable counts
+locally. Changing copies invalidates the preview, just like changing the template.
+A first definite rejection preserves the draft for correction; any prior ambiguous
+submission keeps its original count, payload and key locked until recovery.
+Quick-default requests, asset creation and diagnostic test requests remain one copy.

@@ -82,4 +82,7 @@ export const printingMobileMessages = {
   'printing.mobile.reloadSizes': 'Reload label sizes',
   'printing.mobile.noSizes': 'No supported label sizes are available for this printer.',
   'printing.mobile.sizeUnavailable': 'Label size unavailable',
+  'printing.mobile.options': 'Print options',
+  'printing.mobile.copies': 'Copies',
+  'printing.mobile.invalidCopies': 'Enter a positive whole number of copies.',
 } as const;
