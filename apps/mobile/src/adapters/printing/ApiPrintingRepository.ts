@@ -37,9 +37,13 @@ export class ApiPrintingRepository implements PrintingRepository {
     return { fingerprint: rendered.selectionFingerprint, file: { bytes, format: 'png' as const, width: rendered.widthPixels, height: rendered.heightPixels, rotation: rendered.displayRotation } };
   }
   async submit(scope: PrintScope, assetId: string, selection: PrintSelection, key: string) {
-    try { return mapJob(await this.client.createJob(scope, assetId, { printerId: selection.printerId, expectedMediaFingerprint: selection.mediaFingerprint, copies: selection.copies,
-      templateId: selection.template.id, templateVersion: selection.template.version, templateOptions: { showReference: selection.template.showReference }, previewFingerprint: selection.previewFingerprint }, key)); }
-    catch (error) { if (error instanceof StuffStashAPIError && [400, 409, 422].includes(error.status)) throw new PrintRequestRejected(); throw error; }
+    return requestJob(() => this.client.createJob(scope, assetId, wireSelection(selection), key));
+  }
+  async reprint(scope: PrintScope, predecessorId: string, selection: PrintSelection, key: string) {
+    return requestJob(() => this.client.reprint(scope, predecessorId, wireSelection(selection), key));
+  }
+  async test(scope: PrintScope, printerId: string, selection: PrintSelection, key: string) {
+    return requestJob(() => this.client.testJob(scope, printerId, wireSelection(selection), key));
   }
   async job(scope: PrintScope, jobId: string, signal: AbortSignal) { const job = await this.client.job(scope, jobId); assertReadActive(signal); return mapJob(job); }
   async jobs(scope: PrintScope, signal: AbortSignal) { const page = await this.client.jobs(scope); assertReadActive(signal); return page.items.map(mapJob); }
@@ -48,7 +52,7 @@ export class ApiPrintingRepository implements PrintingRepository {
 }
 function mapSettings(value: WireSettings): PrintSettings { return { revision: value.revision, defaultPrinterId: value.defaultPrinterId, printOnCreateDefault: value.printOnCreateDefault,
   template: { id: value.template.id, version: value.template.version, showReference: value.template.options.showReference } }; }
-function mapJob(value: WireJob): PrintJob { return { id: value.id, assetId: value.assetId, printerId: value.printerId, status: value.status, revision: value.revision, copies: value.copies,
+function mapJob(value: WireJob): PrintJob { return { id: value.id, assetId: value.assetId, kind: value.kind, predecessor: value.predecessor, printerId: value.printerId, status: value.status, revision: value.revision, copies: value.copies,
   latestAttemptId: value.attempts?.at(-1)?.id, idleConfirmed: !!value.attempts?.at(-1)?.idleConfirmedAt, resolution: value.resolution ? { reportedOutcome: reportedOutcome(value.resolution.reportedOutcome) } : undefined,
   completedCopies: Math.max(0, ...(value.attempts ?? []).map(attempt => attempt.completedCopies)) }; }
 async function allPages<T>(read: (cursor?: string) => Promise<{ items: T[]; nextCursor?: string }>, signal: AbortSignal) {
@@ -60,3 +64,12 @@ async function allPages<T>(read: (cursor?: string) => Promise<{ items: T[]; next
 }
 
 function reportedOutcome(value: string): PrintOutcome { return value === "printed" || value === "not_printed" ? value : "unknown"; }
+
+function wireSelection(selection: PrintSelection) {
+  return { printerId: selection.printerId, expectedMediaFingerprint: selection.mediaFingerprint, copies: selection.copies,
+    templateId: selection.template.id, templateVersion: selection.template.version, templateOptions: { showReference: selection.template.showReference }, previewFingerprint: selection.previewFingerprint };
+}
+async function requestJob(send: () => Promise<WireJob>) {
+  try { return mapJob(await send()); }
+  catch (error) { if (error instanceof StuffStashAPIError && [400, 409, 422].includes(error.status)) throw new PrintRequestRejected(); throw error; }
+}

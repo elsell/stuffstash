@@ -1,3 +1,4 @@
+import { canReprint } from '../../application/printing/PrintingWorkspace';
 import { PrintResolutionControls, printOutcomeLabel, type PendingResolution } from './PrintResolutionControls';
 import { useCallback, useRef, useState } from 'react';
 import { ScrollView, Text } from 'react-native';
@@ -7,7 +8,7 @@ import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsLoadingRow, useSettingsListStyles } from '../screens/SettingsList';
 import { printJobStatus } from './PrintingStatus';
 import { usePrintingTask } from './usePrintingTask';
-export function PrintJobScreen({ workspace, scope, jobId, canPrint }: { readonly workspace: PrintingWorkspace; readonly scope: PrintScope; readonly jobId: string; readonly canPrint: boolean }) {
+export function PrintJobScreen({ workspace, scope, jobId, canPrint, onReprint }: { readonly workspace: PrintingWorkspace; readonly scope: PrintScope; readonly jobId: string; readonly canPrint: boolean; readonly onReprint?: (id: string) => void }) {
   const { styles, palette } = useSettingsListStyles();
   const pendingResolution = useRef<PendingResolution | undefined>(undefined);
   const explicitRefresh = useRef(false); const resolutionGeneration = useRef(0);
@@ -41,6 +42,7 @@ export function PrintJobScreen({ workspace, scope, jobId, canPrint }: { readonly
       {job.status === 'uncertain' ? <Text style={{ color: palette.text }}>{t('printing.mobile.uncertain')}</Text> : null}
       {job.resolution ? <><Text style={{ color: palette.text }}>{printOutcomeLabel(job.resolution.reportedOutcome)}</Text><Text style={{ color: palette.textMuted }}>{t('printing.mobile.resolvedDetail')}</Text></> : null}
       {canPrint && job.status === 'uncertain' ? <PrintResolutionControls key={resolutionGeneration.current} pending={pendingResolution} workspace={workspace} scope={scope} job={job} lifetime={task.lifetime} onResolved={resolved} /> : null}
+      {canPrint && onReprint && canReprint(job) ? <NativeCommandButton label={t('printing.mobile.reprint')} onPress={() => onReprint(job.id)} /> : null}
       {canPrint && ['queued', 'claimed'].includes(job.status) ? <NativeCommandButton label={t('printing.mobile.cancel')} disabled={busy} role="destructive" onPress={() => void cancel()} /> : null}
     </> : null}
     {failed ? <Text accessibilityRole="alert" style={styles.errorMessage}>{t('printing.mobile.unavailable')}</Text> : null}

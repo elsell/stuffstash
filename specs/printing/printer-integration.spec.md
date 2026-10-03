@@ -977,3 +977,25 @@ Chromium fixtures at 390px and 1280px verify preview, lost-response dismissal,
 Escape focus return, and retry after reopening. Controlled repository and real
 component tests preserve one successor per intent, its predecessor relationship,
 and viewer/nonterminal gates. These checks do not exercise physical USB output.
+
+### Native linked reprints and diagnostic commands
+
+Job detail offers Reprint label only for completed, failed, or canceled jobs and
+editors. It navigates to the existing label-selection task, retaining the source
+job as predecessor. Fetch current printer/media and independent template defaults;
+asset reprints require a fresh preview of current content before submission.
+Diagnostic predecessors use the fixed test content with explanatory text because
+there is no diagnostic-preview endpoint; they never provision an asset identity.
+Each accepted reprint is a new job, and success navigates to that job's detail.
+A retained ambiguous reprint remains retryable if the predecessor expires; retries
+use its original predecessor, selection, and key rather than starting a new job.
+
+Each active printer in native inventory settings exposes an explicit Print test
+label command to editors. It uses one copy, that printer's current media and the
+current independent template default. It never runs on registration, page entry,
+heartbeat, or refresh. Success navigates to the diagnostic job. Test and reprint
+intents are separately namespaced by scope and target in the session-owned request
+store. Lost-response retries survive navigation with the same immutable payload;
+only a definitive first rejection permits correction. Native task navigation,
+existing pickers, and contextual command buttons are reused. No new confirmation
+modal or automatic reprint is introduced.

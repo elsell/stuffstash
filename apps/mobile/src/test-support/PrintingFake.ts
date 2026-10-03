@@ -1,5 +1,5 @@
 import { PrintRequests } from '../application/printing/PrintSubmission';
-import type { PrintCatalog, PrintJob, PrintOutcome, PrintSettings, PrintingRepository, PrintingWorkspace } from '../application/printing/PrintingWorkspace';
+import type { PrintCatalog, PrintJob, PrintOutcome, PrintSelection, PrintSettings, PrintingRepository, PrintingWorkspace } from '../application/printing/PrintingWorkspace';
 const scope = { tenantId: 'tenant', inventoryId: 'inventory' };
 export class PrintingFake implements PrintingRepository {
   settings: PrintSettings = { revision: 1, defaultPrinterId: 'printer', template: { id: 'qr-title', version: 1, showReference: true }, printOnCreateDefault: false };
@@ -14,6 +14,27 @@ export class PrintingFake implements PrintingRepository {
   async submit(_scope: typeof scope, assetId: string, selection: { printerId: string }, key: string) {
     const job = this.submitted.get(key) ?? { id: key, assetId, printerId: selection.printerId, status: 'queued', revision: 1, copies: 1, completedCopies: 0 };
     this.submitted.set(key, job);
+    if (this.drop) { this.drop = false; throw new Error('Response lost'); } return job;
+  }
+  private readonly printIntents = new Map<string, string>();
+  async reprint(_scope: typeof scope, predecessorId: string, selection: PrintSelection, key: string) {
+    if (this.deny) throw new Error('Forbidden');
+    const fingerprint = JSON.stringify(['reprint', _scope, predecessorId, selection]);
+    if (this.printIntents.has(key) && this.printIntents.get(key) !== fingerprint) throw new Error('Conflict');
+    if (this.printIntents.has(key)) return this.submitted.get(key)!;
+    const predecessor = this.submitted.get(predecessorId);
+    if (!predecessor || !['completed', 'failed', 'canceled'].includes(predecessor.status)) throw new Error('Conflict');
+    const job = { id: key, predecessor: predecessorId, assetId: predecessor.assetId, kind: predecessor.kind, printerId: selection.printerId, status: 'queued', revision: 1, copies: selection.copies, completedCopies: 0 };
+    this.printIntents.set(key, fingerprint); this.submitted.set(key, job);
+    if (this.drop) { this.drop = false; throw new Error('Response lost'); } return job;
+  }
+  async test(_scope: typeof scope, printerId: string, selection: PrintSelection, key: string) {
+    if (this.deny || printerId !== selection.printerId || selection.copies !== 1) throw new Error('Rejected');
+    const fingerprint = JSON.stringify(['test', _scope, printerId, selection]);
+    if (this.printIntents.has(key) && this.printIntents.get(key) !== fingerprint) throw new Error('Conflict');
+    if (this.printIntents.has(key)) return this.submitted.get(key)!;
+    const job = { id: key, kind: 'printer_test', printerId, status: 'queued', revision: 1, copies: 1, completedCopies: 0 };
+    this.printIntents.set(key, fingerprint); this.submitted.set(key, job);
     if (this.drop) { this.drop = false; throw new Error('Response lost'); } return job;
   }
   async jobs() { return [...this.submitted.values()]; }
@@ -31,5 +52,5 @@ export class PrintingFake implements PrintingRepository {
     return next;
   }
   async cancel(_scope: typeof scope, job: PrintJob) { const next = { ...job, status: 'canceled', revision: job.revision + 1 }; this.submitted.set(job.id, next); return next; }
-  workspace(): PrintingWorkspace { return { repository: this, requests: new PrintRequests(this, () => 'request'), newRequestKey: () => 'request', files: { preview: async () => ({ uri: 'file:///private/label.png', release: () => { this.releases++; } }), deliver: async () => {} } }; }
+  workspace(): PrintingWorkspace { let count = 0; const newKey = () => ++count === 1 ? 'request' : `request-${count}`; return { repository: this, requests: new PrintRequests(this, newKey), newRequestKey: newKey, files: { preview: async () => ({ uri: 'file:///private/label.png', release: () => { this.releases++; } }), deliver: async () => {} } }; }
 }

@@ -30,12 +30,23 @@ export class PrintSubmission {
 /** Session-owned intents survive leaving a task; sign-out discards this composition. */
 export class PrintRequests {
   private readonly requests = new Map<string, PrintSubmission>();
-  constructor(private readonly repository: Pick<PrintingRepository, 'submit'>, private readonly newKey: () => string) {}
-  forAsset(scope: PrintScope, assetId: string) {
-    const key = JSON.stringify([scope.tenantId, scope.inventoryId, assetId]);
+  constructor(private readonly repository: Pick<PrintingRepository, 'submit' | 'reprint' | 'test'>, private readonly newKey: () => string) {}
+  forAsset(scope: PrintScope, assetId: string) { return this.forTarget(scope, assetId, 'asset'); }
+  forReprint(scope: PrintScope, predecessorId: string) { return this.forTarget(scope, predecessorId, 'reprint'); }
+  forTest(scope: PrintScope, printerId: string) { return this.forTarget(scope, printerId, 'test'); }
+  private forTarget(scope: PrintScope, targetId: string, kind: 'asset' | 'reprint' | 'test') {
+    const key = JSON.stringify([scope.tenantId, scope.inventoryId, kind, targetId]);
     let request = this.requests.get(key);
-    if (!request) { request = new PrintSubmission(this.repository, this.newKey); this.requests.set(key, request); }
+    if (!request) {
+      const submit: PrintingRepository['submit'] = (selectedScope, selectedTarget, selection, requestKey) => kind === 'asset'
+        ? this.repository.submit(selectedScope, selectedTarget, selection, requestKey)
+        : kind === 'reprint' ? this.repository.reprint(selectedScope, selectedTarget, selection, requestKey)
+        : this.repository.test(selectedScope, selectedTarget, selection, requestKey);
+      request = new PrintSubmission({ submit }, this.newKey); this.requests.set(key, request);
+    }
     return request;
   }
-  settled(scope: PrintScope, assetId: string) { this.requests.delete(JSON.stringify([scope.tenantId, scope.inventoryId, assetId])); }
+  settled(scope: PrintScope, targetId: string, kind: 'asset' | 'reprint' | 'test' = 'asset') {
+    this.requests.delete(JSON.stringify([scope.tenantId, scope.inventoryId, kind, targetId]));
+  }
 }
