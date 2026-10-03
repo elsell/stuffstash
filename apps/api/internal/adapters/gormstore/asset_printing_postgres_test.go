@@ -18,6 +18,56 @@ import (
 )
 
 func TestPostgresConcurrentCreateAndPrintCommitsOneAssetAndJob(t *testing.T) {
+	s, scope, inputs := postgresAtomicPrintFixture(t)
+	ctx := context.Background()
+	db := s.db
+	start := make(chan struct{})
+	results := make(chan ports.AssetPrintResult, 2)
+	failures := make(chan error, 2)
+	var done sync.WaitGroup
+	for _, input := range inputs {
+		done.Add(1)
+		go func() {
+			defer done.Done()
+			<-start
+			result, err := s.CreateAssetWithPrint(ctx, input)
+			results <- result
+			failures <- err
+		}()
+	}
+	close(start)
+	done.Wait()
+	close(results)
+	close(failures)
+	for err := range failures {
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	var original ports.AssetPrintResult
+	created := 0
+	for result := range results {
+		if result.Created {
+			created++
+		}
+		if original.Asset.ID != "" && (result.Asset.ID != original.Asset.ID || result.Job.ID != original.Job.ID) {
+			t.Fatal("concurrent retry returned a different creation")
+		}
+		original = result
+	}
+	if created != 1 {
+		t.Fatalf("created %d times", created)
+	}
+	for _, model := range []any{&assetModel{}, &labelModel{}, &printingJobModel{}} {
+		var count int64
+		if err := db.Model(model).Where(clause.Eq{Column: "tenant_id", Value: scope.TenantID}).Count(&count).Error; err != nil || count != 1 {
+			t.Fatalf("duplicate or partial aggregate %T: count=%d err=%v", model, count, err)
+		}
+	}
+}
+
+func postgresAtomicPrintFixture(t *testing.T) (Store, printing.Scope, []ports.PreparedAssetPrint) {
+	t.Helper()
 	dsn := os.Getenv("STUFF_STASH_TEST_POSTGRES_DSN")
 	if dsn == "" {
 		t.Skip("requires isolated PostgreSQL")
@@ -72,47 +122,6 @@ func TestPostgresConcurrentCreateAndPrintCommitsOneAssetAndJob(t *testing.T) {
 		inputs[index].LabelAudit.TargetID = item.ID.String()
 		inputs[index].Job.Audit.TargetID = string(job.ID)
 	}
-	start := make(chan struct{})
-	results := make(chan ports.AssetPrintResult, 2)
-	failures := make(chan error, 2)
-	var done sync.WaitGroup
-	for _, input := range inputs {
-		done.Add(1)
-		go func() {
-			defer done.Done()
-			<-start
-			result, err := s.CreateAssetWithPrint(ctx, input)
-			results <- result
-			failures <- err
-		}()
-	}
-	close(start)
-	done.Wait()
-	close(results)
-	close(failures)
-	for err := range failures {
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-	var original ports.AssetPrintResult
-	created := 0
-	for result := range results {
-		if result.Created {
-			created++
-		}
-		if original.Asset.ID != "" && (result.Asset.ID != original.Asset.ID || result.Job.ID != original.Job.ID) {
-			t.Fatal("concurrent retry returned a different creation")
-		}
-		original = result
-	}
-	if created != 1 {
-		t.Fatalf("created %d times", created)
-	}
-	for _, model := range []any{&assetModel{}, &labelModel{}, &printingJobModel{}} {
-		var count int64
-		if err := db.Model(model).Where(clause.Eq{Column: "tenant_id", Value: scope.TenantID}).Count(&count).Error; err != nil || count != 1 {
-			t.Fatalf("duplicate or partial aggregate %T: count=%d err=%v", model, count, err)
-		}
-	}
+
+	return s, scope, inputs
 }

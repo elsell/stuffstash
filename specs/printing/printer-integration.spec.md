@@ -1117,3 +1117,11 @@ New printer registration, pairing approval and default writes serialize against
 inventory deletion so a previously authorized request cannot recreate authority
 or defaults after deletion. No new dispatch or self-service recovery rights are
 granted for a deleted scope.
+
+Atomic create-and-print uses the same inventory-before-printer lock order as
+scope deletion. Asset insertion still needs PostgreSQL's inventory foreign-key
+lock, so taking the printer lock first is forbidden even when the inventory was
+already authorized outside the transaction. Production-database concurrency
+coverage controls transaction scheduling while retaining real row locks and
+foreign-key behavior; neither a lock error nor a partially created aggregate is
+an acceptable result of an otherwise valid competing request.
