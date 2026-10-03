@@ -468,3 +468,11 @@ current selection before each write and uses the captured IDs in the API request
 Changing inventory while an earlier tag write is in flight may finish that write
 in its original inventory, but no later tag or asset may target the replacement
 inventory. The final atomic create retains its own scope fence.
+
+### Atomic creation before label bootstrap
+
+Create-with-print must return HTTP 503 when instance identity has not been
+bootstrapped, with no asset or job committed. Authentication and inventory
+creation authorization still run first: anonymous and unrelated principals must
+not learn instance readiness by bypassing access checks. After the operator
+bootstraps the identity, the same authorized create command can succeed.

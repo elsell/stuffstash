@@ -9,15 +9,30 @@ inventory public.
 
 ## What is available
 
-The source build includes label rendering, connector registration, and a foreground
-CLI worker for registered printer queues. Client setup and print controls are still
-being integrated. See [connector setup](../../cli/#register-a-printer-connector). This catalog describes
+The source build includes label previews and scanning, web connector approval,
+printer settings, and print controls in web and mobile. A foreground CLI worker
+runs registered printer queues. See [connector setup](../../cli/#register-a-printer-connector).
+Initialize label identities once using the [self-host instructions](../../self-host-operations/#set-up-labels-and-printing).
+This catalog describes
 the candidate source, and must not be read as a promise that an older downloadable
 CLI has the same features. See [CLI installation](../../cli/) for current downloads.
 
 Initial hardware support is **Brother QL-800, USB, Linux, with 29 × 90 mm labels**.
 Physical printing and scanning still need device verification. Other printer models,
 roll sizes, and remote wake are not part of the initial supported setup.
+
+## Request a label
+
+In inventory settings, choose the default printer and layout, then choose whether
+new items should print a label by default. You can change that choice on the create
+form. On an existing item, container, or location, use its menu to print a label.
+Preview the layout before sending it to the printer.
+
+A queued job can wait while its printer is unavailable. Connector availability and
+printer readiness are separate: a healthy computer cannot print through a powered-off
+printer. If a job's outcome is uncertain, check the physical label and follow the
+recovery controls after the connector confirms the printer is idle. Resolving that
+status never prints another label automatically.
 
 ## Choose the loaded size
 

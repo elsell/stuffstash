@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"errors"
 	printingapp "github.com/stuffstash/stuff-stash/internal/app/printing"
 	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"net/http"
@@ -54,6 +55,9 @@ func RegisterCreate(api huma.API, application app.App) {
 			result, err = application.CreateAssetWithOperation(ctx, command)
 		}
 		if err != nil {
+			if errors.Is(err, printingapp.ErrLabelsUnavailable) {
+				return nil, huma.Error503ServiceUnavailable("Labels are not configured.")
+			}
 			return nil, shared.ToHumaError(err)
 		}
 		item := result.Asset
