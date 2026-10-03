@@ -8,8 +8,8 @@ import time
 import urllib.request
 
 BASE = 'http://127.0.0.1:11434'
-MODEL = 'qwen3:0.6b'
-DIGEST = '7df6b6e09427a769808717c0a93cadc4ae99ed4eb8bf5ca557c90846becea435'
+MODEL = 'qwen3:4b'
+DIGEST = '359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7'
 
 def request(path, body=None, timeout=30):
     data = None if body is None else json.dumps(body).encode()
@@ -18,7 +18,7 @@ def request(path, body=None, timeout=30):
         return json.load(response)
 
 # Verify the tag before download, then verify what the runtime actually loaded.
-with urllib.request.urlopen('https://registry.ollama.ai/v2/library/qwen3/manifests/0.6b', timeout=30) as response:
+with urllib.request.urlopen('https://registry.ollama.ai/v2/library/qwen3/manifests/4b', timeout=30) as response:
     manifest = response.read(1024 * 1024)
 if hashlib.sha256(manifest).hexdigest() != DIGEST:
     raise RuntimeError('Pinned model manifest changed; review before updating')

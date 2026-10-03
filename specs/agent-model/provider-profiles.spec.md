@@ -419,3 +419,19 @@ manual so documentation updates cannot silently rerun inference.
 The first real inference run did not pass for this reference model. Preserve the
 [scoped failure evidence](../../docs/reports/spec-gap-evidence-2026-10-01/local-provider/README.md);
 no production deployment verification or successful round trip is claimed.
+
+### Capacity comparison after the initial failure
+
+One follow-up may distinguish insufficient small-model capacity from a broader
+local-provider compatibility failure. Use the same adapter and unchanged profile,
+lookup-argument and answer assertions with Qwen3 4B, manifest
+`sha256:359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7`.
+Its reviewed manifest contains approximately 2.50 GB of layers. Retain Ollama
+0.9.5, two CPUs, context 2048, prediction limit 512, temperature zero, 90-second
+requests and a 15-minute job; allow 6 GiB container memory for the larger model.
+Download only on the disposable hosted runner and remove its model volume.
+
+This is one comparison, not a model-tuning loop. A pass verifies only this pinned
+configuration. A failure ends the comparison and remains an unmet acceptance
+requirement; do not weaken assertions, increase repeated retries, or gate the
+unrelated client-message release. Retain the first model's failure evidence.
