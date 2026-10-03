@@ -399,7 +399,7 @@ export function SearchScreen({
       </SafeAreaView>
   ) : (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
-      <BrowseAddHeader canAdd={inventoryContext?.canAdd ?? false} onAdd={() => router.navigate('/add')}
+      <BrowseAddHeader onScan={() => router.push('/scan-label')} canAdd={inventoryContext?.canAdd ?? false} onAdd={() => router.navigate('/add')}
         onFilters={openFilters} filterCount={activeFilterCount} />
       <NativeNavigationSearch query={query} placeholder={t('mobile.SearchScreen.searchNamesPlacesOrTags')} onChange={scheduleSearch} onSubmit={text => {setQuery(text);submitQuery(text);}} onClear={clearSearch} />
       <FlatList

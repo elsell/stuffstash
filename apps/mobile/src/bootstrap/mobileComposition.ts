@@ -1,3 +1,9 @@
+import { LabelsClient } from '@stuff-stash/api-client';
+import { ApiLabelRepository } from '../adapters/labels/ApiLabelRepository';
+import { ExpoLabelFiles } from '../adapters/labels/ExpoLabelFiles';
+import { parseMobileLabelLink } from '../adapters/labels/LabelLinkParser';
+import { OpenLabel } from '../application/labels/OpenLabel';
+import type { LabelWorkspace } from '../application/labels/LabelWorkspace';
 import { createExpoArchiveFetch } from '../adapters/archives/ExpoArchiveFetch';
 import { ArchiveClient } from '@stuff-stash/api-client';
 import { requireNativeModule } from 'expo';
@@ -138,6 +144,8 @@ import { QueryClientInventorySelectionObserver } from '../adapters/serverState/Q
 import { createTimeoutFetch, mobileApiRequestTimeoutMs } from '../adapters/network/TimeoutFetch';
 
 export type MobileComposition = {
+  readonly labels: LabelWorkspace;
+  readonly openLabel: OpenLabel;
   readonly createWorkspace: CreateWorkspace;
  readonly expirationWorkspaceQuery: ExpirationWorkspaceQuery;
   readonly pushReconciliation: PushReconciliationController;
@@ -211,6 +219,7 @@ export type MobileComposition = {
 };
 
 export type MobileCompositionOptions = {
+  readonly onLabelEvent?: (event: { readonly name: 'label.cleanup_failed' }) => void;
   readonly onExportEvent?: (event: Parameters<InventoryExportObserver['record']>[0]) => void;
   readonly onExpirationEvent?: (event: ExpirationEvent) => void;
   readonly onNotificationEvent?: (event: NotificationEvent) => void;
@@ -277,6 +286,12 @@ export function createMobileComposition(
     fetch: createTimeoutFetch(mobileApiRequestTimeoutMs)
   });
   const client = createStuffStashClient(profile, sessionOptions, performanceSession.fetch);
+  const labelRepository = new ApiLabelRepository(new LabelsClient({
+    baseUrl: profile.apiBaseUrl, tokenProvider: () => validIdTokenForProfile(profile, sessionOptions),
+    // Reuse the tested RN Request -> Expo streaming bridge, including redirect rejection.
+    fetch: createTimeoutFetch(mobileApiRequestTimeoutMs, createExpoArchiveFetch(async (input, init) => (await import('expo/fetch')).fetch(input, init)))
+  }));
+  const labels: LabelWorkspace = { repository: labelRepository, files: new ExpoLabelFiles(() => options.onLabelEvent?.({ name: 'label.cleanup_failed' })), parse: parseMobileLabelLink };
   const exportObserver: InventoryExportObserver = { record: event => options.onExportEvent?.(event) };
   const exportFiles = new ExpoExportTemporaryFiles(exportObserver);
   void exportFiles.sweep().catch(() => exportObserver.record({ name: 'inventory_export.cleanup_failed' }));
@@ -350,6 +365,12 @@ export function createMobileComposition(
     pushSession,
     pushNotificationResponses,
     notificationObserver,
+    labels,
+    openLabel: new OpenLabel(labelRepository, async (target, signal) => {
+      await selectInventoryCommand.execute(target.inventoryId, { signal });
+      const selected = await inventorySummaries.getCurrentInventoryScope({ signal });
+      if (selected.tenantId !== target.tenantId || selected.inventoryId !== target.inventoryId) throw new Error('Label scope unavailable.');
+    }),
     openPushNotification: new OpenPushNotification(normalizeInstanceUrl(profile.apiBaseUrl), principals, notificationInboxQueries, selectInventoryCommand),
     pushReconciliation: new PushReconciliationController(new ExpoPushReconciliationEvents(AppState, Notifications, pushDevice), pushSession, notificationObserver),
     serviceScopeId,

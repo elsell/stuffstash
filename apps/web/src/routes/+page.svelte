@@ -1,4 +1,10 @@
 <script lang="ts">
+  import {LabelsClient} from '@stuff-stash/api-client';
+  import {labelWorkspaceContext,type LabelWorkspace} from '$lib/ports/labels';
+  import {ApiLabelRepository} from '$lib/adapters/labels/ApiLabelRepository';
+  import {BrowserLabelCamera} from '$lib/adapters/labels/BrowserLabelCamera';
+  import {BrowserLabelFiles} from '$lib/adapters/labels/BrowserLabelFiles';
+
   import { t } from '$lib/presentation/localization';
   import { BrowserConversationTransport } from '$lib/adapters/realtime/browserConversationTransport';
   import type { InventoryConversationTransport } from '$lib/ports/inventoryConversation';
@@ -46,6 +52,8 @@
 
   type WorkspaceRepository = InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & InventoryTagRepository & AssetThumbnailLoaderLifecycle;
 
+  let labels = $state<LabelWorkspace|null>(null);
+  setContext(labelWorkspaceContext,()=>labels);
   let config = $state<RuntimeConfig | null>(null);
   let session = $state<AuthSession | null>(null);
   let repository = $state<WorkspaceRepository | null>(null);
@@ -108,6 +116,7 @@
           exportCommand = new ExportInventory(new ApiInventoryExportRepository(new InventoryExportClient({ baseUrl: loadedConfig.apiBaseUrl, tokenProvider: () => getStoredSession()?.idToken ?? null, fetch: ownedPerformance?.fetch })), new BrowserExportFileDelivery());
           inventoryConversation = new BrowserConversationTransport(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null);
           conversations = conversationWorkspaceRepositories(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch);
+          labels={repository:new ApiLabelRepository(new LabelsClient({baseUrl:loadedConfig.apiBaseUrl,tokenProvider:()=>getStoredSession()?.idToken??null,fetch:ownedPerformance?.fetch})),files:new BrowserLabelFiles(),camera:new BrowserLabelCamera()};
           repository = nextRepository;
           workspaceData = nextWorkspace;
         }
@@ -130,6 +139,7 @@
   });
 
   function releaseOwnedRepository(): void {
+    labels=null;
     ownedPerformance?.dispose();
     ownedPerformance = null;
     ownedRepository?.dispose();

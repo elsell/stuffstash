@@ -20,9 +20,9 @@ export function assetHeaderOverflowScreenOptions({
   onEdit,
   onCheckoutHistory,
   onHistory,
-  onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled
+  onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled, onLabel
 }: AssetHeaderOverflowProps): NativeStackScreenOptions {
-  const groups = assetOverflowMenuGroups({ asset, onCheckoutHistory, onHistory, onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled });
+  const groups = assetOverflowMenuGroups({ asset, onCheckoutHistory, onHistory, onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled, onLabel });
   return {
     headerShown: true as const,
     unstable_headerRightItems: (context): NativeHeaderItem[] => [

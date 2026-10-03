@@ -2,6 +2,7 @@
 export function redirectSystemPath({ path, initial }: { path: string; initial: boolean }): string {
   try {
     const url = new URL(path);
+    if ((url.protocol === 'stuffstash:' && url.hostname === 'labels') || /\/l\/v[^/]+\//.test(url.pathname)) return initial ? '/scan-label' : '';
     if (
       url.protocol === 'stuffstash:' && url.hostname === 'auth' &&
       url.pathname === '/callback' && !url.username && !url.password && !url.port

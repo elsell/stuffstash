@@ -13,6 +13,7 @@ export type AssetOverflowMenuProps = {
     'title' | 'canArchive' | 'canRestore' | 'canDeletePermanently'
   >;
   readonly disabled?: boolean;
+  readonly onLabel?: () => void;
   readonly onMove?: () => void;
   readonly onAddPhotos?: () => void;
   readonly onCheckout?: () => void;
@@ -27,9 +28,9 @@ export function AssetOverflowMenu({
   disabled = false,
   onCheckoutHistory,
   onHistory,
-  onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled
+  onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled, onLabel
 }: AssetOverflowMenuProps) {
-  const groups = assetOverflowMenuGroups({ asset, onCheckoutHistory, onHistory, onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled });
+  const groups = assetOverflowMenuGroups({ asset, onCheckoutHistory, onHistory, onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled, onLabel });
 
   return (
     <NativeActionMenu
@@ -45,11 +46,12 @@ export function assetOverflowMenuGroups({
   asset,
   onCheckoutHistory,
   onHistory,
-  onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled
+  onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled, onLabel
 }: Omit<AssetOverflowMenuProps, 'disabled'>): readonly NativeActionMenuGroup[] {
   const callbacks = { onCheckoutHistory, onHistory, onLifecycleAction };
   const actions = assetOverflowMenuActions(asset);
   const commands: NativeActionMenuGroup = { id: 'commands', items: [
+    ...(onLabel ? [{ id: 'label', label: t('labels.mobile.title'), systemImage: 'qrcode', onPress: onLabel }] : []),
     ...(onAddPhotos ? [{ id: 'add_photos', label: t('mobile.AssetOverflowMenu.addPhotos'), systemImage: 'photo.badge.plus', disabled: photosDisabled, onPress: () => { if (!photosDisabled) onAddPhotos(); } }] : []),
     ...(onMove ? [{ id: 'move', label: t('mobile.AssetOverflowMenu.move'), systemImage: 'folder', onPress: onMove }] : []),
     ...(onCheckout ? [{ id: 'checkout', label: t('mobile.AssetOverflowMenu.checkOut'), systemImage: 'arrow.up.right', onPress: onCheckout }] : [])
