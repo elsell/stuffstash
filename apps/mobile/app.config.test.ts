@@ -43,7 +43,7 @@ describe('app config', () => {
       expect.objectContaining({
         action: 'VIEW',
         autoVerify: true,
-        data: [{ scheme: 'https', host: 'stash.example.test', path: '/invitations/accept' }]
+        data: [{ scheme: 'https', host: 'stash.example.test', path: '/invitations/accept' }, { scheme: 'https', host: 'stash.example.test', pathPrefix: '/l/v1/' }]
       })
     ]);
   });

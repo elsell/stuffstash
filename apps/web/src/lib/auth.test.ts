@@ -41,6 +41,16 @@ describe('auth helpers', () => {
     expect(replaced).toEqual(['/invitations/accept?tenant=tenant-one&inventory=inventory-one&invitation=invite-one']);
   });
 
+  it('preserves a prefixed label landing through login without sending its identity to OIDC', async () => {
+    const path='/stash/l/v1/01ARZ3NDEKTSV4RRFFQ69G5FAV/01ARZ3NDEKTSV4RRFFQ69G5FAW';
+    const storage=new MapStorage();let assigned='';
+    await startSignIn(config,{pathname:path,search:'',hash:'',assign(value:string){assigned=value;}} as Location,storage,{state:null,replaceState(){}});
+    expect(assigned).not.toContain('01ARZ3NDEKTSV4RRFFQ69G5FAV');
+    const state=storage.getItem('stuffstash.oidc.state');
+    expect(await completeSignIn(config,`http://localhost:5173/callback?code=once&state=${state}`,async()=>Response.json({id_token:'session'}),storage)).toBe(path);
+    await expect(completeSignIn(config,`http://localhost:5173/callback?code=once&state=${state}`,async()=>Response.json({id_token:'session'}),storage)).rejects.toThrow('Invalid sign-in callback');
+  });
+
   it('clears expired sessions', () => {
     const storage = new MapStorage();
     storage.setItem('stuffstash.oidc.session', JSON.stringify({ idToken: 'token', expiresAt: Date.now() - 1 }));

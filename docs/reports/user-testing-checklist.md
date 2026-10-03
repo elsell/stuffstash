@@ -120,3 +120,31 @@ These are decisions, not failed tests, and do not block other work.
 
 Local-model acceptance needs a new model/host decision after its bounded failed
 comparison. It is an engineering follow-up, not a device test for this checklist.
+
+## Label downloads and scanning
+
+Status: unverified on native devices and the physical Brother QL-800. Record the
+build and device used; browser/type checks do not establish physical print quality.
+
+- [ ] On an item, container, and location, open More → Label options. Switch QR
+  with title / QR only and reference visibility; save PNG and PDF. **Expected:**
+  preview matches the selected layout, files open, and changing choices during
+  loading never shows an older result.
+- [ ] Open system printing, cancel once, then print the PDF at actual size / 100%
+  on 29 × 90 mm stock. **Expected:** text and QR fit without clipping; scanning
+  succeeds. Saving/opening a print dialog must not display “printed.”
+- [ ] From Browse, scan a label on iOS and Android. Deny camera permission once
+  and paste its link instead. **Expected:** a clear recovery action, one asset
+  navigation, camera stops, and Back returns to Browse.
+- [ ] Open a label while signed out, then sign in. Try an archived asset and a
+  label from a different instance. **Expected:** intended label is retained;
+  authorized archived detail opens; foreign-instance data never appears. Changing
+  server must reauthorize rather than forwarding credentials to the printed URL.
+- [ ] Scan a QR with an old hostname after restoring the same instance to a new
+  configured server. **Expected:** in-app scan still opens the asset without
+  contacting the old hostname. A normal phone camera needs the old URL to remain
+  reachable; this cannot be repaired by the app automatically.
+- [ ] Open HTTPS labels with the app installed and uninstalled, including a
+  self-hosted domain without verified app association. **Expected:** usable web
+  sign-in fallback and an explicit Open in Stuff Stash action; invitations and
+  OIDC callbacks still work.

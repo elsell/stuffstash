@@ -243,10 +243,16 @@ Compose examples have not yet been exercised against a released image.
 
 ## Initialize label identities (development builds)
 
-The label API can provision stable asset links and create private PNG/PDF
-labels. App and website printing/scanning controls are still being delivered;
-this API does not send labels to a physical printer. Use the running API's
-OpenAPI explorer for its **labels** operations.
+After setup, open an item's, container's, or location's **More → Label options**
+to preview and save a PNG or PDF. The initial size is 29 × 90 mm; choose QR with
+title or QR only independently. Print the PDF at **actual size / 100%** using your
+system print controls. Saving a file or opening printing does not confirm that a
+physical label printed. Direct USB delivery is separate work in progress.
+
+Use **Browse → Scan label** to open a label with the camera, or paste its link if
+camera access is unavailable. Labels require sign-in and current inventory access;
+they do not make items public. An ordinary camera opens the web sign-in page,
+which also offers **Open in Stuff Stash** for self-hosted domains without app links.
 
 Give the API an HTTPS `STUFF_STASH_PUBLIC_WEB_BASE_URL`, or set
 `STUFF_STASH_LABEL_BASE_URL` to a separate stable address. Include any path
