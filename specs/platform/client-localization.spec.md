@@ -493,3 +493,14 @@ comparisons format totals and durations with the locale formatter and pluralize
 per-case call counts. Measurement values, comparison eligibility and wire data
 remain unchanged. Verify representative photo metadata and rendered case/run
 reviews under a non-English formatting locale and expanded messages.
+
+### Audit history vocabulary
+
+Web audit history maps every supported audit action, target and source to an
+explicit complete catalog message. Preserve distinct action meanings, including
+read, mutation, invitation, archive and conversation operations. Unknown future
+codes use cataloged generic labels in the primary row; retain original action,
+target and source codes in technical details. Existing web/mobile/local-demo and
+legacy invitation/custom-field aliases remain supported. A vocabulary coverage
+check compares presentation support with the domain's supported audit vocabulary;
+representative rows must render through expanded messages without altering codes.

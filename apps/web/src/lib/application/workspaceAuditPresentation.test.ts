@@ -69,6 +69,7 @@ describe('workspace audit presentation helpers', () => {
     expect(presentation.primaryText).not.toContain('oidc_local_owner_123');
     expect(presentation.technicalDetails).toEqual([
       { label: 'Action code', value: 'asset.created' },
+      { label: 'Target type', value: 'asset' },
       { label: 'Target ID', value: 'asset-tenant-audit' },
       { label: 'Principal ID', value: 'oidc_local_owner_123' },
       { label: 'Source', value: 'api' },
@@ -95,6 +96,27 @@ describe('workspace audit presentation helpers', () => {
     expect(presentation.occurredAtLabel).toBe('not-a-date');
     expect(presentation.primaryText).not.toContain('oidc_google_provider');
     expect(presentation.technicalDetails).toContainEqual({ label: 'Source', value: 'oidc_google_provider' });
+  });
+
+  it('labels supported operational history and preserves unknown codes as technical details', () => {
+    const move = auditRecordPresentation(record({ action: 'asset.moved', targetType: 'inventory_invitation', source: 'background_job' }));
+    expect(move.title).toBe('Asset moved');
+    expect(move.targetLabel).toBe('Inventory invitation');
+    expect(move.sourceLabel).toBe('Background job');
+    const unknown = auditRecordPresentation(record({ action: 'future.action', targetType: 'future_target' }));
+    expect(unknown.title).toBe('Activity recorded');
+    expect(unknown.targetLabel).toBe('Recorded resource');
+    expect(unknown.technicalDetails).toContainEqual({ label: 'Action code', value: 'future.action' });
+    expect(unknown.technicalDetails).toContainEqual({ label: 'Target type', value: 'future_target' });
+  });
+
+  it('does not treat inherited object properties as audit vocabulary', () => {
+    const result = auditRecordPresentation(record({ action: 'constructor', targetType: 'constructor', source: 'toString' }));
+    expect(result.title).toBe('Activity recorded');
+    expect(result.targetLabel).toBe('Recorded resource');
+    expect(result.sourceLabel).toBe('Recorded source');
+    expect(result.technicalDetails).toContainEqual({ label: 'Target type', value: 'constructor' });
+    expect(result.technicalDetails).toContainEqual({ label: 'Source', value: 'toString' });
   });
 
   it('groups records by calendar day in newest-first order', () => {
