@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { SettingsQuery } from '../../application/settings/SettingsQuery';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -21,6 +22,11 @@ beforeEach(() => { queryClient = createMobileQueryClient(); resetNativeTestState
 afterEach(async () => { await harness?.unmount(); harness = undefined; Reflect.deleteProperty(globalThis, 'expo'); });
 
 describe('rendered mobile customization production states', () => {
+  it('catalogs collection field types while retaining authored names', async () => {
+    const screen = await renderCollection({ kind: 'field', query: collectionQuery({ fields: [field('serial', 'Serial number', 'inventory')] }) });
+    expect(screen.allText()).toContain('Serial number');
+    expect(screen.allText().join(' ')).toContain(t('customization.fieldType.text'));
+  });
   it('retains dormant enum options while saving only options applicable to the chosen field type', async () => {
     const calls: unknown[][] = [];
     const screen = await renderEditor({ kind: 'field', manageFields: managerFake({ create: async (...args: unknown[]) => { calls.push(args); return {}; } }) });

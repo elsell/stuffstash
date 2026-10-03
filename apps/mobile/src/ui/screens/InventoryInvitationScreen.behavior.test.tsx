@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import React from 'react';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
@@ -80,7 +81,7 @@ it.each(['expired', 'revoked', 'cancelled'] as const)('does not allow joining a 
   const h = new MobileRenderHarness();
   try {
     await h.render(<InventoryInvitationScreen {...props({ previewQuery: { execute: async () => preview('Kitchen', { status, isExpired: status === 'expired' }) } })} />);
-    expect(h.allText()).toContain(`Invitation ${status}`);
+    expect(h.allText()).toContain(t(status === 'expired' ? 'mobile.InventoryInvitationScreen.invitationExpired' : status === 'revoked' ? 'invitation.title.revoked' : 'invitation.title.cancelled'));
     expect(h.byLabel('Join inventory')).toBeUndefined();
   } finally { await h.unmount(); }
 });
