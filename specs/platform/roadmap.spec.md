@@ -6,17 +6,46 @@ A first-class CLI takes priority over further MCP work. MCP remains a supported
 secondary integration. This changes future sequencing only; the complete portable
 archive and restore flow remains the immediate delivery priority.
 
-## Current production delivery — October 3
+## Current delivery and remaining acceptance — October 3
 
-Release37079752434 published v0.28.8 images, TestFlight and its changelog for
-PR #276 at `178d31772e770392161afdcbae7b6951dd2aff99`. Paul GitOps commit
-`db680237edd42e260f42e54e418473c83ee12c3d` deploys that web image. Flux applied
-the revision, the updated replica became available and web/API health returned
-HTTP200. [Exact deployment evidence](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.8.json).
-The API remains on its v0.28.0 digest: the API diff through this release contains
-tests only. This is rollout readiness, not new authenticated production acceptance.
-Later queued PRs are not included in this deployment. The records below retain
-historical delivery and separate outstanding acceptance obligations.
+The reviewed batches through PR #285 are merged. PR #278 merged at `c165f787`
+and released through run37083346024 as v0.28.9. The remaining five PRs were
+consolidated into #285 at `3ac10814b72d275cc7cbd66f7e2c5ec083eed821`;
+CI37083586337 and Docs37083586335 passed at `e4898e2a`. Release37085079308
+succeeded for **v0.28.10**, including images, TestFlight and its changelog.
+Superseded #279/#280/#282/#283/#284 are closed; their reviewed commits and evidence
+remain in #285. [Exact batch delivery evidence](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/v0.28.10-delivery.json).
+
+Paul GitOps commit `953066f77806a496ddf1c1419c7f7b5076fe58e1` deploys the
+v0.28.10 web digest. Flux applied that revision, the updated replica became
+available, and web/API health returned HTTP200. The API remains on v0.28.0:
+its production code has not changed through these client batches.
+[Deployment evidence](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.10.json).
+This proves rollout readiness, not a new authenticated production journey.
+The earlier [v0.28.8 rollout](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.8.json)
+is historical.
+
+The full audit remains incomplete. Release success does not close these gaps:
+
+- Local-provider real-model acceptance: the pinned 4B comparison passed profile
+  diagnostics but failed the required lookup; answer replay was not reached.
+  The fixed investigation budget is exhausted; no unchanged retry.
+- Localization: the reviewed labels, interpolation and recovery fixes shipped.
+  Remaining inventory candidates still require caller review; candidate counts
+  are not defect counts or proof of complete migration.
+- Connected native acceptance: system-auth-browser discovery stopped the iPhone
+  investigation before sign-in and isolation checks. Android archive fixtures
+  passed native transfer and synthetic approval, not authenticated native restore.
+- Physical file-provider/recipient and assistive acceptance remain unverified.
+  Existing user-confirmed notification delivery is preserved, not reopened.
+- The previously recorded iOS sharing-menu keyboard overlap and proposed web
+  Back-navigation change retain their existing follow-up/decision status.
+
+Existing connected browser, normal-text native and bounded image timing evidence
+remains scoped to its recorded workflows, devices, corpus and sample sizes. It
+is not proof of broad physical-device performance or every adaptation state.
+The records below preserve historical implementation and acceptance detail;
+this section owns current delivery status.
 
 ## Current delivery — portable archive and restore, October 2
 
@@ -105,7 +134,7 @@ cover traversal names, special files, conflicting local/central headers, and
 rejection before restore approval. Required checks job111013509667 in
 run37059638237 passed, including archive adapter, HTTP and application packages.
 The unrelated conversation-browser job was cancelled and remains unverified.
-Release37062636881 is pending; these changes add tests, not a parser behavior fix.
+Release37062636881 succeeded; these changes add tests, not a parser behavior fix.
 
 ## Connected native acceptance — investigation stopped
 

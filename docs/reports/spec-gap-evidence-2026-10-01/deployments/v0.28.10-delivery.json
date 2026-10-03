@@ -1,0 +1,41 @@
+{
+  "precedingRelease": {
+    "conclusion": "success",
+    "headSha": "c165f78713b47c4e174950c547bdd5515afe3990",
+    "status": "completed",
+    "url": "https://github.com/elsell/stuffstash/actions/runs/37083346024"
+  },
+  "285": {
+    "verifiedHead": "e4898e2ac74eb438f954658173c44e49448046e3",
+    "checks": {
+      "Docs Pages": {
+        "conclusion": "success",
+        "headSha": "e4898e2ac74eb438f954658173c44e49448046e3",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37083586335"
+      },
+      "CI": {
+        "conclusion": "success",
+        "headSha": "e4898e2ac74eb438f954658173c44e49448046e3",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37083586337"
+      }
+    },
+    "merge": {
+      "headRefOid": "e4898e2ac74eb438f954658173c44e49448046e3",
+      "mergeCommit": {
+        "oid": "3ac10814b72d275cc7cbd66f7e2c5ec083eed821"
+      },
+      "mergeStateStatus": "UNKNOWN",
+      "state": "MERGED",
+      "url": "https://github.com/elsell/stuffstash/pull/285"
+    },
+    "release": {
+      "conclusion": "success",
+      "headSha": "3ac10814b72d275cc7cbd66f7e2c5ec083eed821",
+      "status": "completed",
+      "url": "https://github.com/elsell/stuffstash/actions/runs/37085079308"
+    }
+  },
+  "outcome": "delivered"
+}
