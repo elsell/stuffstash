@@ -11,11 +11,12 @@ import type { PrintingRepository, PrintIntents } from '$lib/ports/printingReposi
 import type { PrintScope, RegisteredPrinter, LabelTemplate, PrintJob } from '$lib/domain/printing';
 import PairingChoice from './PairingChoice.svelte';
 import PrintJobList from './PrintJobList.svelte';
-let { scope, assetId, repository, intents, onClose, onRestoreFocus }: {
+let { scope, assetId, repository, intents, initialJobId, onClose, onRestoreFocus }: {
     scope: PrintScope;
     assetId: string;
     repository: PrintingRepository;
     intents: PrintIntents;
+    initialJobId?:string;
     onClose: () => void;
     onRestoreFocus?: () => void;
 } = $props();
@@ -35,6 +36,7 @@ async function load() { try {
     const [destinations, layouts, defaults] = await Promise.all([repository.printers(scope), repository.templates(scope), repository.settings(scope)]);
     if (!alive)
         return;
+    if(initialJobId){const existing=await repository.job(scope,initialJobId);if(!alive)return;job=existing;}
     printers = destinations.filter(p => !p.retired);
     templates = layouts;
     printerId = printers.find(p => p.id === defaults.defaultPrinterId)?.id ?? '';

@@ -820,3 +820,18 @@ fakes covering settings conflicts, permission loss, preview media mismatch and
 ambiguous queue delivery. Chromium fixture review exercised 1280px settings and
 390px preview/queue status using the generated renderer PNG; this is not evidence
 of connected OIDC or physical printer execution.
+
+Web asset creation initializes its print checkbox from inventory defaults once per
+new draft. It captures a compatible default destination and media fingerprint;
+o default disables automatic printing with a settings link. The atomic asset
+request carries an explicit selection and stable idempotency key. A session-held
+frozen submission survives closing and reopening after an ambiguous response.
+Retry resumes the prepared child request without recreating confirmed quick
+parents or tags. Definite rejection unlocks corrections only before ambiguity.
+The returned asset's print-job ID links the new asset to its queued label status.
+
+The create checkbox was exercised in Chromium fixtures at 390px and 1280px: a
+true inventory default initializes checked, explicit unchecking survives title
+edits, and the control remains reachable above the action bar. Stateful workflow
+tests cover a committed child with a lost response followed by permission denial
+and successful same-key recovery, without duplicate parent/tag creation.

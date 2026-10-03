@@ -3,6 +3,13 @@ export const webMessages = {
   "audit.action.print_job.reprinted": "Label reprint requested",
   "audit.action.print_job.idle_confirmed": "Printer idle confirmed",
   "audit.action.print_job.resolved": "Uncertain print job resolved",
+  "web.Printing.retryDefaults": "Retry label settings",
+  "web.Printing.createWithoutLabel": "Continue without a label",
+  "web.Printing.viewCreatedJob": "View label job",
+  "web.Printing.createPrint": "Print a label",
+  "web.Printing.chooseDefault": "Choose a default printer in inventory settings to print when creating an asset.",
+  "web.Printing.pendingCreate": "This create-and-print request is not yet confirmed. Its details are preserved. Retry the same request to avoid creating another asset or label.",
+  "web.Printing.retryCreate": "Retry create and print",
 
   "web.Printing.title": "Printers and labels",
   "web.Printing.description": "Registered printers, label defaults, and print jobs",

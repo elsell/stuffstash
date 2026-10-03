@@ -1,3 +1,4 @@
+import { PrintingFailure } from '$lib/domain/printing';
 import { t } from '$lib/presentation/localization';
 import { safeWorkspaceErrorMessage } from './workspaceSafeError';
 import type {
@@ -38,11 +39,18 @@ export interface CreateAssetWorkflowResult {
   route?: Partial<WorkspaceRouteState>;
 }
 
+export interface CreateAssetWorkflowCheckpoint {
+  prepared?: {draft:AddAssetDraft;parent:Asset|null;tags:AssetTag[]};
+  dispatchStarted:boolean;
+  ambiguous:boolean;
+}
+
 export async function createAssetWorkflow(
   repository: AssetCreateRepository,
   data: WorkspaceData,
   inventory: Inventory,
-  draft: AddAssetSubmission
+  draft: AddAssetSubmission,
+  checkpoint?: CreateAssetWorkflowCheckpoint
 ): Promise<CreateAssetWorkflowResult> {
   let createdParent: Asset | null = null;
   let createdAsset: Asset | null = null;
@@ -51,6 +59,12 @@ export async function createAssetWorkflow(
   let uploadResult: PhotoUploadResult = { uploaded: [], failures: 0, failureReasons: [] };
 
   try {
+    let childDraft: AddAssetDraft;
+    if (checkpoint?.prepared) {
+      childDraft = checkpoint.prepared.draft;
+      createdParent = checkpoint.prepared.parent;
+      createdTags = checkpoint.prepared.tags;
+    } else {
     const reconciledTags = reconcilePendingAssetTagDrafts(data.context.assetTags ?? [], draft.tagIds ?? [], draft.newTags ?? []);
     createdTags = await createPendingTags(repository, data, inventory, reconciledTags.newTags);
     const tagIds = [...reconciledTags.tagIds, ...createdTags.map((tag) => tag.id)];
@@ -67,11 +81,14 @@ export async function createAssetWorkflow(
       : null;
 
     const { parentQuickCreate: _parentQuickCreate, newTags: _newTags, ...assetDraft } = draft;
-    const childDraft: AddAssetDraft = {
+    childDraft = {
       ...assetDraft,
       parentAssetId: createdParent?.id ?? draft.parentAssetId,
       tagIds
     };
+    if (checkpoint) checkpoint.prepared = {draft: childDraft, parent: createdParent, tags: createdTags};
+    }
+    if (checkpoint) checkpoint.dispatchStarted = true;
     createdAsset = await repository.createAsset(data.context.selectedTenantId, inventory.id, childDraft);
     uploadResult = await uploadPhotos(repository, createdAsset, draft.photos);
     savedAsset = assetWithPrimaryPhoto(createdAsset, uploadResult.uploaded[0]);
@@ -113,6 +130,10 @@ export async function createAssetWorkflow(
       route: createdAssetRoute(savedAsset)
     };
   } catch (caught) {
+    if (checkpoint?.dispatchStarted && !createdAsset) {
+      const definite = caught instanceof PrintingFailure && caught.kind !== 'unavailable';
+      if (!definite) checkpoint.ambiguous = true;
+    }
     if (createdAsset) {
       const selectedAsset = savedAsset ?? createdAsset;
       const failure = safeWorkspaceErrorMessage(caught, t('web.workspaceAssetWorkflow.actionFailed'));
@@ -206,7 +227,9 @@ export function replaceWorkspaceAsset(data: WorkspaceData, asset: Asset): Worksp
 }
 
 function prependCreatedAssets(data: WorkspaceData, asset: Asset, createdParent: Asset | null): WorkspaceData {
-  return { ...data, assets: createdParent ? [asset, createdParent, ...data.assets] : [asset, ...data.assets] };
+  const additions = createdParent ? [asset, createdParent] : [asset];
+  const ids = new Set(additions.map(item => item.id));
+  return { ...data, assets: [...additions, ...data.assets.filter(item => !ids.has(item.id))] };
 }
 
 function upsertCheckedOutAsset(data: WorkspaceData, asset: Asset): WorkspaceData['checkedOutAssets'] {

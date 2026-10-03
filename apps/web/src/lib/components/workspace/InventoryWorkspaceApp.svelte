@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { prepareAssetPrintCreation, type AssetPrintCreationAttempt } from "$lib/application/printing/assetCreation";
   import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import { inventoryArchiveContext, type InventoryArchiveWorkspace } from '$lib/ports/inventoryArchive';
   import { t } from '$lib/presentation/localization';
@@ -357,6 +358,10 @@
     }
   }
 
+  const pendingPrintCreations = new Map<string, AssetPrintCreationAttempt>();
+  let pendingPrintRevision = $state(0);
+  let pendingPrintDraft = $derived.by(() => { pendingPrintRevision; return selectedInventory ? pendingPrintCreations.get(JSON.stringify([selectedInventory.tenantId, selectedInventory.id]))?.draft : undefined; });
+
   async function createAsset(draft: AddAssetSubmission): Promise<AddAssetSaveResult> {
     if (!selectedInventory) {
       error = t('web.InventoryWorkspaceApp.createAnInventoryBeforeAddingAssets');
@@ -366,12 +371,24 @@
       error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToAddAssetsIn');
       return { saved: false };
     }
+    if (busy) return {saved:false};
+    const scopeKey = JSON.stringify([selectedInventory.tenantId, selectedInventory.id]);
+    let attempt = pendingPrintCreations.get(scopeKey);
+    if (!attempt && draft.printLabel) {
+      attempt = prepareAssetPrintCreation(draft, crypto.randomUUID());
+      pendingPrintCreations.set(scopeKey, attempt);
+      pendingPrintRevision++;
+    }
     busy = true;
     error = '';
     refreshWarning = null;
     notification = null;
     try {
-      const result = await createAssetWorkflow(repository, data, selectedInventory, draft);
+      const result = await createAssetWorkflow(repository, data, selectedInventory, attempt?.draft ?? draft, attempt?.checkpoint);
+      if (attempt && (result.saveResult.saved || !attempt.checkpoint.ambiguous)) {
+        pendingPrintCreations.delete(scopeKey);
+        pendingPrintRevision++;
+      }
       data = result.data;
       if (result.message) {
         setMutationSuccessNotification(result.message, result.selectedAsset, result.selectedAsset ? viewAssetAction(result.selectedAsset) : undefined);
@@ -2070,6 +2087,8 @@
 
   <InventoryWorkspaceOverlays
     {addOpen}
+    {pendingPrintDraft}
+    printScope={selectedInventory ? {tenantId:selectedInventory.tenantId,inventoryId:selectedInventory.id} : undefined}
     {createAssetAllowed}
     {addKind}
     {addParentAssetId}

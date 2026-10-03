@@ -715,7 +715,7 @@ import { assetKindLabel, assetLifecycleLabel } from '$lib/presentation/assetKind
         </dl>
         <div class="detail-actions">
           <AssetLabelAction scope={{tenantId:asset.tenantId,inventoryId:asset.inventoryId,assetId:asset.id}} disabled={saving || action !== null} />
-          {#if canEdit && asset.lifecycleState === "active"}<AssetPrintAction scope={{tenantId: asset.tenantId, inventoryId: asset.inventoryId}} assetId={asset.id}/>{/if}
+          {#if canEdit && asset.lifecycleState === "active"}<AssetPrintAction scope={{tenantId: asset.tenantId, inventoryId: asset.inventoryId}} assetId={asset.id} recentJobId={asset.printJobId}/>{/if}
           <Button.Root href={actionHref('edit')} disabled={!actionIsAvailable('edit')} onclick={(event) => openAction(event, 'edit')}><Pencil /> {t('web.AssetDetail.edit')}</Button.Root>
 	          <Button.Root
 	            href={actionHref('move')}
