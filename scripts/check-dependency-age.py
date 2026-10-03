@@ -77,6 +77,22 @@ def npm_published_at(name, version):
         raise RuntimeError(f"npm metadata for {name}@{version} did not include a publish time") from exc
 
 
+def repository_module(module, go_mod, root):
+    replacement = module.get("Replace", {})
+    if not replacement or replacement.get("Version"):
+        return False
+    directory = (go_mod.parent / replacement["Path"]).resolve()
+    if not directory.is_relative_to(root.resolve()):
+        raise RuntimeError("local Go replacement escapes the repository")
+    declaration = directory / "go.mod"
+    if not declaration.is_file() or not re.search(
+        r"(?m)^module\s+" + re.escape(module["Path"]) + r"\s*$",
+        declaration.read_text(),
+    ):
+        raise RuntimeError("local Go replacement lacks a matching module declaration")
+    return True
+
+
 def go_modules(go_mod):
     command = ["go", "list", "-m", "-json", "all"]
     env = os.environ.copy()
@@ -96,7 +112,7 @@ def go_modules(go_mod):
     while text:
         module, index = decoder.raw_decode(text)
         text = text[index:].lstrip()
-        if module.get("Main") or "Version" not in module:
+        if module.get("Main") or "Version" not in module or repository_module(module, go_mod, Path(__file__).resolve().parents[1]):
             continue
         modules.append((module["Path"], module["Version"], module.get("Time"), str(go_mod)))
     return modules

@@ -377,3 +377,46 @@ client-owned result models and pagination, without token or provider error bodie
 Initial portable release targets are Linux/macOS amd64 and arm64, plus Windows
 amd64; API commands use pure Go builds. USB capability is separately advertised
 and initially absent until the Linux Brother adapter is integrated.
+
+## Initial Linux Brother Transport
+
+The first adapter uses Linux's bidirectional `usblp` character device through
+standard nonblocking file I/O and poll. Operators enable the kernel module,
+disable Editor Lite using the hardware control where needed, and grant a narrow
+printer group access. Discovery reads USB/sysfs metadata without opening the
+printer or transmitting data. No automatic kernel-driver detach, Editor Lite or USB-interface
+configuration changes, privileged helper, Python runtime, or libusb installation
+is performed. Missing device nodes, unsupported unidirectional interfaces, or
+permissions are actionable unavailable states. Serial identity is preferred;
+serial-less devices use an explicitly reported physical-port identity.
+
+The printer port submits one physical copy at a time. The worker owns bounded
+copy sequencing, lease renewal, and durable completed-copy progress under its
+exclusive physical-device lock. Submit requires an immutable validated PNG and
+exact registered media profile. The adapter does not resize, rotate, dither, or
+compose content. It packs the feed-oriented monochrome raster into Brother's
+720-pin rows with the documented offset/bit order.
+
+Completion requires both a spontaneous printing-completed status and the following
+waiting-to-receive phase from the same open connection. Successful USB writes
+are only submission evidence. Observation never sends status requests during
+printing. A partial write, disconnect, malformed status, or timeout after possible
+output is uncertain, including a partial set of copies; never infer no output
+from a missing final print command. No new submission can follow uncertainty
+on the same connection. Reopening is not recovery evidence.
+
+`stuffstash printers discover` performs local read-only discovery without login.
+`stuffstash printers catalog --json` exports deterministic built-in descriptors
+and media presets without probing devices. Catalog availability is distinct from
+physical verification. QL-800 with 29 x 90 mm stock is the only initial profile.
+Physical verification is pending: read-only inspection on Paul found no attached
+Brother printer or usblp node on October 3, 2026.
+
+The built-in preset records the manufacturer's effective height 89.8 mm while
+its user-facing stock name remains 29 x 90 mm. Physical margins are 18 dots
+(1524 micrometers) across and 35 dots (2963 micrometers) along the feed. Raster
+size remains 306 x 991 at 300 DPI; rounded physical dimensions are subject to the
+renderer one-dot tolerance. Brother's printhead offsets (6 right, 408 left) are
+transport mechanics, distinct from these physical margins. Sysfs and device-root
+defaults can be configured by `STUFF_STASH_CLI_SYSFS_USB_ROOT` and
+`STUFF_STASH_CLI_USB_DEVICE_ROOT`; job data cannot override local device paths.
