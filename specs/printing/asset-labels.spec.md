@@ -323,3 +323,36 @@ Use the actual renderer with fixed synthetic fixtures for each supported
 template/media combination; no independent documentation layout implementation.
 Changes to templates, presets, or renderer behavior update generated docs/images
 in the same PR and must pass generation/drift checks.
+
+## Initial Label API Delivery Contract
+
+- `stuff-stash labels bootstrap-instance` explicitly initializes the persisted
+  singleton identity after database migration. Repeating it returns the same ID;
+  competing processes cannot replace it. Before bootstrap, `/instance` and label
+  operations return service-unavailable without creating identity as a read side
+  effect. The operation is a local deployment command, not a public HTTP mutation.
+- `STUFF_STASH_LABEL_BASE_URL` defaults to `STUFF_STASH_PUBLIC_WEB_BASE_URL`.
+  Empty configuration disables label operations; configured values must be valid
+  HTTPS bases with no credentials, query, fragment, ambiguous escaped separators,
+  or dot segments. Preserve a configured path prefix. Never derive it from Host.
+- The initial download slice accepts a standalone media snapshot in
+  `POST /assets/{assetId}/label-renders`, plus explicit template/version/options
+  and PNG/PDF format. It requires a previously provisioned canonical label.
+  Printer-backed requests are added with registered printer resources; they may
+  not accept a caller override of registered dimensions.
+- Responses expose a scoped render ID, content fingerprint, expiry, media
+  fingerprint, content type, digest, and authenticated relative content path.
+  Content reads live under the tenant/inventory path and reauthorize the current
+  principal, active tenant/inventory, asset existence, and expiry on every read.
+- Short-lived preview/download artifacts use a dedicated repository port storing
+  immutable bytes and metadata in the database, separately from future durable
+  job artifacts. `STUFF_STASH_LABEL_RENDER_TTL` and
+  `STUFF_STASH_LABEL_RENDER_MAX_BYTES` bound lifetime and artifact size; periodic
+  cleanup removes expired previews. No public blob URL or bearer download token
+  is issued. Asset deletion atomically tombstones identity and removes previews.
+- Canonical provisioning is naturally idempotent per tenant/inventory/asset and
+  records `label.provisioned` only on first creation. Label metadata/resolve,
+  template listing, rendering, and content access have safe audit actions against
+  the existing asset or inventory target; content, QR URLs, and titles never enter
+  audit metadata. Resolver failures for absent, foreign, tombstoned, and forbidden
+  identities return the same safe 404. Existing HTTP rate limiting applies.

@@ -144,6 +144,7 @@ const (
 const defaultGoogleCredentialMode = GoogleCredentialModeADC
 
 type Config struct {
+	Labels                           LabelConfig
 	Exports                          ExportConfiguration
 	ConversationWorkflows            WorkflowConfiguration
 	ConversationEvaluations          EvaluationConfiguration
@@ -228,6 +229,7 @@ type Config struct {
 
 func Load() Config {
 	return Config{
+		Labels:                           loadLabels(),
 		Exports:                          loadExportConfiguration(),
 		ConversationWorkflows:            loadWorkflowConfiguration(),
 		ConversationEvaluations:          loadEvaluationConfiguration(),

@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	labelroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/labels/routes"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -31,6 +32,7 @@ import (
 )
 
 func registerRoutes(api huma.API, application app.App, archives *dataportability.ArchiveService, archiveTimeout time.Duration, cliAuth *identitydto.CLIAuthMetadata) {
+	labelroutes.Register(api, application)
 	archiveroutes.Register(api, application, archives, archiveTimeout)
 	exportroutes.Register(api, application)
 	notificationroutes.Register(api, application)

@@ -10,12 +10,16 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
+	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"sync"
 )
 
 type Store struct {
+	labelInstance           printing.InstanceID
+	labels                  map[printing.LabelID]printing.Label
+	labelRenders            map[printing.RenderID]printing.LabelRender
 	notificationDeliveries  map[string]ports.NotificationDelivery
 	notificationDevices     map[string]ports.NotificationDevice
 	notificationInbox       map[string]ports.NotificationRecord
@@ -61,6 +65,8 @@ type Store struct {
 
 func NewStore() *Store {
 	return &Store{
+		labels:           map[printing.LabelID]printing.Label{},
+		labelRenders:     map[printing.RenderID]printing.LabelRender{},
 		mediaBlobKeys:    map[media.StorageKey]struct{}{},
 		users:            map[identity.PrincipalID]identity.User{},
 		tenants:          map[tenant.ID]tenant.Tenant{},

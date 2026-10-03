@@ -304,6 +304,7 @@ func (s *Store) DeleteAsset(_ context.Context, tenantID tenant.ID, inventoryID i
 	}
 
 	s.auditRecords[auditRecord.ID] = auditRecord
+	s.tombstoneAssetLabelsLocked(tenantID, inventoryID, assetID)
 	delete(s.assets, assetID)
 	for checkoutID, checkout := range s.checkouts {
 		if checkout.TenantID.String() == tenantID.String() && checkout.InventoryID.String() == inventoryID.String() && checkout.AssetID == assetID {
