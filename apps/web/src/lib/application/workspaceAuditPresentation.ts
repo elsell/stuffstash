@@ -1,3 +1,4 @@
+import { timestampLabel } from '$lib/presentation/timestamp';
 import { auditVocabularyLabel } from './workspaceAuditVocabulary';
 import { t } from '$lib/presentation/localization';
 import type { AuditRecord, AuditScope } from '$lib/domain/inventory';
@@ -175,5 +176,5 @@ function humanizeDate(value: string): string {
   if (Number.isNaN(date.getTime())) {
     return value;
   }
-  return date.toLocaleString();
+  return timestampLabel(value);
 }

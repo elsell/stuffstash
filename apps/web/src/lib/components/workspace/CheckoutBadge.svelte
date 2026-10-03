@@ -1,11 +1,12 @@
 <script lang="ts">
+  import { timestampLabel } from '$lib/presentation/timestamp';
   import { t } from '$lib/presentation/localization';
   import type { CurrentCheckout } from '$lib/domain/inventory';
 
   let { checkout, compact = false }: { checkout: CurrentCheckout; compact?: boolean } = $props();
 </script>
 
-<span class:compact class="checkout-badge" title={t('web.CheckoutBadge.checkedOut2', { value: String(new Date(checkout.checkedOutAt).toLocaleString()) })}> {t('web.CheckoutBadge.checkedOut')} </span>
+<span class:compact class="checkout-badge" title={t('web.CheckoutBadge.checkedOut2', { value: String(timestampLabel(checkout.checkedOutAt)) })}> {t('web.CheckoutBadge.checkedOut')} </span>
 
 <style>
   .checkout-badge {

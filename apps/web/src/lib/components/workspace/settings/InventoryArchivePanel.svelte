@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { timestampLabel } from '$lib/presentation/timestamp';
   import { formatArchiveReview } from '@stuff-stash/localization';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Checkbox } from '$lib/components/ui/checkbox/index.js';
@@ -123,7 +124,7 @@
   <ul class="archive-jobs">
     {#each jobs as job (job.id)}
       <li>
-        <div><strong>{status(job)}</strong><p>{t('archive.expires', { date: new Date(job.expiresAt).toLocaleString(localization.locale) })}</p></div>
+        <div><strong>{status(job)}</strong><p>{t('archive.expires', { date: timestampLabel(job.expiresAt) })}</p></div>
         <div class="archive-actions">
           {#if job.state === 'ready' && job.kind === 'export'}<Button.Root variant="outline" disabled={pending} onclick={() => download(job)}>{t('archive.download')}</Button.Root>{/if}
           {#if job.state === 'ready' && job.kind === 'restore' && job.destinationInventoryId}<Button.Root href={workspaceRouteHref({ mode: 'home' }, scope.tenantId, job.destinationInventoryId)}>{t('archive.open')}</Button.Root>{/if}
