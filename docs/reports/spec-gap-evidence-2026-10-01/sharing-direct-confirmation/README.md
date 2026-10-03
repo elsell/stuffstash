@@ -29,7 +29,7 @@ behavior tests cover confirmation, preserved draft, permission/scope ownership,
 locks, cancellation and failure recovery. These support source behavior, not
 native acceptance. The first native run supports the changed initial presentation.
 
-Deliver the reviewed change after required checks; keep #239 open for complete
+The reviewed change shipped in v0.28.29 after required checks; keep #239 open for complete
 native confirmation and recovery acceptance. No third unchanged native run.
 Retry, copy/share recovery and navigation return remain unverified on this
 candidate. Device checks stay on the consolidated checklist, not a release gate.
