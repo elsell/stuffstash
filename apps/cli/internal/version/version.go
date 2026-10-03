@@ -16,7 +16,7 @@ type Info struct {
 	USBPrinting  bool   `json:"usbPrinting"`
 }
 
-func Current() Info {
+func Current(usbPrinting bool) Info {
 	tag, commit, _ := strings.Cut(Build, ":")
-	return Info{Version: tag, Commit: commit, OS: runtime.GOOS, Architecture: runtime.GOARCH, USBPrinting: false}
+	return Info{Version: tag, Commit: commit, OS: runtime.GOOS, Architecture: runtime.GOARCH, USBPrinting: usbPrinting}
 }
