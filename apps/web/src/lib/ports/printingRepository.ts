@@ -8,6 +8,7 @@ export interface PrintingRepository {
     updatePrinter(scope: PrintScope, printer: RegisteredPrinter, name: string, retired: boolean): Promise<RegisteredPrinter>;
     preview(scope: PrintScope, assetId: string, selection: LabelSelection, media: LabelMedia): Promise<LabelPreview>;
     createJob(scope: PrintScope, assetId: string, selection: LabelSelection, previewFingerprint: string, key: string): Promise<PrintJob>;
+    reprint(scope: PrintScope, predecessor: string, selection: LabelSelection, previewFingerprint: string, key: string): Promise<PrintJob>;
     job(scope: PrintScope, id: string): Promise<PrintJob>;
     jobs(scope: PrintScope, cursor?: string): Promise<PrintPage<PrintJob>>;
     resolve(scope:PrintScope,job:PrintJob,outcome:ReportedPrintOutcome):Promise<PrintJob>;
@@ -30,5 +31,6 @@ export interface PrintIntent {
 }
 export interface PrintIntents {
     forAsset(scope: PrintScope, assetId: string): PrintIntent;
+    forReprint(scope: PrintScope, assetId: string, predecessor: string): PrintIntent;
     startAnother(scope: PrintScope, assetId: string): PrintIntent;
 }

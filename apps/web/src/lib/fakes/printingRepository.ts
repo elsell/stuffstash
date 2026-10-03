@@ -35,11 +35,21 @@ export class FakePrintingRepository implements PrintingRepository {
     async preview(scope: PrintScope, assetId: string, selection: LabelSelection, _media: LabelMedia) { this.check(scope); if (!this.canPrint)
         throw new PrintingFailure('denied'); return { bytes: this.previewBytes, selectionFingerprint: JSON.stringify({ assetId, selection }), mediaFingerprint: selection.expectedMediaFingerprint, displayRotation: 270, expiresAt: '2099-01-01T00:00:00Z' }; }
     async createJob(scope: PrintScope, assetId: string, selection: LabelSelection, previewFingerprint: string, key: string) {
+        return this.enqueue(scope, assetId, selection, previewFingerprint, key);
+    }
+    async reprint(scope: PrintScope, predecessor: string, selection: LabelSelection, previewFingerprint: string, key: string) {
+        this.check(scope);
+        const prior = this.queued.get(predecessor);
+        if (!prior || !prior.assetId) throw new PrintingFailure('invalid');
+        if (!['completed', 'failed', 'canceled'].includes(prior.status)) throw new PrintingFailure('conflict');
+        return this.enqueue(scope, prior.assetId, selection, previewFingerprint, key, predecessor);
+    }
+    private async enqueue(scope: PrintScope, assetId: string, selection: LabelSelection, previewFingerprint: string, key: string, predecessor?: string) {
         this.check(scope);
         if (!this.canPrint)
             throw new PrintingFailure('denied');
-        const fingerprint = JSON.stringify({ assetId, selection });
-        if (fingerprint !== previewFingerprint)
+        const fingerprint = JSON.stringify({ assetId, selection, predecessor });
+        if (JSON.stringify({assetId, selection}) !== previewFingerprint)
             throw new PrintingFailure('conflict');
         const prior = this.requests.get(key);
         if (prior) {
@@ -51,7 +61,7 @@ export class FakePrintingRepository implements PrintingRepository {
         if (!destination || destination.mediaFingerprint !== selection.expectedMediaFingerprint || !Number.isInteger(selection.copies) || selection.copies < 1)
             throw new PrintingFailure('conflict');
         const id = `job-${this.queued.size + 1}`;
-        const job: PrintJob = { id, assetId, printerId: selection.printerId, status: 'queued', revision: 1, copies: selection.copies, completedCopies: 0, reason: '', createdAt: '2026-10-03T12:00:00Z' };
+        const job: PrintJob = { id, assetId, predecessor, printerId: selection.printerId, status: 'queued', revision: 1, copies: selection.copies, completedCopies: 0, reason: '', createdAt: '2026-10-03T12:00:00Z' };
         this.queued.set(id, job);
         this.requests.set(key, { fingerprint, jobId: id });
         if (this.loseNextJobResponse) {

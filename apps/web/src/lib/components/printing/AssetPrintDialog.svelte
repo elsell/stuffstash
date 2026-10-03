@@ -11,16 +11,17 @@ import type { PrintingRepository, PrintIntents } from '$lib/ports/printingReposi
 import type { ReportedPrintOutcome, PrintScope, RegisteredPrinter, LabelTemplate, PrintJob } from '$lib/domain/printing';
 import PairingChoice from './PairingChoice.svelte';
 import PrintJobList from './PrintJobList.svelte';
-let { scope, assetId, repository, intents, initialJobId, onClose, onRestoreFocus }: {
+let { scope, assetId, repository, intents, initialJobId, predecessor, onClose, onRestoreFocus }: {
     scope: PrintScope;
     assetId: string;
     repository: PrintingRepository;
     intents: PrintIntents;
     initialJobId?:string;
+    predecessor?:string;
     onClose: () => void;
     onRestoreFocus?: () => void;
 } = $props();
-let request = $state(untrack(() => intents.forAsset(scope, assetId)));
+let request = $state(untrack(() => predecessor ? intents.forReprint(scope, assetId, predecessor) : intents.forAsset(scope, assetId)));
 let printers = $state<RegisteredPrinter[]>([]), templates = $state<LabelTemplate[]>([]), printerId = $state(''), templateKey = $state(''), showReference = $state(true), copies = $state(1);
 let busy = $state(true), locked = $state(untrack(() => request.locked)), error = $state(''), previewUrl = $state(''), rotation = $state(0), job = $state<PrintJob | null>(untrack(() => request.result)), alive = true;
 const previewLifetime = new AbortController();
@@ -94,7 +95,14 @@ finally {
         busy = false;
     }
 } }
-function another() { request = intents.startAnother(scope, assetId); job = null; locked = false; releasePreview(); error = ""; }
+function another() {
+    if (!job || !['completed','failed','canceled'].includes(job.status)) return;
+    request = intents.forReprint(scope, assetId, job.id);
+    job = request.result; locked = request.locked; releasePreview(); error = '';
+    const selection = request.selection;
+    if (selection) { printerId=selection.printerId; templateKey=`${selection.templateId}:${selection.templateVersion}`; showReference=selection.showReference; copies=selection.copies; }
+    if (request.rendered) { rotation=request.rendered.displayRotation; previewUrl=URL.createObjectURL(request.rendered.bytes); }
+}
 async function refresh() { if (!job || busy)
     return; busy = true; error = ''; try {
     const result = await repository.job(scope, job.id);

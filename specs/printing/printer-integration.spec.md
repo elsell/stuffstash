@@ -960,3 +960,20 @@ intent and clears both the outcome choice and acknowledgement. The user must
 make both choices again; the client never rebases an old acknowledgement onto a
 new attempt. Refreshing the same revision retains the exact pending payload,
 including when the loading state temporarily unmounts the controls.
+### Web linked reprints
+
+An editor can explicitly reprint a terminal asset label from recent jobs or its
+asset print dialog. Open the existing bounded print dialog to choose a current
+destination/template and preview current content. Submit through the predecessor
+reprint endpoint with a fresh idempotency key; never silently use the ordinary
+asset-create-job endpoint. A session retains the same reprint intent per scoped
+predecessor across dismissal and navigation, including ambiguous responses.
+Choosing to reprint its completed successor starts a new linked intent. Viewer,
+nonterminal, and unresolved-uncertainty rows have no reprint command. Escape
+returns focus to the invoking command; workspace/permission changes dismiss the
+surface. No label is enqueued by opening or previewing the dialog.
+
+Chromium fixtures at 390px and 1280px verify preview, lost-response dismissal,
+Escape focus return, and retry after reopening. Controlled repository and real
+component tests preserve one successor per intent, its predecessor relationship,
+and viewer/nonterminal gates. These checks do not exercise physical USB output.

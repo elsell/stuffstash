@@ -8,7 +8,7 @@ export class ManualPrintRequest implements PrintIntent {
     private ambiguous = false;
     private previewGeneration = 0;
     private pending: Promise<PrintJob> | null = null;
-    constructor(private readonly repository: PrintingRepository, private readonly scope: PrintScope, private readonly assetId: string, private readonly key: string) { }
+    constructor(private readonly repository: PrintingRepository, private readonly scope: PrintScope, private readonly assetId: string, private readonly key: string, private readonly predecessor?: string) { }
     invalidate() { if (this.locked)
         throw new PrintingFailure('conflict'); this.previewGeneration++; this.rendered = null; this.selection = null; }
     async preview(selection: LabelSelection, media: LabelMedia, signal?: AbortSignal) {
@@ -32,7 +32,10 @@ export class ManualPrintRequest implements PrintIntent {
         if (!this.selection || !this.rendered)
             return Promise.reject(new PrintingFailure('invalid'));
         this.locked = true;
-        this.pending = this.repository.createJob(this.scope, this.assetId, this.selection, this.rendered.selectionFingerprint, this.key).then(result => { this.result = result; return result; }).catch(error => {
+        const operation = this.predecessor
+            ? this.repository.reprint(this.scope, this.predecessor, this.selection, this.rendered.selectionFingerprint, this.key)
+            : this.repository.createJob(this.scope, this.assetId, this.selection, this.rendered.selectionFingerprint, this.key);
+        this.pending = operation.then(result => { this.result = result; return result; }).catch(error => {
             const definite = error instanceof PrintingFailure && ['invalid', 'conflict', 'denied', 'authentication_required'].includes(error.kind);
             if (!definite)
                 this.ambiguous = true;
@@ -50,6 +53,15 @@ export class SessionPrintIntents implements PrintIntents {
         request = this.create(scope, assetId);
         this.requests.set(key, request);
     } return request; }
+    forReprint(scope: PrintScope, assetId: string, predecessor: string) {
+        const key = JSON.stringify([scope.tenantId, scope.inventoryId, 'reprint', predecessor]);
+        let request = this.requests.get(key);
+        if (!request) {
+            request = new ManualPrintRequest(this.repository, {...scope}, assetId, this.newKey(), predecessor);
+            this.requests.set(key, request);
+        }
+        return request;
+    }
     startAnother(scope: PrintScope, assetId: string) { const prior = this.forAsset(scope, assetId); if (prior.locked && !prior.result)
         throw new PrintingFailure('conflict'); const request = this.create(scope, assetId); this.requests.set(this.identity(scope, assetId), request); return request; }
     private create(scope: PrintScope, assetId: string) { return new ManualPrintRequest(this.repository, { ...scope }, assetId, this.newKey()); }

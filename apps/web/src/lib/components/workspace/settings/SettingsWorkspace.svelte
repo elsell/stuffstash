@@ -93,7 +93,7 @@
     <Button.Root href={levelHref} variant="ghost" class="settings-back" onclick={(event) => navigate(event, levelHref)}><ArrowLeft /> {levelTitle}</Button.Root>
     {#if route.settingsCollection === 'printing' && inventory && printing}
       {#key JSON.stringify([printing.apiIdentity, principal.id, tenant.id, inventory.id])}
-        <InventoryPrintingSettings scope={{tenantId: tenant.id, inventoryId: inventory.id}} repository={printing.repository} canConfigure={hasAccessPermission(inventory.access, 'configure')} canPrint={canEditAsset(inventory)} />
+        <InventoryPrintingSettings scope={{tenantId: tenant.id, inventoryId: inventory.id}} repository={printing.repository} intents={printing.intents} canConfigure={hasAccessPermission(inventory.access, 'configure')} canPrint={canEditAsset(inventory)} />
       {/key}
     {:else if route.settingsCollection === 'notifications' && inventory && notifications}
       {#key JSON.stringify([notifications.apiIdentity, principal.id, tenant.id, inventory.id])}
