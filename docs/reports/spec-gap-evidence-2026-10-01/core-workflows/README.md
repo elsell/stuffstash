@@ -28,10 +28,11 @@ were skipped. These use controlled ports/API fixtures. They establish selected
 query retention, draft recovery, selection and route behaviors, not native visual
 quality or production authentication.
 
-This evidence does not complete the full Browse → Details → Edit/Move → return
-journey against a real backend. Connected native sign-in, physical export saving,
-assistive use and production performance remain unverified. The roadmap owns the
-current queue; these passing checks are not a new product release.
+These fixture checks alone do not complete connected acceptance. The later
+[Android connected walkthrough](android-connected/README.md) verifies Edit
+persistence, Move cancel/commit, search return and filter return against the
+isolated server. iPhone connected sign-in, physical export saving and complete
+assistive acceptance remain unverified. The roadmap owns current status.
 
 
 ## October 2 Sharing menu regression — accepted release follow-up

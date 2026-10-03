@@ -1,0 +1,261 @@
+{
+  "scope": "Exact merge and release-workflow snapshot. A successful docs-only workflow with skipped publishing is not a new release. Runtime acceptance stays separate.",
+  "batches": [
+    {
+      "pr": 310,
+      "merge": {
+        "headRefOid": "8293138309a0813370171a31e3c62445818c4a03",
+        "mergeCommit": {
+          "oid": "849c26f1e52e7610399e7716318b224969164271"
+        },
+        "state": "MERGED",
+        "url": "https://github.com/elsell/stuffstash/pull/310"
+      },
+      "workflow": {
+        "conclusion": "success",
+        "headSha": "849c26f1e52e7610399e7716318b224969164271",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37113766291"
+      },
+      "jobs": [
+        {
+          "name": "Validate release inputs",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish release images and attestations",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Build and upload tagged iOS release",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Publish build changelog / publish",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "publishedReleases": [
+        {
+          "tag": "v0.28.22",
+          "url": "https://github.com/elsell/stuffstash/releases/tag/v0.28.22"
+        }
+      ]
+    },
+    {
+      "pr": 314,
+      "merge": {
+        "headRefOid": "9eeca0629d77188c695480f83af990279dda03ec",
+        "mergeCommit": {
+          "oid": "174b20cc0faea12c1ad84ea0d6067938e192f2c1"
+        },
+        "state": "MERGED",
+        "url": "https://github.com/elsell/stuffstash/pull/314"
+      },
+      "workflow": {
+        "conclusion": "success",
+        "headSha": "174b20cc0faea12c1ad84ea0d6067938e192f2c1",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37116175640"
+      },
+      "jobs": [
+        {
+          "name": "Validate release inputs",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish release images and attestations",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Build and upload tagged iOS release",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Publish build changelog / publish",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "publishedReleases": [
+        {
+          "tag": "v0.28.23",
+          "url": "https://github.com/elsell/stuffstash/releases/tag/v0.28.23"
+        }
+      ]
+    },
+    {
+      "pr": 316,
+      "merge": {
+        "headRefOid": "54d675f42e6fca751fa33dabdd5594836c6f1239",
+        "mergeCommit": {
+          "oid": "6b53edb45c5c3efdd72f7977b3bf4152a91bc079"
+        },
+        "state": "MERGED",
+        "url": "https://github.com/elsell/stuffstash/pull/316"
+      },
+      "workflow": {
+        "conclusion": "success",
+        "headSha": "6b53edb45c5c3efdd72f7977b3bf4152a91bc079",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37118251898"
+      },
+      "jobs": [
+        {
+          "name": "Validate release inputs",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish release images and attestations",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Build and upload tagged iOS release",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Publish build changelog / publish",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "publishedReleases": [
+        {
+          "tag": "v0.28.24",
+          "url": "https://github.com/elsell/stuffstash/releases/tag/v0.28.24"
+        }
+      ]
+    },
+    {
+      "pr": 317,
+      "merge": {
+        "headRefOid": "6875f22775f73468290f7a78161c51bfe64c4ad5",
+        "mergeCommit": {
+          "oid": "bb9b58cfdd295ceb9286185201b9f93e3ccf3da4"
+        },
+        "state": "MERGED",
+        "url": "https://github.com/elsell/stuffstash/pull/317"
+      },
+      "workflow": {
+        "conclusion": "success",
+        "headSha": "bb9b58cfdd295ceb9286185201b9f93e3ccf3da4",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37121961856"
+      },
+      "jobs": [
+        {
+          "name": "Validate release inputs",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish release images and attestations",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Publish iOS release to TestFlight",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ],
+      "publishedReleases": []
+    },
+    {
+      "pr": 318,
+      "merge": {
+        "headRefOid": "73c931d1e6a202a0d1cf632282eeac8a74f63716",
+        "mergeCommit": {
+          "oid": "bef8595f721161c00c7cbfbfbba4ab9cc5f9ab01"
+        },
+        "state": "MERGED",
+        "url": "https://github.com/elsell/stuffstash/pull/318"
+      },
+      "workflow": {
+        "conclusion": "success",
+        "headSha": "bef8595f721161c00c7cbfbfbba4ab9cc5f9ab01",
+        "status": "completed",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37122794405"
+      },
+      "jobs": [
+        {
+          "name": "Validate release inputs",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish release images and attestations",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Build and upload tagged iOS release",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Publish build changelog / publish",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "publishedReleases": [
+        {
+          "tag": "v0.28.25",
+          "url": "https://github.com/elsell/stuffstash/releases/tag/v0.28.25"
+        }
+      ]
+    },
+    {
+      "pr": 322,
+      "merge": {
+        "headRefOid": "fc195470b170ad3e34e69310340cc176cdf1c94c",
+        "mergeCommit": {
+          "oid": "378d5fcbd56e20b5ccbd76732bc387355255c437"
+        },
+        "state": "MERGED",
+        "url": "https://github.com/elsell/stuffstash/pull/322"
+      },
+      "workflow": {
+        "conclusion": "",
+        "headSha": "378d5fcbd56e20b5ccbd76732bc387355255c437",
+        "status": "in_progress",
+        "url": "https://github.com/elsell/stuffstash/actions/runs/37123657202"
+      },
+      "jobs": [
+        {
+          "name": "Validate release inputs",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish release images and attestations",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish iOS release to TestFlight / Build and upload tagged iOS release",
+          "status": "in_progress",
+          "conclusion": ""
+        }
+      ],
+      "publishedReleases": [
+        {
+          "tag": "v0.28.26",
+          "url": "https://github.com/elsell/stuffstash/releases/tag/v0.28.26"
+        }
+      ]
+    }
+  ],
+  "capturedAt": "2026-10-03T13:14:43.920103+00:00"
+}

@@ -1,0 +1,23 @@
+{
+  "tag": "v0.28.26",
+  "source": "378d5fcbd56e20b5ccbd76732bc387355255c437",
+  "api": "ghcr.io/elsell/stuffstash@sha256:935ad34d2f0578ce57a740289eeee072b6a8ca25005ee4a1e03efdf1e55ed147",
+  "releaseURL": "https://github.com/elsell/stuffstash/releases/tag/v0.28.26",
+  "publicationRun": 37123657202,
+  "publicationConclusion": "success",
+  "scope": "Verified image publication; TestFlight completion tracked separately",
+  "rollout": {
+    "release": "v0.28.26",
+    "releaseSource": "378d5fcbd56e20b5ccbd76732bc387355255c437",
+    "infraCommit": "5f2e02c73183d1525b632c89bf3a489cd253b0d6",
+    "apiImage": "ghcr.io/elsell/stuffstash@sha256:935ad34d2f0578ce57a740289eeee072b6a8ca25005ee4a1e03efdf1e55ed147",
+    "scope": "API-only rollout; not authenticated acceptance",
+    "webHTTP": 200,
+    "apiHTTP": 200,
+    "fluxRevision": "master@sha1:5f2e02c73183d1525b632c89bf3a489cd253b0d6",
+    "updatedReplicas": 1,
+    "availableReplicas": 1,
+    "outcome": "ready"
+  },
+  "outcome": "deployed"
+}

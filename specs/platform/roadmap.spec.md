@@ -14,23 +14,27 @@ goal blocker. Continue independent work and keep missing acceptance explicitly
 unverified; do not confuse this policy with a passing test or waive required checks.
 
 
-Reviewed localization and recovery batches through PR #305 are merged and
-released. #289/#290/#291/#292/#294/#295/#296 shipped as v0.28.11–v0.28.17;
-#304 (photo/evaluation metadata) and #305 (audit history vocabulary) shipped as
-v0.28.18 and v0.28.19. #303 reconciled the preceding delivery documentation.
-Each product batch has successful checks on its final integration commit and
-successful release jobs. The final merge is
-`07ffd62275a994b83445803593e4a27eac5d584d`, release37105572828.
-[Exact delivery records](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/localization-delivery-through-v0.28.19.json)
-include TestFlight and changelog job outcomes. Integration conflicts retained the
-reviewed source trees. #295's docs download failure recovered on one retry;
-its successful product CI was not rerun to conceal a product failure.
+Delivery snapshot through v0.28.26 API publication: product batches #310, #314,
+#316 and #318 shipped as v0.28.22–v0.28.25 with successful TestFlight upload and
+changelog jobs. Documentation-only #317 merged; its release workflow correctly
+skipped publication and created no product tag. #321 was superseded by #322.
+#322 merged at `378d5fcbd56e20b5ccbd76732bc387355255c437`; v0.28.26 images
+and attestations are published. Its TestFlight completion is tracked separately
+in [exact workflow evidence](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/delivery-through-v0.28.26.json).
+The earlier [v0.28.20–v0.28.21 record](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/delivery-v0.28.20-v0.28.21.json)
+and [preceding releases](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/localization-delivery-through-v0.28.19.json)
+retain their original evidence.
 
-Paul GitOps commit `d2708075620d1798a82e9b17584fbc222ada2588` deployed the
-v0.28.19 web digest. The [rollout record](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.19.json)
-records the applied revision, replica readiness and web/API HTTP results.
-The API remains on v0.28.0: these batches contain no production API changes.
-Rollout readiness is not a new authenticated production journey.
+Paul's web deployment is v0.28.26, infra revision `de14fb7b1802d9faae5cb1a45633b72a1eef83a3`.
+The API is v0.28.26, infra revision `5f2e02c73183d1525b632c89bf3a489cd253b0d6`.
+[Web rollout](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.26.json)
+and [API rollout](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/return-cancel-v0.28.26.json)
+record pinned images, Flux revision, ready replicas and HTTP200 health checks.
+The API fixes return cancellation incorrectly rejected as stale after PostgreSQL
+truncated timestamps. Real PostgreSQL reproduces the original failure and verifies
+the correction plus scope/stale-edit guards. The user-device retest stays on the
+checklist. API publication and rollout did not wait for TestFlight; neither is
+claimed as authenticated production workflow acceptance.
 
 The full audit remains incomplete. Release success does not close these gaps:
 
@@ -39,11 +43,12 @@ The full audit remains incomplete. Release success does not close these gaps:
   The fixed investigation budget is exhausted; no unchanged retry.
 - Localization: the reviewed labels, interpolation and recovery fixes shipped.
   The residual TypeScript snapshot at `a93b524a` has a scoped caller review of
-  31 files, retained as exact-string classifications. This is not a refreshed
-  whole-client scan or complete derived/template-copy acceptance; candidate
-  counts are not defect counts or proof of complete migration. The follow-up source review found
-  inline web Browse expiration labels bypassing the catalog; the current batch
-  catalogs those links and guards inline each-block labels. Existing RTL
+  31 files, retained as exact-string classifications. The subsequent script/template
+  review found inline web Browse expiration labels bypassing the catalog; #318
+  catalogs those links and guards inline each-block labels. A bounded
+  [derived-string review](../../docs/reports/spec-gap-evidence-2026-10-01/localization-derived-review.json)
+  classifies five remaining TypeScript files as diagnostics, protocol strings or
+  test fixtures. These source reviews do not prove whole-client runtime localization. Existing RTL
   search/proposal artifacts were visually reviewed without another native run;
   [scoped evidence](../../docs/reports/spec-gap-evidence-2026-10-01/native-search/README.md)
   preserves broader mirroring and physical/assistive limits.
@@ -52,7 +57,7 @@ The full audit remains incomplete. Release success does not close these gaps:
 - Android connected acceptance verifies real browser sign-in return, persisted
   session, native sign-out and second-principal asset isolation. PR #309 merged
   at `c1c1184b` and release37110696922 succeeded.
-- PR #310 merged at `849c26f1`; release confirmation remains pending. Its
+- PR #310 merged at `849c26f1` and shipped as v0.28.22. Its
   three gaps are post-setup root navigation, authenticated
   Android archive acceptance and a representative TalkBack journey. The normal
   APK at `a93b524a` verifies fresh household creation returns to Home and an
@@ -62,12 +67,12 @@ The full audit remains incomplete. Release success does not close these gaps:
   native recipient saving is still unverified. TalkBack showed visible focus,
   but complete activation and spoken-output acceptance remain open. Later
   Home/Browse refresh errors are recorded without an unproven diagnosis.
-  Ship the verified navigation fix; these limits remain audit follow-ups.
+  The navigation fix is shipped; these limits remain audit follow-ups.
 - Web workspace creation, editing and shared action recovery now use the existing
   safe localized presenter. PR #311 merged at `42ae0fe3` and shipped as v0.28.21, including TestFlight
   and changelog publication. The [delivery record](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/delivery-v0.28.20-v0.28.21.json)
   also records #309/v0.28.20. Child-dialog recovery and typed-error propagation
-  are reviewed in PR #314; integration and release remain pending.
+  shipped in PR #314/v0.28.23.
 - A connected Android normal-text walkthrough at `a93b524a` now verifies Edit
   persistence across relaunch, Move cancel/commit and location restoration, search
   return, and Places-filter return. [Evidence](../../docs/reports/spec-gap-evidence-2026-10-01/core-workflows/android-connected/README.md)

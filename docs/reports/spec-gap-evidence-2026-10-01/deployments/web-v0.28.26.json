@@ -1,0 +1,15 @@
+{
+  "release": "v0.28.26",
+  "releaseSource": "378d5fcbd56e20b5ccbd76732bc387355255c437",
+  "infraCommit": "de14fb7b1802d9faae5cb1a45633b72a1eef83a3",
+  "webImage": "ghcr.io/elsell/stuffstash-web@sha256:49433b4d8a87d51769d27f2335dd5f4319f342d2efab9d592ceee7ebbd0b9bc1",
+  "scope": "web-only rollout; not authenticated acceptance",
+  "webHTTP": 200,
+  "apiHTTP": 200,
+  "outcome": "ready",
+  "fluxRevision": "master@sha1:de14fb7b1802d9faae5cb1a45633b72a1eef83a3",
+  "updatedReplicas": 1,
+  "availableReplicas": 1,
+  "verifiedAt": "2026-10-03T13:14:00.114118+00:00",
+  "initialObservation": "First external web check returned HTTP502 after Kubernetes readiness. Read-only recheck succeeded; no redeployment or workflow retry."
+}

@@ -1,0 +1,67 @@
+{
+  "source": "6c0eac38759998ba0eba796458cfda66712b1ac3",
+  "scope": "Residual template-derived TypeScript candidates from existing sampler, excluding previously classified exact literals. Source review only; not full runtime localization acceptance.",
+  "findings": [
+    {
+      "file": "apps/mobile/src/adapters/auth/ApiMobileAuthMetadataGateway.ts",
+      "strings": [
+        "Stuff Stash mobile sign-in metadata contains invalid ",
+        "Stuff Stash mobile sign-in metadata is missing "
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "OnboardingPresentation.onboardingError converts plain metadata failures to cataloged setup recovery."
+    },
+    {
+      "file": "apps/mobile/src/adapters/voice/WebSocketRealtimeVoiceTransport.ts",
+      "strings": [
+        " has unsupported direct upload URL.",
+        " has unsupported direct upload method.",
+        " has unsupported photo content type.",
+        " must be a boolean.",
+        " must be a non-empty string.",
+        " must be a non-negative integer.",
+        " must be a positive integer.",
+        " must be a string array.",
+        " must be a string record.",
+        " must be an array.",
+        " must be an object.",
+        " must contain objects.",
+        "Bearer ",
+        "Unsupported voice event: ",
+        "Voice event field ",
+        "Voice socket closed before the session completed (code "
+      ],
+      "classification": "protocol-or-diagnostic",
+      "reason": "Bearer is an authorization prefix; validation and socket failure text flows to buildFailedVoiceRealtimeState catalog fallback, not verbatim visible error."
+    },
+    {
+      "file": "apps/mobile/src/application/onboarding/OnboardingTestSupport.ts",
+      "strings": [
+        "Connection lost",
+        "Forbidden",
+        "Unauthorized",
+        "Unavailable"
+      ],
+      "classification": "test-fixture",
+      "reason": "Fake failure messages; no non-test consumer found by source search."
+    },
+    {
+      "file": "apps/mobile/src/config/mobileRuntimeConfigCore.ts",
+      "strings": [
+        "Invalid mobile runtime configuration value: ",
+        "Missing mobile runtime configuration value: "
+      ],
+      "classification": "configuration-diagnostic",
+      "reason": "Environment configuration parsing errors describe invalid deployment inputs; not ordinary product copy."
+    },
+    {
+      "file": "apps/web/src/lib/adapters/api/inventoryMapper.ts",
+      "strings": [
+        "Unsupported attachment content type: "
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "Unsupported content type throws plain Error, without safeForUser; workspace presenters use catalog fallback."
+    }
+  ],
+  "confirmedAdditionalProductCopyDefects": 0
+}
