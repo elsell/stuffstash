@@ -12,7 +12,14 @@ import (
 
 var _ ports.PrintJobRepository = (*Store)(nil)
 
-func clonePrintJob(j printing.Job) printing.Job { j.Attempts = slices.Clone(j.Attempts); return j }
+func clonePrintJob(j printing.Job) printing.Job {
+	j.Attempts = slices.Clone(j.Attempts)
+	if j.Resolution != nil {
+		resolution := *j.Resolution
+		j.Resolution = &resolution
+	}
+	return j
+}
 func (s *Store) printJobLocked(scope printing.Scope, id printing.JobID) (printing.Job, error) {
 	j, ok := s.printingJobs[id]
 	if !ok || j.Scope != scope || scope.TenantID == "" || scope.InventoryID == "" {

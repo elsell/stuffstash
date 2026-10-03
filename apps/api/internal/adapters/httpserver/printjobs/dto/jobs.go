@@ -58,6 +58,7 @@ type ListInput struct {
 	Cursor    string `query:"cursor"`
 }
 type PrintJobAttempt struct {
+	IdleConfirmedAt *time.Time `json:"idleConfirmedAt,omitempty"`
 	ID              string     `json:"id"`
 	ConnectorID     string     `json:"connectorId"`
 	ClaimedAt       time.Time  `json:"claimedAt"`
@@ -69,19 +70,20 @@ type PrintJobAttempt struct {
 	CompletedCopies int        `json:"completedCopies"`
 }
 type PrintJob struct {
-	ID               string            `json:"id"`
-	Predecessor      string            `json:"predecessor,omitempty"`
-	PrinterID        string            `json:"printerId"`
-	AssetID          string            `json:"assetId,omitempty"`
-	Kind             string            `json:"kind"`
-	Status           string            `json:"status"`
-	Revision         uint64            `json:"revision"`
-	Copies           int               `json:"copies"`
-	MediaFingerprint string            `json:"mediaFingerprint"`
-	RequestedBy      string            `json:"requestedBy"`
-	CreatedAt        time.Time         `json:"createdAt"`
-	UpdatedAt        time.Time         `json:"updatedAt"`
-	Attempts         []PrintJobAttempt `json:"attempts"`
+	Resolution       *PrintJobResolution `json:"resolution,omitempty"`
+	ID               string              `json:"id"`
+	Predecessor      string              `json:"predecessor,omitempty"`
+	PrinterID        string              `json:"printerId"`
+	AssetID          string              `json:"assetId,omitempty"`
+	Kind             string              `json:"kind"`
+	Status           string              `json:"status"`
+	Revision         uint64              `json:"revision"`
+	Copies           int                 `json:"copies"`
+	MediaFingerprint string              `json:"mediaFingerprint"`
+	RequestedBy      string              `json:"requestedBy"`
+	CreatedAt        time.Time           `json:"createdAt"`
+	UpdatedAt        time.Time           `json:"updatedAt"`
+	Attempts         []PrintJobAttempt   `json:"attempts"`
 }
 type Output struct {
 	Status       int
@@ -91,4 +93,23 @@ type Output struct {
 type ListOutput struct {
 	CacheControl string `header:"Cache-Control"`
 	Body         shared.SuccessEnvelope[[]PrintJob]
+}
+
+type PrintJobResolutionRequest struct {
+	Revision               uint64 `json:"revision" minimum:"1"`
+	AcknowledgeUncertainty bool   `json:"acknowledgeUncertainty"`
+	ReportedOutcome        string `json:"reportedOutcome" enum:"printed,not_printed,unknown"`
+}
+type ResolveInput struct {
+	JobInput
+	Body PrintJobResolutionRequest
+}
+type PrintJobResolution struct {
+	ReportedOutcome string    `json:"reportedOutcome"`
+	ResolvedBy      string    `json:"resolvedBy"`
+	ResolvedAt      time.Time `json:"resolvedAt"`
+}
+type PrintIdleInput struct {
+	PrintAttemptInput
+	Body PrintJobRevision
 }

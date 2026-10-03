@@ -48,7 +48,7 @@ func (r *Runtime) deviceSession(ctx context.Context, registration printing.Regis
 	// media edits do not change ownership of existing recovery evidence.
 	worker.Config.Binding += ":" + registration.ID
 	worker.Config.RecoveryOnly = true
-	if err = worker.Step(ctx, journal, nil); err != nil {
+	if err = worker.Step(ctx, journal, nil); err != nil && !errors.Is(err, ports.ErrRecoveryRequired) {
 		return err
 	}
 	connection, err := r.Devices.Open(ctx, registration)
@@ -56,6 +56,9 @@ func (r *Runtime) deviceSession(ctx context.Context, registration printing.Regis
 		return err
 	}
 	defer connection.Close()
+	if err = worker.Step(ctx, journal, connection); err != nil {
+		return err
+	}
 	for {
 		worker.Config.RecoveryOnly = retired.Load()
 		if worker.Config.RecoveryOnly {
@@ -120,7 +123,21 @@ func (r *Runtime) retiredSession(ctx context.Context, registration printing.Regi
 	worker.Config.Binding += ":" + registration.ID
 	worker.Config.RecoveryOnly = true
 	for retired.Load() {
-		if err = worker.Step(ctx, journal, nil); err != nil {
+		err = worker.Step(ctx, journal, nil)
+		if errors.Is(err, ports.ErrRecoveryRequired) {
+			// Retirement stops new work, but an ambiguous attempt may still
+			// need a locked, read-only device check before human resolution.
+			connection, openErr := r.Devices.Open(ctx, registration)
+			if openErr != nil {
+				return openErr
+			}
+			err = worker.Step(ctx, journal, connection)
+			closeErr := connection.Close()
+			if err == nil {
+				err = closeErr
+			}
+		}
+		if err != nil {
 			return err
 		}
 		if err = worker.Waiter.Wait(ctx, r.PollInterval); err != nil {

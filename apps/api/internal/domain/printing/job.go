@@ -39,6 +39,7 @@ type Artifact struct {
 
 type Job struct {
 	AssetCreationOperationID                             string
+	Resolution                                           *Resolution
 	ID                                                   JobID
 	Scope                                                Scope
 	PrinterID                                            PrinterID

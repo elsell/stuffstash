@@ -14,6 +14,9 @@ const (
 	EventPrintJobReleased      EventName = "print_job.released"
 
 	EventPrintJobQueued                            EventName = "print_job.queued"
+	EventPrintJobReprinted                         EventName = "print_job.reprinted"
+	EventPrintJobResolved                          EventName = "print_job.resolved"
+	EventPrintJobIdleConfirmed                     EventName = "print_job.idle_confirmed"
 	EventPrintJobCanceled                          EventName = "print_job.canceled"
 	EventLabelProvisioned                          EventName = "label.provisioned"
 	EventLabelCleanupFailed                        EventName = "label.cleanup_failed"

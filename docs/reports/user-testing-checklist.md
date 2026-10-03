@@ -162,3 +162,9 @@ Verify once the connector worker is integrated:
 - Disconnect or restart during output produces uncertainty without duplicate labels.
 
 These checks do not block independent software delivery.
+
+After an ambiguous print, verify the connector can read a fresh idle status from
+the QL-800 without printing another label. The queue must stay paused until an
+editor acknowledges the unknown outcome. That acknowledgement must preserve the
+uncertain attempt and permit a separate, explicit reprint. Idle confirmation is
+covered by protocol-fake tests; its physical-device behavior remains unverified.

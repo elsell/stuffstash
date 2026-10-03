@@ -1,5 +1,9 @@
 /** mobile presentation messages. */
 export const mobileMessages = {
+  "audit.action.print_job.reprinted": "Label reprint requested",
+  "audit.action.print_job.idle_confirmed": "Printer idle confirmed",
+  "audit.action.print_job.resolved": "Uncertain print job resolved",
+
   "audit.action.print_settings.viewed": "Print settings viewed",
   "audit.action.print_settings.updated": "Print settings updated",
   "mobile.AppKeyboardAccessoryios.hidesTheKeyboardWithoutSubmitting": "Hides the keyboard without submitting",

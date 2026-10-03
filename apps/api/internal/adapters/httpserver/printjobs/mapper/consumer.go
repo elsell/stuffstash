@@ -18,6 +18,9 @@ func ConsumerAttempt(j p.Job, id p.AttemptID, now time.Time, artifact bool) *dto
 		}
 	}
 	result := &dto.PrintConsumerAttempt{ProtocolVersion: 1, JobID: string(j.ID), PrinterID: string(j.PrinterID), AttemptID: string(a.ID), SessionID: string(a.Authority.SessionID), Status: string(j.Status), Revision: j.Revision, Copies: j.Copies, LeaseExpiresAt: a.LeaseExpiresAt, LeaseValid: a.LeaseExpiresAt.After(now) && (j.Status == p.JobClaimed || j.Status == p.JobPrinting) && len(j.Attempts) > 0 && j.Attempts[len(j.Attempts)-1].ID == a.ID, Outcome: dto.PrintOutcome{Kind: string(a.Outcome.Kind), Reason: string(a.Outcome.Reason), CompletedCopies: a.Outcome.CompletedCopies, Retryable: a.Outcome.Retryable}, MediaFingerprint: j.MediaFingerprint}
+	if j.Resolution != nil && len(j.Attempts) > 0 && j.Attempts[len(j.Attempts)-1].ID == a.ID {
+		result.ResolvedAt = &j.Resolution.ResolvedAt
+	}
 	if !a.StartedAt.IsZero() {
 		result.StartedAt = &a.StartedAt
 	}

@@ -133,3 +133,8 @@ func (c *Client) Artifact(ctx context.Context, control printing.AttemptControl, 
 	}
 	return body, contentType, nil
 }
+
+func (c *Client) ConfirmIdle(ctx context.Context, id string, revision uint64) error {
+	_, err := read[generated.SuccessEnvelopePrintConsumerAttempt](c.sdk.PostPrintConsumerAttemptsByAttemptIdIdleConfirmation(ctx, id, nil, generated.PrintJobRevision{Revision: int64(revision)}))
+	return consumerError(err)
+}

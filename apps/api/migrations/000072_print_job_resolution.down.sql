@@ -1,0 +1,1 @@
+-- Keep historical resolution and idle-confirmation audit records valid.

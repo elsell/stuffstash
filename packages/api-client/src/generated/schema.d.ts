@@ -225,6 +225,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/print-consumer/attempts/{attemptId}/idle-confirmation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post print consumer attempts by attempt ID idle confirmation */
+        post: operations["post-print-consumer-attempts-by-attempt-id-idle-confirmation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/print-consumer/attempts/{attemptId}/reconciliation": {
         parameters: {
             query?: never;
@@ -2132,6 +2149,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/resolution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID print jobs by job ID resolution */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id-resolution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/print-settings": {
         parameters: {
             query?: never;
@@ -3875,6 +3909,8 @@ export interface components {
             printerId: string;
             /** Format: int64 */
             protocolVersion: number;
+            /** Format: date-time */
+            resolvedAt?: string;
             /** Format: int64 */
             revision: number;
             sessionId: string;
@@ -3918,6 +3954,7 @@ export interface components {
             predecessor?: string;
             printerId: string;
             requestedBy: string;
+            resolution?: components["schemas"]["PrintJobResolution"];
             /** Format: int64 */
             revision: number;
             status: string;
@@ -3932,6 +3969,8 @@ export interface components {
             connectorId: string;
             id: string;
             /** Format: date-time */
+            idleConfirmedAt?: string;
+            /** Format: date-time */
             leaseExpiresAt: string;
             outcome: string;
             reason: string;
@@ -3939,6 +3978,25 @@ export interface components {
             settledAt?: string;
             /** Format: date-time */
             startedAt?: string;
+        };
+        PrintJobResolution: {
+            reportedOutcome: string;
+            /** Format: date-time */
+            resolvedAt: string;
+            resolvedBy: string;
+        };
+        PrintJobResolutionRequest: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/PrintJobResolutionRequest.json
+             */
+            readonly $schema?: string;
+            acknowledgeUncertainty: boolean;
+            /** @enum {string} */
+            reportedOutcome: "printed" | "not_printed" | "unknown";
+            /** Format: int64 */
+            revision: number;
         };
         PrintJobRevision: {
             /**
@@ -5762,6 +5820,44 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintConsumerAttempt"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-print-consumer-attempts-by-attempt-id-idle-confirmation": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrintJobRevision"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -11899,6 +11995,47 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopePrintJob"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id-resolution": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrintJobResolutionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrintJob"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
         };

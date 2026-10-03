@@ -41,6 +41,9 @@ type Action string
 
 const (
 	ActionPrintAttemptsListed                       Action = "print_attempt.listed"
+	ActionPrintJobReprinted                         Action = "print_job.reprinted"
+	ActionPrintJobIdleConfirmed                     Action = "print_job.idle_confirmed"
+	ActionPrintJobResolved                          Action = "print_job.resolved"
 	ActionPrintJobClaimed                           Action = "print_job.claimed"
 	ActionPrintJobStarted                           Action = "print_job.started"
 	ActionPrintJobCompleted                         Action = "print_job.completed"
@@ -188,7 +191,7 @@ const (
 func NewAction(value string) (Action, bool) {
 	action := Action(strings.TrimSpace(value))
 	switch action {
-	case ActionPrintSettingsViewed, ActionPrintSettingsUpdated, ActionPrintPairingReviewed, ActionPrintConnectorViewed, ActionPrintConnectorListed, ActionPrintConnectorUpdated, ActionPrintConnectorApproved, ActionPrintJobQueued, ActionPrintJobViewed, ActionPrintJobsListed, ActionPrintJobCanceled, ActionPrinterRegistered, ActionPrinterViewed, ActionPrintersListed, ActionPrinterUpdated, ActionLabelProvisioned, ActionLabelViewed, ActionLabelResolved, ActionLabelRendered, ActionLabelContentDownloaded, ActionLabelTemplatesListed, ActionArchiveJobViewed, ActionArchiveJobCreated, ActionArchiveJobUpdated, ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated, ActionPrintConnectorCredentialIssued, ActionPrintConnectorActivated, ActionPrintConnectorCredentialRotated, ActionPrintConnectorRotationRequested, ActionPrintAttemptsListed, ActionPrintJobClaimed, ActionPrintJobStarted, ActionPrintJobCompleted, ActionPrintJobFailed, ActionPrintJobUncertain, ActionPrintJobReleased, ActionPrintJobContentDownloaded, ActionPrintAttemptViewed,
+	case ActionPrintSettingsViewed, ActionPrintSettingsUpdated, ActionPrintJobReprinted, ActionPrintJobIdleConfirmed, ActionPrintJobResolved, ActionPrintPairingReviewed, ActionPrintConnectorViewed, ActionPrintConnectorListed, ActionPrintConnectorUpdated, ActionPrintConnectorApproved, ActionPrintJobQueued, ActionPrintJobViewed, ActionPrintJobsListed, ActionPrintJobCanceled, ActionPrinterRegistered, ActionPrinterViewed, ActionPrintersListed, ActionPrinterUpdated, ActionLabelProvisioned, ActionLabelViewed, ActionLabelResolved, ActionLabelRendered, ActionLabelContentDownloaded, ActionLabelTemplatesListed, ActionArchiveJobViewed, ActionArchiveJobCreated, ActionArchiveJobUpdated, ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated, ActionPrintConnectorCredentialIssued, ActionPrintConnectorActivated, ActionPrintConnectorCredentialRotated, ActionPrintConnectorRotationRequested, ActionPrintAttemptsListed, ActionPrintJobClaimed, ActionPrintJobStarted, ActionPrintJobCompleted, ActionPrintJobFailed, ActionPrintJobUncertain, ActionPrintJobReleased, ActionPrintJobContentDownloaded, ActionPrintAttemptViewed,
 		ActionTenantViewed,
 		ActionTenantListed,
 		ActionTenantUpdated,

@@ -8,7 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 )
 
-func (w *Worker) recover(ctx context.Context, journal ports.LockedPrintState, record printing.JournalRecord) error {
+func (w *Worker) recover(ctx context.Context, journal ports.LockedPrintState, record printing.JournalRecord, printer ports.PrinterConnection) error {
 	if record.Binding != w.Config.Binding {
 		return ports.ErrRecoveryRequired
 	}
@@ -37,14 +37,44 @@ func (w *Worker) recover(ctx context.Context, journal ports.LockedPrintState, re
 				evidence.Reason = printing.NoReason
 			}
 		}
+		if evidence.Outcome == printing.Uncertain {
+			return w.confirmIdle(ctx, printer, []printing.AttemptStatus{status})
+		}
 		if err = w.Jobs.Reconcile(ctx, record.AttemptID, status.Revision, evidence); err != nil {
 			return err
-		}
-		if evidence.Outcome == printing.Uncertain {
-			return ports.ErrRecoveryRequired
 		}
 		return journal.Save(ctx, nil)
 	default:
 		return ports.ErrRecoveryRequired
 	}
+}
+
+// Lost local evidence cannot establish completion or zero output. Scoped server
+// identity plus an independently locked idle device can still permit a human
+// acknowledgement, without manufacturing a journal or submitting output.
+func (w *Worker) recoverMissingJournal(ctx context.Context, printer ports.PrinterConnection, attempts []printing.AttemptStatus) error {
+	for _, attempt := range attempts {
+		if attempt.Phase != printing.RemoteUncertain || attempt.AttemptID == "" || attempt.Revision == 0 {
+			return ports.ErrRecoveryRequired
+		}
+	}
+	return w.confirmIdle(ctx, printer, attempts)
+}
+func (w *Worker) confirmIdle(ctx context.Context, printer ports.PrinterConnection, attempts []printing.AttemptStatus) error {
+	idle, ok := printer.(ports.PrinterIdleConfirmation)
+	if !ok {
+		return ports.ErrRecoveryRequired
+	}
+	check, cancel := context.WithTimeout(ctx, w.Config.ReadinessTimeout)
+	err := idle.ConfirmIdle(check)
+	cancel()
+	if err != nil {
+		return err
+	}
+	for _, attempt := range attempts {
+		if err = w.Jobs.ConfirmIdle(ctx, attempt.AttemptID, attempt.Revision); err != nil {
+			return err
+		}
+	}
+	return ports.ErrRecoveryRequired
 }

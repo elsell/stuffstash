@@ -29,3 +29,10 @@ type PrinterTransport interface {
 	Write(context.Context, []byte) (int, error)
 	Close() error
 }
+
+// PrinterIdleConfirmation is optional recovery evidence. Implementations must
+// verify current device state without submitting output; an uncertain or active
+// local connection must fail. The caller holds its physical and journal locks.
+type PrinterIdleConfirmation interface {
+	ConfirmIdle(context.Context) error
+}

@@ -15,9 +15,13 @@ func optionalTime(t time.Time) *time.Time {
 func Job(j printing.Job) dto.PrintJob {
 	attempts := make([]dto.PrintJobAttempt, 0, len(j.Attempts))
 	for _, a := range j.Attempts {
-		attempts = append(attempts, dto.PrintJobAttempt{ID: string(a.ID), ConnectorID: string(a.Authority.ConnectorID), ClaimedAt: a.ClaimedAt, LeaseExpiresAt: a.LeaseExpiresAt, StartedAt: optionalTime(a.StartedAt), SettledAt: optionalTime(a.SettledAt), Outcome: string(a.Outcome.Kind), Reason: string(a.Outcome.Reason), CompletedCopies: a.Outcome.CompletedCopies})
+		attempts = append(attempts, dto.PrintJobAttempt{ID: string(a.ID), IdleConfirmedAt: optionalTime(a.IdleConfirmedAt), ConnectorID: string(a.Authority.ConnectorID), ClaimedAt: a.ClaimedAt, LeaseExpiresAt: a.LeaseExpiresAt, StartedAt: optionalTime(a.StartedAt), SettledAt: optionalTime(a.SettledAt), Outcome: string(a.Outcome.Kind), Reason: string(a.Outcome.Reason), CompletedCopies: a.Outcome.CompletedCopies})
 	}
-	return dto.PrintJob{ID: string(j.ID), Predecessor: string(j.Predecessor), PrinterID: string(j.PrinterID), AssetID: j.AssetID, Kind: string(j.Kind), Status: string(j.Status), Revision: j.Revision, Copies: j.Copies, MediaFingerprint: j.MediaFingerprint, RequestedBy: j.RequestedBy, CreatedAt: j.CreatedAt, UpdatedAt: j.UpdatedAt, Attempts: attempts}
+	var resolution *dto.PrintJobResolution
+	if j.Resolution != nil {
+		resolution = &dto.PrintJobResolution{ReportedOutcome: string(j.Resolution.ReportedOutcome), ResolvedBy: j.Resolution.ResolvedBy, ResolvedAt: j.Resolution.ResolvedAt}
+	}
+	return dto.PrintJob{Resolution: resolution, ID: string(j.ID), Predecessor: string(j.Predecessor), PrinterID: string(j.PrinterID), AssetID: j.AssetID, Kind: string(j.Kind), Status: string(j.Status), Revision: j.Revision, Copies: j.Copies, MediaFingerprint: j.MediaFingerprint, RequestedBy: j.RequestedBy, CreatedAt: j.CreatedAt, UpdatedAt: j.UpdatedAt, Attempts: attempts}
 }
 func Jobs(values []printing.Job) []dto.PrintJob {
 	out := make([]dto.PrintJob, 0, len(values))

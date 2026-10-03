@@ -134,3 +134,21 @@ func TestUnavailableAndUncertainOutputAreNotRetried(t *testing.T) {
 		})
 	}
 }
+
+func TestIdleConfirmationDoesNotSubmitAndRejectsActiveDevice(t *testing.T) {
+	ctx := context.Background()
+	device := fakes.NewPrinterTransport()
+	connection := NewConnection(device)
+	if err := connection.ConfirmIdle(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if device.PhysicalLabels != 0 || len(device.Rows) != 0 {
+		t.Fatal("idle check printed")
+	}
+	if _, err := connection.Submit(ctx, label(t)); err != nil {
+		t.Fatal(err)
+	}
+	if connection.ConfirmIdle(ctx) == nil {
+		t.Fatal("active submission confirmed idle")
+	}
+}

@@ -1,6 +1,10 @@
 import { t } from '$lib/presentation/localization';
 
 const actionMessages = {
+  "print_job.reprinted": "audit.action.print_job.reprinted",
+  "print_job.idle_confirmed": "audit.action.print_job.idle_confirmed",
+  "print_job.resolved": "audit.action.print_job.resolved",
+
   "print_settings.viewed": "audit.action.print_settings.viewed",
   "print_settings.updated": "audit.action.print_settings.updated",
   "print_job.claimed": "audit.action.print_job.claimed",

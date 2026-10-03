@@ -652,6 +652,40 @@ Reprint idempotency outlives predecessor retention: while the new job is retaine
 an identical authorized request returns it even when its predecessor has expired.
 Diagnostic and reprint OpenAPI contracts expose both 201 creation and 200 replay.
 
+### Safe human uncertainty resolution
+
+The serving connector may POST an attempt revision to
+`/print-consumer/attempts/{attemptId}/idle-confirmation` only while holding its
+exclusive local journal and physical device locks and after a fresh adapter
+check confirms no active device submission. This is authenticated connector
+attestation, not independent server observation. Unknown, busy, disconnected,
+or unsupported adapters cannot attest. Confirmation is recorded on that attempt;
+it does not release the reservation or turn ambiguous output into success.
+An identical confirmation retry is harmless. No command may restart that attempt.
+
+An inventory editor may POST `{revision, acknowledgeUncertainty: true,
+reportedOutcome: "printed" | "not_printed" | "unknown"}` to the job's resolution
+endpoint. The current uncertain attempt must have the serving connector's idle
+confirmation. Resolution preserves all physical evidence and stores the human
+report separately with actor and time. It closes the job as `failed` (unconfirmed
+physical outcome), releases the printer reservation, and never reports confirmed
+completion. An identical repeat by the same actor returns the prior resolution;
+changed acknowledgement or stale revision conflicts. A later reprint is a
+separate explicit job. Late connector reconciliation cannot rewrite this decision.
+
+The CLI checks idle only during recovery, without sending label data. It keeps
+its durable journal until the server reports a terminal resolution. Restart,
+lease loss, and lock contention never justify replay. For the QL-800, a fresh
+status response in idle phase on a newly opened connection provides this check;
+existing active or uncertain connections cannot attest. Hardware operation
+already buffered remains outside server fencing guarantees.
+
+Missing local journal data does not permanently prevent acknowledgement. While
+holding the journal reservation and physical device lock, the CLI may use its
+scoped unsettled-attempt listing to confirm idle for an uncertain attempt. This
+never reconstructs completion/no-output evidence, writes a replacement claim,
+or submits a label. Claimed or printing attempts remain blocked. The worker
+continues to wait for human resolution before accepting another job.
 ### Human health projection
 
 Connector list/detail responses expose server-computed `availability` (`online`,
