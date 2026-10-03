@@ -1,0 +1,9 @@
+{
+  "stage": "preflight",
+  "apiURL": "https://nsa-lnx-rzn.local:28780",
+  "caSHA256": "DF:1D:95:68:53:DB:24:C7:B0:CF:A0:E9:55:FD:37:48:69:C8:CE:C6:B8:AC:3E:7B:E8:FA:E2:69:6B:89:7B:22",
+  "emulator": "Android API36 emulator-5580",
+  "browserHTTPS": "health JSON visible without bypassing a certificate warning after installing the exact CA through Android Settings",
+  "trustSetup": "Disposable emulator system trust mount plus user CA installation; production APK TLS configuration unchanged",
+  "scope": "Network and browser trust only; native sign-in, relaunch and isolation not yet tested"
+}

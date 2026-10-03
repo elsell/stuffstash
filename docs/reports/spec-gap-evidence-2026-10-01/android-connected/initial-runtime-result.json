@@ -1,0 +1,11 @@
+{
+  "source": "b3d0fb6d27c945ceb96e816746483db145b20395",
+  "apkSHA256": "3275b72166f3da82948807d879fd3e270a544b415593273fc7826eee8e00d921",
+  "runtime": "Android API36 emulator-5580",
+  "server": "isolated Paul v0.27.3 API, real Dex and SpiceDB",
+  "networkAdjustment": "Pinned nsa-lnx-rzn.local to 192.168.1.204 inside disposable emulator after observing native SYN-SENT to unreachable IPv6 link-local address; hostname and TLS verification preserved",
+  "signInReturn": "failed: Expo Router showed Unmatched Route on the app-owned callback; callback query intentionally not retained",
+  "sessionAfterRelaunch": "passed: force-stop/launcher restart opened Mobile audit inventory and existing Connected audit flashlight through production API",
+  "crossPrincipalIsolation": "not run",
+  "nextAction": "Verify native-intent callback navigation fix in a new normal-app build; do not repeat unchanged build"
+}

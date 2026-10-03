@@ -1831,3 +1831,15 @@ without horizontal scrolling. Use normal text size and real production component
 Retain only post-login synthetic-content screenshots and geometry/focus results.
 This establishes sampled browser keyboard/reflow evidence, not screen-reader,
 physical mobile, visual-design acceptance, or a whole-app accessibility pass.
+
+### Connected Android acceptance artifact
+
+The native audit workflow may retain a normal Android application APK for the
+three connected acceptance gaps: real OIDC sign-in, persisted-session relaunch,
+and inventory isolation across principals. Build from the production routes and
+pinned dependencies; do not install synthetic archive/onboarding routes, inject
+sessions, change TLS trust, or intercept API calls. Bundle JavaScript so execution
+does not depend on Metro. Retain the source revision and APK checksum with the
+short-lived artifact. Build success proves compilation and packaging only; all three journey
+claims require recorded runtime evidence against an isolated authenticated stack.
+Do not change production Android distribution or claim physical-device acceptance.

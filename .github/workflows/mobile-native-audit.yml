@@ -39,6 +39,7 @@ on:
           - inventory-archive
           - android-build
           - android-archive
+          - android-connected
           - image-telemetry
           - localization
           - release-corrections
@@ -100,7 +101,7 @@ env:
 
 jobs:
   ios:
-    if: inputs.test_case != 'android-build' && inputs.test_case != 'android-archive'
+    if: inputs.test_case != 'android-build' && inputs.test_case != 'android-archive' && inputs.test_case != 'android-connected'
     name: iOS ${{ matrix.suite }} (${{ matrix.device }})${{ inputs.test_case && inputs.test_case != 'all' && format(' [{0}]', inputs.test_case) || '' }}
     runs-on: macos-26
     timeout-minutes: 120
@@ -772,7 +773,7 @@ jobs:
           if-no-files-found: warn
 
   android:
-    if: inputs.test_case == 'android-build' || inputs.test_case == 'android-archive'
+    if: inputs.test_case == 'android-build' || inputs.test_case == 'android-archive' || inputs.test_case == 'android-connected'
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
@@ -844,5 +845,26 @@ jobs:
         with:
           name: android-archive-fixture
           path: android-archive-artifact/
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Bundle normal application for connected acceptance
+        if: inputs.test_case == 'android-connected'
+        working-directory: apps/mobile/android
+        run: ./gradlew :app:assembleRelease --no-daemon --console=plain -PreactNativeArchitectures=x86_64 -Dorg.gradle.workers.max=2
+      - name: Record normal application source and checksum
+        if: inputs.test_case == 'android-connected'
+        run: |
+          mkdir -p android-connected-artifact
+          cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk android-connected-artifact/
+          git rev-parse HEAD > android-connected-artifact/source-revision.txt
+          cd android-connected-artifact
+          sha256sum app-release.apk > SHA256SUMS
+      - name: Retain normal application for connected acceptance
+        if: inputs.test_case == 'android-connected'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: android-connected-application
+          path: android-connected-artifact/
           if-no-files-found: error
           retention-days: 1
