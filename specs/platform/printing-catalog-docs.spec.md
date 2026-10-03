@@ -175,3 +175,7 @@ The archive preserves existing project licensing: include a root LICENSE if one
 exists and identify the first-party source without inventing a license grant. The
 license collector may recognize only that exact checked-in first-party module path,
 not skip arbitrary replacement modules. A dirty profile prevents a release build.
+
+CI provisions the exact exporter build dependency graph into a job-local module
+cache and verifies downloaded module contents before offline rendering. A restored
+compiled/package cache does not substitute for module integrity verification.
