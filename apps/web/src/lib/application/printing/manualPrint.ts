@@ -1,5 +1,6 @@
+import {PrinterTestRequest} from './printerTest';
 import { PrintingFailure, type PrintScope, type LabelSelection, type LabelPreview, type LabelMedia, type PrintJob } from '$lib/domain/printing';
-import type { PrintingRepository, PrintIntent, PrintIntents } from '$lib/ports/printingRepository';
+import type { PrintingRepository, PrintIntent, PrintIntents, PrinterTestIntent } from '$lib/ports/printingRepository';
 export class ManualPrintRequest implements PrintIntent {
     locked = false;
     selection: LabelSelection | null = null;
@@ -47,8 +48,19 @@ export class ManualPrintRequest implements PrintIntent {
     }
 }
 export class SessionPrintIntents implements PrintIntents {
+    private readonly tests = new Map<string, PrinterTestIntent>();
     private readonly requests = new Map<string, PrintIntent>();
     constructor(private readonly repository: PrintingRepository, private readonly newKey: () => string) { }
+    forPrinterTest(scope:PrintScope,printerId:string){
+        const identity=this.identity(scope,printerId);let request=this.tests.get(identity);
+        if(!request){request=new PrinterTestRequest(this.repository,{...scope},printerId,this.newKey());this.tests.set(identity,request);}
+        return request;
+    }
+    startAnotherPrinterTest(scope:PrintScope,printerId:string,priorJob:PrintJob){
+        const prior=this.forPrinterTest(scope,printerId);
+        if(!prior.result||prior.result.id!==priorJob.id||!['completed','failed','canceled'].includes(priorJob.status))throw new PrintingFailure('conflict');
+        const request=new PrinterTestRequest(this.repository,{...scope},printerId,this.newKey());this.tests.set(this.identity(scope,printerId),request);return request;
+    }
     forAsset(scope: PrintScope, assetId: string) { const key = this.identity(scope, assetId); let request = this.requests.get(key); if (!request) {
         request = this.create(scope, assetId);
         this.requests.set(key, request);
