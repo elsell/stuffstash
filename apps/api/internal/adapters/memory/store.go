@@ -17,9 +17,15 @@ import (
 )
 
 type Store struct {
-	labelInstance           printing.InstanceID
-	labels                  map[printing.LabelID]printing.Label
-	labelRenders            map[printing.RenderID]printing.LabelRender
+	labelInstance      printing.InstanceID
+	labels             map[printing.LabelID]printing.Label
+	labelRenders       map[printing.RenderID]printing.LabelRender
+	printingPrinters   map[printing.PrinterID]printing.Printer
+	printingConnectors map[printing.ConnectorID]printing.Connector
+	printingBindings   map[string]printing.PrinterBinding
+	printingReports    map[string]printing.PrinterReport
+	printingPairings   map[printing.PairingID]printing.Pairing
+
 	notificationDeliveries  map[string]ports.NotificationDelivery
 	notificationDevices     map[string]ports.NotificationDevice
 	notificationInbox       map[string]ports.NotificationRecord

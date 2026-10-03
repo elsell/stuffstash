@@ -1,5 +1,10 @@
 /** web presentation messages. */
 export const webMessages = {
+  "audit.action.printer.registered": "Printer registered",
+  "audit.action.printer.viewed": "Printer viewed",
+  "audit.action.printer.listed": "Printers viewed",
+  "audit.action.printer.updated": "Printer updated",
+
   "audit.action.label.provisioned": "Label created",
   "audit.action.label.viewed": "Label viewed",
   "audit.action.label.resolved": "Label opened",

@@ -434,3 +434,56 @@ message broker, public webhook receiver, or persistent event stream is required.
 User-device checks belong in `docs/reports/user-testing-checklist.md` during
 implementation. Pending checks do not block independent implementation or release;
 keep hardware acceptance explicitly unverified and do not represent it as passing.
+
+## Registry Implementation Contracts
+
+- A shared plain-data Go package under `packages/printingprofiles` owns built-in
+  printer/media descriptors. API and CLI adapters map those descriptors to their
+  local models; neither maintains another independently editable QL profile.
+- Registry persistence uses `printers` and the connector/binding tables. Queue
+  transitions lock connector, binding, printer, then job, in that order. Media
+  changes lock the printer and reject printing/uncertain reservations. Retirement
+  preserves the active job reference and completion/recovery evidence.
+- Authorization checks return an internal consumer authority carrying the
+  credential version and binding generation. Stateful command transactions
+  recheck those deny fences under row locks after the SpiceDB check. Session
+  ownership remains a queue concern and is not implied by connector identity.
+- Readiness is per connector/printer binding with a freshness deadline, never a
+  last-writer-wins global report. A claim uses the requesting connector's report.
+- Pairing uses Ed25519 public keys. The credential exchange signs the UTF-8
+  domain-separated message `stuffstash-print-pairing-v1\n<pairing-id>\n<poll-token>`.
+  The polling token and credential are cryptographically random and stored only
+  as SHA-256 digests. Polling/exchange headers and request bodies are never audit
+  metadata. Exchange consumes the approved request atomically once.
+- Relationship reconciliation serializes by connector generation while applying
+  the latest desired bindings. Persistence locks remain held through the bounded
+  authorization write, so a delayed grant cannot overtake a committed removal.
+  Partial external delivery leaves the generation pending and therefore denied.
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/printer-profiles` lists the
+  finite built-in adapter catalog and complete versioned media snapshots for an
+  active inventory with `inventory.view`. It requires no registered printer and
+  permits selecting media for a download before pairing hardware. It uses the
+  standard response envelope, contains no device identifiers, and does not create
+  audit history because it reads static shipped capability metadata, not stored
+  inventory content. Profile responses identify supported platforms and whether
+  the profile has been physically verified.
+- Registry services live in `internal/app/printregistry`; rendering and labels
+  remain in `internal/app/printing`. A human creates the logical printer with a
+  name, adapter, and media preset. Pairing creation supplies local discovered
+  candidates with an opaque candidate ID, display name, adapter ID, and protected
+  device identity. Approval maps candidate IDs to existing printer IDs; the
+  server requires matching adapters and persists the device binding. Human DTOs
+  never return the protected device identity, credentials, or local paths.
+- Heartbeats include a process session ID for observability but do not replace an
+  existing attempt owner. Connector last-seen time advances only on a heartbeat;
+  readiness reports have separate timestamps. Fresh heartbeat and readiness are
+  dispatch requirements, not prerequisites for reporting an earlier outcome.
+- Printer registration requires `Idempotency-Key`; its scope includes the human
+  actor and inventory. An identical replay returns the existing printer; reusing
+  the key with different registration content conflicts. Persistence stores only
+  a hash of the scoped request key and a canonical request fingerprint.
+- The initial printer CRUD slice creates logical registrations before connector
+  authorization. Pairing reconciliation must sync each printer's inventory
+  relationship before granting/synchronizing connector bindings; pending sync
+  remains denied by the persistence fence. A human registration alone grants no
+  service principal access.

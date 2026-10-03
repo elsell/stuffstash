@@ -5,7 +5,8 @@ ARG RUNTIME_IMAGE=registry.access.redhat.com/hi/core-runtime:2.42-1781714135@sha
 
 FROM ${GO_BUILDER_IMAGE} AS builder
 
-WORKDIR /src
+WORKDIR /src/apps/api
+COPY packages/printingprofiles /src/packages/printingprofiles
 COPY apps/api/go.mod ./
 COPY apps/api/go.sum ./
 COPY apps/api/cmd ./cmd
