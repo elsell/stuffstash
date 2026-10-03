@@ -172,6 +172,16 @@ controls and adapt layouts across sizes:
   A returning user with usable inventory context proceeds directly to the native
   tab shell. Do not create new resources merely because onboarding was opened.
 
+### Native stack initialization after onboarding
+
+When the authenticated navigator mounts without existing route state, its explicit
+initial destination is the Home/Browse tab shell, with Home selected. This applies
+after household creation, first-inventory creation, and session recovery. Screen
+declaration order must not select an unrelated task such as a voice-plan location.
+Use the native stack's initial-route option; do not unconditionally redirect ready
+sessions, which would discard valid asset or invitation links. Explicit incoming
+routes and their parameters retain precedence over the fallback.
+
 ### Household and inventory setup
 
 `Household` is the onboarding presentation of the existing tenant concept. It

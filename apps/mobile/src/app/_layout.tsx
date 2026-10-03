@@ -49,6 +49,7 @@ function ThemedApp() {
     <AppServicesProvider><HomeReturnTaskProvider><AssetTagSelectionTaskProvider><AddDestinationTaskProvider>
       <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack
+        initialRouteName="(tabs)"
         screenLayout={AppNoticeScreenLayout}
         screenOptions={{
           contentStyle: { backgroundColor: palette.background },

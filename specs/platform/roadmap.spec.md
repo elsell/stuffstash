@@ -42,7 +42,11 @@ The full audit remains incomplete. Release success does not close these gaps:
   isolation. [Evidence](../../docs/reports/spec-gap-evidence-2026-10-01/android-connected/README.md)
   records the production-route APK and isolated real server. A newly created
   household incorrectly opens Containing location; root navigation recovers.
-  Fix that onboarding route in the next product batch. This does not close iPhone,
+  The next frozen batch covers three gaps: post-setup root navigation,
+  authenticated Android archive acceptance, and a representative TalkBack journey.
+  The root stack fallback is corrected in source with real-router regression
+  coverage; its new native build and both remaining workflows are pending.
+  This does not close iPhone,
   authenticated archive, physical or assistive acceptance.
 - Physical file-provider/recipient and assistive acceptance remain unverified.
   Existing user-confirmed notification delivery is preserved, not reopened.
