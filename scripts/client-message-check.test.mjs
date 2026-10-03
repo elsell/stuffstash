@@ -141,3 +141,13 @@ test('leaves ambiguous Svelte bindings to caller review without disabling direct
   assert.deepEqual(embeddedDisplayMessages(`<script module>const message = caught instanceof Error ? caught.message : fallback;</script><script>const message = value;</script><p>{message}</p>`, 'Recovery.svelte'), []);
   assert.equal(embeddedDisplayMessages(prefix + '<Widget let:message><p>{caught instanceof Error ? caught.message : fallback}</p></Widget>', 'Recovery.svelte').length, 1);
 });
+
+test('checks human labels in inline Svelte each-block arrays', () => {
+  const source = `{#each [['soon', 'Expiring soon'], ['expired', 'Expired'], ['all', 'All dates']] as [mode, label]}<a href={mode}>{label}</a>{/each}`;
+  assert.deepEqual(embeddedDisplayMessages(source, 'Expiration.svelte').map(issue => issue.text), ['Expiring soon', 'Expired', 'All dates']);
+  assert.deepEqual(embeddedDisplayMessages(`{#each [['soon', t('soon')], ['expired', t('expired')]] as [mode, label]}<a href={mode}>{label}</a>{/each}`, 'Expiration.svelte'), []);
+});
+
+test('does not inspect non-display attribute arrays as each-block labels', () => {
+  assert.deepEqual(embeddedDisplayMessages(`<div class={['rounded-lg shadow-sm']}>{value}</div>`, 'Styled.svelte'), []);
+});
