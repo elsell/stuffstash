@@ -8,22 +8,21 @@ archive and restore flow remains the immediate delivery priority.
 
 ## Current delivery and remaining acceptance — October 3
 
-The reviewed batches through PR #285 are merged. PR #278 merged at `c165f787`
-and released through run37083346024 as v0.28.9. The remaining five PRs were
-consolidated into #285 at `3ac10814b72d275cc7cbd66f7e2c5ec083eed821`;
-CI37083586337 and Docs37083586335 passed at `e4898e2a`. Release37085079308
-succeeded for **v0.28.10**, including images, TestFlight and its changelog.
-Superseded #279/#280/#282/#283/#284 are closed; their reviewed commits and evidence
-remain in #285. [Exact batch delivery evidence](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/v0.28.10-delivery.json).
+Reviewed batches through PR #296 are merged and released. The seven localization
+and recovery batches #289/#290/#291/#292/#294/#295/#296 shipped separately as
+v0.28.11–v0.28.17. Each has successful checks on its final integration commit and
+successful release jobs; the final merge is
+`b89a8a566a27d91392d9f63f4b5592a26a0ae1e1`, release37101320565.
+[Exact delivery records](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/localization-delivery-through-v0.28.17.json)
+include TestFlight and changelog job outcomes. Merge conflicts retained the
+reviewed source trees. #295's docs download failure recovered on one retry;
+its successful product CI was not rerun to conceal a product failure.
 
-Paul GitOps commit `953066f77806a496ddf1c1419c7f7b5076fe58e1` deploys the
-v0.28.10 web digest. Flux applied that revision, the updated replica became
-available, and web/API health returned HTTP200. The API remains on v0.28.0:
-its production code has not changed through these client batches.
-[Deployment evidence](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.10.json).
-This proves rollout readiness, not a new authenticated production journey.
-The earlier [v0.28.8 rollout](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.8.json)
-is historical.
+Paul GitOps commit `7cb62998cae732851c36abf160dd8ab20efdf1ca` targets the
+v0.28.17 web digest. The [rollout record](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/web-v0.28.17.json)
+records the applied revision, replica readiness and web/API HTTP results.
+The API remains on v0.28.0: only API tests changed since that release.
+Rollout readiness is not a new authenticated production journey.
 
 The full audit remains incomplete. Release success does not close these gaps:
 
