@@ -3,7 +3,6 @@ import { t, localization } from '../../presentation/localization';
 import { sharingCopy } from '../../presentation/SharingCopy';
 import { InvitationEmailInput } from './InvitationEmailInput';
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
-import { NativeActionMenu } from '../components/NativeActionMenu';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { usePullRefresh } from '../serverState/usePullRefresh';
@@ -306,14 +305,12 @@ export function InventorySharingScreen({
                 </View> : null}
               </View>
               {invitation.status === 'pending' && !invitation.isExpired ? (
-                <NativeActionMenu
-                  accessibilityLabel={t('mobile.InventorySharingScreen.invitationActions', { email: invitation.email })}
+                <NativeCommandButton
+                  label={t('mobile.InventorySharingScreen.cancelInvitation')}
+                  accessibilityLabel={t('sharing.cancelForEmail', { email: invitation.email })}
+                  role="destructive"
                   disabled={cancellingKeys.has(cancellationKey(invitation.id))}
-                  groups={[{ id: 'invitation', items: [{ id: 'cancel',
-                    label: t('mobile.InventorySharingScreen.cancelInvitation'),
-                    systemImage: 'xmark.circle', isDestructive: true,
-                    onPress: () => requestCancellation(invitation)
-                  }] }]} />
+                  onPress={() => requestCancellation(invitation)} />
               ) : null}
             </View>
           </View>
@@ -353,8 +350,8 @@ function createStyles(colors: MobileColorPalette) {
     empty: { minHeight: 68, justifyContent: 'center', paddingHorizontal: spacing.md },
     emptyText: { color: colors.textMuted, fontSize: 16 },
     separator: { backgroundColor: colors.border, height: StyleSheet.hairlineWidth, marginLeft: spacing.md },
-    invitationRow: { alignItems: 'center', flexDirection: 'row', minHeight: 68, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-    invitationText: { flex: 1, minWidth: 0 },
+    invitationRow: { alignItems: 'stretch', gap: spacing.sm, minHeight: 68, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+    invitationText: { minWidth: 0 },
     invitationEmail: { color: colors.text, fontSize: 16, fontWeight: '600' },
     invitationMetadata: { color: colors.textMuted, fontSize: 13, lineHeight: 18, marginTop: 2 }
   });

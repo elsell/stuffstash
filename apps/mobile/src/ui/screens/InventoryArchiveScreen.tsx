@@ -4,7 +4,7 @@ import { useFocusEffect } from 'expo-router';
 import { AppState, Text, View } from 'react-native';
 import { ArchiveTask } from '../../application/archives/ArchiveTask';
 import type { ArchiveJob, ArchivePreview, ArchiveScope, InventoryArchiveWorkspace } from '../../application/archives/InventoryArchive';
-import { t } from '../../presentation/localization';
+import { localization, t } from '../../presentation/localization';
 import { NativeFilterSheet } from '../components/NativeFilterSheet';
 import { NativeActionMenu } from '../components/NativeActionMenu';
 import { DraftTextField } from '../components/DraftTextField';
@@ -113,7 +113,7 @@ export function InventoryArchiveScreen({ workspace, scope, onClose, onOpen }: {
           {index ? <SettingsSeparator /> : null}
           <View style={styles.navigationRow}>
             <Text style={styles.rowLabel}>{t(job.phase === 'finalization' && ['queued', 'running'].includes(job.state) ? 'archive.restoring' : job.state === 'running' ? job.kind === 'export' ? 'archive.running' : job.phase === 'validation' ? 'archive.validating' : 'archive.restoring' : `archive.${job.state}`)}</Text>
-            <Text style={styles.rowContext}>{t('archive.expires', { date: new Date(job.expiresAt).toLocaleString() })}</Text>
+            <Text style={styles.rowContext}>{t('archive.expires', { date: new Date(job.expiresAt).toLocaleString(localization.locale) })}</Text>
           </View>
           {job.state === 'ready' ? <SettingsActionRow disabled={busy} label={t(job.kind === 'export' ? 'archive.download' : 'archive.open')} onPress={() => void run(async visit => {
             if (job.kind === 'export') await workspace.files.share(() => workspace.repository.download(scope, job.id, visit.signal), visit.signal);

@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { localization, t } from '../../presentation/localization';
 import type {
   Asset,
   AssetTag,
@@ -351,7 +351,7 @@ export function updatedAtLabel(asset: Asset): string {
   if (Number.isNaN(date.getTime())) {
     return t('inventory.loaded');
   }
-  return t('inventory.updated', { date: date.toLocaleDateString(undefined, {
+  return t('inventory.updated', { date: localization.date(date, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'

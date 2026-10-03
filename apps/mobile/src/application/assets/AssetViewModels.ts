@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { localization, t } from '../../presentation/localization';
 import type { AssetSummary } from '../../domain/assets/AssetSummary';
 
 export type AssetCardViewModel = {
@@ -325,11 +325,11 @@ function checkoutLabel(asset: AssetSummary): string {
   if (Number.isNaN(date.getTime())) {
     return t('mobile.AssetViewModels.checkedOut');
   }
-  return t('mobile.AssetViewModels.checkedOut2', { value: String(date.toLocaleDateString(undefined, {
+  return t('mobile.AssetViewModels.checkedOut2', { value: localization.date(date, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
-  })) });
+  }) });
 }
 
 function compareContainedAssetSummaries(left: AssetSummary, right: AssetSummary): number {
