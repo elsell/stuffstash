@@ -32,9 +32,13 @@ func connectorCredentialStore(options app.Options) ports.ConnectorCredentials {
 	return credentials.ConnectorKeyring{}
 }
 func registerPrintConnector(ctx context.Context, options app.Options, getenv func(string) string, output ports.Output) error {
-	candidates, err := discoverPairingCandidates(ctx, getenv)
-	if err != nil {
-		return err
+	var candidates []ports.PairingCandidate
+	var err error
+	if options.Command[2] != "rotate" {
+		candidates, err = discoverPairingCandidates(ctx, getenv)
+		if err != nil {
+			return err
+		}
 	}
 	api, err := httpapi.NewPairing(options.Server, &http.Client{Timeout: 30 * time.Second})
 	if err != nil {
@@ -48,6 +52,9 @@ func registerPrintConnector(ctx context.Context, options app.Options, getenv fun
 		}
 	}
 	registrar := app.ConnectorRegistrar{API: api, Credentials: connectorCredentialStore(options), Keys: pairingkeys.Keys{}, Clock: systemClock{}, Waiter: timerWaiter{}, Output: output, PollInterval: interval}
+	if options.Command[2] == "rotate" {
+		return registrar.Rotate(ctx, options.Server, options.ConnectorID)
+	}
 	return registrar.Register(ctx, options.Server, options.ConnectorName, candidates)
 }
 
