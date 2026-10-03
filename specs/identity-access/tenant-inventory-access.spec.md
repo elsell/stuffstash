@@ -356,3 +356,21 @@ redirecting its screen. The underlying authorized inventory/account operation
 still completes; this guard does not reverse its effect. Current-session success
 still clears the link and returns Home, and failures remain available to the
 screen's existing recovery handling.
+
+## Planned CLI And Print Connector Authentication
+
+[CLI](../platform/cli.spec.md) specifies a separate public OIDC client for human
+CLI login with browser PKCE and provider-enabled device authorization; both
+produce the same human principal and SpiceDB permissions. [Printer integration](../printing/printer-integration.spec.md) specifies
+browser-approved restricted machine credentials for print consumers. This is an
+explicit machine-authentication extension, not a replacement for human OIDC.
+Inventory `view` permits safe printer/status discovery and label rendering;
+`edit_asset` permits physical print requests/cancellation/reprint, and `configure`
+permits registration, bindings, defaults, and revocation. Connector credentials
+authenticate distinct service accounts and never inherit human permissions.
+SpiceDB connector/printer relationships authorize every consumer operation;
+registration records are lifecycle and relationship-intent data, not a parallel
+allowlist. Current claim ownership is an additional gate. See the
+[planned schema](spicedb-schema.spec.md#planned-print-connector-authorization)
+for outbox synchronization, immediate revocation fences, and fail-closed checks.
+Adversarial boundary tests precede implementation.

@@ -53,3 +53,16 @@ The product must not assume that every tenant has only one inventory.
 - If assets can move between inventories, what happens to custom field values that are not defined in the destination inventory?
 - If assets can move between inventories, what happens to custom asset type assignments that are not defined in the destination inventory?
 - Inventories have `active` and `archived` lifecycle states. Archive, restore, and hard-delete behavior is defined by `specs/platform/resource-lifecycle.spec.md`.
+
+## Planned Label Settings
+
+Inventory-owned default printer, independent versioned label template/options,
+and print-on-create
+default (initially false) are defined in [asset labels](../printing/asset-labels.spec.md).
+Printer/connector discovery is visible to inventory viewers; configuration requires
+`inventory.configure`. Registration and job ownership remain inventory-scoped.
+These settings are specified, not yet implemented.
+
+A printer is registered together with one user-selected label size. Media settings
+are edited on that registration, not managed as a separate inventory catalog.
+Printing uses that registered size; templates remain independently selectable.

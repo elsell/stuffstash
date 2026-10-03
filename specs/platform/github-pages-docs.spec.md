@@ -60,3 +60,11 @@ It does not define application deployment, API hosting, or generated API client 
 - Local verification must build the docs with a representative pull request preview base path.
 - The generated preview HTML must reference CSS and script assets under the preview base path.
 - After deployment, the published production URL and a pull request preview URL should be checked with `curl` for expected HTML and CSS asset availability.
+
+## Planned Generated Printing Catalog
+
+[Generated printer and label documentation](printing-catalog-docs.spec.md) requires
+a Printing section generated from executable printer/template/media registries,
+including PNG examples from the production renderer. PR generation and drift
+checks, preview builds, and production publishing must include these outputs
+without exposing deployment credentials to untrusted PR code. Not yet implemented.

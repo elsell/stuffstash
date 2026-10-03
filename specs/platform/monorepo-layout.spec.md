@@ -15,6 +15,8 @@ This spec does not define every future package, CI job, or deployment manifest.
 ## Decisions
 
 - The Go API service must live under `apps/api`.
+- The planned Go CLI must live under `apps/cli`; see [CLI](cli.spec.md). Add its
+  module to the Go workspace and root checks when implementation begins.
 - The SvelteKit web application must live under `apps/web` once created.
 - The React Native and Expo mobile application must live under `apps/mobile` once created.
 - The Astro and Starlight documentation site must live under the top-level `docs/` directory.

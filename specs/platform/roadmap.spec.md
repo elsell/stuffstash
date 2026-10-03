@@ -1,5 +1,37 @@
 # Roadmap Spec
 
+## Specified Next: Labels, Printers, And CLI — October 3, 2026
+
+The user authorized specification of QR labels/scanning and registered CLI print
+consumers. Design is specified; implementation has not begun. See
+[asset labels](../printing/asset-labels.spec.md),
+[printer integration](../printing/printer-integration.spec.md), and [CLI](cli.spec.md).
+Sequence: contract/security and job-state tests; API label/registration/job slice;
+CLI pairing and built-in Linux QL-800 adapter; web/mobile printing and scanning;
+physical-device evidence and operator documentation. Implement atomic claims,
+separate connector/printer health, and safe uncertain-outcome recovery together.
+Connector credentials authenticate service accounts; SpiceDB relationships scope
+printer access, and claim tokens separately fence print attempts. The CLI requires
+a generated Go SDK from the shared OpenAPI artifact and supports browser PKCE
+and provider-enabled device-code human login. Register each printer with one
+user-selected label size; trust that setting without mandatory roll detection.
+Size remains editable; mismatching queued jobs wait without resizing. Independent
+templates produce immutable API-rendered artifacts for that registered size,
+consumed through a versioned contract rather than adapter-owned layouts.
+[Generated printing docs](printing-catalog-docs.spec.md) adds registry-derived
+printer/template/size catalogs and production-rendered PNG examples, automatically
+regenerated and checked in PR CI. This automation is specified, not implemented. Each project release must publish
+version-stamped CLI binaries and checksums; verified release metadata refreshes
+concrete download commands in the docs. Implementation is now authorized as an
+active goal: orchestrate parallel agents and ship small coherent functional PRs,
+writing only critical security, recovery, integration, and artifact tests.
+Initial required printer/media support is only the USB QL-800 on Linux. Its
+media profile derives from the user's old script: 29 x 90 mm, 306 x 991
+raster. Actual USB completion reporting, media/scan behavior, and packaging remain
+unverified. Remote wake/smart outlets and a shared hosted QR resolver are outside
+the first release. Pending user-device checks do not block unrelated delivery;
+this specification does not close existing audit or acceptance work.
+
 ## Integration priority clarification — October 2, 2026
 
 A first-class CLI takes priority over further MCP work. MCP remains a supported

@@ -107,3 +107,64 @@ Any unknown mode must fail startup.
 - The SpiceDB adapter must have an opt-in real-SpiceDB verification path that runs against the pinned local SpiceDB image.
 - Real-SpiceDB verification must prove tenant-owner inheritance, inventory-owner visibility, viewer/editor direct grants, edit denial for viewers, share denial for non-owners, unrelated-user denial, and cross-tenant denial.
 - Real-SpiceDB verification must not run during default `make test`; it must be an explicit command because it requires Docker.
+
+## Planned Print Connector Authorization
+
+Specification only; update the executable `.zed` schema and adapter/HTTP tests
+before shipping printing. See [printer integration](../printing/printer-integration.spec.md).
+Human CLI commands keep ordinary user permissions. Machine credentials authenticate
+service principals; all connector access uses SpiceDB through the authorization
+port, with no registration-table allowlist fallback.
+
+Add these definitions without widening existing `user` relations:
+
+```zed
+definition service_account {}
+
+definition print_connector {
+  relation inventory: inventory
+  relation agent: service_account
+
+  permission report = agent
+}
+
+definition printer {
+  relation inventory: inventory
+  relation consumer: service_account
+
+  permission view = inventory->view
+  permission configure = inventory->configure
+  permission print = inventory->edit_asset
+  permission view_consumer = consumer
+  permission report = consumer
+  permission consume = consumer
+}
+```
+
+- The API provisions one service account per registered connector. Credentials
+  resolve to this typed identity; service-account IDs cannot impersonate `user`
+  IDs even when their string values happen to match.
+- Human registration/default/binding management checks `inventory.configure`;
+  human print requests check `inventory.edit_asset`. Human inventory roles do
+  not grant machine `consume`, and machine relations do not grant human view/edit.
+- Every consumer request checks `print_connector.report`. Safe printer metadata
+  reads check `printer.view_consumer`; readiness reports check `printer.report`;
+  claims, artifact delivery, renewal, start, settlement, recovery reads, and
+  reconciliation check `printer.consume` for the job's actual printer.
+- Relations grant no cross-inventory discovery: application and repository scope
+  must prove the connector, printer, job, and attempt share tenant/inventory.
+  The explicit inventory edges record ownership; they do not by themselves prove
+  equality between two resources. Defensive checks must reject inconsistent edges.
+- Approval, binding changes, and revocation use the authorization outbox and its
+  ordered generation-aware reconciliation. Pending grants cannot authorize work;
+  pending removal is denied immediately by a revocation fence in persistence.
+  That fence only denies access; positive authorization always requires SpiceDB.
+- Initial checks use fully consistent reads and fail closed on SpiceDB errors.
+  Credential validation, operation-specific lifecycle, scope checks, and attempt
+  ownership are additional gates. Retired printers reject new work but permit
+  authorized existing-attempt outcome/recovery; explicit binding or connector
+  revocation denies those operations too. An old credential or claim cannot override a denial.
+- Boundary tests with real SpiceDB must cover authorized service-account work,
+  human/machine identity confusion, wrong printer/tenant/inventory, stale
+  relationships, delayed/reordered outbox delivery, outage, binding removal,
+  credential rotation/revocation, and loss of access between claim and start.
