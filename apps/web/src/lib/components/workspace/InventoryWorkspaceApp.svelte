@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import { inventoryArchiveContext, type InventoryArchiveWorkspace } from '$lib/ports/inventoryArchive';
   import { t } from '$lib/presentation/localization';
   import InventoryConversationPanel from './InventoryConversationPanel.svelte';
@@ -343,7 +344,7 @@
       if (handleSessionExpired(caught)) {
         return;
       }
-      error = caught instanceof Error ? caught.message : t('web.InventoryWorkspaceApp.actionFailed');
+      error = safeWorkspaceErrorMessage(caught, t('web.InventoryWorkspaceApp.actionFailed'));
       if (rethrow) {
         throw new Error(error);
       }
@@ -463,7 +464,7 @@
           }
         };
       }
-      error = caught instanceof Error ? caught.message : t('web.InventoryWorkspaceApp.actionFailed');
+      error = safeWorkspaceErrorMessage(caught, t('web.InventoryWorkspaceApp.actionFailed'));
       throw new Error(error);
     } finally {
       busy = false;
@@ -772,7 +773,7 @@
         }
         return;
       }
-      const taskError = caught instanceof Error ? caught.message : t('web.InventoryWorkspaceApp.actionFailed');
+      const taskError = safeWorkspaceErrorMessage(caught, t('web.InventoryWorkspaceApp.actionFailed'));
       if (options.rethrow) {
         throw caught instanceof Error ? caught : new Error(taskError);
       }

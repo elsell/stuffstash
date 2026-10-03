@@ -632,6 +632,26 @@ describe('InventoryWorkspaceApp route application', () => {
     });
   });
 
+  it('keeps private creation diagnostics out of workspace setup recovery', async () => {
+    class FailingSetupRepository extends SeededInventoryRepository {
+      override async createTenantWithInventory(): Promise<WorkspaceData> {
+        throw new Error('PRIVATE_DATABASE_SETUP_DIAGNOSTIC');
+      }
+    }
+    await mountWorkspace('/', new FailingSetupRepository({
+      principal: { id: 'principal-one', email: 'owner@example.test' },
+      tenants: [], inventories: [], customAssetTypes: [], customFieldDefinitions: [], assets: []
+    }));
+    inputWithLabel('Tenant name').value = 'Cabin';
+    inputWithLabel('Tenant name').dispatchEvent(new Event('input', { bubbles: true }));
+    inputWithLabel('Inventory name').value = 'Tools';
+    inputWithLabel('Inventory name').dispatchEvent(new Event('input', { bubbles: true }));
+    buttonContaining('Create workspace').click();
+    await waitFor(() => expect(document.body.textContent).toContain('Action failed.'));
+    expect(document.body.textContent).not.toContain('PRIVATE_DATABASE_SETUP_DIAGNOSTIC');
+    expect(inputWithLabel('Tenant name').value).toBe('Cabin');
+  });
+
   it('guides a user through naming the first inventory for an existing tenant', async () => {
     await mountWorkspace('/', new SeededInventoryRepository({
       principal: { id: 'principal-one', email: 'owner@example.test' },
@@ -2050,7 +2070,8 @@ describe('InventoryWorkspaceApp route application', () => {
     saveButton.click();
 
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Update failed.');
+      expect(document.body.textContent).toContain('Action failed.');
+      expect(document.body.textContent).not.toContain('Update failed.');
     });
     expect(repository.createdTagCount).toBe(1);
     await waitFor(() => {
@@ -2059,7 +2080,8 @@ describe('InventoryWorkspaceApp route application', () => {
     });
     saveButton.click();
     await waitFor(() => {
-      expect(document.body.textContent).toContain('Update failed.');
+      expect(document.body.textContent).toContain('Action failed.');
+      expect(document.body.textContent).not.toContain('Update failed.');
     });
     expect(repository.createdTagCount).toBe(1);
     controlContaining('Cancel').click();
@@ -2272,7 +2294,9 @@ describe('InventoryWorkspaceApp route application', () => {
 
     controlContaining('Return').click();
 
-    await waitFor(() => expect(document.body.textContent).toContain('Return failed. Passport stayed checked out.'));
+    await waitFor(() => expect(document.body.textContent).toContain('Action failed.'));
+    expect(document.body.textContent).not.toContain('Return failed. Passport stayed checked out.');
+    expect(controlContaining('Return')).toBeTruthy();
   });
 
   it('clears stale primary-photo metadata after successful attachment deletion', async () => {
