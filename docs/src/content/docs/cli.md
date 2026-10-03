@@ -77,7 +77,9 @@ pass it with `--cursor`. Flags can also set `--server`, `--tenant`, and
 The normal Release workflow attaches five portable CLI archives, individual
 SHA-256 files, and `stuffstash-cli-release.json` to the project tag. The archive
 includes third-party notices; `stuffstash version` reports its tag and source
-commit. USB printer support remains limited to Linux and the supported Brother
+commit. `version --json` reports whether that build includes a USB printer adapter;
+this is separate from whether a printer is connected or ready. USB printer support
+remains limited to Linux and the supported Brother
 profile, even when ordinary inventory commands run on another platform.
 
 If publication stops after staging its assets, run **Release → Run workflow**

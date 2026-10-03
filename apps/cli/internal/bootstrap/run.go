@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/credentials"
@@ -28,7 +29,7 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		return exit(output, err)
 	}
 	if err == nil && len(options.Command) == 1 && options.Command[0] == "version" {
-		return exit(output, output.Result(version.Current()))
+		return exit(output, output.Result(version.Current(supportsUSB(BuiltinPrinters(getenv), runtime.GOOS))))
 	}
 	if err == nil && len(options.Command) == 2 && options.Command[0] == "printers" && (options.Command[1] == "catalog" || options.Command[1] == "discover") {
 		return exit(output, printerCommand(ctx, options.Command[1], getenv, output))
