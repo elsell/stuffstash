@@ -5,7 +5,6 @@ import (
 	"crypto/subtle"
 	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/internal/ports"
-	"time"
 )
 
 func clonePrintPairing(p printing.Pairing) printing.Pairing {
@@ -15,6 +14,7 @@ func clonePrintPairing(p printing.Pairing) printing.Pairing {
 }
 func clonePrintConnector(c printing.Connector) printing.Connector {
 	c.PublicKey = append([]byte(nil), c.PublicKey...)
+	c.PendingPublicKey = append([]byte(nil), c.PendingPublicKey...)
 	if c.LastSeenAt != nil {
 		value := *c.LastSeenAt
 		c.LastSeenAt = &value
@@ -85,7 +85,8 @@ func (s *Store) ApprovePrintPairing(_ context.Context, input ports.PairingApprov
 	s.auditRecords[input.Audit.ID] = input.Audit
 	return s.printRegistrationLocked(c), nil
 }
-func (s *Store) ConsumePrintPairing(_ context.Context, id printing.PairingID, now time.Time, credentialHash string, expires, activation time.Time) (printing.Connector, error) {
+func (s *Store) ConsumePrintPairing(_ context.Context, input ports.PairingExchange) (printing.Connector, error) {
+	id, now, credentialHash, expires, activation := input.PairingID, input.Now, input.CredentialHash, input.CredentialExpiresAt, input.ActivationDeadline
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	p, ok := s.printingPairings[id]
@@ -93,18 +94,63 @@ func (s *Store) ConsumePrintPairing(_ context.Context, id printing.PairingID, no
 		return printing.Connector{}, ports.ErrPrintDenied
 	}
 	c, ok := s.printingConnectors[p.ConnectorID]
-	if !ok || c.Scope != p.Scope || c.State != printing.ConnectorPending || c.Generation != c.SyncedGeneration {
+	if !ok || c.Scope != p.Scope || (!p.Rotation && c.State != printing.ConnectorPending) || (p.Rotation && (c.State == printing.ConnectorRevoked || c.State == printing.ConnectorPending)) || c.Generation != c.SyncedGeneration {
 		return printing.Connector{}, ports.ErrPrintDenied
 	}
 	if credentialHash == "" || !expires.After(now) || !activation.After(now) {
 		return printing.Connector{}, ports.ErrPrintConflict
 	}
-	c.CredentialHash = credentialHash
-	c.CredentialExpiresAt = expires
-	c.ActivationDeadline = activation
-	c.State = printing.ConnectorAwaitingActivation
+	if p.Rotation && (c.CredentialVersion != p.RotationVersion || (c.PendingCredentialHash != "" && c.PendingActivationDeadline.After(now))) {
+		return printing.Connector{}, ports.ErrPrintConflict
+	}
+	if p.Rotation {
+		c.PendingCredentialHash = credentialHash
+		c.PendingCredentialVersion = c.CredentialVersion + 1
+		c.PendingCredentialExpiresAt = expires
+		c.PendingActivationDeadline = activation
+		c.PendingPublicKey = append([]byte(nil), p.PublicKey...)
+	} else {
+		c.CredentialHash = credentialHash
+		c.CredentialExpiresAt = expires
+		c.ActivationDeadline = activation
+		c.State = printing.ConnectorAwaitingActivation
+	}
 	c.UpdatedAt = now
+	if _, exists := s.auditRecords[input.Audit.ID]; exists {
+		return printing.Connector{}, ports.ErrPrintConflict
+	}
+	s.auditRecords[input.Audit.ID] = input.Audit
 	s.printingPairings[id] = p
 	s.printingConnectors[c.ID] = clonePrintConnector(c)
+	if p.Rotation {
+		return clonePrintConnector(c.PendingCredentialIdentity()), nil
+	}
 	return clonePrintConnector(c), nil
+}
+
+func (s *Store) ApprovePrintCredentialRotation(_ context.Context, input ports.RotationApproval) (printing.Pairing, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	p, ok := s.printingPairings[input.PairingID]
+	if !ok || subtle.ConstantTimeCompare([]byte(p.CodeHash), []byte(input.CodeHash)) != 1 || !p.Approve(input.Scope, input.ConnectorID, input.Now) {
+		return printing.Pairing{}, ports.ErrPrintDenied
+	}
+	c, ok := s.printingConnectors[input.ConnectorID]
+	if !ok || c.Scope != input.Scope {
+		return printing.Pairing{}, ports.ErrPrintNotFound
+	}
+	if c.Generation != input.Generation || c.Generation != c.SyncedGeneration || c.State == printing.ConnectorRevoked || c.State == printing.ConnectorPending {
+		return printing.Pairing{}, ports.ErrPrintConflict
+	}
+	if _, exists := s.auditRecords[input.Audit.ID]; exists {
+		return printing.Pairing{}, ports.ErrPrintConflict
+	}
+	if c.PendingCredentialHash != "" && c.PendingActivationDeadline.After(input.Now) {
+		return printing.Pairing{}, ports.ErrPrintConflict
+	}
+	p.RotationVersion = c.CredentialVersion
+	p.Rotation = true
+	s.printingPairings[p.ID] = clonePrintPairing(p)
+	s.auditRecords[input.Audit.ID] = input.Audit
+	return clonePrintPairing(p), nil
 }

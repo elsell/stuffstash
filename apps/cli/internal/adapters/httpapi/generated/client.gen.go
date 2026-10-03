@@ -730,6 +730,63 @@ func (e NotificationResponseMilestone) Valid() bool {
 	}
 }
 
+// Defines values for PrintOutcomeKind.
+const (
+	Completed PrintOutcomeKind = "completed"
+	NoOutput  PrintOutcomeKind = "no_output"
+	Uncertain PrintOutcomeKind = "uncertain"
+)
+
+// Valid indicates whether the value is a known member of the PrintOutcomeKind enum.
+func (e PrintOutcomeKind) Valid() bool {
+	switch e {
+	case Completed:
+		return true
+	case NoOutput:
+		return true
+	case Uncertain:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PrintOutcomeReason.
+const (
+	PrintOutcomeReasonCanceled          PrintOutcomeReason = "canceled"
+	PrintOutcomeReasonDeviceFailure     PrintOutcomeReason = "device_failure"
+	PrintOutcomeReasonDeviceUnavailable PrintOutcomeReason = "device_unavailable"
+	PrintOutcomeReasonEmpty             PrintOutcomeReason = ""
+	PrintOutcomeReasonInvalidArtifact   PrintOutcomeReason = "invalid_artifact"
+	PrintOutcomeReasonLeaseExpired      PrintOutcomeReason = "lease_expired"
+	PrintOutcomeReasonPartialOutput     PrintOutcomeReason = "partial_output"
+	PrintOutcomeReasonUnknown           PrintOutcomeReason = "unknown"
+)
+
+// Valid indicates whether the value is a known member of the PrintOutcomeReason enum.
+func (e PrintOutcomeReason) Valid() bool {
+	switch e {
+	case PrintOutcomeReasonCanceled:
+		return true
+	case PrintOutcomeReasonDeviceFailure:
+		return true
+	case PrintOutcomeReasonDeviceUnavailable:
+		return true
+	case PrintOutcomeReasonEmpty:
+		return true
+	case PrintOutcomeReasonInvalidArtifact:
+		return true
+	case PrintOutcomeReasonLeaseExpired:
+		return true
+	case PrintOutcomeReasonPartialOutput:
+		return true
+	case PrintOutcomeReasonUnknown:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PrinterReportInputBodyReason.
 const (
 	PrinterReportInputBodyReasonCoverOpen         PrinterReportInputBodyReason = "cover_open"
@@ -958,6 +1015,21 @@ func (e VoiceProviderSlotResponseSelectionSource) Valid() bool {
 	case VoiceProviderSlotResponseSelectionSourceImplicit:
 		return true
 	case VoiceProviderSlotResponseSelectionSourceMissing:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetPrintConsumerAttemptsParamsStatus.
+const (
+	Unsettled GetPrintConsumerAttemptsParamsStatus = "unsettled"
+)
+
+// Valid indicates whether the value is a known member of the GetPrintConsumerAttemptsParamsStatus enum.
+func (e GetPrintConsumerAttemptsParamsStatus) Valid() bool {
+	switch e {
+	case Unsettled:
 		return true
 	default:
 		return false
@@ -2810,6 +2882,75 @@ type PrincipalResponse struct {
 	Id          string  `json:"id"`
 }
 
+// PrintArtifact defines model for PrintArtifact.
+type PrintArtifact struct {
+	ByteLength   int64     `json:"byteLength"`
+	ContentType  string    `json:"contentType"`
+	ExpiresAt    time.Time `json:"expiresAt"`
+	HeightPixels int64     `json:"heightPixels"`
+	Sha256       string    `json:"sha256"`
+	WidthPixels  int64     `json:"widthPixels"`
+}
+
+// PrintClaimProof defines model for PrintClaimProof.
+type PrintClaimProof struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/PrintClaimProof.json
+	Schema     *string `json:"$schema,omitempty"`
+	ClaimToken string  `json:"claimToken"`
+	Revision   int64   `json:"revision"`
+	SessionId  string  `json:"sessionId"`
+}
+
+// PrintClaimRequest defines model for PrintClaimRequest.
+type PrintClaimRequest struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/PrintClaimRequest.json
+	Schema     *string `json:"$schema,omitempty"`
+	AttemptId  string  `json:"attemptId"`
+	ClaimToken string  `json:"claimToken"`
+	PrinterId  string  `json:"printerId"`
+	SessionId  string  `json:"sessionId"`
+}
+
+// PrintConsumerAttempt defines model for PrintConsumerAttempt.
+type PrintConsumerAttempt struct {
+	Artifact         *PrintArtifact      `json:"artifact,omitempty"`
+	AttemptId        string              `json:"attemptId"`
+	Copies           int64               `json:"copies"`
+	JobId            string              `json:"jobId"`
+	LeaseExpiresAt   time.Time           `json:"leaseExpiresAt"`
+	LeaseValid       bool                `json:"leaseValid"`
+	Media            *PrintConsumerMedia `json:"media,omitempty"`
+	MediaFingerprint string              `json:"mediaFingerprint"`
+	Outcome          PrintOutcome        `json:"outcome"`
+	PrinterId        string              `json:"printerId"`
+	ProtocolVersion  int64               `json:"protocolVersion"`
+	Revision         int64               `json:"revision"`
+	SessionId        string              `json:"sessionId"`
+	SettledAt        *time.Time          `json:"settledAt,omitempty"`
+	StartedAt        *time.Time          `json:"startedAt,omitempty"`
+	Status           string              `json:"status"`
+}
+
+// PrintConsumerMedia defines model for PrintConsumerMedia.
+type PrintConsumerMedia struct {
+	ColorMode          string            `json:"colorMode"`
+	CutPolicy          string            `json:"cutPolicy"`
+	DisplayRotation    int64             `json:"displayRotation"`
+	HeightMicrometers  int64             `json:"heightMicrometers"`
+	MarginsMicrometers PrintMediaMargins `json:"marginsMicrometers"`
+	Orientation        string            `json:"orientation"`
+	PresetId           string            `json:"presetId"`
+	RasterHeight       int64             `json:"rasterHeight"`
+	RasterWidth        int64             `json:"rasterWidth"`
+	ResolutionDpi      int64             `json:"resolutionDpi"`
+	Version            int32             `json:"version"`
+	WidthMicrometers   int64             `json:"widthMicrometers"`
+}
+
 // PrintJob defines model for PrintJob.
 type PrintJob struct {
 	AssetId          *string                              `json:"assetId,omitempty"`
@@ -2866,6 +3007,50 @@ type PrintJobSelection struct {
 // PrintJobTemplateOptions defines model for PrintJobTemplateOptions.
 type PrintJobTemplateOptions struct {
 	ShowReference bool `json:"showReference"`
+}
+
+// PrintMediaMargins defines model for PrintMediaMargins.
+type PrintMediaMargins struct {
+	Bottom int64 `json:"bottom"`
+	Left   int64 `json:"left"`
+	Right  int64 `json:"right"`
+	Top    int64 `json:"top"`
+}
+
+// PrintOutcome defines model for PrintOutcome.
+type PrintOutcome struct {
+	CompletedCopies int64              `json:"completedCopies"`
+	Kind            PrintOutcomeKind   `json:"kind"`
+	Reason          PrintOutcomeReason `json:"reason"`
+	Retryable       bool               `json:"retryable"`
+}
+
+// PrintOutcomeKind defines model for PrintOutcome.Kind.
+type PrintOutcomeKind string
+
+// PrintOutcomeReason defines model for PrintOutcome.Reason.
+type PrintOutcomeReason string
+
+// PrintOutcomeRequest defines model for PrintOutcomeRequest.
+type PrintOutcomeRequest struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/PrintOutcomeRequest.json
+	Schema     *string      `json:"$schema,omitempty"`
+	ClaimToken string       `json:"claimToken"`
+	Outcome    PrintOutcome `json:"outcome"`
+	Revision   int64        `json:"revision"`
+	SessionId  string       `json:"sessionId"`
+}
+
+// PrintReconciliation defines model for PrintReconciliation.
+type PrintReconciliation struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/PrintReconciliation.json
+	Schema   *string      `json:"$schema,omitempty"`
+	Outcome  PrintOutcome `json:"outcome"`
+	Revision int64        `json:"revision"`
 }
 
 // Printer defines model for Printer.
@@ -3071,6 +3256,17 @@ type Revision struct {
 	Number            int64      `json:"number"`
 	SettingsMigration *string    `json:"settingsMigration,omitempty"`
 	WorkflowId        string     `json:"workflowId"`
+}
+
+// RotateCredentialInputBody defines model for RotateCredentialInputBody.
+type RotateCredentialInputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/RotateCredentialInputBody.json
+	Schema     *string `json:"$schema,omitempty"`
+	Generation int64   `json:"generation"`
+	PairingId  string  `json:"pairingId"`
+	UserCode   string  `json:"userCode"`
 }
 
 // SearchAncestor defines model for SearchAncestor.
@@ -3570,6 +3766,16 @@ type SuccessEnvelopeListNotificationResponse struct {
 	Meta   Meta                                      `json:"meta"`
 }
 
+// SuccessEnvelopeListPrintConsumerAttempt defines model for SuccessEnvelopeListPrintConsumerAttempt.
+type SuccessEnvelopeListPrintConsumerAttempt struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopeListPrintConsumerAttempt.json
+	Schema *string                                   `json:"$schema,omitempty"`
+	Data   nullable.Nullable[[]PrintConsumerAttempt] `json:"data"`
+	Meta   Meta                                      `json:"meta"`
+}
+
 // SuccessEnvelopeListPrintJob defines model for SuccessEnvelopeListPrintJob.
 type SuccessEnvelopeListPrintJob struct {
 	// Schema A URL to the JSON Schema for this object.
@@ -3728,6 +3934,16 @@ type SuccessEnvelopePrincipalResponse struct {
 	Schema *string           `json:"$schema,omitempty"`
 	Data   PrincipalResponse `json:"data"`
 	Meta   Meta              `json:"meta"`
+}
+
+// SuccessEnvelopePrintConsumerAttempt defines model for SuccessEnvelopePrintConsumerAttempt.
+type SuccessEnvelopePrintConsumerAttempt struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/SuccessEnvelopePrintConsumerAttempt.json
+	Schema *string              `json:"$schema,omitempty"`
+	Data   PrintConsumerAttempt `json:"data"`
+	Meta   Meta                 `json:"meta"`
 }
 
 // SuccessEnvelopePrintJob defines model for SuccessEnvelopePrintJob.
@@ -4236,6 +4452,56 @@ type PostPrintConnectorPairingsByPairingIdCredentialParams struct {
 type PostPrintConnectorPairingsByPairingIdReviewParams struct {
 	Authorization *string `json:"Authorization,omitempty"`
 	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
+// GetPrintConsumerAttemptsParams defines parameters for GetPrintConsumerAttempts.
+type GetPrintConsumerAttemptsParams struct {
+	PrinterId     *string                               `form:"printerId,omitempty" json:"printerId,omitempty"`
+	Status        *GetPrintConsumerAttemptsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	Limit         *int64                                `form:"limit,omitempty" json:"limit,omitempty"`
+	Cursor        *string                               `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Authorization *string                               `json:"Authorization,omitempty"`
+}
+
+// GetPrintConsumerAttemptsParamsStatus defines parameters for GetPrintConsumerAttempts.
+type GetPrintConsumerAttemptsParamsStatus string
+
+// GetPrintConsumerAttemptsByAttemptIdParams defines parameters for GetPrintConsumerAttemptsByAttemptId.
+type GetPrintConsumerAttemptsByAttemptIdParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+}
+
+// PostPrintConsumerAttemptsByAttemptIdReconciliationParams defines parameters for PostPrintConsumerAttemptsByAttemptIdReconciliation.
+type PostPrintConsumerAttemptsByAttemptIdReconciliationParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+}
+
+// PostPrintConsumerClaimsParams defines parameters for PostPrintConsumerClaims.
+type PostPrintConsumerClaimsParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+}
+
+// ListPrintConsumerClaimsByAttemptIdContentParams defines parameters for ListPrintConsumerClaimsByAttemptIdContent.
+type ListPrintConsumerClaimsByAttemptIdContentParams struct {
+	Authorization    *string `json:"Authorization,omitempty"`
+	XPrintSessionID  string  `json:"X-Print-Session-ID"`
+	XPrintClaimToken string  `json:"X-Print-Claim-Token"`
+	XPrintRevision   int64   `json:"X-Print-Revision"`
+}
+
+// PostPrintConsumerClaimsByAttemptIdOutcomeParams defines parameters for PostPrintConsumerClaimsByAttemptIdOutcome.
+type PostPrintConsumerClaimsByAttemptIdOutcomeParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+}
+
+// PostPrintConsumerClaimsByAttemptIdRenewalParams defines parameters for PostPrintConsumerClaimsByAttemptIdRenewal.
+type PostPrintConsumerClaimsByAttemptIdRenewalParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+}
+
+// PostPrintConsumerClaimsByAttemptIdStartParams defines parameters for PostPrintConsumerClaimsByAttemptIdStart.
+type PostPrintConsumerClaimsByAttemptIdStartParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
 }
 
 // PostPrintConsumerHeartbeatParams defines parameters for PostPrintConsumerHeartbeat.
@@ -5487,6 +5753,12 @@ type PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdP
 	XRequestID    *string `json:"X-Request-ID,omitempty"`
 }
 
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationParams defines parameters for PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation.
+type PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationParams struct {
+	Authorization *string `json:"Authorization,omitempty"`
+	XRequestID    *string `json:"X-Request-ID,omitempty"`
+}
+
 // GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsParams defines parameters for GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs.
 type GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsParams struct {
 	PrinterId     *string `form:"printerId,omitempty" json:"printerId,omitempty"`
@@ -5777,6 +6049,21 @@ type PostPrintConnectorPairingsByPairingIdCredentialJSONRequestBody = ExchangePa
 // PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody defines body for PostPrintConnectorPairingsByPairingIdReview for application/json ContentType.
 type PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody = ReviewPairingInputBody
 
+// PostPrintConsumerAttemptsByAttemptIdReconciliationJSONRequestBody defines body for PostPrintConsumerAttemptsByAttemptIdReconciliation for application/json ContentType.
+type PostPrintConsumerAttemptsByAttemptIdReconciliationJSONRequestBody = PrintReconciliation
+
+// PostPrintConsumerClaimsJSONRequestBody defines body for PostPrintConsumerClaims for application/json ContentType.
+type PostPrintConsumerClaimsJSONRequestBody = PrintClaimRequest
+
+// PostPrintConsumerClaimsByAttemptIdOutcomeJSONRequestBody defines body for PostPrintConsumerClaimsByAttemptIdOutcome for application/json ContentType.
+type PostPrintConsumerClaimsByAttemptIdOutcomeJSONRequestBody = PrintOutcomeRequest
+
+// PostPrintConsumerClaimsByAttemptIdRenewalJSONRequestBody defines body for PostPrintConsumerClaimsByAttemptIdRenewal for application/json ContentType.
+type PostPrintConsumerClaimsByAttemptIdRenewalJSONRequestBody = PrintClaimProof
+
+// PostPrintConsumerClaimsByAttemptIdStartJSONRequestBody defines body for PostPrintConsumerClaimsByAttemptIdStart for application/json ContentType.
+type PostPrintConsumerClaimsByAttemptIdStartJSONRequestBody = PrintClaimProof
+
 // PostPrintConsumerHeartbeatJSONRequestBody defines body for PostPrintConsumerHeartbeat for application/json ContentType.
 type PostPrintConsumerHeartbeatJSONRequestBody = HeartbeatInputBody
 
@@ -5911,6 +6198,9 @@ type PutTenantsByTenantIdInventoriesByInventoryIdNotificationPreferencesTypesByC
 
 // PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdJSONRequestBody defines body for PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId for application/json ContentType.
 type PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdJSONRequestBody = UpdateConnectorInputBody
+
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationJSONRequestBody defines body for PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation for application/json ContentType.
+type PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationJSONRequestBody = RotateCredentialInputBody
 
 // PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdCancellationJSONRequestBody defines body for PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdCancellation for application/json ContentType.
 type PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdCancellationJSONRequestBody = PrintJobRevision
@@ -6112,6 +6402,91 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /print-connector-pairings/{pairingId}/review (the `PostPrintConnectorPairingsByPairingIdReview` operationId).
 	PostPrintConnectorPairingsByPairingIdReview(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, body PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPrintConsumerAttempts Get print consumer attempts
+	//
+	// Corresponds with GET /print-consumer/attempts (the `GetPrintConsumerAttempts` operationId).
+	GetPrintConsumerAttempts(ctx context.Context, params *GetPrintConsumerAttemptsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPrintConsumerAttemptsByAttemptId Get print consumer attempts by attempt ID
+	//
+	// Corresponds with GET /print-consumer/attempts/{attemptId} (the `GetPrintConsumerAttemptsByAttemptId` operationId).
+	GetPrintConsumerAttemptsByAttemptId(ctx context.Context, attemptId string, params *GetPrintConsumerAttemptsByAttemptIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerAttemptsByAttemptIdReconciliationWithBody Post print consumer attempts by attempt ID reconciliation
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /print-consumer/attempts/{attemptId}/reconciliation (the `PostPrintConsumerAttemptsByAttemptIdReconciliation` operationId).
+	PostPrintConsumerAttemptsByAttemptIdReconciliationWithBody(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdReconciliationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerAttemptsByAttemptIdReconciliation Post print consumer attempts by attempt ID reconciliation
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /print-consumer/attempts/{attemptId}/reconciliation (the `PostPrintConsumerAttemptsByAttemptIdReconciliation` operationId).
+	PostPrintConsumerAttemptsByAttemptIdReconciliation(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdReconciliationParams, body PostPrintConsumerAttemptsByAttemptIdReconciliationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerClaimsWithBody Post print consumer claims
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /print-consumer/claims (the `PostPrintConsumerClaims` operationId).
+	PostPrintConsumerClaimsWithBody(ctx context.Context, params *PostPrintConsumerClaimsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerClaims Post print consumer claims
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /print-consumer/claims (the `PostPrintConsumerClaims` operationId).
+	PostPrintConsumerClaims(ctx context.Context, params *PostPrintConsumerClaimsParams, body PostPrintConsumerClaimsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListPrintConsumerClaimsByAttemptIdContent List print consumer claims by attempt ID content
+	//
+	// Corresponds with GET /print-consumer/claims/{attemptId}/content (the `ListPrintConsumerClaimsByAttemptIdContent` operationId).
+	ListPrintConsumerClaimsByAttemptIdContent(ctx context.Context, attemptId string, params *ListPrintConsumerClaimsByAttemptIdContentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerClaimsByAttemptIdOutcomeWithBody Post print consumer claims by attempt ID outcome
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /print-consumer/claims/{attemptId}/outcome (the `PostPrintConsumerClaimsByAttemptIdOutcome` operationId).
+	PostPrintConsumerClaimsByAttemptIdOutcomeWithBody(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdOutcomeParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerClaimsByAttemptIdOutcome Post print consumer claims by attempt ID outcome
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /print-consumer/claims/{attemptId}/outcome (the `PostPrintConsumerClaimsByAttemptIdOutcome` operationId).
+	PostPrintConsumerClaimsByAttemptIdOutcome(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdOutcomeParams, body PostPrintConsumerClaimsByAttemptIdOutcomeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerClaimsByAttemptIdRenewalWithBody Post print consumer claims by attempt ID renewal
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /print-consumer/claims/{attemptId}/renewal (the `PostPrintConsumerClaimsByAttemptIdRenewal` operationId).
+	PostPrintConsumerClaimsByAttemptIdRenewalWithBody(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdRenewalParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerClaimsByAttemptIdRenewal Post print consumer claims by attempt ID renewal
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /print-consumer/claims/{attemptId}/renewal (the `PostPrintConsumerClaimsByAttemptIdRenewal` operationId).
+	PostPrintConsumerClaimsByAttemptIdRenewal(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdRenewalParams, body PostPrintConsumerClaimsByAttemptIdRenewalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerClaimsByAttemptIdStartWithBody Post print consumer claims by attempt ID start
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /print-consumer/claims/{attemptId}/start (the `PostPrintConsumerClaimsByAttemptIdStart` operationId).
+	PostPrintConsumerClaimsByAttemptIdStartWithBody(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdStartParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrintConsumerClaimsByAttemptIdStart Post print consumer claims by attempt ID start
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /print-consumer/claims/{attemptId}/start (the `PostPrintConsumerClaimsByAttemptIdStart` operationId).
+	PostPrintConsumerClaimsByAttemptIdStart(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdStartParams, body PostPrintConsumerClaimsByAttemptIdStartJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostPrintConsumerHeartbeatWithBody Post print consumer heartbeat
 	//
@@ -7205,6 +7580,20 @@ type ClientInterface interface {
 	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
 	PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, body PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithBody Post tenants by tenant ID inventories by inventory ID print connectors by connector ID credential rotation
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}/credential-rotation (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithBody(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation Post tenants by tenant ID inventories by inventory ID print connectors by connector ID credential rotation
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}/credential-rotation (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs Get tenants by tenant ID inventories by inventory ID print jobs
 	//
 	// Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-jobs (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs` operationId).
@@ -7677,6 +8066,221 @@ func (c *Client) PostPrintConnectorPairingsByPairingIdReviewWithBody(ctx context
 // Corresponds with POST /print-connector-pairings/{pairingId}/review (the `PostPrintConnectorPairingsByPairingIdReview` operationId).
 func (c *Client) PostPrintConnectorPairingsByPairingIdReview(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, body PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostPrintConnectorPairingsByPairingIdReviewRequest(c.Server, pairingId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPrintConsumerAttempts Get print consumer attempts
+//
+// Corresponds with GET /print-consumer/attempts (the `GetPrintConsumerAttempts` operationId).
+func (c *Client) GetPrintConsumerAttempts(ctx context.Context, params *GetPrintConsumerAttemptsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPrintConsumerAttemptsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPrintConsumerAttemptsByAttemptId Get print consumer attempts by attempt ID
+//
+// Corresponds with GET /print-consumer/attempts/{attemptId} (the `GetPrintConsumerAttemptsByAttemptId` operationId).
+func (c *Client) GetPrintConsumerAttemptsByAttemptId(ctx context.Context, attemptId string, params *GetPrintConsumerAttemptsByAttemptIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPrintConsumerAttemptsByAttemptIdRequest(c.Server, attemptId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerAttemptsByAttemptIdReconciliationWithBody Post print consumer attempts by attempt ID reconciliation
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /print-consumer/attempts/{attemptId}/reconciliation (the `PostPrintConsumerAttemptsByAttemptIdReconciliation` operationId).
+func (c *Client) PostPrintConsumerAttemptsByAttemptIdReconciliationWithBody(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdReconciliationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerAttemptsByAttemptIdReconciliationRequestWithBody(c.Server, attemptId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerAttemptsByAttemptIdReconciliation Post print consumer attempts by attempt ID reconciliation
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /print-consumer/attempts/{attemptId}/reconciliation (the `PostPrintConsumerAttemptsByAttemptIdReconciliation` operationId).
+func (c *Client) PostPrintConsumerAttemptsByAttemptIdReconciliation(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdReconciliationParams, body PostPrintConsumerAttemptsByAttemptIdReconciliationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerAttemptsByAttemptIdReconciliationRequest(c.Server, attemptId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerClaimsWithBody Post print consumer claims
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /print-consumer/claims (the `PostPrintConsumerClaims` operationId).
+func (c *Client) PostPrintConsumerClaimsWithBody(ctx context.Context, params *PostPrintConsumerClaimsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerClaimsRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerClaims Post print consumer claims
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /print-consumer/claims (the `PostPrintConsumerClaims` operationId).
+func (c *Client) PostPrintConsumerClaims(ctx context.Context, params *PostPrintConsumerClaimsParams, body PostPrintConsumerClaimsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerClaimsRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListPrintConsumerClaimsByAttemptIdContent List print consumer claims by attempt ID content
+//
+// Corresponds with GET /print-consumer/claims/{attemptId}/content (the `ListPrintConsumerClaimsByAttemptIdContent` operationId).
+func (c *Client) ListPrintConsumerClaimsByAttemptIdContent(ctx context.Context, attemptId string, params *ListPrintConsumerClaimsByAttemptIdContentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListPrintConsumerClaimsByAttemptIdContentRequest(c.Server, attemptId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerClaimsByAttemptIdOutcomeWithBody Post print consumer claims by attempt ID outcome
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /print-consumer/claims/{attemptId}/outcome (the `PostPrintConsumerClaimsByAttemptIdOutcome` operationId).
+func (c *Client) PostPrintConsumerClaimsByAttemptIdOutcomeWithBody(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdOutcomeParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerClaimsByAttemptIdOutcomeRequestWithBody(c.Server, attemptId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerClaimsByAttemptIdOutcome Post print consumer claims by attempt ID outcome
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /print-consumer/claims/{attemptId}/outcome (the `PostPrintConsumerClaimsByAttemptIdOutcome` operationId).
+func (c *Client) PostPrintConsumerClaimsByAttemptIdOutcome(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdOutcomeParams, body PostPrintConsumerClaimsByAttemptIdOutcomeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerClaimsByAttemptIdOutcomeRequest(c.Server, attemptId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerClaimsByAttemptIdRenewalWithBody Post print consumer claims by attempt ID renewal
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /print-consumer/claims/{attemptId}/renewal (the `PostPrintConsumerClaimsByAttemptIdRenewal` operationId).
+func (c *Client) PostPrintConsumerClaimsByAttemptIdRenewalWithBody(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdRenewalParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerClaimsByAttemptIdRenewalRequestWithBody(c.Server, attemptId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerClaimsByAttemptIdRenewal Post print consumer claims by attempt ID renewal
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /print-consumer/claims/{attemptId}/renewal (the `PostPrintConsumerClaimsByAttemptIdRenewal` operationId).
+func (c *Client) PostPrintConsumerClaimsByAttemptIdRenewal(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdRenewalParams, body PostPrintConsumerClaimsByAttemptIdRenewalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerClaimsByAttemptIdRenewalRequest(c.Server, attemptId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerClaimsByAttemptIdStartWithBody Post print consumer claims by attempt ID start
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /print-consumer/claims/{attemptId}/start (the `PostPrintConsumerClaimsByAttemptIdStart` operationId).
+func (c *Client) PostPrintConsumerClaimsByAttemptIdStartWithBody(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdStartParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerClaimsByAttemptIdStartRequestWithBody(c.Server, attemptId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostPrintConsumerClaimsByAttemptIdStart Post print consumer claims by attempt ID start
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /print-consumer/claims/{attemptId}/start (the `PostPrintConsumerClaimsByAttemptIdStart` operationId).
+func (c *Client) PostPrintConsumerClaimsByAttemptIdStart(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdStartParams, body PostPrintConsumerClaimsByAttemptIdStartJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrintConsumerClaimsByAttemptIdStartRequest(c.Server, attemptId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -10609,6 +11213,40 @@ func (c *Client) PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsBy
 	return c.Client.Do(req)
 }
 
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithBody Post tenants by tenant ID inventories by inventory ID print connectors by connector ID credential rotation
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}/credential-rotation (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation` operationId).
+func (c *Client) PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithBody(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationRequestWithBody(c.Server, tenantId, inventoryId, connectorId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation Post tenants by tenant ID inventories by inventory ID print connectors by connector ID credential rotation
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}/credential-rotation (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation` operationId).
+func (c *Client) PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationRequest(c.Server, tenantId, inventoryId, connectorId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs Get tenants by tenant ID inventories by inventory ID print jobs
 //
 // Corresponds with GET /tenants/{tenantId}/inventories/{inventoryId}/print-jobs (the `GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs` operationId).
@@ -11796,6 +12434,539 @@ func NewPostPrintConnectorPairingsByPairingIdReviewRequestWithBody(server string
 			}
 
 			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewGetPrintConsumerAttemptsRequest constructs an http.Request for the GetPrintConsumerAttempts method
+func NewGetPrintConsumerAttemptsRequest(server string, params *GetPrintConsumerAttemptsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-consumer/attempts")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.PrinterId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "printerId", *params.PrinterId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Status != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "status", *params.Status, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int64"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewGetPrintConsumerAttemptsByAttemptIdRequest constructs an http.Request for the GetPrintConsumerAttemptsByAttemptId method
+func NewGetPrintConsumerAttemptsByAttemptIdRequest(server string, attemptId string, params *GetPrintConsumerAttemptsByAttemptIdParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "attemptId", attemptId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-consumer/attempts/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPostPrintConsumerAttemptsByAttemptIdReconciliationRequest calls the generic PostPrintConsumerAttemptsByAttemptIdReconciliation builder with application/json body
+func NewPostPrintConsumerAttemptsByAttemptIdReconciliationRequest(server string, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdReconciliationParams, body PostPrintConsumerAttemptsByAttemptIdReconciliationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrintConsumerAttemptsByAttemptIdReconciliationRequestWithBody(server, attemptId, params, "application/json", bodyReader)
+}
+
+// NewPostPrintConsumerAttemptsByAttemptIdReconciliationRequestWithBody constructs an http.Request for the PostPrintConsumerAttemptsByAttemptIdReconciliation method, with any body, and a specified content type
+func NewPostPrintConsumerAttemptsByAttemptIdReconciliationRequestWithBody(server string, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdReconciliationParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "attemptId", attemptId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-consumer/attempts/%s/reconciliation", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPostPrintConsumerClaimsRequest calls the generic PostPrintConsumerClaims builder with application/json body
+func NewPostPrintConsumerClaimsRequest(server string, params *PostPrintConsumerClaimsParams, body PostPrintConsumerClaimsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrintConsumerClaimsRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewPostPrintConsumerClaimsRequestWithBody constructs an http.Request for the PostPrintConsumerClaims method, with any body, and a specified content type
+func NewPostPrintConsumerClaimsRequestWithBody(server string, params *PostPrintConsumerClaimsParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-consumer/claims")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewListPrintConsumerClaimsByAttemptIdContentRequest constructs an http.Request for the ListPrintConsumerClaimsByAttemptIdContent method
+func NewListPrintConsumerClaimsByAttemptIdContentRequest(server string, attemptId string, params *ListPrintConsumerClaimsByAttemptIdContentParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "attemptId", attemptId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-consumer/claims/%s/content", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		var headerParam1 string
+
+		headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Print-Session-ID", params.XPrintSessionID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("X-Print-Session-ID", headerParam1)
+
+		var headerParam2 string
+
+		headerParam2, err = runtime.StyleParamWithOptions("simple", false, "X-Print-Claim-Token", params.XPrintClaimToken, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("X-Print-Claim-Token", headerParam2)
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithOptions("simple", false, "X-Print-Revision", params.XPrintRevision, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "integer", Format: "int64"})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("X-Print-Revision", headerParam3)
+
+	}
+
+	return req, nil
+}
+
+// NewPostPrintConsumerClaimsByAttemptIdOutcomeRequest calls the generic PostPrintConsumerClaimsByAttemptIdOutcome builder with application/json body
+func NewPostPrintConsumerClaimsByAttemptIdOutcomeRequest(server string, attemptId string, params *PostPrintConsumerClaimsByAttemptIdOutcomeParams, body PostPrintConsumerClaimsByAttemptIdOutcomeJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrintConsumerClaimsByAttemptIdOutcomeRequestWithBody(server, attemptId, params, "application/json", bodyReader)
+}
+
+// NewPostPrintConsumerClaimsByAttemptIdOutcomeRequestWithBody constructs an http.Request for the PostPrintConsumerClaimsByAttemptIdOutcome method, with any body, and a specified content type
+func NewPostPrintConsumerClaimsByAttemptIdOutcomeRequestWithBody(server string, attemptId string, params *PostPrintConsumerClaimsByAttemptIdOutcomeParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "attemptId", attemptId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-consumer/claims/%s/outcome", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPostPrintConsumerClaimsByAttemptIdRenewalRequest calls the generic PostPrintConsumerClaimsByAttemptIdRenewal builder with application/json body
+func NewPostPrintConsumerClaimsByAttemptIdRenewalRequest(server string, attemptId string, params *PostPrintConsumerClaimsByAttemptIdRenewalParams, body PostPrintConsumerClaimsByAttemptIdRenewalJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrintConsumerClaimsByAttemptIdRenewalRequestWithBody(server, attemptId, params, "application/json", bodyReader)
+}
+
+// NewPostPrintConsumerClaimsByAttemptIdRenewalRequestWithBody constructs an http.Request for the PostPrintConsumerClaimsByAttemptIdRenewal method, with any body, and a specified content type
+func NewPostPrintConsumerClaimsByAttemptIdRenewalRequestWithBody(server string, attemptId string, params *PostPrintConsumerClaimsByAttemptIdRenewalParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "attemptId", attemptId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-consumer/claims/%s/renewal", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewPostPrintConsumerClaimsByAttemptIdStartRequest calls the generic PostPrintConsumerClaimsByAttemptIdStart builder with application/json body
+func NewPostPrintConsumerClaimsByAttemptIdStartRequest(server string, attemptId string, params *PostPrintConsumerClaimsByAttemptIdStartParams, body PostPrintConsumerClaimsByAttemptIdStartJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrintConsumerClaimsByAttemptIdStartRequestWithBody(server, attemptId, params, "application/json", bodyReader)
+}
+
+// NewPostPrintConsumerClaimsByAttemptIdStartRequestWithBody constructs an http.Request for the PostPrintConsumerClaimsByAttemptIdStart method, with any body, and a specified content type
+func NewPostPrintConsumerClaimsByAttemptIdStartRequestWithBody(server string, attemptId string, params *PostPrintConsumerClaimsByAttemptIdStartParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "attemptId", attemptId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/print-consumer/claims/%s/start", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
 		}
 
 	}
@@ -23187,6 +24358,93 @@ func NewPatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnector
 	return req, nil
 }
 
+// NewPostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationRequest calls the generic PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation builder with application/json body
+func NewPostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationRequest(server string, tenantId string, inventoryId string, connectorId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationRequestWithBody(server, tenantId, inventoryId, connectorId, params, "application/json", bodyReader)
+}
+
+// NewPostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationRequestWithBody constructs an http.Request for the PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation method, with any body, and a specified content type
+func NewPostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationRequestWithBody(server string, tenantId string, inventoryId string, connectorId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "tenantId", tenantId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "inventoryId", inventoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "connectorId", connectorId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenants/%s/inventories/%s/print-connectors/%s/credential-rotation", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.Authorization != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Authorization", *params.Authorization, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Authorization", headerParam0)
+		}
+
+		if params.XRequestID != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Request-ID", *params.XRequestID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Request-ID", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
 // NewGetTenantsByTenantIdInventoriesByInventoryIdPrintJobsRequest constructs an http.Request for the GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs method
 func NewGetTenantsByTenantIdInventoriesByInventoryIdPrintJobsRequest(server string, tenantId string, inventoryId string, params *GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsParams) (*http.Request, error) {
 	var err error
@@ -25600,6 +26858,97 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /print-connector-pairings/{pairingId}/review (the `PostPrintConnectorPairingsByPairingIdReview` operationId).
 	PostPrintConnectorPairingsByPairingIdReviewWithResponse(ctx context.Context, pairingId string, params *PostPrintConnectorPairingsByPairingIdReviewParams, body PostPrintConnectorPairingsByPairingIdReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConnectorPairingsByPairingIdReviewResponse, error)
 
+	// GetPrintConsumerAttemptsWithResponse Get print consumer attempts
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /print-consumer/attempts (the `GetPrintConsumerAttempts` operationId).
+	GetPrintConsumerAttemptsWithResponse(ctx context.Context, params *GetPrintConsumerAttemptsParams, reqEditors ...RequestEditorFn) (*GetPrintConsumerAttemptsResponse, error)
+
+	// GetPrintConsumerAttemptsByAttemptIdWithResponse Get print consumer attempts by attempt ID
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /print-consumer/attempts/{attemptId} (the `GetPrintConsumerAttemptsByAttemptId` operationId).
+	GetPrintConsumerAttemptsByAttemptIdWithResponse(ctx context.Context, attemptId string, params *GetPrintConsumerAttemptsByAttemptIdParams, reqEditors ...RequestEditorFn) (*GetPrintConsumerAttemptsByAttemptIdResponse, error)
+
+	// PostPrintConsumerAttemptsByAttemptIdReconciliationWithBodyWithResponse Post print consumer attempts by attempt ID reconciliation
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/attempts/{attemptId}/reconciliation (the `PostPrintConsumerAttemptsByAttemptIdReconciliation` operationId).
+	PostPrintConsumerAttemptsByAttemptIdReconciliationWithBodyWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdReconciliationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerAttemptsByAttemptIdReconciliationResponse, error)
+
+	// PostPrintConsumerAttemptsByAttemptIdReconciliationWithResponse Post print consumer attempts by attempt ID reconciliation
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/attempts/{attemptId}/reconciliation (the `PostPrintConsumerAttemptsByAttemptIdReconciliation` operationId).
+	PostPrintConsumerAttemptsByAttemptIdReconciliationWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdReconciliationParams, body PostPrintConsumerAttemptsByAttemptIdReconciliationJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerAttemptsByAttemptIdReconciliationResponse, error)
+
+	// PostPrintConsumerClaimsWithBodyWithResponse Post print consumer claims
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/claims (the `PostPrintConsumerClaims` operationId).
+	PostPrintConsumerClaimsWithBodyWithResponse(ctx context.Context, params *PostPrintConsumerClaimsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsResponse, error)
+
+	// PostPrintConsumerClaimsWithResponse Post print consumer claims
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/claims (the `PostPrintConsumerClaims` operationId).
+	PostPrintConsumerClaimsWithResponse(ctx context.Context, params *PostPrintConsumerClaimsParams, body PostPrintConsumerClaimsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsResponse, error)
+
+	// ListPrintConsumerClaimsByAttemptIdContentWithResponse List print consumer claims by attempt ID content
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /print-consumer/claims/{attemptId}/content (the `ListPrintConsumerClaimsByAttemptIdContent` operationId).
+	ListPrintConsumerClaimsByAttemptIdContentWithResponse(ctx context.Context, attemptId string, params *ListPrintConsumerClaimsByAttemptIdContentParams, reqEditors ...RequestEditorFn) (*ListPrintConsumerClaimsByAttemptIdContentResponse, error)
+
+	// PostPrintConsumerClaimsByAttemptIdOutcomeWithBodyWithResponse Post print consumer claims by attempt ID outcome
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/claims/{attemptId}/outcome (the `PostPrintConsumerClaimsByAttemptIdOutcome` operationId).
+	PostPrintConsumerClaimsByAttemptIdOutcomeWithBodyWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdOutcomeParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsByAttemptIdOutcomeResponse, error)
+
+	// PostPrintConsumerClaimsByAttemptIdOutcomeWithResponse Post print consumer claims by attempt ID outcome
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/claims/{attemptId}/outcome (the `PostPrintConsumerClaimsByAttemptIdOutcome` operationId).
+	PostPrintConsumerClaimsByAttemptIdOutcomeWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdOutcomeParams, body PostPrintConsumerClaimsByAttemptIdOutcomeJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsByAttemptIdOutcomeResponse, error)
+
+	// PostPrintConsumerClaimsByAttemptIdRenewalWithBodyWithResponse Post print consumer claims by attempt ID renewal
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/claims/{attemptId}/renewal (the `PostPrintConsumerClaimsByAttemptIdRenewal` operationId).
+	PostPrintConsumerClaimsByAttemptIdRenewalWithBodyWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdRenewalParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsByAttemptIdRenewalResponse, error)
+
+	// PostPrintConsumerClaimsByAttemptIdRenewalWithResponse Post print consumer claims by attempt ID renewal
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/claims/{attemptId}/renewal (the `PostPrintConsumerClaimsByAttemptIdRenewal` operationId).
+	PostPrintConsumerClaimsByAttemptIdRenewalWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdRenewalParams, body PostPrintConsumerClaimsByAttemptIdRenewalJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsByAttemptIdRenewalResponse, error)
+
+	// PostPrintConsumerClaimsByAttemptIdStartWithBodyWithResponse Post print consumer claims by attempt ID start
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/claims/{attemptId}/start (the `PostPrintConsumerClaimsByAttemptIdStart` operationId).
+	PostPrintConsumerClaimsByAttemptIdStartWithBodyWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdStartParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsByAttemptIdStartResponse, error)
+
+	// PostPrintConsumerClaimsByAttemptIdStartWithResponse Post print consumer claims by attempt ID start
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /print-consumer/claims/{attemptId}/start (the `PostPrintConsumerClaimsByAttemptIdStart` operationId).
+	PostPrintConsumerClaimsByAttemptIdStartWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdStartParams, body PostPrintConsumerClaimsByAttemptIdStartJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsByAttemptIdStartResponse, error)
+
 	// PostPrintConsumerHeartbeatWithBodyWithResponse Post print consumer heartbeat
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -26878,6 +28227,20 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PATCH /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId} (the `PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorId` operationId).
 	PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdWithResponse(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdParams, body PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse, error)
 
+	// PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithBodyWithResponse Post tenants by tenant ID inventories by inventory ID print connectors by connector ID credential rotation
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}/credential-rotation (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithBodyWithResponse(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse, error)
+
+	// PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithResponse Post tenants by tenant ID inventories by inventory ID print connectors by connector ID credential rotation
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}/credential-rotation (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation` operationId).
+	PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithResponse(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse, error)
+
 	// GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsWithResponse Get tenants by tenant ID inventories by inventory ID print jobs
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -27716,6 +29079,447 @@ func (r PostPrintConnectorPairingsByPairingIdReviewResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PostPrintConnectorPairingsByPairingIdReviewResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetPrintConsumerAttemptsResponse200Headers the declared response headers of an HTTP 200 response for GetPrintConsumerAttempts
+type GetPrintConsumerAttemptsResponse200Headers struct {
+	CacheControl *string
+}
+
+type GetPrintConsumerAttemptsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopeListPrintConsumerAttempt
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetPrintConsumerAttemptsResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPrintConsumerAttemptsResponse) GetJSON200() *SuccessEnvelopeListPrintConsumerAttempt {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetPrintConsumerAttemptsResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPrintConsumerAttemptsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPrintConsumerAttemptsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPrintConsumerAttemptsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPrintConsumerAttemptsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetPrintConsumerAttemptsByAttemptIdResponse200Headers the declared response headers of an HTTP 200 response for GetPrintConsumerAttemptsByAttemptId
+type GetPrintConsumerAttemptsByAttemptIdResponse200Headers struct {
+	CacheControl *string
+}
+
+type GetPrintConsumerAttemptsByAttemptIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePrintConsumerAttempt
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetPrintConsumerAttemptsByAttemptIdResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPrintConsumerAttemptsByAttemptIdResponse) GetJSON200() *SuccessEnvelopePrintConsumerAttempt {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetPrintConsumerAttemptsByAttemptIdResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPrintConsumerAttemptsByAttemptIdResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPrintConsumerAttemptsByAttemptIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPrintConsumerAttemptsByAttemptIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPrintConsumerAttemptsByAttemptIdResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostPrintConsumerAttemptsByAttemptIdReconciliationResponse200Headers the declared response headers of an HTTP 200 response for PostPrintConsumerAttemptsByAttemptIdReconciliation
+type PostPrintConsumerAttemptsByAttemptIdReconciliationResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostPrintConsumerAttemptsByAttemptIdReconciliationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePrintConsumerAttempt
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostPrintConsumerAttemptsByAttemptIdReconciliationResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostPrintConsumerAttemptsByAttemptIdReconciliationResponse) GetJSON200() *SuccessEnvelopePrintConsumerAttempt {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostPrintConsumerAttemptsByAttemptIdReconciliationResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostPrintConsumerAttemptsByAttemptIdReconciliationResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrintConsumerAttemptsByAttemptIdReconciliationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrintConsumerAttemptsByAttemptIdReconciliationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostPrintConsumerAttemptsByAttemptIdReconciliationResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostPrintConsumerClaimsResponse200Headers the declared response headers of an HTTP 200 response for PostPrintConsumerClaims
+type PostPrintConsumerClaimsResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostPrintConsumerClaimsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePrintConsumerAttempt
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostPrintConsumerClaimsResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostPrintConsumerClaimsResponse) GetJSON200() *SuccessEnvelopePrintConsumerAttempt {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostPrintConsumerClaimsResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostPrintConsumerClaimsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrintConsumerClaimsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrintConsumerClaimsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostPrintConsumerClaimsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// ListPrintConsumerClaimsByAttemptIdContentResponse200Headers the declared response headers of an HTTP 200 response for ListPrintConsumerClaimsByAttemptIdContent
+type ListPrintConsumerClaimsByAttemptIdContentResponse200Headers struct {
+	CacheControl *string
+	ContentType  *string
+}
+
+type ListPrintConsumerClaimsByAttemptIdContentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]byte
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *ListPrintConsumerClaimsByAttemptIdContentResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListPrintConsumerClaimsByAttemptIdContentResponse) GetJSON200() *[]byte {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListPrintConsumerClaimsByAttemptIdContentResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListPrintConsumerClaimsByAttemptIdContentResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListPrintConsumerClaimsByAttemptIdContentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListPrintConsumerClaimsByAttemptIdContentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListPrintConsumerClaimsByAttemptIdContentResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostPrintConsumerClaimsByAttemptIdOutcomeResponse200Headers the declared response headers of an HTTP 200 response for PostPrintConsumerClaimsByAttemptIdOutcome
+type PostPrintConsumerClaimsByAttemptIdOutcomeResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostPrintConsumerClaimsByAttemptIdOutcomeResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePrintConsumerAttempt
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostPrintConsumerClaimsByAttemptIdOutcomeResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostPrintConsumerClaimsByAttemptIdOutcomeResponse) GetJSON200() *SuccessEnvelopePrintConsumerAttempt {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostPrintConsumerClaimsByAttemptIdOutcomeResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostPrintConsumerClaimsByAttemptIdOutcomeResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrintConsumerClaimsByAttemptIdOutcomeResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrintConsumerClaimsByAttemptIdOutcomeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostPrintConsumerClaimsByAttemptIdOutcomeResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostPrintConsumerClaimsByAttemptIdRenewalResponse200Headers the declared response headers of an HTTP 200 response for PostPrintConsumerClaimsByAttemptIdRenewal
+type PostPrintConsumerClaimsByAttemptIdRenewalResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostPrintConsumerClaimsByAttemptIdRenewalResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePrintConsumerAttempt
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostPrintConsumerClaimsByAttemptIdRenewalResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostPrintConsumerClaimsByAttemptIdRenewalResponse) GetJSON200() *SuccessEnvelopePrintConsumerAttempt {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostPrintConsumerClaimsByAttemptIdRenewalResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostPrintConsumerClaimsByAttemptIdRenewalResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrintConsumerClaimsByAttemptIdRenewalResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrintConsumerClaimsByAttemptIdRenewalResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostPrintConsumerClaimsByAttemptIdRenewalResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// PostPrintConsumerClaimsByAttemptIdStartResponse200Headers the declared response headers of an HTTP 200 response for PostPrintConsumerClaimsByAttemptIdStart
+type PostPrintConsumerClaimsByAttemptIdStartResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostPrintConsumerClaimsByAttemptIdStartResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePrintConsumerAttempt
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostPrintConsumerClaimsByAttemptIdStartResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostPrintConsumerClaimsByAttemptIdStartResponse) GetJSON200() *SuccessEnvelopePrintConsumerAttempt {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostPrintConsumerClaimsByAttemptIdStartResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostPrintConsumerClaimsByAttemptIdStartResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrintConsumerClaimsByAttemptIdStartResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrintConsumerClaimsByAttemptIdStartResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostPrintConsumerClaimsByAttemptIdStartResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -34477,6 +36281,61 @@ func (r PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnector
 	return ""
 }
 
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse200Headers the declared response headers of an HTTP 200 response for PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation
+type PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse200Headers struct {
+	CacheControl *string
+}
+
+type PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SuccessEnvelopePairingStatus
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *ErrorEnvelope
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse) GetJSON200() *SuccessEnvelopePairingStatus {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse) GetJSONDefault() *ErrorEnvelope {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsResponse200Headers the declared response headers of an HTTP 200 response for GetTenantsByTenantIdInventoriesByInventoryIdPrintJobs
 type GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsResponse200Headers struct {
 	CacheControl *string
@@ -36048,6 +37907,175 @@ func (c *ClientWithResponses) PostPrintConnectorPairingsByPairingIdReviewWithRes
 		return nil, err
 	}
 	return ParsePostPrintConnectorPairingsByPairingIdReviewResponse(rsp)
+}
+
+// GetPrintConsumerAttemptsWithResponse Get print consumer attempts
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /print-consumer/attempts (the `GetPrintConsumerAttempts` operationId).
+func (c *ClientWithResponses) GetPrintConsumerAttemptsWithResponse(ctx context.Context, params *GetPrintConsumerAttemptsParams, reqEditors ...RequestEditorFn) (*GetPrintConsumerAttemptsResponse, error) {
+	rsp, err := c.GetPrintConsumerAttempts(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPrintConsumerAttemptsResponse(rsp)
+}
+
+// GetPrintConsumerAttemptsByAttemptIdWithResponse Get print consumer attempts by attempt ID
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /print-consumer/attempts/{attemptId} (the `GetPrintConsumerAttemptsByAttemptId` operationId).
+func (c *ClientWithResponses) GetPrintConsumerAttemptsByAttemptIdWithResponse(ctx context.Context, attemptId string, params *GetPrintConsumerAttemptsByAttemptIdParams, reqEditors ...RequestEditorFn) (*GetPrintConsumerAttemptsByAttemptIdResponse, error) {
+	rsp, err := c.GetPrintConsumerAttemptsByAttemptId(ctx, attemptId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPrintConsumerAttemptsByAttemptIdResponse(rsp)
+}
+
+// PostPrintConsumerAttemptsByAttemptIdReconciliationWithBodyWithResponse Post print consumer attempts by attempt ID reconciliation
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/attempts/{attemptId}/reconciliation (the `PostPrintConsumerAttemptsByAttemptIdReconciliation` operationId).
+func (c *ClientWithResponses) PostPrintConsumerAttemptsByAttemptIdReconciliationWithBodyWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdReconciliationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerAttemptsByAttemptIdReconciliationResponse, error) {
+	rsp, err := c.PostPrintConsumerAttemptsByAttemptIdReconciliationWithBody(ctx, attemptId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerAttemptsByAttemptIdReconciliationResponse(rsp)
+}
+
+// PostPrintConsumerAttemptsByAttemptIdReconciliationWithResponse Post print consumer attempts by attempt ID reconciliation
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/attempts/{attemptId}/reconciliation (the `PostPrintConsumerAttemptsByAttemptIdReconciliation` operationId).
+func (c *ClientWithResponses) PostPrintConsumerAttemptsByAttemptIdReconciliationWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerAttemptsByAttemptIdReconciliationParams, body PostPrintConsumerAttemptsByAttemptIdReconciliationJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerAttemptsByAttemptIdReconciliationResponse, error) {
+	rsp, err := c.PostPrintConsumerAttemptsByAttemptIdReconciliation(ctx, attemptId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerAttemptsByAttemptIdReconciliationResponse(rsp)
+}
+
+// PostPrintConsumerClaimsWithBodyWithResponse Post print consumer claims
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/claims (the `PostPrintConsumerClaims` operationId).
+func (c *ClientWithResponses) PostPrintConsumerClaimsWithBodyWithResponse(ctx context.Context, params *PostPrintConsumerClaimsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsResponse, error) {
+	rsp, err := c.PostPrintConsumerClaimsWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerClaimsResponse(rsp)
+}
+
+// PostPrintConsumerClaimsWithResponse Post print consumer claims
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/claims (the `PostPrintConsumerClaims` operationId).
+func (c *ClientWithResponses) PostPrintConsumerClaimsWithResponse(ctx context.Context, params *PostPrintConsumerClaimsParams, body PostPrintConsumerClaimsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsResponse, error) {
+	rsp, err := c.PostPrintConsumerClaims(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerClaimsResponse(rsp)
+}
+
+// ListPrintConsumerClaimsByAttemptIdContentWithResponse List print consumer claims by attempt ID content
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /print-consumer/claims/{attemptId}/content (the `ListPrintConsumerClaimsByAttemptIdContent` operationId).
+func (c *ClientWithResponses) ListPrintConsumerClaimsByAttemptIdContentWithResponse(ctx context.Context, attemptId string, params *ListPrintConsumerClaimsByAttemptIdContentParams, reqEditors ...RequestEditorFn) (*ListPrintConsumerClaimsByAttemptIdContentResponse, error) {
+	rsp, err := c.ListPrintConsumerClaimsByAttemptIdContent(ctx, attemptId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListPrintConsumerClaimsByAttemptIdContentResponse(rsp)
+}
+
+// PostPrintConsumerClaimsByAttemptIdOutcomeWithBodyWithResponse Post print consumer claims by attempt ID outcome
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/claims/{attemptId}/outcome (the `PostPrintConsumerClaimsByAttemptIdOutcome` operationId).
+func (c *ClientWithResponses) PostPrintConsumerClaimsByAttemptIdOutcomeWithBodyWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdOutcomeParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsByAttemptIdOutcomeResponse, error) {
+	rsp, err := c.PostPrintConsumerClaimsByAttemptIdOutcomeWithBody(ctx, attemptId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerClaimsByAttemptIdOutcomeResponse(rsp)
+}
+
+// PostPrintConsumerClaimsByAttemptIdOutcomeWithResponse Post print consumer claims by attempt ID outcome
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/claims/{attemptId}/outcome (the `PostPrintConsumerClaimsByAttemptIdOutcome` operationId).
+func (c *ClientWithResponses) PostPrintConsumerClaimsByAttemptIdOutcomeWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdOutcomeParams, body PostPrintConsumerClaimsByAttemptIdOutcomeJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsByAttemptIdOutcomeResponse, error) {
+	rsp, err := c.PostPrintConsumerClaimsByAttemptIdOutcome(ctx, attemptId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerClaimsByAttemptIdOutcomeResponse(rsp)
+}
+
+// PostPrintConsumerClaimsByAttemptIdRenewalWithBodyWithResponse Post print consumer claims by attempt ID renewal
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/claims/{attemptId}/renewal (the `PostPrintConsumerClaimsByAttemptIdRenewal` operationId).
+func (c *ClientWithResponses) PostPrintConsumerClaimsByAttemptIdRenewalWithBodyWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdRenewalParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsByAttemptIdRenewalResponse, error) {
+	rsp, err := c.PostPrintConsumerClaimsByAttemptIdRenewalWithBody(ctx, attemptId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerClaimsByAttemptIdRenewalResponse(rsp)
+}
+
+// PostPrintConsumerClaimsByAttemptIdRenewalWithResponse Post print consumer claims by attempt ID renewal
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/claims/{attemptId}/renewal (the `PostPrintConsumerClaimsByAttemptIdRenewal` operationId).
+func (c *ClientWithResponses) PostPrintConsumerClaimsByAttemptIdRenewalWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdRenewalParams, body PostPrintConsumerClaimsByAttemptIdRenewalJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsByAttemptIdRenewalResponse, error) {
+	rsp, err := c.PostPrintConsumerClaimsByAttemptIdRenewal(ctx, attemptId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerClaimsByAttemptIdRenewalResponse(rsp)
+}
+
+// PostPrintConsumerClaimsByAttemptIdStartWithBodyWithResponse Post print consumer claims by attempt ID start
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/claims/{attemptId}/start (the `PostPrintConsumerClaimsByAttemptIdStart` operationId).
+func (c *ClientWithResponses) PostPrintConsumerClaimsByAttemptIdStartWithBodyWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdStartParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsByAttemptIdStartResponse, error) {
+	rsp, err := c.PostPrintConsumerClaimsByAttemptIdStartWithBody(ctx, attemptId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerClaimsByAttemptIdStartResponse(rsp)
+}
+
+// PostPrintConsumerClaimsByAttemptIdStartWithResponse Post print consumer claims by attempt ID start
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /print-consumer/claims/{attemptId}/start (the `PostPrintConsumerClaimsByAttemptIdStart` operationId).
+func (c *ClientWithResponses) PostPrintConsumerClaimsByAttemptIdStartWithResponse(ctx context.Context, attemptId string, params *PostPrintConsumerClaimsByAttemptIdStartParams, body PostPrintConsumerClaimsByAttemptIdStartJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrintConsumerClaimsByAttemptIdStartResponse, error) {
+	rsp, err := c.PostPrintConsumerClaimsByAttemptIdStart(ctx, attemptId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrintConsumerClaimsByAttemptIdStartResponse(rsp)
 }
 
 // PostPrintConsumerHeartbeatWithBodyWithResponse Post print consumer heartbeat
@@ -38426,6 +40454,32 @@ func (c *ClientWithResponses) PatchTenantsByTenantIdInventoriesByInventoryIdPrin
 	return ParsePatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse(rsp)
 }
 
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithBodyWithResponse Post tenants by tenant ID inventories by inventory ID print connectors by connector ID credential rotation
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}/credential-rotation (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation` operationId).
+func (c *ClientWithResponses) PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithBodyWithResponse(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse, error) {
+	rsp, err := c.PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithBody(ctx, tenantId, inventoryId, connectorId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse(rsp)
+}
+
+// PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithResponse Post tenants by tenant ID inventories by inventory ID print connectors by connector ID credential rotation
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}/credential-rotation (the `PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation` operationId).
+func (c *ClientWithResponses) PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithResponse(ctx context.Context, tenantId string, inventoryId string, connectorId string, params *PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationParams, body PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse, error) {
+	rsp, err := c.PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotation(ctx, tenantId, inventoryId, connectorId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse(rsp)
+}
+
 // GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsWithResponse Get tenants by tenant ID inventories by inventory ID print jobs
 //
 // Returns a wrapper object for the known response body format(s).
@@ -39361,6 +41415,381 @@ func ParsePostPrintConnectorPairingsByPairingIdReviewResponse(rsp *http.Response
 	switch {
 	case rsp.StatusCode == 200:
 		var headers PostPrintConnectorPairingsByPairingIdReviewResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetPrintConsumerAttemptsResponse parses an HTTP response from a GetPrintConsumerAttemptsWithResponse call
+func ParseGetPrintConsumerAttemptsResponse(rsp *http.Response) (*GetPrintConsumerAttemptsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPrintConsumerAttemptsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopeListPrintConsumerAttempt
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetPrintConsumerAttemptsResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetPrintConsumerAttemptsByAttemptIdResponse parses an HTTP response from a GetPrintConsumerAttemptsByAttemptIdWithResponse call
+func ParseGetPrintConsumerAttemptsByAttemptIdResponse(rsp *http.Response) (*GetPrintConsumerAttemptsByAttemptIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPrintConsumerAttemptsByAttemptIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePrintConsumerAttempt
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetPrintConsumerAttemptsByAttemptIdResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostPrintConsumerAttemptsByAttemptIdReconciliationResponse parses an HTTP response from a PostPrintConsumerAttemptsByAttemptIdReconciliationWithResponse call
+func ParsePostPrintConsumerAttemptsByAttemptIdReconciliationResponse(rsp *http.Response) (*PostPrintConsumerAttemptsByAttemptIdReconciliationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrintConsumerAttemptsByAttemptIdReconciliationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePrintConsumerAttempt
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostPrintConsumerAttemptsByAttemptIdReconciliationResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostPrintConsumerClaimsResponse parses an HTTP response from a PostPrintConsumerClaimsWithResponse call
+func ParsePostPrintConsumerClaimsResponse(rsp *http.Response) (*PostPrintConsumerClaimsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrintConsumerClaimsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePrintConsumerAttempt
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostPrintConsumerClaimsResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseListPrintConsumerClaimsByAttemptIdContentResponse parses an HTTP response from a ListPrintConsumerClaimsByAttemptIdContentWithResponse call
+func ParseListPrintConsumerClaimsByAttemptIdContentResponse(rsp *http.Response) (*ListPrintConsumerClaimsByAttemptIdContentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListPrintConsumerClaimsByAttemptIdContentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []byte
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers ListPrintConsumerClaimsByAttemptIdContentResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostPrintConsumerClaimsByAttemptIdOutcomeResponse parses an HTTP response from a PostPrintConsumerClaimsByAttemptIdOutcomeWithResponse call
+func ParsePostPrintConsumerClaimsByAttemptIdOutcomeResponse(rsp *http.Response) (*PostPrintConsumerClaimsByAttemptIdOutcomeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrintConsumerClaimsByAttemptIdOutcomeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePrintConsumerAttempt
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostPrintConsumerClaimsByAttemptIdOutcomeResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostPrintConsumerClaimsByAttemptIdRenewalResponse parses an HTTP response from a PostPrintConsumerClaimsByAttemptIdRenewalWithResponse call
+func ParsePostPrintConsumerClaimsByAttemptIdRenewalResponse(rsp *http.Response) (*PostPrintConsumerClaimsByAttemptIdRenewalResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrintConsumerClaimsByAttemptIdRenewalResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePrintConsumerAttempt
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostPrintConsumerClaimsByAttemptIdRenewalResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostPrintConsumerClaimsByAttemptIdStartResponse parses an HTTP response from a PostPrintConsumerClaimsByAttemptIdStartWithResponse call
+func ParsePostPrintConsumerClaimsByAttemptIdStartResponse(rsp *http.Response) (*PostPrintConsumerClaimsByAttemptIdStartResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrintConsumerClaimsByAttemptIdStartResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePrintConsumerAttempt
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostPrintConsumerClaimsByAttemptIdStartResponse200Headers
 		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
 			var value string
 			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
@@ -44202,6 +46631,52 @@ func ParsePatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnect
 	switch {
 	case rsp.StatusCode == 200:
 		var headers PatchTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse parses an HTTP response from a PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationWithResponse call
+func ParsePostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse(rsp *http.Response) (*PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SuccessEnvelopePairingStatus
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers PostTenantsByTenantIdInventoriesByInventoryIdPrintConnectorsByConnectorIdCredentialRotationResponse200Headers
 		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
 			var value string
 			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {

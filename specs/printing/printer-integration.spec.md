@@ -569,3 +569,46 @@ The pairing ID is a public reference, not authorization; neither short code nor
 polling token appears in this URL. Without a configured public web base, new
 pairing creation is unavailable (503); already configured consumers remain
 operational. Existing label rendering uses the same public web base setting.
+
+### Credential Rotation Protocol
+
+The CLI starts a fresh key-bound pairing. An inventory administrator submits its
+pairing ID and short code to the existing connector's `credential-rotation`
+endpoint with the connector generation precondition. This approves the new key
+for the same connector and service principal without changing any printer/device
+binding. The human response contains only the pairing reference and expiry.
+
+Exchange stores a pending credential with the next credential version and a
+bounded activation deadline. The old credential remains valid until the first
+heartbeat authenticated by the pending credential atomically activates it. That
+heartbeat clears the pending fields and invalidates the previous version. Pending
+credentials may only activate through heartbeat; they cannot claim or fetch work.
+Expired pending credentials never become active, and a subsequent fresh pairing
+may replace them. Replayed pairing exchanges never return either credential.
+Approval, issuance, and activation write atomic, safe lifecycle audit records;
+ordinary heartbeat timestamps and readiness reports remain operational telemetry
+and do not create one audit entry per polling request.
+
+Rotation approval captures the current credential version. Exchange rejects a
+stale approval if another rotation has already activated, and allows only one
+unexpired pending credential at a time. A delayed exchange therefore cannot
+replace a newer activated credential or overwrite another still-live pending key.
+### Consumer Claim Transport And Recovery
+
+The worker durably creates a random attempt ID, process session ID, and canonical
+base64url 32-byte claim secret before POST `/print-consumer/claims`. Its body
+contains these values and `printerId`. Only the secret's SHA-256 digest is stored.
+An identical claim retry reads that same attempt; changing printer/session/secret
+for an existing attempt conflicts and never creates another output attempt.
+Attempt and session identifiers are bounded opaque ASCII values (16–100 characters).
+
+Start, renewal and outcome bodies contain `sessionId`, `claimToken`, and expected
+`revision`; outcome adds finite kind/reason, completed copies and retryability.
+Content reads use `X-Print-Session-ID`, `X-Print-Claim-Token`, and
+`X-Print-Revision` headers. No secret appears in a URL. Every operation checks the
+current credential and fully consistent printer authorization. Content additionally
+requires ownership of the current unexpired attempt and an unexpired artifact.
+Recovery reads never return the claim secret, label title, QR URL, or PNG bytes.
+Unsettled discovery is filtered to the authenticated connector, supports an optional
+printer filter, and uses scoped cursor pagination. A recovered record is evidence,
+never permission to resume earlier-session physical output.

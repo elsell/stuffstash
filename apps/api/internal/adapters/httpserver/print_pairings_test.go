@@ -24,9 +24,11 @@ func TestPrintPairingHTTPBindsKeyScopeAndCredentialWithoutHumanAccess(t *testing
 func runPrintPairingHTTP(t *testing.T) {
 	const tid = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
 	const iid = "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+	const otherTid = "01ARZ3NDEKTSV4RRFFQ69G5FAX"
+	const otherIid = "01ARZ3NDEKTSV4RRFFQ69G5FAY"
 	store := memory.NewStore()
 	auth := memory.NewAuthorizer()
-	application := newSeededTestAppWithStoreAndAuthorizer(t, seededState{tenants: []seedTenant{{id: tid, name: "Home", owner: "owner"}}, inventories: []seedInventory{{id: iid, tenantID: tid, name: "Garage", owner: "owner"}}}, store, auth).WithPrinterRegistry(store, printingprofiles.Catalog{}).WithPrintConnectors(store, auth, pairingcrypto.Secrets{}, printregistry.ConnectorPolicy{PublicWebBaseURL: "https://example.test", PairingLifetime: 10 * time.Minute, CredentialLifetime: 24 * time.Hour, ActivationLifetime: time.Minute, AuthorizationTimeout: time.Second, ReportMaxAge: time.Minute})
+	application := newSeededTestAppWithStoreAndAuthorizer(t, seededState{tenants: []seedTenant{{id: tid, name: "Home", owner: "owner"}, {id: otherTid, name: "Other home", owner: "owner"}}, inventories: []seedInventory{{id: iid, tenantID: tid, name: "Garage", owner: "owner"}, {id: otherIid, tenantID: otherTid, name: "Other garage", owner: "owner"}}}, store, auth).WithPrinterRegistry(store, printingprofiles.Catalog{}).WithPrintConnectors(store, auth, pairingcrypto.Secrets{}, printregistry.ConnectorPolicy{PublicWebBaseURL: "https://example.test", PairingLifetime: 10 * time.Minute, CredentialLifetime: 24 * time.Hour, ActivationLifetime: time.Minute, AuthorizationTimeout: time.Second, ReportMaxAge: time.Minute})
 	server := NewServer(":0", application)
 	printer, _, err := application.PrinterRegistry().Register(context.Background(), printregistry.RegisterPrinter{Actor: printregistry.Actor{Principal: identity.Principal{ID: "owner"}, Scope: printing.Scope{TenantID: tid, InventoryID: iid}}, RequestKey: "p", Name: "Garage", AdapterID: "brother-ql800", PresetID: "brother-ql800-29x90", PresetVersion: 1})
 	if err != nil {
@@ -128,6 +130,47 @@ func runPrintPairingHTTP(t *testing.T) {
 		t.Fatalf("worker accessed human inventory %d", human.Code)
 	}
 
+	nextPublic, nextPrivate, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rotationPair := performRequest(server, http.MethodPost, "/print-connector-pairings", "", map[string]any{"name": "Replacement key", "publicKey": base64.StdEncoding.EncodeToString(nextPublic), "candidates": []map[string]string{{"id": "usb-one", "name": "Brother", "adapterId": "brother-ql800", "deviceId": "protected-usb-path"}}})
+	requireStatus(t, rotationPair, http.StatusCreated)
+	var nextPair struct {
+		Data struct{ ID, PollToken, UserCode string }
+	}
+	if err := json.Unmarshal(rotationPair.Body.Bytes(), &nextPair); err != nil {
+		t.Fatal(err)
+	}
+	rotationPath := "/tenants/" + tid + "/inventories/" + iid + "/print-connectors/" + credential.Data.ConnectorID + "/credential-rotation"
+	rotationBody := map[string]any{"generation": 1, "pairingId": nextPair.Data.ID, "userCode": nextPair.Data.UserCode}
+	rejectedRotation := performRequest(server, http.MethodPost, rotationPath, "Bearer dev:other", rotationBody)
+	requireStatus(t, rejectedRotation, http.StatusForbidden)
+	crossScope := performRequest(server, http.MethodPost, "/tenants/"+otherTid+"/inventories/"+otherIid+"/print-connectors/"+credential.Data.ConnectorID+"/credential-rotation", "Bearer dev:owner", rotationBody)
+	requireStatus(t, crossScope, http.StatusNotFound)
+	rotated := performRequest(server, http.MethodPost, rotationPath, "Bearer dev:owner", rotationBody)
+	requireStatus(t, rotated, http.StatusOK)
+	nextSignature := ed25519.Sign(nextPrivate, printing.PairingProofMessage(printing.PairingID(nextPair.Data.ID), nextPair.Data.PollToken))
+	nextExchange := performRequestWithHeaders(server, http.MethodPost, "/print-connector-pairings/"+nextPair.Data.ID+"/credential", "", map[string]string{"X-Pairing-Token": nextPair.Data.PollToken}, map[string]string{"signature": base64.StdEncoding.EncodeToString(nextSignature)})
+	requireStatus(t, nextExchange, http.StatusOK)
+	var nextCredential struct {
+		Data struct{ Credential, ConnectorID string }
+	}
+	if err := json.Unmarshal(nextExchange.Body.Bytes(), &nextCredential); err != nil {
+		t.Fatal(err)
+	}
+	if nextCredential.Data.ConnectorID != credential.Data.ConnectorID {
+		t.Fatal("rotation replaced connector identity")
+	}
+	oldStillValid := performRequest(server, http.MethodPost, "/print-consumer/heartbeat", "Bearer "+credential.Data.Credential, map[string]string{"sessionId": "old-session"})
+	requireStatus(t, oldStillValid, http.StatusOK)
+	pendingCannotWork := performRequest(server, http.MethodGet, "/print-consumer/printers", "Bearer "+nextCredential.Data.Credential, nil)
+	requireStatus(t, pendingCannotWork, http.StatusForbidden)
+	activate := performRequest(server, http.MethodPost, "/print-consumer/heartbeat", "Bearer "+nextCredential.Data.Credential, map[string]string{"sessionId": "new-session"})
+	requireStatus(t, activate, http.StatusOK)
+	oldInvalid := performRequest(server, http.MethodPost, "/print-consumer/heartbeat", "Bearer "+credential.Data.Credential, map[string]string{"sessionId": "old-session"})
+	requireStatus(t, oldInvalid, http.StatusUnauthorized)
+	credential.Data.Credential = nextCredential.Data.Credential
 	collection := "/tenants/" + tid + "/inventories/" + iid + "/print-connectors"
 	detail := collection + "/" + credential.Data.ConnectorID
 	for _, resource := range []string{collection, detail} {
@@ -165,6 +208,7 @@ func coverPrintPairingScenarios(t *testing.T, coverage executedScenarioCoverage,
 		"POST /print-connector-pairings", "GET /print-connector-pairings/{pairingId}",
 		"POST /print-connector-pairings/{pairingId}/review", "POST /print-connector-pairings/{pairingId}/approval", "POST /print-connector-pairings/{pairingId}/credential",
 		"POST /print-consumer/heartbeat", "GET /print-consumer/printers", "POST /print-consumer/printer-reports",
+		"POST /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}/credential-rotation",
 		"GET /tenants/{tenantId}/inventories/{inventoryId}/print-connectors", "GET /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}", "PATCH /tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}",
 	} {
 		coverage.operation[operation] = struct{}{}

@@ -25,7 +25,7 @@ func TestPairingExchangeIsSingleUseAndPendingGrantsDenyIssuance(t *testing.T) {
 	if _, err := store.ApprovePrintPairing(ctx, approval); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := store.ConsumePrintPairing(ctx, p.ID, now, "hash", now.Add(time.Hour), now.Add(time.Minute)); err == nil {
+	if _, err := store.ConsumePrintPairing(ctx, ports.PairingExchange{PairingID: p.ID, Now: now, CredentialHash: "hash", CredentialExpiresAt: now.Add(time.Hour), ActivationDeadline: now.Add(time.Minute), Audit: audit.Record{ID: "issued"}}); err == nil {
 		t.Fatal("pending grants issued credential")
 	}
 	if err := store.SynchronizePrintConnector(ctx, scope, c.ID, func(context.Context, ports.ConnectorRegistration, []printing.Printer) error { return nil }); err != nil {
@@ -37,7 +37,7 @@ func TestPairingExchangeIsSingleUseAndPendingGrantsDenyIssuance(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if _, err := store.ConsumePrintPairing(ctx, p.ID, now, "hash", now.Add(time.Hour), now.Add(time.Minute)); err == nil {
+			if _, err := store.ConsumePrintPairing(ctx, ports.PairingExchange{PairingID: p.ID, Now: now, CredentialHash: "hash", CredentialExpiresAt: now.Add(time.Hour), ActivationDeadline: now.Add(time.Minute), Audit: audit.Record{ID: "issued"}}); err == nil {
 				successes.Add(1)
 			}
 		}()
@@ -50,7 +50,7 @@ func TestPairingExchangeIsSingleUseAndPendingGrantsDenyIssuance(t *testing.T) {
 	if err != nil || current.State != printing.ConnectorAwaitingActivation {
 		t.Fatalf("credential not awaiting activation: %+v %v", current, err)
 	}
-	if _, err := store.HeartbeatPrintConnector(ctx, current, now.Add(2*time.Minute)); err == nil {
+	if _, err := store.HeartbeatPrintConnector(ctx, current, now.Add(2*time.Minute), nil); err == nil {
 		t.Fatal("unconfirmed credential remained valid")
 	}
 }

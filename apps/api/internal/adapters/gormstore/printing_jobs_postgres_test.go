@@ -108,6 +108,22 @@ func TestPostgresPrintingClaimsSerializeAcrossConnectors(t *testing.T) {
 	}
 	job := <-results
 	owner := job.Attempts[0].Authority
+	for _, a := range authorities {
+		attempts, listErr := s.ListPrintConsumerAttempts(ctx, scope, a.ConnectorID, pid, 10, "")
+		expected := 0
+		if a.ConnectorID == owner.ConnectorID {
+			expected = 1
+		}
+		if listErr != nil || len(attempts) != expected {
+			t.Fatalf("recovery ownership isolation: %d %v", len(attempts), listErr)
+		}
+	}
+	for _, foreign := range []printing.Scope{{TenantID: scope.TenantID, InventoryID: ids.NewID()}, {TenantID: ids.NewID(), InventoryID: scope.InventoryID}} {
+		attempts, listErr := s.ListPrintConsumerAttempts(ctx, foreign, owner.ConnectorID, pid, 10, "")
+		if listErr != nil || len(attempts) != 0 {
+			t.Fatalf("recovery scope isolation: %d %v", len(attempts), listErr)
+		}
+	}
 	var authority printing.ConsumerAuthority
 	for _, a := range authorities {
 		if a.ConnectorID == owner.ConnectorID {

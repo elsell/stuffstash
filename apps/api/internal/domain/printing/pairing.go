@@ -16,6 +16,8 @@ type PairingCandidate struct {
 }
 
 type Pairing struct {
+	RotationVersion      uint64
+	Rotation             bool
 	Candidates           []PairingCandidate
 	ID                   PairingID
 	Name                 string

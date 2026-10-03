@@ -8,7 +8,6 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"time"
 )
 
 func (s Store) CreatePrintPairing(ctx context.Context, p printing.Pairing) error {
@@ -101,7 +100,8 @@ func (s Store) ApprovePrintPairing(ctx context.Context, input ports.PairingAppro
 	})
 	return result, err
 }
-func (s Store) ConsumePrintPairing(ctx context.Context, id printing.PairingID, now time.Time, hash string, expires, activation time.Time) (printing.Connector, error) {
+func (s Store) ConsumePrintPairing(ctx context.Context, input ports.PairingExchange) (printing.Connector, error) {
+	id, now, hash, expires, activation := input.PairingID, input.Now, input.CredentialHash, input.CredentialExpiresAt, input.ActivationDeadline
 	var result printing.Connector
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		p, err := lockPrintPairing(tx, id)
@@ -116,16 +116,27 @@ func (s Store) ConsumePrintPairing(ctx context.Context, id printing.PairingID, n
 			return err
 		}
 		c := cm.domain()
-		if c.State != printing.ConnectorPending || c.Generation != c.SyncedGeneration {
+		if (!p.Rotation && c.State != printing.ConnectorPending) || (p.Rotation && (c.State == printing.ConnectorRevoked || c.State == printing.ConnectorPending)) || c.Generation != c.SyncedGeneration {
 			return ports.ErrPrintDenied
 		}
 		if hash == "" || !expires.After(now) || !activation.After(now) {
 			return ports.ErrPrintConflict
 		}
-		c.CredentialHash = hash
-		c.CredentialExpiresAt = expires
-		c.ActivationDeadline = activation
-		c.State = printing.ConnectorAwaitingActivation
+		if p.Rotation && (c.CredentialVersion != p.RotationVersion || (c.PendingCredentialHash != "" && c.PendingActivationDeadline.After(now))) {
+			return ports.ErrPrintConflict
+		}
+		if p.Rotation {
+			c.PendingCredentialHash = hash
+			c.PendingCredentialVersion = c.CredentialVersion + 1
+			c.PendingCredentialExpiresAt = expires
+			c.PendingActivationDeadline = activation
+			c.PendingPublicKey = append([]byte(nil), p.PublicKey...)
+		} else {
+			c.CredentialHash = hash
+			c.CredentialExpiresAt = expires
+			c.ActivationDeadline = activation
+			c.State = printing.ConnectorAwaitingActivation
+		}
 		c.UpdatedAt = now
 		cm = printingConnectorFromDomain(c)
 		if err := tx.Save(&cm).Error; err != nil {
@@ -138,7 +149,51 @@ func (s Store) ConsumePrintPairing(ctx context.Context, id printing.PairingID, n
 		if err := tx.Save(&pm).Error; err != nil {
 			return err
 		}
+		if err := createAuditRecord(tx, input.Audit); err != nil {
+			return err
+		}
 		result = c
+		if p.Rotation {
+			result = c.PendingCredentialIdentity()
+		}
+		return nil
+	})
+	return result, err
+}
+
+func (s Store) ApprovePrintCredentialRotation(ctx context.Context, input ports.RotationApproval) (printing.Pairing, error) {
+	var result printing.Pairing
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		p, err := lockPrintPairing(tx, input.PairingID)
+		if err != nil {
+			return err
+		}
+		if subtle.ConstantTimeCompare([]byte(p.CodeHash), []byte(input.CodeHash)) != 1 || !p.Approve(input.Scope, input.ConnectorID, input.Now) {
+			return ports.ErrPrintDenied
+		}
+		c, err := lockPrintConnector(tx, input.Scope, input.ConnectorID)
+		if err != nil {
+			return err
+		}
+		if c.Generation != input.Generation || c.Generation != c.SyncedGeneration || c.State == string(printing.ConnectorRevoked) || c.State == string(printing.ConnectorPending) {
+			return ports.ErrPrintConflict
+		}
+		if c.PendingCredentialHash != "" && c.PendingActivationDeadline.After(input.Now) {
+			return ports.ErrPrintConflict
+		}
+		p.RotationVersion = c.CredentialVersion
+		p.Rotation = true
+		model, err := printingPairingFromDomain(p)
+		if err != nil {
+			return err
+		}
+		if err := tx.Save(&model).Error; err != nil {
+			return err
+		}
+		if err := createAuditRecord(tx, input.Audit); err != nil {
+			return err
+		}
+		result = p
 		return nil
 	})
 	return result, err

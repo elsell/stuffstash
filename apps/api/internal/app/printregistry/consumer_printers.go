@@ -15,6 +15,9 @@ type ConsumerPrinter struct {
 }
 
 func (s ConnectorService) ConsumerPrinters(ctx context.Context, c printing.Connector) ([]ConsumerPrinter, error) {
+	if c.State != printing.ConnectorActive {
+		return nil, apperrors.ErrUnauthorized
+	}
 	registration, err := s.Repository.GetPrintConnector(ctx, c.Scope, c.ID)
 	if err != nil {
 		return nil, connectorError(err)

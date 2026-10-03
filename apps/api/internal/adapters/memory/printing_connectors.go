@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"crypto/subtle"
 	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"sort"
@@ -47,6 +48,9 @@ func (s *Store) FindPrintConnectorCredential(_ context.Context, hash string) (pr
 	defer s.mu.RUnlock()
 	if hash != "" {
 		for _, c := range s.printingConnectors {
+			if c.PendingCredentialHash == hash && c.State != printing.ConnectorRevoked {
+				return clonePrintConnector(c.PendingCredentialIdentity()), nil
+			}
 			if c.CredentialHash == hash {
 				return clonePrintConnector(c), nil
 			}
@@ -96,17 +100,42 @@ func (s *Store) PendingPrintConnectorScopes(_ context.Context, limit int) ([]pri
 	}
 	return out, nil
 }
-func (s *Store) HeartbeatPrintConnector(_ context.Context, authenticated printing.Connector, now time.Time) (printing.Connector, error) {
+func (s *Store) HeartbeatPrintConnector(_ context.Context, authenticated printing.Connector, now time.Time, makeAudit ports.ConnectorActivationAudit) (printing.Connector, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	c, ok := s.printingConnectors[authenticated.ID]
-	if !ok || c.Scope != authenticated.Scope || c.ServiceAccountID != authenticated.ServiceAccountID || c.CredentialVersion != authenticated.CredentialVersion || c.Generation != c.SyncedGeneration || !c.CredentialExpiresAt.After(now) {
+	if !ok || c.Scope != authenticated.Scope || c.ServiceAccountID != authenticated.ServiceAccountID || c.Generation != c.SyncedGeneration || c.State == printing.ConnectorRevoked {
 		return printing.Connector{}, ports.ErrPrintDenied
 	}
-	if c.State == printing.ConnectorAwaitingActivation && c.ActivationDeadline.After(now) {
-		c.State = printing.ConnectorActive
-	} else if c.State != printing.ConnectorActive {
-		return printing.Connector{}, ports.ErrPrintDenied
+	activating := c.State == printing.ConnectorAwaitingActivation
+	pending := c.PendingCredentialHash != "" && c.PendingCredentialVersion == authenticated.CredentialVersion && subtle.ConstantTimeCompare([]byte(c.PendingCredentialHash), []byte(authenticated.CredentialHash)) == 1
+	if pending {
+		if !c.PendingCredentialExpiresAt.After(now) || !c.PendingActivationDeadline.After(now) {
+			return printing.Connector{}, ports.ErrPrintDenied
+		}
+		c.ActivatePending()
+	} else {
+		if c.CredentialVersion != authenticated.CredentialVersion || subtle.ConstantTimeCompare([]byte(c.CredentialHash), []byte(authenticated.CredentialHash)) != 1 || !c.CredentialExpiresAt.After(now) {
+			return printing.Connector{}, ports.ErrPrintDenied
+		}
+		if c.State == printing.ConnectorAwaitingActivation && c.ActivationDeadline.After(now) {
+			c.State = printing.ConnectorActive
+		} else if c.State != printing.ConnectorActive {
+			return printing.Connector{}, ports.ErrPrintDenied
+		}
+	}
+	if pending || activating {
+		if makeAudit == nil {
+			return printing.Connector{}, ports.ErrPrintConflict
+		}
+		record, err := makeAudit(c, pending)
+		if err != nil {
+			return printing.Connector{}, err
+		}
+		if _, exists := s.auditRecords[record.ID]; exists {
+			return printing.Connector{}, ports.ErrPrintConflict
+		}
+		s.auditRecords[record.ID] = record
 	}
 	c.LastSeenAt = &now
 	c.UpdatedAt = now

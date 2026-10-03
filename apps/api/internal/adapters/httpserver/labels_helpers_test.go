@@ -40,7 +40,7 @@ func labelTestApplication(t *testing.T, clocks ...ports.Clock) (app.App, *memory
 	if _, err := svc.BootstrapInstance(ctx); err != nil {
 		t.Fatal(err)
 	}
-	application := app.New(app.Dependencies{Labels: svc, Observer: &fakeObserver{}, Auth: auth.NewLocalDevAuthenticator(), Authorizer: az, Users: store, Tenants: store, TenantUnitOfWork: store, Inventories: store, InventoryUnitOfWork: store, InventoryAccess: store, InventoryAccessUnitOfWork: store, Assets: store, AssetUnitOfWork: store, AssetTags: store, AssetTagUnitOfWork: store, Checkouts: store, Undoables: store, CustomAssetTypes: store, CustomFields: store, Audit: store, Outbox: store})
+	application := app.New(app.Dependencies{Clock: clock, Labels: svc, Observer: &fakeObserver{}, Auth: auth.NewLocalDevAuthenticator(), Authorizer: az, Users: store, Tenants: store, TenantUnitOfWork: store, Inventories: store, InventoryUnitOfWork: store, InventoryAccess: store, InventoryAccessUnitOfWork: store, Assets: store, AssetUnitOfWork: store, AssetTags: store, AssetTagUnitOfWork: store, Checkouts: store, Undoables: store, CustomAssetTypes: store, CustomFields: store, Audit: store, Outbox: store})
 	return application, store, az
 }
 func labelResponseData(t *testing.T, resBody []byte) map[string]any {

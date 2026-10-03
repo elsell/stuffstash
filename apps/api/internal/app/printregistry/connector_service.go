@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 	"net/url"
@@ -134,7 +135,11 @@ func (s ConnectorService) Exchange(ctx context.Context, id printing.PairingID, t
 		return PairingCredential{}, err
 	}
 	now := s.Registry.Clock.Now()
-	c, err := s.Repository.ConsumePrintPairing(ctx, id, now, s.Secrets.Digest(credential), now.Add(s.Policy.CredentialLifetime), now.Add(s.Policy.ActivationLifetime))
+	record, err := s.machineAudit(registration.Connector, audit.ActionPrintConnectorCredentialIssued)
+	if err != nil {
+		return PairingCredential{}, err
+	}
+	c, err := s.Repository.ConsumePrintPairing(ctx, ports.PairingExchange{PairingID: id, Now: now, CredentialHash: s.Secrets.Digest(credential), CredentialExpiresAt: now.Add(s.Policy.CredentialLifetime), ActivationDeadline: now.Add(s.Policy.ActivationLifetime), Audit: record})
 	if err != nil {
 		return PairingCredential{}, connectorError(err)
 	}
@@ -158,6 +163,9 @@ func (s ConnectorService) AuthenticateConsumer(ctx context.Context, credential s
 	return c, nil
 }
 func (s ConnectorService) AuthorizePrinter(ctx context.Context, c printing.Connector, id printing.PrinterID, permission ports.PrinterPermission) (printing.ConsumerAuthority, error) {
+	if c.State != printing.ConnectorActive {
+		return printing.ConsumerAuthority{}, apperrors.ErrUnauthorized
+	}
 	current, err := s.Repository.GetPrintConnector(ctx, c.Scope, c.ID)
 	if err != nil {
 		return printing.ConsumerAuthority{}, connectorError(err)
@@ -187,7 +195,13 @@ func (s ConnectorService) Heartbeat(ctx context.Context, c printing.Connector) (
 	if err := s.Authorization.CheckPrintConnector(ctx, c.ServiceAccountID, c.ID); err != nil {
 		return printing.Connector{}, err
 	}
-	result, err := s.Repository.HeartbeatPrintConnector(ctx, c, s.Registry.Clock.Now())
+	result, err := s.Repository.HeartbeatPrintConnector(ctx, c, s.Registry.Clock.Now(), func(activated printing.Connector, rotated bool) (audit.Record, error) {
+		action := audit.ActionPrintConnectorActivated
+		if rotated {
+			action = audit.ActionPrintConnectorCredentialRotated
+		}
+		return s.machineAudit(activated, action)
+	})
 	return result, connectorError(err)
 }
 func (s ConnectorService) Reconcile(ctx context.Context, scope printing.Scope, id printing.ConnectorID) error {
