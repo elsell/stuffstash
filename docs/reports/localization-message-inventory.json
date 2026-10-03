@@ -943,10 +943,6 @@
       "candidates": 3
     },
     {
-      "file": "apps/web/src/lib/components/workspace/expiration/ExpirationBrowseEntry.svelte",
-      "candidates": 3
-    },
-    {
       "file": "apps/web/src/lib/components/workspace/settings/TagSettingsManager.svelte",
       "candidates": 3
     },

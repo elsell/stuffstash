@@ -30,9 +30,9 @@ completion actions:
 - iPhone: [selected location](iphone-expanded-followup-location.png), [returned proposal](iphone-expanded-followup-proposal.png).
 
 This is normal-text simulator fixture evidence, not connected voice, physical
-integration or whole-app localization acceptance. RTL run36936112035 was already
-started; its result remains unverified here and is not a new merge gate. No more
-runs are authorized merely to make this PR's native ledger green.
+integration or whole-app localization acceptance. RTL run36936112035 subsequently passed both devices; the October 3 artifact
+review below records its limited visual evidence. No additional run was started.
+No more runs are authorized merely to make this PR's native ledger green.
 
 ## Earlier evidence
 
@@ -77,3 +77,27 @@ and the [preserved proposal after closing and returning](iphone-expanded-returne
 Expanded app labels fit the visible proposal and its completion actions at normal
 text size; user-provided names remain unchanged. This is simulator fixture evidence,
 not connected voice, physical-device or full-app localization acceptance.
+
+## October 3 review of existing RTL artifacts
+
+[Run 36936112035](https://github.com/elsell/stuffstash/actions/runs/36936112035)
+passed its iPhone 17 and iPad mini localization jobs at
+`7f20184e6ce0f18e653703910a26f7bac3eeda7c`. This review used retained artifacts
+11200575542 and 11199528947, not a new native experiment.
+
+The [iPhone search capture](rtl-iphone-voice-location-empty-search.png) shows the
+complete `missing` query, no matching locations, and the retained inventory-root
+choice. The selected-destination captures show `Garage / Garage bin` in the
+proposal with Approve and Cancel visible on [iPhone](rtl-iphone-voice-proposal-selected-location.png)
+and [iPad](rtl-ipad-voice-proposal-selected-location.png). Separate protected-proposal
+return captures show the proposal retained at Inventory root on
+[iPhone](rtl-iphone-voice-native-header-returned-proposal.png) and
+[iPad](rtl-ipad-voice-native-header-returned-proposal.png). Those are separate
+fixture scenarios, not evidence of losing the selected destination.
+
+The proposal captures expose `Native direction: rtl`; the RTL fixture verification
+and successful assertions accompany this visual review. The iPad returned-proposal
+body extends into its scroll region; visible completion controls do not certify
+that all content fits without scrolling. English pseudotext and left-aligned
+content remain visible. This is scoped search/selection/return evidence, not an
+Arabic translation, full mirroring, screen-reader or physical-device certification.
