@@ -1896,3 +1896,17 @@ with no interactive keyboard. Retain both runs' scoped evidence, stop native
 retries at this investigation budget, and deliver the source-reviewed candidate
 after required checks. Keep #239 open until complete native recovery acceptance;
 do not count the unexecuted retry/copy/share stages as passing.
+
+### Connected label-printing acceptance
+
+The real Dex/PostgreSQL/SpiceDB browser acceptance must exercise the production
+web build after explicit label-instance bootstrap through the deployment CLI:
+approve a key-bound connector request, register the Brother QL-800
+with its 29 × 90 mm preset, save an inventory default, and create an asset with
+printing selected. With no physical printer or consumer attached, exactly one
+job remains queued across replay of the same create request and page reload.
+Resolve that asset's label with its authorized owner and deny anonymous and
+unrelated authenticated principals. This acceptance uses real API calls and
+OIDC sessions, never intercepted routes or fabricated identity tokens. A generated
+pairing public key is a controlled connector fixture; no device is opened and
+no output is sent. Retain a screenshot of the queued offline-printer state.

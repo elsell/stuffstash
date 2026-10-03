@@ -1,0 +1,6 @@
+# Connected browser acceptance only. HTTPS label identity is resolved through the
+# local API by the authenticated client; no external host or printer is contacted.
+services:
+  app:
+    environment:
+      STUFF_STASH_PUBLIC_WEB_BASE_URL: https://labels.example.invalid

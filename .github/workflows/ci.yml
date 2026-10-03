@@ -281,6 +281,7 @@ jobs:
             apps/web/test-results/connected/**/connected-archive-*.png
             apps/web/test-results/connected/**/connected-archive-state.json
             apps/web/test-results/connected/**/connected-archive-fixture.zip
+            apps/web/test-results/connected/**/connected-print-queued.png
             apps/web/test-results/connected/**/connected-browse.png
             apps/web/test-results/connected/**/connected-edited-asset.png
             apps/web/test-results/connected/**/connected-edit-narrow.png

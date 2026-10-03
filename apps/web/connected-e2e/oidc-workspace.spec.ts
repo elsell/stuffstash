@@ -1,3 +1,4 @@
+import { verifyPrintingJourney, verifyPrintingIsolation } from './printing-journey';
 import { verifyEditAccessibility } from './edit-accessibility';
 import { addArchivePhoto } from './archive-media';
 import { verifyArchiveJourney } from './archive-journey';
@@ -34,10 +35,21 @@ async function inventoryStatus(request: APIRequestContext, url: string, token?: 
 
 async function exportedAuditFormats(request: APIRequestContext, url: string, token: string): Promise<string[]> {
   try {
-    const response = await request.get(`${url}/audit-records?limit=100`, { headers: { Authorization: `Bearer ${token}` } });
-    if (response.status() !== 200) throw new Error('Audit history unavailable.');
-    const body = await response.json() as { data: { action: string; metadata: { format?: string } }[] };
-    return body.data.filter(record => record.action === 'inventory.exported').map(record => record.metadata.format ?? '');
+    const formats: string[] = [];
+    let cursor: string | undefined;
+    const visited = new Set<string>();
+    do {
+      const query = new URLSearchParams({ limit: '100', ...(cursor ? { cursor } : {}) });
+      const response = await request.get(`${url}/audit-records?${query}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (response.status() !== 200) throw new Error('Audit history unavailable.');
+      const body = await response.json() as { data: { action: string; metadata: { format?: string } }[]; meta: { pagination?: { nextCursor?: string } } };
+      formats.push(...body.data.filter(record => record.action === 'inventory.exported').map(record => record.metadata.format ?? ''));
+      if (formats.includes('json') && formats.includes('csv')) return formats;
+      cursor = body.meta.pagination?.nextCursor;
+      if (cursor && visited.has(cursor)) throw new Error('Audit cursor repeated.');
+      if (cursor) visited.add(cursor);
+    } while (cursor && visited.size < 20);
+    return formats;
   } catch {
     throw new Error('Could not verify persisted inventory export history.');
   }
@@ -58,6 +70,8 @@ test('real OIDC workspace, item creation and exports preserve principal isolatio
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Browse', exact: true })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('connected-browse.png') });
+
+  const labelResolutionURL = await verifyPrintingJourney(page, request, inventoryURL, ownerToken, testInfo);
 
   const originalTitle = 'Connected export, flashlight';
   const itemTitle = 'Connected edited, flashlight';
@@ -123,6 +137,7 @@ test('real OIDC workspace, item creation and exports preserve principal isolatio
     await expect(otherPage.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
     const otherToken = await sessionToken(otherPage);
     expect(Boolean(otherToken)).toBe(true);
+    await verifyPrintingIsolation(request, labelResolutionURL, otherToken);
     expect([403, 404]).toContain(await inventoryStatus(request, inventoryURL, otherToken));
     expect([403, 404]).toContain(await inventoryStatus(request, assetURL, otherToken));
     for (const format of ['json', 'csv']) {
