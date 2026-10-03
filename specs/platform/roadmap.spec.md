@@ -13,7 +13,10 @@ claim tokens fence attempts. Browser PKCE and provider-enabled device-code login
 remain available for human commands.
 
 Delivery continues through small PRs in the native GitHub stack. Required CI,
-remaining integration review, and final release verification are not complete.
+inventory/tenant deletion cleanup, remaining integration review, and final release
+verification are not complete. Printer retirement now atomically cancels safe
+pending jobs and clears defaults while preserving started/uncertain evidence.
+Both clients support one-action default printing and custom copy counts.
 Critical tests use faithful stateful fakes; tests that merely repeat implementation
 are outside the delivery goal. Keep parallel implementation in isolated worktrees.
 See [asset labels](../printing/asset-labels.spec.md),
@@ -24,6 +27,15 @@ See [asset labels](../printing/asset-labels.spec.md),
 - HTTP authorization and isolation checks cover human and connector boundaries.
   Real PostgreSQL checks verify exclusive claims, scoped recovery, atomic rollback,
   and concurrent create retries producing exactly one asset and print job.
+- Real-SpiceDB HTTP acceptance verifies permission loss between claim and start,
+  rotation without privilege changes, pending/reordered synchronization, and
+  retirement outcome/reconciliation. CI runs these alongside adapter grant,
+  cross-inventory rejection, and transport-outage checks. Real PostgreSQL also
+  verifies concurrent default initialization; these checks do not use mocks.
+- Actual CLI browser PKCE with Dex verified S256/state/nonce, an ephemeral
+  loopback callback, the separate CLI audience, protected credential storage,
+  authorized API reads, and logout removal/denial. The local acceptance used the
+  explicit HTTP development opt-in; this is not a hardware print check.
 - Stateful worker checks cover lost responses, durable journals, readiness fencing,
   revocation, and uncertain output. Client checks cover retained request identities,
   scope changes, and fresh acknowledgement after a newer uncertain attempt.
@@ -39,8 +51,8 @@ See [asset labels](../printing/asset-labels.spec.md),
   dimensions, deterministic rendering, and responsive catalog views are verified.
   See [generated printing docs](printing-catalog-docs.spec.md).
 - Release publication has shipped five-platform CLI archives, checksums, and
-  embedded tag/commit metadata. The downloaded v0.38.1 Linux archive checksum,
-  version, and printer catalog were verified. This evidence predates the USB
+  embedded tag/commit metadata. The downloaded v0.38.1 and v0.40.0 Linux archives,
+  checksums, and embedded version/commit metadata were verified. This evidence predates the USB
   capability metadata correction in #370; verification of a published release
   containing the final implementation remains pending. Verified release metadata
   updates pinned download commands through a maintenance PR.

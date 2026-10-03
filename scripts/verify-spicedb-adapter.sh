@@ -18,7 +18,7 @@ run_spicedb_integration_test() {
   if command -v go >/dev/null 2>&1; then
     STUFF_STASH_SPICEDB_INTEGRATION_ENDPOINT="localhost:${port}" \
       GOCACHE="${GOCACHE:-$PWD/.cache/go-build}" \
-      go test ./apps/api/internal/adapters/spicedb -run TestSpiceDBIntegration -count=1
+      go test ./apps/api/internal/adapters/spicedb ./apps/api/internal/adapters/httpserver -run TestSpiceDBIntegration -count=1
     return
   fi
 
@@ -29,7 +29,7 @@ run_spicedb_integration_test() {
     -v "$PWD:/src" \
     -w /src \
     "$image" \
-    go test ./apps/api/internal/adapters/spicedb -run TestSpiceDBIntegration -count=1
+    go test ./apps/api/internal/adapters/spicedb ./apps/api/internal/adapters/httpserver -run TestSpiceDBIntegration -count=1
 }
 
 cleanup
