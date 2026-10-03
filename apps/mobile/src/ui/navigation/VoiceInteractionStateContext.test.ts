@@ -22,7 +22,7 @@ describe('buildFailedVoiceRealtimeState', () => {
       status: 'failed',
       progressLabel: 'Voice failed',
       failureCode: 'provider_readiness',
-      errorMessage: 'Voice provider profiles are not ready: speech_to_text, text_to_speech.'
+      errorMessage: 'Voice provider profiles are not ready: Speech input, Spoken output.'
     });
   });
 
@@ -37,7 +37,7 @@ describe('buildFailedVoiceRealtimeState', () => {
       tenantName: 'Main tenant',
       inventoryName: 'Home inventory',
       failureCode: 'provider_readiness',
-      errorMessage: 'Voice provider profiles are not ready: language_inference.'
+      errorMessage: 'Voice provider profiles are not ready: Agent brain.'
     });
   });
 
@@ -59,7 +59,7 @@ describe('buildFailedVoiceRealtimeState', () => {
       missingCapabilities: ['text_to_speech', 'secret_endpoint']
     });
 
-    expect(state.errorMessage).toBe('Voice provider profiles are not ready: text_to_speech.');
+    expect(state.errorMessage).toBe('Voice provider profiles are not ready: Spoken output.');
   });
 
   it('applies live recorder levels only to active listening state', () => {

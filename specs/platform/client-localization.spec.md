@@ -439,3 +439,13 @@ validation, explicit missing-link guidance, and field/destination/photo drafts.
 Provider required-field validation carries a catalog key rather than arbitrary
 text. Ordinary exceptions must not appear in inline errors, notices or alerts.
 Keep duplicate-command guards, one-time invitation handling and retry behavior.
+
+### Voice readiness labels and raw-error regression guard
+
+Both provider-readiness errors and voice failure presentation must name missing
+capabilities with the same cataloged labels used by provider settings. Retain
+wire capability IDs in typed data and reject unknown values from visible lists.
+The copy gate must reject direct ordinary-Error message/fallback conditionals in
+rendered text, display properties, and returned presentation helpers. Typed
+catalog recovery and diagnostic-only categorization remain permitted. This
+syntactic guard complements caller review; it is not data-flow verification.

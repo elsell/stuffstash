@@ -159,7 +159,7 @@ describe('ProviderProfileVoiceReadinessCheck', () => {
     });
     await expect(check.assertReady()).rejects.toBeInstanceOf(VoiceProviderReadinessError);
     await expect(check.assertReady()).rejects.toThrow(
-      'Voice provider profiles are not ready: text_to_speech.'
+      'Voice provider profiles are not ready: Spoken output.'
     );
   });
 
@@ -170,7 +170,7 @@ describe('ProviderProfileVoiceReadinessCheck', () => {
     ]);
 
     expect(error.missingCapabilities).toEqual(['text_to_speech']);
-    expect(error.message).toBe('Voice provider profiles are not ready: text_to_speech.');
+    expect(error.message).toBe('Voice provider profiles are not ready: Spoken output.');
   });
 });
 

@@ -1,3 +1,4 @@
+import { formatVoiceProviderCapabilityLabel } from '../../presentation/ProviderCapabilityPresentation';
 import { t } from '../../presentation/localization';
 import { ProviderProfileSettingsQuery } from './ProviderProfileSettingsQuery';
 import type { ProviderProfileCapability } from './ProviderProfileRepository';
@@ -30,7 +31,7 @@ export class ProviderProfileVoiceReadinessCheck {
 
 function readinessMessage(missingCapabilities: readonly VoiceRequiredProviderCapability[]): string {
   return missingCapabilities.length > 0
-    ? t('provider.readinessMissing', { capabilities: missingCapabilities.join(', ') })
+    ? t('provider.readinessMissing', { capabilities: missingCapabilities.map(formatVoiceProviderCapabilityLabel).join(', ') })
     : t('mobile.ProviderProfileVoiceReadinessCheck.voiceProviderProfilesAreNotReady');
 }
 
