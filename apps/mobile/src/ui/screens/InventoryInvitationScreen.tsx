@@ -1,4 +1,5 @@
-import { t } from '../../presentation/localization';
+import { t, localization } from '../../presentation/localization';
+import { invitationCopy } from '../../presentation/InvitationCopy';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { CheckCircle2, MailCheck } from 'lucide-react-native';
@@ -125,7 +126,7 @@ export function InventoryInvitationScreen({
               </View>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>{t('mobile.InventoryInvitationScreen.expires')}</Text>
-                <Text style={styles.detailValue}>{expirationLabel(state.preview.expiresAt)}</Text>
+                <Text style={styles.detailValue}>{invitationCopy(localization).expiration(state.preview.expiresAt)}</Text>
               </View>
             </View>
             <View style={styles.commands}>
@@ -142,7 +143,7 @@ export function InventoryInvitationScreen({
           <>
             <CheckCircle2 color={colors.success} size={36} />
             <Text accessibilityRole="header" style={styles.title}>{t('mobile.InventoryInvitationScreen.youReIn')}</Text>
-            <Text style={styles.message}>{t('mobile.InventoryInvitationScreen.youNowHaveAccessTo')}{state.inventoryName}.</Text>
+            <Text style={styles.message}>{invitationCopy(localization).accepted(state.inventoryName)}</Text>
             {state.status === 'open_error' ? <Text style={styles.message}>{t('mobile.InventoryInvitationScreen.theInventoryCouldNotBeOpenedYourAccessWas')}</Text> : null}
             <View style={styles.commands}>
               <NativeCommandButton label={t('mobile.InventoryInvitationScreen.openInventory')} prominence="primary" disabled={state.status === 'opening'}
@@ -206,10 +207,6 @@ function StateMessage({ icon, message, styles, title }: {
 
 function relationshipLabel(relationship: InventoryInvitationPreview['relationship']): string {
   return relationship === 'editor' ? t('mobile.InventoryInvitationScreen.editor') : t('mobile.InventoryInvitationScreen.viewer');
-}
-
-function expirationLabel(value: string): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 }
 
 function terminalState(preview: InventoryInvitationPreview): ScreenState {

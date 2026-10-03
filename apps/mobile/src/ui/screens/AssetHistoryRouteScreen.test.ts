@@ -1,3 +1,4 @@
+import { createTranslator, en } from '@stuff-stash/localization';
 import { describe, expect, it } from 'vitest';
 import type { AssetActivityRecordViewModel } from '../../application/assets/AssetActivityQuery';
 import {
@@ -9,6 +10,14 @@ import {
 } from './AssetHistoryPresentation';
 
 describe('AssetHistoryRouteScreen presentation', () => {
+  it('formats headings in the client locale without changing grouping or invalid-date recovery', () => {
+    const translator = createTranslator(en, { locale: 'de' });
+    const records = [record('one', '2026-07-14T15:00:00Z'), record('two', '2026-07-14T16:00:00Z'), record('unknown', 'bad-date')];
+    const sections = groupHistoryRecords(records, translator);
+    expect(sections.map(section => section.data.map(row => row.id))).toEqual([['one', 'two'], ['unknown']]);
+    expect(sections[0].title).toBe(new Intl.DateTimeFormat('de', { dateStyle: 'medium' }).format(new Date(records[0].occurredAt)));
+    expect(sections[1].title).toBe('Date unavailable');
+  });
   it('groups newest-first records with localized date context without changing row order', () => {
     const records = [record('newer', '2026-07-14T15:00:00Z'), record('older', '2026-07-13T15:00:00Z')];
     const sections = groupHistoryRecords(records);

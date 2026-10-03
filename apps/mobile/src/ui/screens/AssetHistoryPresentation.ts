@@ -1,12 +1,11 @@
 import { t, localization } from '../../presentation/localization';
 import type { AssetActivityEntry, AssetActivityRecordViewModel } from '../../application/assets/AssetActivityQuery';
-export function groupHistoryRecords(records: readonly AssetActivityRecordViewModel[]): readonly { readonly title: string; readonly data: readonly AssetActivityRecordViewModel[] }[] {
-  const formatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
+export function groupHistoryRecords(records: readonly AssetActivityRecordViewModel[], translator = localization): readonly { readonly title: string; readonly data: readonly AssetActivityRecordViewModel[] }[] {
   const sections = new Map<string, { title: string; data: AssetActivityRecordViewModel[] }>();
   for (const record of records) {
     const date = new Date(record.occurredAt);
     const key = Number.isNaN(date.getTime()) ? 'unknown' : `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-    const title = Number.isNaN(date.getTime()) ? t('mobile.AssetHistoryPresentation.dateUnavailable') : formatter.format(date);
+    const title = Number.isNaN(date.getTime()) ? translator.message('mobile.AssetHistoryPresentation.dateUnavailable') : translator.date(date, { dateStyle: 'medium' });
     const section = sections.get(key) ?? { title, data: [] };
     section.data.push(record);
     sections.set(key, section);
