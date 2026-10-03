@@ -1740,6 +1740,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tenants/{tenantId}/inventories/{inventoryId}/printers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID printers */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-printers"];
+        put?: never;
+        /** Post tenants by tenant ID inventories by inventory ID printers */
+        post: operations["post-tenants-by-tenant-id-inventories-by-inventory-id-printers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID inventories by inventory ID printers by printer ID */
+        get: operations["get-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch tenants by tenant ID inventories by inventory ID printers by printer ID */
+        patch: operations["patch-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id"];
+        trace?: never;
+    };
     "/tenants/{tenantId}/inventories/{inventoryId}/restore": {
         parameters: {
             query?: never;
@@ -3215,6 +3251,17 @@ export interface components {
             email?: string;
             id: string;
         };
+        Printer: {
+            adapterId: string;
+            id: string;
+            media: components["schemas"]["MediaProfile"];
+            mediaFingerprint: string;
+            name: string;
+            readiness: string;
+            retired: boolean;
+            /** Format: int64 */
+            revision: number;
+        };
         PrinterProfile: {
             adapterId: string;
             media: components["schemas"]["MediaProfile"][] | null;
@@ -3294,6 +3341,19 @@ export interface components {
             token: string;
             /** @enum {string} */
             transport: "apns" | "fcm";
+        };
+        RegisterPrinterBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/RegisterPrinterBody.json
+             */
+            readonly $schema?: string;
+            adapterId: string;
+            name: string;
+            presetId: string;
+            /** Format: int32 */
+            presetVersion: number;
         };
         RenderInputBody: {
             /**
@@ -3814,6 +3874,16 @@ export interface components {
             data: components["schemas"]["NotificationResponse"][] | null;
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeListPrinter: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListPrinter.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["Printer"][] | null;
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeListPrinterProfile: {
             /**
              * Format: uri
@@ -3912,6 +3982,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["PrincipalResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopePrinter: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopePrinter.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["Printer"];
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeProviderProfileResponse: {
@@ -4150,6 +4230,21 @@ export interface components {
              * @description New invitation expiration timestamp
              */
             expiresAt: string;
+        };
+        UpdatePrinterBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/UpdatePrinterBody.json
+             */
+            readonly $schema?: string;
+            name?: string;
+            presetId?: string;
+            /** Format: int32 */
+            presetVersion?: number;
+            retired?: boolean;
+            /** Format: int64 */
+            revision: number;
         };
         UpdateProviderProfileBody: {
             /**
@@ -9924,6 +10019,160 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessEnvelopeListPrinterProfile"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-printers": {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListPrinter"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-printers": {
+        parameters: {
+            query?: never;
+            header: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterPrinterBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrinter"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                printerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrinter"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+                "X-Request-ID"?: string;
+            };
+            path: {
+                tenantId: string;
+                inventoryId: string;
+                printerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePrinterBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopePrinter"];
                 };
             };
             /** @description Error */
