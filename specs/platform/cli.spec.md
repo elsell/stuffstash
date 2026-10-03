@@ -538,6 +538,36 @@ before sending; an ambiguous failure can be retried with that exact key and
 selection. The CLI never automatically retries with a new key. Cancellation reads
 the current revision and relies on the API's compare-and-swap fence. Human output
 identifies queued jobs as queued and includes the creation's print-job ID.
+
+### Standalone Label Commands
+
+`labels templates` lists the authorized versioned catalog. `labels resolve URL`
+needs a configured authenticated server but no selected inventory: parse locally,
+check `/instance`, then use only the generated configured-server resolver endpoint.
+HTTPS links may retain obsolete hosts/path prefixes; no request reaches that host.
+Apply the shared label protocol restrictions, including canonical opaque IDs,
+version, path, whitespace/encoding, and rejection of credentials/query/fragment.
+
+`labels render ASSET --format png|pdf --output PATH` uses explicit scoped context
+and inventory template defaults, with the existing template/version/reference
+flags. Media comes from `--printer` (or the configured default printer), an
+explicit `--media-preset` from the authenticated registry, or paired positive
+`--width-mm` and `--height-mm` values selecting an exact supported catalog size.
+Dimensions never synthesize unreviewed printer geometry; initial standalone stock
+remains 29 × 90 mm. Conflicting media selectors fail before rendering. Rendering
+without a registered printer does not create one, enqueue work, or access USB.
+
+Provision label identity, request the immutable artifact, then download only its
+scoped generated content endpoint. Ignore returned content URLs. Verify the expected
+PNG/PDF content type, a bounded 16 MiB download, and SHA-256 before publishing.
+Write a private file atomically without replacing any existing path or symlink;
+failed or canceled downloads leave no output file. Output reports the path, format
+and digest through the presentation port, never binary bytes mixed with JSON.
+
+Private label-file publication initially supports Linux and macOS. Windows must
+fail closed without creating a file until a Windows adapter establishes and verifies
+an owner-only DACL; Unix mode 0600 alone is not evidence of Windows privacy.
+Other Windows label and queue commands remain supported.
 ### Release capability metadata
 
 The Linux Brother adapter is now integrated. Linux amd64 and arm64 binaries

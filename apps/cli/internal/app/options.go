@@ -10,6 +10,8 @@ import (
 )
 
 type Options struct {
+	Format, OutputPath, MediaPreset                                       string
+	WidthMM, HeightMM                                                     float64
 	PrinterID, TemplateID                                                 string
 	TemplateVersion                                                       uint
 	Copies                                                                int
@@ -34,6 +36,11 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	}
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
+	flags.StringVar(&o.Format, "format", "png", "label file format: png or pdf")
+	flags.StringVar(&o.OutputPath, "output", "", "new private label file path")
+	flags.StringVar(&o.MediaPreset, "media-preset", "", "authorized media preset ID")
+	flags.Float64Var(&o.WidthMM, "width-mm", 0, "catalog physical label width in millimeters")
+	flags.Float64Var(&o.HeightMM, "height-mm", 0, "catalog physical label height in millimeters")
 	flags.StringVar(&o.PrinterID, "printer", "", "registered printer destination")
 	flags.StringVar(&o.TemplateID, "template", "", "label template ID")
 	flags.UintVar(&o.TemplateVersion, "template-version", 0, "label template version")

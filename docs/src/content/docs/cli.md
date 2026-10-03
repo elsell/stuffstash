@@ -253,3 +253,36 @@ label job ID. Each print request writes its request key to stderr before sending
 If the response is lost, retry the same command with that key using
 `--idempotency-key`; keep its arguments unchanged. A changed request conflicts
 instead of silently printing another label. Use `--json` for structured output.
+
+### Save or resolve a label
+
+You can save labels without running a USB connector:
+
+```sh
+stuffstash labels templates
+stuffstash labels render ASSET_ID --printer PRINTER_ID --format png --output label.png
+stuffstash labels render ASSET_ID --media-preset brother-ql800-29x90 --format pdf --output label.pdf
+stuffstash labels resolve 'https://old.example.com/l/v1/INSTANCE_ID/LABEL_ID'
+```
+
+Rendering uses the inventory's template defaults, with the same template options
+as `labels print`. Omit the media selector to use the default printer. Choose a
+catalog media preset to render without registering a printer. Paired `--width-mm`
+and `--height-mm` also select an exact supported profile; the nominal 29 × 90 mm
+Brother preset has a physical profile of 29 × 89.8 mm. Unsupported sizes are
+rejected instead of being resized. See [supported label sizes](./printing/label-sizes/)
+for available templates and stock.
+
+PNG and PDF downloads are checked against the server's checksum before saving.
+The output path must be new: an existing file or symlink is never overwritten.
+Saving label files currently requires Linux or macOS. Windows refuses file output
+until a private Windows file adapter is available; listing templates, resolving
+labels, and requesting prints still work.
+`--json` reports the path, format, and checksum without mixing image bytes into
+terminal output. Saving a label does not enqueue a print job.
+
+Resolution uses your configured server and login, even when the scanned label
+contains an old hostname. It checks the instance identity and access before
+returning the asset, tenant, and inventory IDs. It never sends your credentials
+to the hostname printed in the QR code. Unlike scoped rendering, resolution does
+not require a selected tenant or inventory.
