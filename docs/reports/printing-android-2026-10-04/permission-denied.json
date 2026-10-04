@@ -1,0 +1,106 @@
+[
+  {
+    "text": "",
+    "label": "Cancel",
+    "id": "",
+    "class": "android.view.View",
+    "bounds": "[74,170][137,233]",
+    "enabled": "true"
+  },
+  {
+    "text": "Scan label",
+    "label": "",
+    "id": "",
+    "class": "android.view.View",
+    "bounds": "[168,166][1038,237]",
+    "enabled": "true"
+  },
+  {
+    "text": "Camera unavailable. Allow camera access in Settings, or paste a label link.",
+    "label": "",
+    "id": "",
+    "class": "android.view.View",
+    "bounds": "[63,338][1017,432]",
+    "enabled": "true"
+  },
+  {
+    "text": "",
+    "label": "Use camera",
+    "id": "",
+    "class": "android.view.View",
+    "bounds": "[63,485][381,590]",
+    "enabled": "true"
+  },
+  {
+    "text": "Use camera",
+    "label": "",
+    "id": "",
+    "class": "android.widget.TextView",
+    "bounds": "[126,516][318,559]",
+    "enabled": "true"
+  },
+  {
+    "text": "Paste label link",
+    "label": "",
+    "id": "",
+    "class": "android.widget.TextView",
+    "bounds": "[63,642][1017,693]",
+    "enabled": "true"
+  },
+  {
+    "text": "",
+    "label": "Paste label link",
+    "id": "",
+    "class": "android.widget.EditText",
+    "bounds": "[63,735][1017,855]",
+    "enabled": "true"
+  },
+  {
+    "text": "",
+    "label": "Open label",
+    "id": "",
+    "class": "android.view.View",
+    "bounds": "[63,907][359,1012]",
+    "enabled": "true"
+  },
+  {
+    "text": "Open label",
+    "label": "",
+    "id": "",
+    "class": "android.widget.TextView",
+    "bounds": "[126,938][296,981]",
+    "enabled": "true"
+  },
+  {
+    "text": "",
+    "label": "Change server",
+    "id": "",
+    "class": "android.view.View",
+    "bounds": "[63,1075][419,1180]",
+    "enabled": "true"
+  },
+  {
+    "text": "Change server",
+    "label": "",
+    "id": "",
+    "class": "android.widget.TextView",
+    "bounds": "[126,1106][356,1149]",
+    "enabled": "true"
+  },
+  {
+    "text": "",
+    "label": "Switch account",
+    "id": "",
+    "class": "android.view.View",
+    "bounds": "[63,1243][437,1348]",
+    "enabled": "true"
+  },
+  {
+    "text": "Switch account",
+    "label": "",
+    "id": "",
+    "class": "android.widget.TextView",
+    "bounds": "[126,1274][374,1317]",
+    "enabled": "true"
+  }
+]
