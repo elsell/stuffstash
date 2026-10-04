@@ -1,4 +1,7 @@
-# Real local-model acceptance: not passed
+# Initial 0.6B local-model acceptance: not passed
+
+Later scoped 4B acceptance passed; see [the October 4 result](instrumented-4b/README.md).
+The failure below remains historical evidence.
 
 Run [37071655138](https://github.com/elsell/stuffstash/actions/runs/37071655138),
 job [111052254865](https://github.com/elsell/stuffstash/actions/runs/37071655138/job/111052254865),
