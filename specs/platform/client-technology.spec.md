@@ -111,3 +111,20 @@ The exact monorepo layout remains open, but it must support these logical areas:
 - The mobile app must have build, test, lint, and platform smoke checks before user-facing mobile features are merged.
 - Generated API client code must be reproducible from pinned tools and the checked-in OpenAPI contract.
 - Tests must verify DTO-to-domain mapping at client adapter boundaries.
+
+## Native Router Production Boundary
+
+Expo Router discovers every source module under `apps/mobile/src/app` as part of
+its production route graph. Keep tests, test fixtures and test-support modules
+outside that directory, including platform-qualified `.test`/`.spec` files and
+`__tests__` directories. Route tests may import production route helpers from a
+sibling testing directory. The existing mobile structural check must examine this
+boundary before its ordinary test-file exclusions, so test runners cannot enter
+Hermes release bundles. Production iOS and Android exports validate this boundary;
+a test-only `import.meta` failure must not be worked around with a Hermes polyfill.
+
+The October 4 packaging regression reproduced the iOS Vite `import.meta` failure
+before moving `native-label-intent.test.ts` out of the route tree. After relocation,
+production Expo 55.0.26 exports with pinned Node 24.17.0 produced both iOS and
+Android Hermes bytecode bundles, with the dependency lock unchanged. This is
+release JavaScript packaging evidence, not a signed native archive or device run.

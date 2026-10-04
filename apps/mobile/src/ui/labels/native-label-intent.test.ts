@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { redirectSystemPath } from './+native-intent';
+import { redirectSystemPath } from '../../app/+native-intent';
 it('captures cold labels without exposing their params and leaves warm draft navigation untouched', () => {
   for (const path of ['stuffstash://labels/v1/instance/label', 'https://old.example/prefix/l/v1/instance/label']) {
     expect(redirectSystemPath({ path, initial: true })).toBe('/scan-label');
