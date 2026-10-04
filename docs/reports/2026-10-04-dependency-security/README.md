@@ -49,3 +49,17 @@ claim that GitHub's three version alerts are closed.
 The code critic reviewed the patches, compatibility changes and telemetry migration;
 confirmed findings are resolved. Final CI, default-branch alert closure, and any
 new release remain pending.
+
+## gRPC follow-up
+
+GitHub subsequently reconciled the original baseline, leaving its three explicitly
+patched upstream alerts plus this additional advisory:
+
+| Advisory | Manifest | Reviewed resolution | Validation |
+| --- | --- | --- | --- |
+| [GHSA-2v4p-qf9q-27wj](https://github.com/grpc/grpc-go/security/advisories/GHSA-2v4p-qf9q-27wj) | `apps/api/go.mod` | gRPC 1.83.2, with upstream-required x/net 0.58.0, x/crypto 0.55.0 and x/text 0.41.0 | PR #411 required checks and connected authorization CI; alert closure requires merge |
+
+The vulnerable path is an xDS gRPC server interceptor. Stuff Stash's adapter
+constructs a SpiceDB client; no application xDS server entry point was found.
+The patch removes the vulnerable library version without changing product or
+permission behavior. The original JSON matrix remains the historical baseline.

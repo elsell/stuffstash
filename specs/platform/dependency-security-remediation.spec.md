@@ -82,3 +82,15 @@ Astro 7.3.5 and its matched compiler 0.5.1/Markdown 0.4.2/MDX 8.0.2
 packages, plus smol-toml 1.9.0, require explicit temporary age-policy exceptions
 for security fixes. Retain older compatible Vite 8.3.0/Rolldown 1.2.9, Starlight
 0.42.2, magic-string 1.4.1 and Undici 8.10.2 rather than widening those exceptions.
+
+## gRPC advisory follow-up
+
+After the original baseline reconciles, GHSA-2v4p-qf9q-27wj requires gRPC
+1.83.2 in the API module. The advisory concerns xDS servers receiving requests
+without authority/Host headers. Stuff Stash uses a gRPC client for SpiceDB and
+has no application `xds.NewGRPCServer` entry point; still remove the affected
+library version rather than suppress the alert. Accept gRPC's required reviewed
+x/net 0.58.0, x/crypto 0.55.0 and x/text 0.41.0 graph updates (and x/tools 0.48.0
+checksum resolution). Keep API/CLI workspace builds consistent and retain real
+SpiceDB authorization and required-check coverage. No new application endpoint or
+authentication behavior is introduced. Verify GitHub closure after merge.
