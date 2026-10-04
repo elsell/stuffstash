@@ -52,7 +52,9 @@ This does not establish physical QR readability, camera decoding, iOS behavior,
 Android enlarged-text/TalkBack behavior, universal-link association, or every
 permission/recovery condition. Those remain separate acceptance work. After
 sign-in, the retained-label banner still says “Sign in to open it” even though
-its Open label action works; that wording is a separate copy follow-up.
+its Open label action works. A subsequent copy-only correction uses “Your label
+is ready to open” in the authenticated notice and leaves the signed-out prompt
+unchanged. These native results remain pinned to the earlier APK above.
 
 The owned emulator was stopped after testing. The unrelated emulator was not
 changed. Host resource pressure interrupted initial setup; the preserved audit

@@ -560,3 +560,11 @@ only when the scanner is focused and the app is active. Backgrounding must stop
 capture immediately; leaving the scanner invalidates late permission results.
 Verify the inactive/pending/denied and inactive/pending/granted transitions with a
 controlled permission fake, plus the actual OS denial on a named native build.
+
+### Pending-label notice after sign-in
+
+The signed-out connection screen explains that sign-in is required to open a
+retained label. Once the authenticated application is ready, its pending-label
+notice says the label is ready to open and offers the existing Open label action;
+it must not instruct an already signed-in user to sign in again. Keep warm-link
+navigation explicit so receiving a label does not replace an unrelated draft.

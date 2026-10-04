@@ -17,6 +17,7 @@ export const labelMobileMessages = {
   'labels.mobile.cameraDenied': 'Camera unavailable. Allow camera access in Settings, or paste a label link.',
   'labels.mobile.resolving': 'Opening label…',
   'labels.mobile.wrongInstance': 'This label belongs to another Stuff Stash instance. Connect to that server and try again.',
+  'labels.mobile.ready': 'Your label is ready to open.',
   'labels.mobile.pending': 'Your label is waiting. Sign in to open it.',
   'labels.mobile.unsupported': 'This is not a supported Stuff Stash label.',
   'labels.mobile.retry': 'Try again',
