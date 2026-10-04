@@ -517,7 +517,13 @@ function parseSettingsCollectionSegments(route: WorkspaceRouteState, segments: s
     ? (segments[0] as Exclude<SettingsCollection, null>)
     : null;
   if (!collection) return route;
-  if ((collection === 'notifications' || collection === 'printing') && (route.settingsLevel !== 'inventory' || segments.length !== 1)) return route;
+  if (collection === 'notifications' && (route.settingsLevel !== 'inventory' || segments.length !== 1)) return route;
+  if (collection === 'printing') {
+    if (route.settingsLevel !== 'inventory') return route;
+    if (segments.length === 1) return {...route,settingsCollection:collection};
+    if (segments.length === 2 && segments[1] === 'history') return {...route,settingsCollection:collection,settingsResourceId:'history'};
+    return route;
+  }
   if (collection === 'conversations' && (route.settingsLevel !== 'tenant' || segments.length !== 1)) return route;
   if (segments.length === 1) return { ...route, settingsCollection: collection };
   if (collection === 'access' && segments.length === 4 && segments[1] === 'invitations') {

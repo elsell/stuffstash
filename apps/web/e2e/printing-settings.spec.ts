@@ -6,12 +6,26 @@ test('printer settings protect drafts and disclose report details inside the wor
  const printer=await installPrintingSettings(page,()=>pendingProfiles);await page.goto(path);
  await expect(page.getByRole('heading',{name:'Registered printers',exact:true})).toBeVisible();
  await expect(page.getByText('29 × 90 mm (DK-11201)',{exact:true})).toBeVisible();
- await expect(page.getByText('Reported printed',{exact:true})).toBeVisible();
+ await expect(page.getByText('Reported printed',{exact:true})).not.toBeVisible();
+ await page.getByRole('checkbox',{name:'Print a label by default when creating an asset',exact:true}).check();
+ await page.getByRole('link',{name:'View print history',exact:true}).click();
+ await expect(page).toHaveURL(`${path}/history`);
  await expect(page.getByRole('heading',{name:'Print history',exact:true})).toBeVisible();
  const actor=page.getByText('Reported by oidc_', {exact:false});await expect(actor).not.toBeVisible();
  await page.getByText('Report details',{exact:true}).focus();await page.keyboard.press('Enter');await expect(actor).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.getByText('Report details',{exact:true}).press('Enter');
+ await page.screenshot({path:testInfo.outputPath('printing-history.png'),fullPage:true});
+ await page.getByRole('link',{name:'Printers and labels',exact:true}).click();
+ await expect(page.getByRole('checkbox',{name:'Print a label by default when creating an asset',exact:true})).toBeChecked();
+ const add=page.getByRole('button',{name:'Add a printer',exact:true});await add.click();
+ await expect(page.getByRole('dialog',{name:'Add a printer'})).toBeVisible();
+ await expect(page.getByRole('link',{name:'Download Stuff Stash CLI'})).toHaveAttribute('href','https://stuffstash.org/cli-downloads/');
+ await expect(page.getByRole('link',{name:'Printer setup guide'})).toHaveAttribute('href','https://stuffstash.org/printing/setup/');
+ await page.getByLabel('Computer name',{exact:true}).fill("Garage's computer");
+ await expect(page.getByLabel('Printer registration command')).toContainText("./stuffstash --server 'http://127.0.0.1:18080' connectors print register --name 'Garage'\\''s computer'");
+ await page.screenshot({path:testInfo.outputPath('printer-setup.png')});
+ await page.keyboard.press('Escape');await expect(add).toBeFocused();
  await page.getByRole('heading',{name:'Printers and labels',exact:true}).scrollIntoViewIfNeeded();
  await page.screenshot({path:testInfo.outputPath('printing-settings.png'),fullPage:true});
  const edit=page.getByRole('button',{name:'Edit printer',exact:true});await edit.click();
@@ -33,4 +47,19 @@ test('printer settings protect drafts and disclose report details inside the wor
  await expect(page.getByRole('button',{name:'Cancel',exact:true})).toBeEnabled();await page.keyboard.press('Escape');
  await expect(page.getByRole('dialog')).not.toBeVisible();await expect(edit).toBeFocused();}
  finally{release();}
+});
+
+test('empty printer settings lead directly to setup and documentation',async({page})=>{
+ await installPrintingSettings(page,undefined,true);await page.goto(path);
+ await expect(page.getByText('No printers registered yet',{exact:true})).toBeVisible();
+ const cdp=await page.context().newCDPSession(page);await cdp.send('Browser.setPermission',{permission:{name:'clipboard-write'},setting:'denied',origin:new URL(page.url()).origin});
+ await page.getByRole('button',{name:'Add a printer',exact:true}).click();
+ await expect(page.getByLabel('Printer registration command')).toContainText("--server 'http://127.0.0.1:18080'");
+ await expect(page.getByRole('link',{name:'Download Stuff Stash CLI'})).toBeVisible();
+ await expect(page.getByRole('link',{name:'Printer setup guide'})).toBeVisible();
+ await page.getByRole('button',{name:'Copy command',exact:true}).click();
+ await expect(page.getByRole('alert')).toContainText('Select and copy');
+ await expect(page.getByLabel('Printer registration command')).toBeVisible();
+ await page.getByRole('button',{name:'Close',exact:true}).last().click();
+ await expect(page.getByRole('button',{name:'Add a printer',exact:true})).toBeFocused();
 });

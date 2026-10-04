@@ -1,5 +1,5 @@
 <script lang="ts">
-import { onMount } from 'svelte';
+import { onMount, tick, untrack } from 'svelte';
 import { t } from '$lib/presentation/localization';
 import { timestampLabel } from '$lib/presentation/timestamp';
 import { labelMediaName, connectorAvailabilityLabel, readinessReasonLabel, readinessLabel, connectorStatusLabel, printingFailureMessage } from '$lib/presentation/printing';
@@ -15,18 +15,31 @@ import type {PrintPollingRuntime} from '$lib/ports/printPolling';
 import PrintJobList from './PrintJobList.svelte';
 import PrinterSettingsDialog from './PrinterSettingsDialog.svelte';
 import PrinterTestDialog from './PrinterTestDialog.svelte';
+import PrinterSetupDialog from './PrinterSetupDialog.svelte';
+import type {TextClipboard} from '$lib/ports/textClipboard';
 import AssetPrintDialog from './AssetPrintDialog.svelte';
-let { scope, repository, intents, pollingRuntime, canConfigure, canPrint }: {
+let { scope, repository, intents, pollingRuntime, canConfigure, canPrint, view = 'settings', apiBaseUrl, clipboard, historyHref, onNavigate }: {
     scope: PrintScope;
     repository: PrintingRepository;
     intents?: PrintIntents;
     pollingRuntime?:PrintPollingRuntime;
     canConfigure: boolean;
     canPrint: boolean;
+    view?:'settings'|'history';
+    apiBaseUrl?:string;
+    clipboard?:TextClipboard;
+    historyHref?:string;
+    onNavigate?:(href:string)=>void;
 } = $props();
+let titleElement:HTMLHeadingElement;
+let lastView=untrack(()=>view);
+$effect(()=>{if(view!==lastView){lastView=view;void tick().then(()=>titleElement?.focus());}});
+let setupOpen=$state(false);let setupTrigger:HTMLElement|undefined;
+$effect(()=>{if(!canConfigure)setupOpen=false;});
 let mediaProfiles=$state<PrinterMediaChoice[]>([]);
 function mediaName(printer:RegisteredPrinter){return labelMediaName(mediaProfiles.find(p=>p.adapterId===printer.adapterId&&p.media.presetId===printer.media.presetId&&p.media.version===printer.media.version)?.media??printer.media);}
 let printers = $state<RegisteredPrinter[]>([]), connectors = $state<PrintConnector[]>([]), templates = $state<LabelTemplate[]>([]), jobs = $state<PrintJob[]>([]);
+const activeJobs=$derived(jobs.filter(job=>printJobNeedsPolling(job)));
 let draft = $state<PrintDefaults | null>(null), busy = $state(true), error = $state(''), saved = $state(false), conflict = $state(false), nextCursor = $state<string | undefined>();
 let savedDraft=$state('');
 const savedUnchanged=$derived(saved&&JSON.stringify(draft)===savedDraft);
@@ -91,7 +104,9 @@ finally {
 async function moreJobs() { if (!nextCursor || busy)
     return; busy = true; try {
     const page = await repository.jobs(scope, nextCursor);
-    jobs = [...jobs, ...page.items];
+    const merged=new Map(jobs.map(job=>[job.id,job]));
+    for(const job of page.items){const prior=merged.get(job.id);if(!prior||prior.revision<=job.revision)merged.set(job.id,job);}
+    jobs=[...merged.values()];
     nextCursor = page.nextCursor;
     pollError=false;
 }
@@ -131,14 +146,19 @@ function receiveStatus(value:Awaited<ReturnType<typeof pollStatus>>){
     const ids=new Set(refreshed.map(j=>j.id));jobs=[...refreshed,...jobs.filter(j=>!ids.has(j.id))];
 }
 </script>
-<PrintStatusPolling identity={JSON.stringify([scope.tenantId,scope.inventoryId])} enabled={!busy&&Boolean(draft)&&!editing&&!testPrinterId&&!reprint} read={pollStatus} publish={receiveStatus} failed={()=>{if(!busy)pollError=true;}} runtime={pollingRuntime}/>
+<PrintStatusPolling identity={JSON.stringify([scope.tenantId,scope.inventoryId])} enabled={!busy&&Boolean(draft)&&!editing&&!testPrinterId&&!reprint&&!setupOpen} read={pollStatus} publish={receiveStatus} failed={()=>{if(!busy)pollError=true;}} runtime={pollingRuntime}/>
 <section class="printing-settings" aria-labelledby="printing-settings-title" aria-busy={busy}>
- <header><h1 id="printing-settings-title">{t('web.Printing.title')}</h1><p>{t('web.Printing.description')}</p></header>
+ <header><h1 bind:this={titleElement} tabindex="-1" id="printing-settings-title">{t(view==='history'?'web.Printing.jobs':'web.Printing.title')}</h1><p>{t(view==='history'?'web.Printing.historyOrder':'web.Printing.description')}</p></header>
  {#if error}<p role="alert">{error}</p>{/if}
  {#if pollError}<p role="status">{t('web.Printing.statusRefreshFailed')}</p>{/if}
  {#if !draft}{#if busy}<p role="status">{t('web.Printing.loading')}</p>{:else}<Button.Root onclick={()=>void load()}>{t('web.Printing.reload')}</Button.Root>{/if}
  {:else}
 
+  {#if view==='history'}
+   <div><Button.Root variant="outline" disabled={busy} onclick={()=>void refresh()}>{t('web.Printing.refresh')}</Button.Root></div>
+   <PrintJobList {jobs} {printers} {scope} {canPrint} {busy} onCancel={cancel} onResolve={resolve} onReprint={intents?openReprint:undefined}/>
+   {#if nextCursor}<div><Button.Root variant="outline" disabled={busy} onclick={()=>void moreJobs()}>{t('web.Printing.moreJobs')}</Button.Root></div>{/if}
+  {:else}
   <div class="settings-grid">
   <section class="printers-panel" aria-labelledby="registered-printers-title">
    <div class="section-heading"><h2 id="registered-printers-title">{t('web.Printing.registered')}</h2><Button.Root variant="ghost" disabled={busy} onclick={()=>void refresh()}>{t('web.Printing.refresh')}</Button.Root></div>
@@ -152,7 +172,9 @@ function receiveStatus(value:Awaited<ReturnType<typeof pollStatus>>){
      {#if printer.reportedAt}<details class="diagnostics"><summary>{t('web.Printing.printerDetails')}</summary><p>{t('web.Printing.reportedAt',{time:timestampLabel(printer.reportedAt)})}</p></details>{/if}
     </li>
    {/each}</ul>
-   {#if canConfigure}<details class="setup" open={printers.length===0}><summary>{t('web.Printing.addPrinter')}</summary><p>{t('web.Printing.registrationHelp')}</p></details>{/if}
+   {#if canConfigure&&apiBaseUrl}<div class="setup-action"><Button.Root onclick={event=>{setupTrigger=event.currentTarget;setupOpen=true;}}>{t('web.Printing.addPrinter')}</Button.Root></div>{/if}
+   {#if historyHref}<div class="history-action"><Button.Root variant="link" href={historyHref} onclick={event=>{if(onNavigate&&!event.metaKey&&!event.ctrlKey&&!event.shiftKey&&!event.altKey&&event.button===0){event.preventDefault();onNavigate(historyHref!);}}}>{t('web.Printing.viewHistory')}</Button.Root></div>{/if}
+   {#if activeJobs.length}<section class="active-jobs"><h2>{t('web.Printing.activeJobs')}</h2><PrintJobList jobs={activeJobs} {printers} {scope} {canPrint} {busy} onCancel={cancel} onResolve={resolve}/></section>{/if}
    {#each connectors.filter(connector=>connector.availability!=='online'||connector.authorizationPending||connector.state!=='active') as connector(connector.id)}<p class="attention">{connector.name} · {connectorAvailabilityLabel(connector)} · {connectorStatusLabel(connector)}</p>{/each}
    <details class="computers"><summary>{t('web.Printing.connectors')} <span class="count">{connectors.length}</span></summary>
     {#if connectors.length===0}<p>{t('web.Printing.emptyConnectors')}</p>{/if}
@@ -173,11 +195,12 @@ function receiveStatus(value:Awaited<ReturnType<typeof pollStatus>>){
    </form>
   </section>
   </div>
-  <section><h2>{t('web.Printing.jobs')}</h2><PrintJobList {jobs} {printers} {scope} {canPrint} {busy} onCancel={cancel} onResolve={resolve} onReprint={intents?openReprint:undefined}/>{#if nextCursor}<Button.Root variant="outline" disabled={busy} onclick={()=>void moreJobs()}>{t('web.Printing.moreJobs')}</Button.Root>{/if}</section>
+  {/if}
  {/if}
 </section>
+{#if setupOpen&&canConfigure&&apiBaseUrl}<PrinterSetupDialog {apiBaseUrl} {clipboard} onClose={()=>{setupOpen=false;}} onRestoreFocus={()=>setupTrigger?.focus()}/>{/if}
 {#if reprint?.assetId && intents && canPrint}
- {#key reprint.id}<AssetPrintDialog {scope} assetId={reprint.assetId} predecessor={reprint.id} {repository} {intents} onClose={()=>{reprint=null;}} onRestoreFocus={()=>reprintTrigger?.focus()}/>{/key}
+ {#key reprint.id}<AssetPrintDialog {scope} assetId={reprint.assetId} predecessor={reprint.id} {repository} {intents} onClose={()=>{reprint=null;}} onRestoreFocus={()=>{if(reprintTrigger?.isConnected)reprintTrigger.focus();else titleElement?.focus();}}/>{/key}
 {/if}
 {#if testPrinterId && intents && canPrint}
  {#key testPrinterId}<PrinterTestDialog {scope} printerId={testPrinterId} {repository} {intents} onClose={()=>{testPrinterId='';}} onRestoreFocus={()=>testTrigger?.focus()}/>{/key}
@@ -199,6 +222,6 @@ ul{list-style:none;padding:0;margin:0;display:grid;gap:var(--space-3)}li{min-wid
 .readiness{font-size:var(--text-metadata-size);font-weight:600;background:var(--muted);padding:.25rem .625rem;border-radius:var(--radius-pill)}.readiness.ready{color:var(--foreground)}
 p{color:var(--muted-foreground);margin-block:var(--space-2);line-height:1.5}strong,p,h3,summary{overflow-wrap:anywhere}
 details{font-size:var(--text-metadata-size)}summary{cursor:pointer;min-height:44px;align-content:center;font-weight:500}summary:focus-visible{outline:2px solid var(--ring);outline-offset:3px;border-radius:var(--radius-sm)}
-.diagnostics{margin-top:var(--space-2);color:var(--muted-foreground)}.setup,.computers{margin-top:var(--space-3)}.computers{border-top:1px solid var(--border);padding-top:var(--space-2)}.count{color:var(--muted-foreground);margin-left:.5rem}.attention{color:var(--foreground)}.empty-state{padding-block:var(--space-4)}
+.diagnostics{margin-top:var(--space-2);color:var(--muted-foreground)}.setup-action,.history-action,.active-jobs,.computers{margin-top:var(--space-3)}.computers{border-top:1px solid var(--border);padding-top:var(--space-2)}.count{color:var(--muted-foreground);margin-left:.5rem}.attention{color:var(--foreground)}.empty-state{padding-block:var(--space-4)}
 @media(max-width:1024px){.settings-grid{grid-template-columns:minmax(0,1fr)}.defaults-panel{padding:var(--space-4)}header h1{font-size:var(--text-title-size)}}
 </style>

@@ -25,7 +25,8 @@ See [asset labels](../printing/asset-labels.spec.md),
 ### Web printing usability follow-up
 
 The October 4 website audit prioritizes printer readiness, groups label defaults,
-and moves diagnostic fields behind disclosures. Its refactor protects printer
+and moves diagnostic fields behind disclosures. Printer setup is an explicit
+guided dialog; print history has a separate route that preserves the settings draft. Its refactor protects printer
 drafts on dismissal and distinguishes reported output from device confirmation.
 See [the scoped audit](../../docs/reports/web-printing-ux-audit.md) for browser
 coverage, screenshots, and explicit limitations.

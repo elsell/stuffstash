@@ -1136,7 +1136,7 @@ use the available width for printer status and defaults; reflow to one column on
 narrow screens. Do not place every operational field in the initial scan path.
 
 Computer connection details and printer report timestamps are supplementary
-native HTML disclosures. Setup instructions have their own disclosure. Failures,
+native HTML disclosures. Setup uses an explicit Add printer button and guided dialog. Failures,
 offline readiness, permission limits and uncertain-output recovery remain visible
 without opening diagnostics. Job rows lead with the printer and explicit outcome;
 a user report never becomes device-confirmed completion. Keep raw actor identifiers
@@ -1165,3 +1165,25 @@ label reference as a short, readable ID on the label.
 The web list is named Print history: current cursor pagination is ascending by
 job ID. Do not claim recent-first presentation or reverse only one loaded page.
 A latest-first API cursor contract is a separate follow-up for larger histories.
+
+### Revised web task separation — October 4 user review
+
+The user's review replaces the earlier all-in-one settings decision above. Add
+printer is an explicit button opening a bounded setup dialog, not a disclosure.
+Show the Linux USB prerequisite, CLI download link, a selectable/copyable register
+command with the runtime API base and user-chosen computer name, and the browser
+approval/worker steps. Shell-quote dynamic command arguments; do not assume the
+web and API share an origin. Inventory selection remains in the existing browser
+approval flow; do not invent registration flags or automatically register/print.
+Use the canonical project links https://stuffstash.org/cli-downloads/ and
+https://stuffstash.org/printing/setup/; they are project help, not deployment config.
+
+Move complete print history to the inventory-scoped `/printing/history` route,
+with normal Back, direct-link and browser navigation. Retain the same scoped
+settings controller across this view switch so unsaved defaults survive. Main
+settings show printer health and any known active/uncertain jobs near the printer
+section, including jobs for missing/retired printers. Do not claim all-clear or a
+complete active-job count from a partial page. View print history remains visible.
+History owns older-first ordering information, Load more, terminal outcomes and
+reprints. Merge overlapping pages by job ID and revision. No API ordering change
+or physical print is part of this user-interface revision.
