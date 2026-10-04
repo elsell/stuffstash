@@ -1919,3 +1919,9 @@ as PNG and PDF export must remain visually distinguishable. The iPhone printing
 audit at maximum text exposed identical truncated export labels; the shared SwiftUI
 text must retain its ideal vertical size inside the measured native host. Review
 other action-row consumers when changing this shared adapter.
+
+The native action button must itself report its ideal vertical size to the Host.
+Text-only wrapping can overflow a button still accepting a 48-point proposed
+height; the October 4 iPhone audit reproduced overlapping export rows. Keep the
+width constrained and measure the complete padded button before accepting this
+fix from native screenshots.

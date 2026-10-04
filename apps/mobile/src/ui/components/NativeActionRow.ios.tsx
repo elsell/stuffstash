@@ -9,7 +9,7 @@ export function NativeActionRow({ label, accessibilityLabel = label, disabled, r
   const palette = useAppearanceAwarePalette();
   return <Host matchContents={{ vertical: true }} style={{ width: '100%', minHeight: 48 }}>
     <Button onPress={press} role={role === 'destructive' ? 'destructive' : undefined}
-      modifiers={[buttonStyle('plain'), nativeDisabled(!!disabled), nativeLabel(accessibilityLabel)]}>
+      modifiers={[buttonStyle('plain'), fixedSize({ horizontal: false, vertical: true }), nativeDisabled(!!disabled), nativeLabel(accessibilityLabel)]}>
       <HStack modifiers={[padding({ horizontal: 16, vertical: 12 }), frame({ minHeight: 48, maxWidth: Infinity }), contentShape(shapes.rectangle())]}>
         <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), foregroundStyle(role === 'destructive' ? palette.danger : palette.action)]}>{label}</Text><Spacer />
       </HStack>

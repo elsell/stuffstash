@@ -3241,13 +3241,21 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(retry.waitForExistence(timeout: 10))
     capture("printing-label-preview-failure-\(suffix)")
     verifyPrintingSheetAction(retry, header: header); retry.tap()
-    let image = app.images["Label preview"].firstMatch
+    // React Native exposes this rendered image as Other in XCTest, despite an explicit image role.
+    let image = app.descendants(matching: .any).matching(identifier: "Label preview").firstMatch
     XCTAssertTrue(image.waitForExistence(timeout: 10), "Retry must perform another render, not only reload the catalog")
-    let sheetScroll = app.scrollViews.containing(.image, identifier: "Label preview").firstMatch
+    let sheetScroll = app.scrollViews.containing(.any, identifier: "Label preview").firstMatch
     XCTAssertTrue(sheetScroll.exists)
+    XCTAssertGreaterThan(image.frame.width, 0)
+    XCTAssertGreaterThan(image.frame.height, 0)
     XCTAssertGreaterThanOrEqual(image.frame.minX, sheetScroll.frame.minX)
     XCTAssertLessThanOrEqual(image.frame.maxX, sheetScroll.frame.maxX, "Preview must fit the actual iPad sheet, not the full window")
     capture("printing-label-preview-recovered-\(suffix)")
+    for format in ["PNG", "PDF"] {
+      let export = app.buttons["Save or share \(format)"].firstMatch
+      verifyPrintingSheetAction(export, header: header)
+      capture("printing-label-export-\(format)-\(suffix)")
+    }
     let print = app.buttons["Print…"].firstMatch
     verifyPrintingSheetAction(print, header: header)
     capture("printing-label-final-action-\(suffix)")

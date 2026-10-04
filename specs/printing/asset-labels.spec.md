@@ -576,3 +576,9 @@ nor repeat a physical print or share handoff. Catalog failure retries catalog lo
 Changing an option invalidates the old preview. Every export still independently
 reauthorizes and renders through the repository; no preview file becomes an unchecked
 delivery path. Leaving the task cancels outstanding work and suppresses late handoffs.
+
+Native audit queries locate the rendered preview by its unique accessible label
+across XCTest element categories. In the pinned React Native runtime the rendered
+Image remains categorized as Other despite an explicit image role; that category
+is not proof of a missing render or a VoiceOver trait. Preserve the image role,
+assert the actual preview bounds, and review the recovered PNG screenshot.
