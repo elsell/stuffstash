@@ -24,15 +24,18 @@ concurrency:
 env:
   ASTRO_TELEMETRY_DISABLED: "1"
   NODE_VERSION: "24.17.0"
-  STUFF_STASH_DOCS_SITE: "https://elsell.github.io"
 
 jobs:
   build:
     name: Build docs
+    outputs:
+      cname: ${{ steps.pages.outputs.cname }}
+      public-url: ${{ steps.pages.outputs.url }}
     if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || (github.event_name == 'pull_request' && github.event.action != 'closed') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+      pages: read
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
@@ -40,7 +43,9 @@ jobs:
           ref: ${{ github.event_name == 'pull_request' && github.sha || 'main' }}
 
       - name: Verify concurrent Pages publication
-        run: python3 scripts/test-pages-push.py
+        run: |
+          python3 scripts/test-pages-push.py
+          python3 scripts/test-pages-config.py
 
       - name: Setup Go for runtime catalog export
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
@@ -70,13 +75,16 @@ jobs:
       - name: Install docs dependencies
         run: pnpm --dir docs install --frozen-lockfile
 
-      - name: Configure production base path
-        if: github.event_name != 'pull_request'
-        run: echo "STUFF_STASH_DOCS_BASE=/stuffstash/" >> "$GITHUB_ENV"
-
-      - name: Configure pull request preview base path
-        if: github.event_name == 'pull_request'
-        run: echo "STUFF_STASH_DOCS_BASE=/stuffstash/pr-${{ github.event.pull_request.number }}/" >> "$GITHUB_ENV"
+      - name: Configure public Pages destination
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREVIEW_NUMBER: ${{ github.event_name == 'pull_request' && github.event.pull_request.number || '' }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/pages" > "$RUNNER_TEMP/pages.json"
+          args=()
+          if [ -n "$PREVIEW_NUMBER" ]; then args+=(--preview "$PREVIEW_NUMBER"); fi
+          python3 scripts/configure-pages.py "$RUNNER_TEMP/pages.json" "${args[@]}" --env-file "$GITHUB_ENV" --output-file "$GITHUB_OUTPUT"
 
       - name: Verify generated download documentation
         run: python3 scripts/generate-cli-downloads.py --check
@@ -151,10 +159,13 @@ jobs:
 
       - name: Publish production docs
         if: github.event_name != 'pull_request'
+        env:
+          PAGES_CNAME: ${{ needs.build.outputs.cname }}
         run: |
           mkdir -p pages
           find pages -mindepth 1 -maxdepth 1 ! -name .git ! -name 'pr-*' -exec rm -rf {} +
           cp -R built-docs/. pages/
+          if [ -n "$PAGES_CNAME" ]; then printf '%s\n' "$PAGES_CNAME" > pages/CNAME; fi
           touch pages/.nojekyll
 
       - name: Publish pull request preview
@@ -181,8 +192,10 @@ jobs:
 
       - name: Report preview URL
         if: github.event_name == 'pull_request'
+        env:
+          PUBLIC_URL: ${{ needs.build.outputs.public-url }}
         run: |
-          echo "Preview URL: https://elsell.github.io/stuffstash/pr-${{ github.event.pull_request.number }}/" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Preview URL: %s\n' "$PUBLIC_URL" >> "$GITHUB_STEP_SUMMARY"
 
   cleanup-preview:
     name: Clean up docs preview
