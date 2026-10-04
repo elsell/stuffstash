@@ -2,8 +2,8 @@
 
 ## Status And Scope
 
-Accepted design direction, October 3, 2026; not implemented. Ship a project-owned
-Go CLI named `stuffstash` under `apps/cli`, separate from the API server binary.
+Implemented as the project-owned Go CLI `stuffstash` under `apps/cli`,
+separate from the API server binary. Versioned binaries ship with releases.
 It is an API client and a host for local connector adapters. It never connects
 directly to the database, SpiceDB, or another app's internal packages.
 
@@ -279,9 +279,11 @@ stuffstash print-jobs reprint <job-id>
 - The connector and Linux USB adapter are implemented. Stateful protocol,
   journal, and worker tests verify recovery without duplicate submission. Real
   Dex browser PKCE and device-code login have been exercised against the API;
-  these checks do not establish physical printer or scan behavior. Read-only
-  discovery on Paul found no currently attached Brother device. Physical
-  printing and scanning remain on the user-testing checklist.
+  these checks do not establish physical printer or scan behavior. A later
+  queued test on Paul verified physical output, API completion, and journal
+  cleanup on October 4, 2026 at 01:03:31 UTC (see the adapter acceptance record
+  below). Physical QR scanning, alignment, interrupted-output recovery, and
+  unattended service setup remain on the user-testing checklist.
 
 ## Generated First-Party Printer Documentation
 
