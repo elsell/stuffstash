@@ -187,4 +187,22 @@ cat > "$workdir/apps/mobile/src/ui/components/android-icons/probe.xml" <<'CASE'
 <vector xmlns:android="http://schemas.android.com/apk/res/android"><path android:fillColor="#FF000000" android:pathData="M1,1L3,1L3,3Z" /></vector>
 CASE
 "$checker" "$workdir/apps/mobile/src"
+# Router discovery includes tests before normal source-rule exclusions.
+mkdir -p "$workdir/apps/mobile/src/app/(tabs)/__tests__" "$workdir/apps/mobile/src/ui/labels"
+printf "import { it } from 'vitest';\n" > "$workdir/apps/mobile/src/ui/labels/route.test.ts"
+"$checker" "$workdir/apps/mobile/src"
+for route_test in 'native-label-intent.test.ts' 'screen.spec.ios.tsx' '(tabs)/__tests__/route.js' 'testing/fixture.ts'; do
+  route_path="$workdir/apps/mobile/src/app/$route_test"
+  mkdir -p "$(dirname "$route_path")"
+  printf "import { it } from 'vitest';\n" > "$route_path"
+  if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
+    echo "expected a test module in the production Expo Router tree to fail: $route_test" >&2
+    exit 1
+  fi
+  grep -F "Expo Router production tree" "$workdir/output" >/dev/null
+  rm "$route_path"
+done
+rmdir "$workdir/apps/mobile/src/app/(tabs)/__tests__" "$workdir/apps/mobile/src/app/testing"
+printf 'export default function Screen() { return null; }\n' > "$workdir/apps/mobile/src/app/index.tsx"
+"$checker" "$workdir/apps/mobile/src"
 echo "mobile UI structural rule tests passed"

@@ -122,6 +122,17 @@ def main() -> int:
         return 1
 
     failed = False
+    # Expo Router processes this graph before our general source/test filters.
+    router_root = root / "app"
+    if router_root.is_dir():
+        for path in sorted(router_root.rglob("*")):
+            if not path.is_file() or path.suffix not in {".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"}:
+                continue
+            relative = path.relative_to(router_root)
+            test_directory = any(part in {"__tests__", "__mocks__", "testing", "test-support", "fixtures", "__fixtures__"} for part in relative.parts[:-1])
+            if test_directory or re.search(r"\.(?:test|spec)(?:\.|$)", path.name):
+                failed = True
+                print(f"{path}: test module in Expo Router production tree; move tests and fixtures outside src/app", file=sys.stderr)
     for path in sorted(root.rglob("android-icons/*.xml")):
         try:
             tree = ET.parse(path)
