@@ -1,0 +1,2499 @@
+{
+  "baselineDate": "2026-10-04",
+  "repository": "elsell/stuffstash",
+  "baselineOpenAlerts": 151,
+  "versionRangeResolved": 148,
+  "upstreamUnfixedMitigated": 3,
+  "defaultBranchClosure": "Not yet verified; requires merge and GitHub dependency-graph refresh",
+  "alerts": [
+    {
+      "number": 179,
+      "advisory": "GHSA-vfj7-8cjw-p6xm",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "braces",
+      "range": "<= 3.0.3",
+      "firstPatched": null,
+      "selected": [
+        "3.0.3"
+      ],
+      "remaining": [
+        "3.0.3"
+      ],
+      "status": "mitigated-with-package-patch-upstream-alert-open",
+      "evidence": "scripts/test-dependency-security.cjs; original affected version deliberately retained"
+    },
+    {
+      "number": 178,
+      "advisory": "GHSA-ch52-4w7c-c8xp",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "http-cache-semantics",
+      "range": "<= 4.2.0",
+      "firstPatched": null,
+      "selected": [
+        "4.2.0"
+      ],
+      "remaining": [
+        "4.2.0"
+      ],
+      "status": "mitigated-with-package-patch-upstream-alert-open",
+      "evidence": "scripts/test-dependency-security.cjs; original affected version deliberately retained"
+    },
+    {
+      "number": 177,
+      "advisory": "GHSA-86w9-cpqp-85rv",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "node-forge",
+      "range": "<= 1.4.0",
+      "firstPatched": null,
+      "selected": [
+        "1.4.0"
+      ],
+      "remaining": [
+        "1.4.0"
+      ],
+      "status": "mitigated-with-package-patch-upstream-alert-open",
+      "evidence": "scripts/test-dependency-security.cjs; original affected version deliberately retained"
+    },
+    {
+      "number": 176,
+      "advisory": "GHSA-j22f-vq7h-c4qm",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "devalue",
+      "range": ">= 5.1.0, <= 5.9.2",
+      "firstPatched": "5.9.3",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 175,
+      "advisory": "GHSA-hx4r-w6wj-j8fg",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "devalue",
+      "range": "<= 5.9.2",
+      "firstPatched": "5.9.3",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 174,
+      "advisory": "GHSA-mcm9-63f2-9j32",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "devalue",
+      "range": "<= 5.9.2",
+      "firstPatched": "5.9.3",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 173,
+      "advisory": "GHSA-wf3x-273g-mvxv",
+      "severity": "low",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "devalue",
+      "range": ">= 1.0.0, <= 5.9.2",
+      "firstPatched": "5.9.3",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 172,
+      "advisory": "GHSA-x5rw-q4pp-hg5g",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "devalue",
+      "range": ">= 5.8.0, <= 5.9.2",
+      "firstPatched": "5.9.3",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 171,
+      "advisory": "GHSA-4q55-j62x-fr9h",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "devalue",
+      "range": "<= 5.9.2",
+      "firstPatched": "5.9.3",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 170,
+      "advisory": "GHSA-j22f-vq7h-c4qm",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "devalue",
+      "range": ">= 5.1.0, <= 5.9.2",
+      "firstPatched": "5.9.3",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 169,
+      "advisory": "GHSA-hx4r-w6wj-j8fg",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "devalue",
+      "range": "<= 5.9.2",
+      "firstPatched": "5.9.3",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 168,
+      "advisory": "GHSA-mcm9-63f2-9j32",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "devalue",
+      "range": "<= 5.9.2",
+      "firstPatched": "5.9.3",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 167,
+      "advisory": "GHSA-wf3x-273g-mvxv",
+      "severity": "low",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "devalue",
+      "range": ">= 1.0.0, <= 5.9.2",
+      "firstPatched": "5.9.3",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 166,
+      "advisory": "GHSA-x5rw-q4pp-hg5g",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "devalue",
+      "range": ">= 5.8.0, <= 5.9.2",
+      "firstPatched": "5.9.3",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 165,
+      "advisory": "GHSA-4q55-j62x-fr9h",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "devalue",
+      "range": "<= 5.9.2",
+      "firstPatched": "5.9.3",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 164,
+      "advisory": "GHSA-q2hr-2g5m-vwhr",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": "< 1.1.21",
+      "firstPatched": "1.1.21",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 163,
+      "advisory": "GHSA-q2hr-2g5m-vwhr",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": ">= 2.0.0, < 2.1.7",
+      "firstPatched": "2.1.7",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 162,
+      "advisory": "GHSA-q2hr-2g5m-vwhr",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": ">= 4.0.0, < 5.0.12",
+      "firstPatched": "5.0.12",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 161,
+      "advisory": "GHSA-qhr7-859c-m2p7",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": "< 1.1.20",
+      "firstPatched": "1.1.20",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 160,
+      "advisory": "GHSA-qhr7-859c-m2p7",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": ">= 2.0.0, < 2.1.6",
+      "firstPatched": "2.1.6",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 159,
+      "advisory": "GHSA-qhr7-859c-m2p7",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": ">= 4.0.0, < 5.0.11",
+      "firstPatched": "5.0.11",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 158,
+      "advisory": "GHSA-6j4f-fj2g-mc7p",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": "< 1.1.19",
+      "firstPatched": "1.1.19",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 157,
+      "advisory": "GHSA-6j4f-fj2g-mc7p",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": ">= 2.0.0, < 2.1.5",
+      "firstPatched": "2.1.5",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 156,
+      "advisory": "GHSA-6j4f-fj2g-mc7p",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": ">= 4.0.0, < 5.0.10",
+      "firstPatched": "5.0.10",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 155,
+      "advisory": "GHSA-pmjh-fq2x-6v4x",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.11.0, < 7.29.1",
+      "firstPatched": "7.29.1",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 154,
+      "advisory": "GHSA-r53p-7pc4-xj5r",
+      "severity": "low",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.29.1",
+      "firstPatched": "7.29.1",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 153,
+      "advisory": "GHSA-rfgv-xxqx-mfg5",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.29.1",
+      "firstPatched": "7.29.1",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 152,
+      "advisory": "GHSA-3xpg-4rpp-hhhm",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.15.0, < 7.29.1",
+      "firstPatched": "7.29.1",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 151,
+      "advisory": "GHSA-2jfj-6hjv-fm6j",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.29.1",
+      "firstPatched": "7.29.1",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 150,
+      "advisory": "GHSA-2gqq-gqf2-x968",
+      "severity": "low",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.1.0, < 7.29.1",
+      "firstPatched": "7.29.1",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 149,
+      "advisory": "GHSA-w293-vg96-wgc3",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.24.1, < 7.29.1",
+      "firstPatched": "7.29.1",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 148,
+      "advisory": "GHSA-8436-99hf-9mmv",
+      "severity": "low",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.29.1",
+      "firstPatched": "7.29.1",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 147,
+      "advisory": "GHSA-rx4f-c7p8-82vq",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.29.1",
+      "firstPatched": "7.29.1",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 146,
+      "advisory": "GHSA-hjf4-fphr-2h65",
+      "severity": "medium",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "go.opentelemetry.io/otel/sdk/log",
+      "range": "< 0.21.0",
+      "firstPatched": "0.21.0",
+      "selected": [
+        "0.21.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 145,
+      "advisory": "GHSA-5p2g-fcmc-qvqq",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "image-size",
+      "range": ">= 1.2.0, <= 2.0.2",
+      "firstPatched": "2.0.3",
+      "selected": [
+        "2.0.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 144,
+      "advisory": "GHSA-w3rx-r6r6-pgpr",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "image-size",
+      "range": ">= 0.6.3, <= 2.0.2",
+      "firstPatched": "2.0.3",
+      "selected": [
+        "2.0.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 143,
+      "advisory": "GHSA-9rgm-9g3h-6x36",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "devalue",
+      "range": "< 5.9.1",
+      "firstPatched": "5.9.2",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 142,
+      "advisory": "GHSA-9rgm-9g3h-6x36",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "devalue",
+      "range": "< 5.9.1",
+      "firstPatched": "5.9.2",
+      "selected": [
+        "5.9.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 141,
+      "advisory": "GHSA-8wmf-6v46-5gfg",
+      "severity": "low",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "go.opentelemetry.io/otel/exporters/otlp/otlptrace",
+      "range": ">= 1.5.0, <= 1.44.0",
+      "firstPatched": "1.45.0",
+      "selected": [
+        "1.45.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 140,
+      "advisory": "GHSA-8wmf-6v46-5gfg",
+      "severity": "low",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "go.opentelemetry.io/otel/sdk",
+      "range": ">= 1.5.0, <= 1.44.0",
+      "firstPatched": "1.45.0",
+      "selected": [
+        "1.45.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 139,
+      "advisory": "GHSA-8wmf-6v46-5gfg",
+      "severity": "low",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp",
+      "range": ">= 1.5.0, <= 1.44.0",
+      "firstPatched": "1.45.0",
+      "selected": [
+        "1.45.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 138,
+      "advisory": "GHSA-2883-xcg3-v3hh",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "js-yaml",
+      "range": ">= 3.0.0, < 3.15.2",
+      "firstPatched": "3.15.2",
+      "selected": [
+        "4.3.2",
+        "3.15.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 137,
+      "advisory": "GHSA-2883-xcg3-v3hh",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "js-yaml",
+      "range": ">= 4.0.0, < 4.3.2",
+      "firstPatched": "4.3.2",
+      "selected": [
+        "4.3.2",
+        "3.15.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 136,
+      "advisory": "GHSA-c7q8-3ch8-vqpv",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.7.0, <= 0.8.14",
+      "firstPatched": "0.8.15",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 135,
+      "advisory": "GHSA-27p8-2357-5qqv",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.7.0, <= 0.8.14",
+      "firstPatched": "0.8.15",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 134,
+      "advisory": "GHSA-6h8r-xr42-gp59",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.7.0, <= 0.8.14",
+      "firstPatched": "0.8.15",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 133,
+      "advisory": "GHSA-8344-3jmq-59r6",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.7.0, <= 0.8.14",
+      "firstPatched": "0.8.15",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 132,
+      "advisory": "GHSA-x4fp-j954-r2f4",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.7.0, <= 0.8.14",
+      "firstPatched": "0.8.15",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 131,
+      "advisory": "GHSA-965w-775f-mr7g",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.7.0, <= 0.8.14",
+      "firstPatched": "0.8.15",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 130,
+      "advisory": "GHSA-93r5-fhx6-vmg9",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.7.0, <= 0.8.14",
+      "firstPatched": "0.8.15",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 129,
+      "advisory": "GHSA-82fw-gwwq-j7x9",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "vitest",
+      "range": ">= 2.1.0, < 4.1.11",
+      "firstPatched": "4.1.11",
+      "selected": [
+        "4.1.11"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 128,
+      "advisory": "GHSA-w5vr-8v7q-w6rv",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "baseline-browser-mapping",
+      "range": ">= 2.0.0, < 2.11.0",
+      "firstPatched": "2.11.0",
+      "selected": [
+        "2.11.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 127,
+      "advisory": "GHSA-w2rr-34g9-rvrj",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.7.0, <= 0.8.13",
+      "firstPatched": "0.8.14",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 126,
+      "advisory": "GHSA-4w3w-2rp5-g8jm",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.7.0, <= 0.8.13",
+      "firstPatched": "0.8.14",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 125,
+      "advisory": "GHSA-82fw-gwwq-j7x9",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "packages/api-client/package.json",
+      "package": "vitest",
+      "range": ">= 2.1.0, < 4.1.11",
+      "firstPatched": "4.1.11",
+      "selected": [
+        "4.1.11"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 124,
+      "advisory": "GHSA-7w5x-hrqm-74c2",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "smol-toml",
+      "range": "<= 1.7.0",
+      "firstPatched": "1.7.1",
+      "selected": [
+        "1.9.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 123,
+      "advisory": "GHSA-rgj7-g3m4-5g8c",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "sharp",
+      "range": "< 0.35.4",
+      "firstPatched": "0.35.4",
+      "selected": [
+        "0.35.4"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 122,
+      "advisory": "GHSA-2883-xcg3-v3hh",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "js-yaml",
+      "range": ">= 4.0.0, < 4.3.2",
+      "firstPatched": "4.3.2",
+      "selected": [
+        "4.3.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 121,
+      "advisory": "GHSA-82fw-gwwq-j7x9",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "apps/web/package.json",
+      "package": "vitest",
+      "range": ">= 2.1.0, < 4.1.11",
+      "firstPatched": "4.1.11",
+      "selected": [
+        "4.1.11"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 120,
+      "advisory": "GHSA-82fw-gwwq-j7x9",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "apps/mobile/package.json",
+      "package": "vitest",
+      "range": ">= 2.1.0, < 4.1.11",
+      "firstPatched": "4.1.11",
+      "selected": [
+        "4.1.11"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 119,
+      "advisory": "GHSA-qc2q-p7wx-3px3",
+      "severity": "medium",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "google.golang.org/grpc",
+      "range": "<= 1.83.0",
+      "firstPatched": "1.83.1",
+      "selected": [
+        "1.83.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 118,
+      "advisory": "GHSA-2v4p-qf9q-27wj",
+      "severity": "high",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "google.golang.org/grpc",
+      "range": "< 1.82.2",
+      "firstPatched": "1.82.2",
+      "selected": [
+        "1.83.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 117,
+      "advisory": "GHSA-82fw-gwwq-j7x9",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@vitest/mocker",
+      "range": ">= 2.1.0, < 4.1.11",
+      "firstPatched": "4.1.11",
+      "selected": [
+        "4.1.11"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 116,
+      "advisory": "GHSA-376h-93r7-7g6f",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "astro",
+      "range": "<= 7.2.3",
+      "firstPatched": "7.2.4",
+      "selected": [
+        "7.3.5"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 115,
+      "advisory": "GHSA-376h-93r7-7g6f",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "docs/package.json",
+      "package": "astro",
+      "range": "<= 7.2.3",
+      "firstPatched": "7.2.4",
+      "selected": [
+        "7.3.5"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 114,
+      "advisory": "GHSA-26w7-cxv4-gfx2",
+      "severity": "critical",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "astro",
+      "range": "< 7.2.8",
+      "firstPatched": "7.2.8",
+      "selected": [
+        "7.3.5"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 113,
+      "advisory": "GHSA-26w7-cxv4-gfx2",
+      "severity": "critical",
+      "ecosystem": "npm",
+      "manifest": "docs/package.json",
+      "package": "astro",
+      "range": "< 7.2.8",
+      "firstPatched": "7.2.8",
+      "selected": [
+        "7.3.5"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 112,
+      "advisory": "GHSA-w27v-7q3p-w38r",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "svgo",
+      "range": ">= 4.0.0, < 4.1.0",
+      "firstPatched": "4.1.0",
+      "selected": [
+        "4.1.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 111,
+      "advisory": "GHSA-4vpr-x523-8j87",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "svgo",
+      "range": ">= 4.0.0, < 4.1.0",
+      "firstPatched": "4.1.0",
+      "selected": [
+        "4.1.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 110,
+      "advisory": "GHSA-g53g-w8rj-fmg7",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.0-beta.9, <= 0.9.10",
+      "firstPatched": "0.9.11",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 109,
+      "advisory": "GHSA-4w3w-2rp5-g8jm",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.0, <= 0.9.10",
+      "firstPatched": "0.9.11",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 108,
+      "advisory": "GHSA-c7q8-3ch8-vqpv",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.0, <= 0.9.11",
+      "firstPatched": "0.9.12",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 107,
+      "advisory": "GHSA-6h8r-xr42-gp59",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.0, <= 0.9.11",
+      "firstPatched": "0.9.12",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 106,
+      "advisory": "GHSA-6mj3-qw4j-hgrw",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.0-beta.1, <= 0.9.11",
+      "firstPatched": "0.9.12",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 105,
+      "advisory": "GHSA-3px3-54cx-rmw9",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.0, <= 0.9.11",
+      "firstPatched": "0.9.12",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 104,
+      "advisory": "GHSA-965w-775f-mr7g",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.0, <= 0.9.11",
+      "firstPatched": "0.9.12",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 103,
+      "advisory": "GHSA-27p8-2357-5qqv",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.0, <= 0.9.11",
+      "firstPatched": "0.9.12",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 102,
+      "advisory": "GHSA-w2rr-34g9-rvrj",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.0, <= 0.9.10",
+      "firstPatched": "0.9.11",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 101,
+      "advisory": "GHSA-8344-3jmq-59r6",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.0, <= 0.9.11",
+      "firstPatched": "0.9.12",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 100,
+      "advisory": "GHSA-93r5-fhx6-vmg9",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.0, <= 0.9.11",
+      "firstPatched": "0.9.12",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 99,
+      "advisory": "GHSA-vr34-hp96-76pp",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.10, <= 0.9.11",
+      "firstPatched": "0.9.12",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 98,
+      "advisory": "GHSA-mh2q-q3fh-2475",
+      "severity": "high",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "go.opentelemetry.io/otel",
+      "range": ">= 1.36.0, <= 1.40.0",
+      "firstPatched": "1.41.0",
+      "selected": [
+        "1.45.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 97,
+      "advisory": "GHSA-hfvc-g4fc-pqhx",
+      "severity": "high",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "go.opentelemetry.io/otel/sdk",
+      "range": ">= 1.15.0, <= 1.42.0",
+      "firstPatched": "1.43.0",
+      "selected": [
+        "1.45.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 96,
+      "advisory": "GHSA-w8rr-5gcm-pp58",
+      "severity": "medium",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp",
+      "range": "< 0.19.0",
+      "firstPatched": "0.19.0",
+      "selected": [
+        "0.21.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 95,
+      "advisory": "GHSA-w8rr-5gcm-pp58",
+      "severity": "medium",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp",
+      "range": "< 1.43.0",
+      "firstPatched": "1.43.0",
+      "selected": [
+        "1.45.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 94,
+      "advisory": "GHSA-w8rr-5gcm-pp58",
+      "severity": "medium",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp",
+      "range": "< 1.43.0",
+      "firstPatched": "1.43.0",
+      "selected": [
+        "1.45.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 93,
+      "advisory": "GHSA-9h8m-3fm2-qjrq",
+      "severity": "high",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "go.opentelemetry.io/otel/sdk",
+      "range": ">= 1.21.0, < 1.40.0",
+      "firstPatched": "1.40.0",
+      "selected": [
+        "1.45.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 92,
+      "advisory": "GHSA-c83g-rgw3-j3cx",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "browserslist",
+      "range": "<= 4.28.6",
+      "firstPatched": "4.28.7",
+      "selected": [
+        "4.28.7"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 91,
+      "advisory": "GHSA-73wf-gq98-2v4g",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "browserslist",
+      "range": "<= 4.28.6",
+      "firstPatched": "4.28.7",
+      "selected": [
+        "4.28.7"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 90,
+      "advisory": "GHSA-6gmq-8vp8-gcm6",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.7.0, <= 0.8.14",
+      "firstPatched": "0.8.15",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 89,
+      "advisory": "GHSA-w9m9-85wc-3x92",
+      "severity": "low",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "postcss-selector-parser",
+      "range": ">= 6.1.0, < 6.1.3",
+      "firstPatched": "6.1.3",
+      "selected": [
+        "6.1.3"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 88,
+      "advisory": "GHSA-6gmq-8vp8-gcm6",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@xmldom/xmldom",
+      "range": ">= 0.9.0, <= 0.9.11",
+      "firstPatched": "0.9.12",
+      "selected": [
+        "0.8.15",
+        "0.9.12"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 87,
+      "advisory": "GHSA-vp52-pcj8-j9qc",
+      "severity": "high",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "google.golang.org/grpc",
+      "range": "<= 1.83.0",
+      "firstPatched": "1.83.1",
+      "selected": [
+        "1.83.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 86,
+      "advisory": "GHSA-vcc3-ghjq-m6fr",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "decode-uri-component",
+      "range": "<= 0.4.2",
+      "firstPatched": "0.5.0",
+      "selected": [
+        "0.5.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 85,
+      "advisory": "GHSA-rgw5-rvv9-x895",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": ">= 2.0.0, < 2.1.4",
+      "firstPatched": "2.1.4",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 84,
+      "advisory": "GHSA-rgw5-rvv9-x895",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": "< 1.1.18",
+      "firstPatched": "1.1.18",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 83,
+      "advisory": "GHSA-3jxr-9vmj-r5cp",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": ">= 2.0.0, < 2.1.2",
+      "firstPatched": "2.1.2",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 82,
+      "advisory": "GHSA-2v37-7h3g-55p8",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "nanoid",
+      "range": "< 3.3.18",
+      "firstPatched": "3.3.18",
+      "selected": [
+        "3.3.18"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 81,
+      "advisory": "GHSA-2v37-7h3g-55p8",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "nanoid",
+      "range": "< 3.3.18",
+      "firstPatched": "3.3.18",
+      "selected": [
+        "3.3.18"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 80,
+      "advisory": "GHSA-fxqj-rqcc-2cmp",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "postcss",
+      "range": "<= 8.5.22",
+      "firstPatched": "8.5.23",
+      "selected": [
+        "8.5.28"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 79,
+      "advisory": "GHSA-fxqj-rqcc-2cmp",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "postcss",
+      "range": "<= 8.5.22",
+      "firstPatched": "8.5.23",
+      "selected": [
+        "8.5.28"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 78,
+      "advisory": "GHSA-28wg-ghj8-5hjv",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "nanoid",
+      "range": "< 3.3.16",
+      "firstPatched": "3.3.16",
+      "selected": [
+        "3.3.18"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 77,
+      "advisory": "GHSA-28wg-ghj8-5hjv",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "nanoid",
+      "range": "< 3.3.16",
+      "firstPatched": "3.3.16",
+      "selected": [
+        "3.3.18"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 74,
+      "advisory": "GHSA-5p4m-2wfm-xmqj",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "js-yaml",
+      "range": ">= 4.0.0, < 4.3.1",
+      "firstPatched": "4.3.1",
+      "selected": [
+        "4.3.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 73,
+      "advisory": "GHSA-5p4m-2wfm-xmqj",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "js-yaml",
+      "range": ">= 4.0.0, < 4.3.1",
+      "firstPatched": "4.3.1",
+      "selected": [
+        "4.3.2",
+        "3.15.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 72,
+      "advisory": "GHSA-5p4m-2wfm-xmqj",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "js-yaml",
+      "range": ">= 3.0.0, < 3.15.1",
+      "firstPatched": "3.15.1",
+      "selected": [
+        "4.3.2",
+        "3.15.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 69,
+      "advisory": "GHSA-mh99-v99m-4gvg",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": "< 1.1.17",
+      "firstPatched": "1.1.17",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 68,
+      "advisory": "GHSA-29g2-3rmr-qm68",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@sveltejs/kit",
+      "range": "<= 2.70.1",
+      "firstPatched": "2.70.2",
+      "selected": [
+        "2.70.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 67,
+      "advisory": "GHSA-29g2-3rmr-qm68",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "apps/web/package.json",
+      "package": "@sveltejs/kit",
+      "range": "<= 2.70.1",
+      "firstPatched": "2.70.2",
+      "selected": [
+        "2.70.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 66,
+      "advisory": "GHSA-rgw5-rvv9-x895",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": ">= 4.0.0, < 5.0.9",
+      "firstPatched": "5.0.9",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 65,
+      "advisory": "GHSA-m8rv-5g2x-5cg5",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.29.0",
+      "firstPatched": "7.29.0",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 64,
+      "advisory": "GHSA-jr45-8vmc-qm54",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.29.0",
+      "firstPatched": "7.29.0",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 63,
+      "advisory": "GHSA-v3r7-h72x-cjcm",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.29.0",
+      "firstPatched": "7.29.0",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 62,
+      "advisory": "GHSA-8xcm-r25x-g524",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.29.0",
+      "firstPatched": "7.29.0",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 61,
+      "advisory": "GHSA-4cwx-7wf7-3272",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.29.0",
+      "firstPatched": "7.29.0",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 60,
+      "advisory": "GHSA-mh99-v99m-4gvg",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": ">= 2.0.0, < 2.1.3",
+      "firstPatched": "2.1.3",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 59,
+      "advisory": "GHSA-r28c-9q8g-f849",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "postcss",
+      "range": "<= 8.5.17",
+      "firstPatched": "8.5.18",
+      "selected": [
+        "8.5.28"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 58,
+      "advisory": "GHSA-r28c-9q8g-f849",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "postcss",
+      "range": "<= 8.5.17",
+      "firstPatched": "8.5.18",
+      "selected": [
+        "8.5.28"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 57,
+      "advisory": "GHSA-mh99-v99m-4gvg",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": ">= 4.0.0, < 5.0.8",
+      "firstPatched": "5.0.8",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 55,
+      "advisory": "GHSA-3jxr-9vmj-r5cp",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": "< 1.1.16",
+      "firstPatched": "1.1.16",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 54,
+      "advisory": "GHSA-52cp-r559-cp3m",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "js-yaml",
+      "range": ">= 4.0.0, < 4.3.0",
+      "firstPatched": "4.3.0",
+      "selected": [
+        "4.3.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 53,
+      "advisory": "GHSA-52cp-r559-cp3m",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "js-yaml",
+      "range": ">= 4.0.0, < 4.3.0",
+      "firstPatched": "4.3.0",
+      "selected": [
+        "4.3.2",
+        "3.15.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 52,
+      "advisory": "GHSA-866w-xmhq-wj7x",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@sveltejs/kit",
+      "range": "<= 2.69.0",
+      "firstPatched": "2.69.1",
+      "selected": [
+        "2.70.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 51,
+      "advisory": "GHSA-866w-xmhq-wj7x",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "apps/web/package.json",
+      "package": "@sveltejs/kit",
+      "range": "<= 2.69.0",
+      "firstPatched": "2.69.1",
+      "selected": [
+        "2.70.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 50,
+      "advisory": "GHSA-wqjv-9729-c5q2",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "@sveltejs/kit",
+      "range": "<= 2.69.0",
+      "firstPatched": "2.69.1",
+      "selected": [
+        "2.70.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 49,
+      "advisory": "GHSA-wqjv-9729-c5q2",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "apps/web/package.json",
+      "package": "@sveltejs/kit",
+      "range": "<= 2.69.0",
+      "firstPatched": "2.69.1",
+      "selected": [
+        "2.70.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 48,
+      "advisory": "GHSA-52cp-r559-cp3m",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "js-yaml",
+      "range": ">= 3.0.0, < 3.15.0",
+      "firstPatched": "3.15.0",
+      "selected": [
+        "4.3.2",
+        "3.15.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 47,
+      "advisory": "GHSA-f88m-g3jw-g9cj",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "sharp",
+      "range": "< 0.35.0",
+      "firstPatched": "0.35.0",
+      "selected": [
+        "0.35.4"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 46,
+      "advisory": "GHSA-395f-4hp3-45gv",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "shell-quote",
+      "range": "<= 1.8.4",
+      "firstPatched": "1.9.0",
+      "selected": [
+        "1.9.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 45,
+      "advisory": "GHSA-hrxh-6v49-42gf",
+      "severity": "high",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "google.golang.org/grpc",
+      "range": "< 1.82.1",
+      "firstPatched": "1.82.1",
+      "selected": [
+        "1.83.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 44,
+      "advisory": "GHSA-2p49-hgcm-8545",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "svgo",
+      "range": ">= 4.0.0, < 4.0.2",
+      "firstPatched": "4.0.2",
+      "selected": [
+        "4.1.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 43,
+      "advisory": "GHSA-f48w-9m4c-m7f5",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "astro",
+      "range": "< 7.0.6",
+      "firstPatched": "7.0.6",
+      "selected": [
+        "7.3.5"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 42,
+      "advisory": "GHSA-f48w-9m4c-m7f5",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "docs/package.json",
+      "package": "astro",
+      "range": "< 7.0.6",
+      "firstPatched": "7.0.6",
+      "selected": [
+        "7.3.5"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 41,
+      "advisory": "GHSA-3jxr-9vmj-r5cp",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "brace-expansion",
+      "range": ">= 3.0.0, < 5.0.7",
+      "firstPatched": "5.0.7",
+      "selected": [
+        "2.1.7",
+        "5.0.12",
+        "1.1.21"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 40,
+      "advisory": "GHSA-7pw4-f3q4-r2p2",
+      "severity": "low",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "astro",
+      "range": ">= 3.10.0, < 7.0.4",
+      "firstPatched": "7.0.4",
+      "selected": [
+        "7.3.5"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 39,
+      "advisory": "GHSA-7pw4-f3q4-r2p2",
+      "severity": "low",
+      "ecosystem": "npm",
+      "manifest": "docs/package.json",
+      "package": "astro",
+      "range": ">= 3.10.0, < 7.0.4",
+      "firstPatched": "7.0.4",
+      "selected": [
+        "7.3.5"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 38,
+      "advisory": "GHSA-4g3v-8h47-v7g6",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "astro",
+      "range": ">= 2.9.0, <= 7.0.9",
+      "firstPatched": "7.1.0",
+      "selected": [
+        "7.3.5"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 37,
+      "advisory": "GHSA-4g3v-8h47-v7g6",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "docs/package.json",
+      "package": "astro",
+      "range": ">= 2.9.0, <= 7.0.9",
+      "firstPatched": "7.1.0",
+      "selected": [
+        "7.3.5"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 23,
+      "advisory": "GHSA-h67p-54hq-rp68",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "js-yaml",
+      "range": "< 3.15.0",
+      "firstPatched": "3.15.0",
+      "selected": [
+        "4.3.2",
+        "3.15.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 22,
+      "advisory": "GHSA-h67p-54hq-rp68",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "js-yaml",
+      "range": ">= 4.0.0, <= 4.1.1",
+      "firstPatched": "4.2.0",
+      "selected": [
+        "4.3.2",
+        "3.15.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 20,
+      "advisory": "GHSA-5cv4-jp36-h3mw",
+      "severity": "medium",
+      "ecosystem": "go",
+      "manifest": "apps/api/go.mod",
+      "package": "golang.org/x/net",
+      "range": "< 0.55.0",
+      "firstPatched": "0.55.0",
+      "selected": [
+        "0.57.0"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 18,
+      "advisory": "GHSA-w5hq-g745-h8pq",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "uuid",
+      "range": "< 11.1.1",
+      "firstPatched": "11.1.1",
+      "selected": [
+        "11.1.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 16,
+      "advisory": "GHSA-g8m3-5g58-fq7m",
+      "severity": "low",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.28.0",
+      "firstPatched": "7.28.0",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 15,
+      "advisory": "GHSA-p88m-4jfj-68fv",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.28.0",
+      "firstPatched": "7.28.0",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 14,
+      "advisory": "GHSA-vxpw-j846-p89q",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.28.0",
+      "firstPatched": "7.28.0",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 13,
+      "advisory": "GHSA-hm92-r4w5-c3mj",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.23.0, < 7.28.0",
+      "firstPatched": "7.28.0",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 12,
+      "advisory": "GHSA-35p6-xmwp-9g52",
+      "severity": "low",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.28.0",
+      "firstPatched": "7.28.0",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 11,
+      "advisory": "GHSA-vmh5-mc38-953g",
+      "severity": "high",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.23.0, < 7.28.0",
+      "firstPatched": "7.28.0",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 10,
+      "advisory": "GHSA-pr7r-676h-xcf6",
+      "severity": "medium",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "undici",
+      "range": ">= 7.0.0, < 7.28.0",
+      "firstPatched": "7.28.0",
+      "selected": [
+        "7.29.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 8,
+      "advisory": "GHSA-pxg6-pf52-xh8x",
+      "severity": "low",
+      "ecosystem": "npm",
+      "manifest": "pnpm-lock.yaml",
+      "package": "cookie",
+      "range": "< 0.7.0",
+      "firstPatched": "0.7.0",
+      "selected": [
+        "0.7.2"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    },
+    {
+      "number": 5,
+      "advisory": "GHSA-g7r4-m6w7-qqqr",
+      "severity": "low",
+      "ecosystem": "npm",
+      "manifest": "docs/pnpm-lock.yaml",
+      "package": "esbuild",
+      "range": ">= 0.27.3, < 0.28.1",
+      "firstPatched": "0.28.1",
+      "selected": [
+        "0.28.1"
+      ],
+      "remaining": [],
+      "status": "patched-version",
+      "evidence": "Committed manifest/lockfile version compared with this advisory range; relevant runtime/build validation in README.md"
+    }
+  ]
+}

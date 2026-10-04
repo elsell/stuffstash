@@ -1,0 +1,17 @@
+--- a/index.js
++++ b/index.js
+@@ -395,7 +395,13 @@
+         this._assertRequestHasHeaders(req);
+ 
+         // In all circumstances, a cache MUST NOT ignore the must-revalidate directive
+-        if (this._rescc['must-revalidate']) {
++        // A request cannot opt back into a response that requires revalidation.
++        const sharedRevalidation = this._isShared && (
++            this._rescc['proxy-revalidate'] ||
++            (this._resHeaders['set-cookie'] && !this._rescc.public && !this._rescc.immutable)
++        );
++        if (!this.storable() || this._rescc['no-cache'] ||
++            this._rescc['must-revalidate'] || sharedRevalidation) {
+             return this._evaluateRequestMissResult(req);
+         }
+ 

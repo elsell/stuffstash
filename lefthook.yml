@@ -46,3 +46,6 @@ pre-commit:
     scripts-test:
       glob: "{scripts/**,compose.selfhost.yaml,.env.example,docs/src/content/docs/self-hosting.md,specs/platform/local-development-topology.spec.md}"
       run: make scripts-test
+    dependency-security:
+      glob: "{pnpm-lock.yaml,pnpm-workspace.yaml,docs/pnpm-lock.yaml,docs/pnpm-workspace.yaml,patches/**,docs/patches/**,scripts/test-dependency-security.cjs}"
+      run: make dependency-security-test
