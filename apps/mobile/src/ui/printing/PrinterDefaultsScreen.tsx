@@ -54,7 +54,7 @@ export function PrinterDefaultsScreen({ workspace, scope, canConfigure, draftSta
     {task.loading ? <SettingsLoadingRow label={t('printing.mobile.loading')} /> : null}
     {task.error ? <SettingsSection><Text accessibilityRole="alert" style={styles.errorMessage}>{t('printing.mobile.unavailable')}</Text><SettingsActionRow label={t('printing.mobile.retry')} onPress={task.reload} /></SettingsSection> : null}
     {catalog && draft ? <>
-      <SettingsSection>
+      <SettingsSection footer={t('labels.mobile.referenceHelp')}>
         <SettingsPickerRow label={t('printing.mobile.printer')} accessibilityLabel={t('printing.mobile.printer')} value={draft.defaultPrinterId ?? ''} disabled={!editable}
           options={[{ value: '', label: t('printing.mobile.none') }, ...catalog.printers.filter(printer => !printer.retired).map(printer => ({ value: printer.id, label: `${printer.name} · ${mediaSizeLabel(printer.mediaName, printer.media)}` }))]}
           onChange={id => change({ ...draft, defaultPrinterId: id || null, printOnCreateDefault: !!id && draft.printOnCreateDefault })} />

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Text } from 'react-native';
 import { useAppServices } from '../../../ui/navigation/AppServicesContext';
 import type { LabelScope } from '../../../application/labels/LabelWorkspace';
-import { LabelOptionsScreen } from '../../../ui/labels/LabelOptionsScreen';
+import { AssetLabelTask } from '../../../ui/labels/AssetLabelTask';
 import { t } from '../../../presentation/localization';
 export default function AssetLabelRoute() {
   const services = useAppServices(); const router = useRouter(); const params = useLocalSearchParams<{ assetId: string }>();
@@ -17,5 +17,5 @@ export default function AssetLabelRoute() {
     return () => controller.abort();
   }, [services, params.assetId]);
   if (!scope || typeof params.assetId !== 'string') return <><LabelTaskHeader /><Text>{t(error ? 'labels.mobile.unavailable' : 'labels.mobile.loading')}</Text></>;
-  return <><LabelTaskHeader /><LabelOptionsScreen key={`${services.serviceScopeId}:${scope.tenantId}:${scope.inventoryId}:${params.assetId}`} workspace={services.labels} scope={scope} assetId={params.assetId} onPrintOptions={loaded?.canPrint ? () => router.push(`/assets/${params.assetId}/print?options=1`) : undefined} /></>;
+  return <><LabelTaskHeader /><AssetLabelTask key={`${services.serviceScopeId}:${scope.tenantId}:${scope.inventoryId}:${params.assetId}`} labels={services.labels} printing={loaded?.canPrint ? services.printing : undefined} scope={scope} assetId={params.assetId} onQueued={id => router.replace({ pathname: '/print-jobs/[jobId]', params: { jobId: id } } as never)} /></>;
 }

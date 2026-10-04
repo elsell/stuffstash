@@ -1,7 +1,7 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { createCompletePrintingWorkspace, completePrintScope as scope } from './CompletePrintingRepository';
+import { createCompletePrintingWorkspace, createCompleteLabelWorkspace, completePrintScope as scope } from './CompletePrintingRepository';
 import type { PrintingWorkspace } from '../src/application/printing/PrintingWorkspace';
 import { AppearancePreferenceController } from '../src/application/settings/AppearancePreference';
 import { AppearanceProvider, useAppearancePalette } from '../src/ui/theme/AppearanceContext';
@@ -11,7 +11,7 @@ import { AppNoticeScreenLayout } from '../src/ui/feedback/AppNoticeScreenLayout'
 import { createAssetNativeSheetOptions } from '../src/ui/screens/AssetNativeSheetOptions';
 import { SettingsSection, SettingsActionRow, useSettingsListStyles } from '../src/ui/screens/SettingsList';
 import { LabelTaskHeader } from '../src/ui/labels/LabelTaskHeader';
-import { QuickPrintScreen } from '../src/ui/printing/QuickPrintScreen';
+import { AssetLabelTask } from '../src/ui/labels/AssetLabelTask';
 import { PrintJobScreen } from '../src/ui/printing/PrintJobScreen';
 import { ReprintLabelScreen } from '../src/ui/printing/ReprintLabelScreen';
 
@@ -33,13 +33,14 @@ function CompletePrintingNavigation() {
 export function CompletePrintingHome() {
   const router = useRouter(); const { styles } = useSettingsListStyles();
   return <ScrollView style={styles.shell} contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic"><SettingsSection>
-    <SettingsActionRow label="Open quick print" onPress={() => router.push('/assets/printing-item/print' as never)} />
+    <SettingsActionRow label="Open label" onPress={() => router.push('/assets/printing-item/print' as never)} />
     <SettingsActionRow label="Inspect uncertain job" onPress={() => router.push('/print-jobs/uncertain' as never)} />
   </SettingsSection></ScrollView>;
 }
 export function CompletePrintingTask() {
   const router = useRouter(); const workspace = useWorkspace();
-  return <><LabelTaskHeader /><QuickPrintScreen workspace={workspace} scope={scope} assetId="printing-item" onQueued={jobId => router.replace({ pathname: '/print-jobs/[jobId]', params: { jobId } } as never)} /></>;
+  const labels = useMemo(() => createCompleteLabelWorkspace(workspace), [workspace]);
+  return <><LabelTaskHeader /><AssetLabelTask printing={workspace} labels={labels} scope={scope} assetId="printing-item" onQueued={jobId => router.replace({ pathname: '/print-jobs/[jobId]', params: { jobId } } as never)} /></>;
 }
 export function CompletePrintingJob() {
   const router = useRouter(); const workspace = useWorkspace(); const { jobId, action } = useLocalSearchParams<{ jobId: string; action?: string }>();

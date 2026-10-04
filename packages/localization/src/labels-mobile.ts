@@ -3,6 +3,8 @@ export const labelMobileMessages = {
   'labels.mobile.scan': 'Scan label',
   'labels.mobile.cancel': 'Cancel',
   'labels.mobile.template': 'Layout',
+  'labels.mobile.referenceHelp': 'Shows the label’s ID as readable text alongside the QR code.',
+  'labels.mobile.noPrinter': 'No label printer is registered. Save or share a label to print using another app.',
   'labels.mobile.reference': 'Show reference',
   'labels.mobile.preview': 'Preview label',
   'labels.mobile.sharePNG': 'Save or share PNG',
