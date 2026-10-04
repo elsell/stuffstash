@@ -548,3 +548,25 @@ on dismissal/reopening or a lost response. An uncertain request can only retry
 its original selection/key. Scope teardown, loss of edit access, or task dismissal
 before submission prevents deferred loading from starting a print. Focus returns
 to the originating asset menu after either task closes.
+
+## Native label options recovery and hierarchy
+
+Label options uses an inset grouped task: committed media size, layout and reference
+choices; a preview with its recovery state; and separate download/system-print
+actions. Registered-printer options remain a navigation row. Secondary commands
+use native action rows rather than a stack of tinted capsule buttons. This follows
+[Apple’s button hierarchy guidance](https://developer.apple.com/design/human-interface-guidelines/buttons)
+and the existing project settings adapters. It does not change shared button styles.
+
+The scrolling task opts into native automatic content insets so the first and last
+controls remain reachable around the sheet header and system bars. Native runtime
+verification must cover narrow and enlarged-text layouts; source tests alone do not
+establish visual clearance.
+
+A failed render clears the preview and disables export/system-print actions until
+a successful preview retry or a new selection. Retry after a render failure renders
+the current selection again; it must not just reload the catalog and clear the error,
+nor repeat a physical print or share handoff. Catalog failure retries catalog loading.
+Changing an option invalidates the old preview. Every export still independently
+reauthorizes and renders through the repository; no preview file becomes an unchecked
+delivery path. Leaving the task cancels outstanding work and suppresses late handoffs.

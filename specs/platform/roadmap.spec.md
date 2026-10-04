@@ -84,6 +84,18 @@ coverage, screenshots, and explicit limitations.
   status, queue overflow, and uncertainty without replay. The user confirmed the
   physical output; QR scanning and alignment were not assessed.
 
+### Native printing usability follow-up — October 4, 2026
+
+User-device screenshots exposed obscured scrolling controls, competing tinted
+commands, and weak settings hierarchy. The current follow-up uses grouped native
+settings/actions and automatic scroll insets; label-render failure recovery must
+retry the selected render without repeating a physical handoff. A focused native
+runtime audit will verify clearance and recovery before visual acceptance.
+
+The deployed label instance was also uninitialized. An explicit bootstrap restored
+public instance readiness and an authenticated CLI PNG render; GitOps now runs the
+idempotent bootstrap after migrations, preserving the existing instance identity.
+
 ### Hardware and delivery limits
 
 Initial hardware/media support is only Brother QL-800 over USB on Linux with
