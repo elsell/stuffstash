@@ -26,7 +26,8 @@ export function formatSettingsRouteHref(state: SettingsRouteState): string {
     if (state.settingsLevel === 'inventory' && state.inventoryId) path += `/inventories/${encodeURIComponent(state.inventoryId)}`;
     if (state.settingsCollection && (!['notifications', 'printing'].includes(state.settingsCollection) || state.settingsLevel === 'inventory') && (state.settingsCollection !== 'conversations' || state.settingsLevel === 'tenant')) {
       path += `/${state.settingsCollection}`;
-      if (state.settingsCollection === 'conversations' || state.settingsCollection === 'notifications' || state.settingsCollection === 'printing') return path;
+      if(state.settingsCollection==='printing')return state.settingsResourceId==='history'?`${path}/history`:path;
+      if (state.settingsCollection === 'conversations' || state.settingsCollection === 'notifications') return path;
       if (state.settingsCollection === 'access' && state.accessInvitationAction && state.accessInvitationId) {
         path += `/invitations/${encodeURIComponent(state.accessInvitationId)}/${state.accessInvitationAction}`;
       } else if (state.settingsResourceAction === 'new') path += '/new';

@@ -1125,3 +1125,65 @@ already authorized outside the transaction. Production-database concurrency
 coverage controls transaction scheduling while retaining real row locks and
 foreign-key behavior; neither a lock error nor a partially created aggregate is
 an acceptable result of an otherwise valid competing request.
+
+### Web printing settings hierarchy
+
+The web settings page prioritizes the household tasks of checking a printer,
+printing a test, choosing defaults, and checking an outcome. Show registered
+printers before defaults, with concise readiness and locally grouped actions.
+Defaults occupy a bounded form with an intrinsic-width save action. On desktop,
+use the available width for printer status and defaults; reflow to one column on
+narrow screens. Do not place every operational field in the initial scan path.
+
+Computer connection details and printer report timestamps are supplementary
+native HTML disclosures. Setup uses an explicit Add printer button and guided dialog. Failures,
+offline readiness, permission limits and uncertain-output recovery remain visible
+without opening diagnostics. Job rows lead with the printer and explicit outcome;
+a user report never becomes device-confirmed completion. Keep raw actor identifiers
+and report timestamps available inside a report-details disclosure, with wrapping.
+
+Retain existing permission checks, revision conflicts, immutable retry intents,
+polling without draft replacement, and dialog focus restoration. Use browser
+semantics and existing shadcn primitives. Verify keyboard disclosure and dialog
+return, 390px/desktop reflow, long identifiers, viewer state and uncertain recovery.
+This is a focused refactor authorized by the October 4 user UI audit request;
+it does not introduce a new navigation model or require a separate design gate.
+The printer editor must protect an unsaved name, media or retirement draft on
+Cancel, Escape and outside dismissal with Keep editing / Discard changes. Only a pending save locks dismissal. Catalog loading and refresh reads remain
+cancelable; closing ignores their late results. A dirty draft still requires
+Keep editing / Discard changes during a refresh. The successful save still closes
+and restores the triggering control. A saved-defaults notice clears when any
+field is changed, including a checkbox. Catalog display names may supplement
+registered media by adapter/preset/version identity without altering dimensions.
+For a settled uncertain job, lead with Reported printed / Reported not printed /
+Outcome unresolved and a concise statement that a person reported the outcome,
+not the printer. Hardware-confirmed copy counts remain available in Report
+details alongside the original report; do not imply zero labels physically
+printed merely because hardware confirmation was unavailable. Explain the optional
+label reference as a short, readable ID on the label.
+
+The web list is named Print history: current cursor pagination is ascending by
+job ID. Do not claim recent-first presentation or reverse only one loaded page.
+A latest-first API cursor contract is a separate follow-up for larger histories.
+
+### Revised web task separation — October 4 user review
+
+The user's review replaces the earlier all-in-one settings decision above. Add
+printer is an explicit button opening a bounded setup dialog, not a disclosure.
+Show the Linux USB prerequisite, CLI download link, a selectable/copyable register
+command with the runtime API base and user-chosen computer name, and the browser
+approval/worker steps. Shell-quote dynamic command arguments; do not assume the
+web and API share an origin. Inventory selection remains in the existing browser
+approval flow; do not invent registration flags or automatically register/print.
+Use the canonical project links https://stuffstash.org/cli-downloads/ and
+https://stuffstash.org/printing/setup/; they are project help, not deployment config.
+
+Move complete print history to the inventory-scoped `/printing/history` route,
+with normal Back, direct-link and browser navigation. Retain the same scoped
+settings controller across this view switch so unsaved defaults survive. Main
+settings show printer health and any known active/uncertain jobs near the printer
+section, including jobs for missing/retired printers. Do not claim all-clear or a
+complete active-job count from a partial page. View print history remains visible.
+History owns older-first ordering information, Load more, terminal outcomes and
+reprints. Merge overlapping pages by job ID and revision. No API ordering change
+or physical print is part of this user-interface revision.

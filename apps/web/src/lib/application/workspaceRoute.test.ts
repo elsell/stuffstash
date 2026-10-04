@@ -470,3 +470,10 @@ it('routes notification preferences only at inventory scope without resource sub
   expect(parseWorkspaceRoute(new URL('https://app.test/settings/tenants/home/notifications')).settingsCollection).toBeNull();
   expect(parseWorkspaceRoute(new URL(`https://app.test${path}/new`)).settingsCollection).toBeNull();
 });
+
+it('round trips inventory print history and rejects invalid scopes and suffixes',()=>{
+ const url='https://app.test/settings/tenants/home/inventories/garage/printing/history';
+ const route=parseWorkspaceRoute(new URL(url));expect(route).toMatchObject({settingsCollection:'printing',settingsResourceId:'history'});
+ expect(workspaceRouteHref(route,null,null)).toBe(new URL(url).pathname);
+ for(const path of ['/settings/tenants/home/printing/history','/settings/tenants/home/inventories/garage/printing/other'])expect(parseWorkspaceRoute(new URL(path,'https://app.test')).settingsCollection).toBeNull();
+});

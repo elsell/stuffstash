@@ -1,5 +1,6 @@
 <script lang="ts">
   import { inventoryArchiveContext, type InventoryArchiveWorkspace } from '$lib/ports/inventoryArchive';
+  import {browserTextClipboard} from '$lib/adapters/browser/textClipboard';
   import InventoryPrintingSettings from '$lib/components/printing/InventoryPrintingSettings.svelte';
   import { printingWorkspaceContext, type PrintingWorkspace } from '$lib/ports/printingRepository';
   const printing = getContext<PrintingWorkspace | undefined>(printingWorkspaceContext);
@@ -47,6 +48,8 @@
   let levelTitle = $derived(route.settingsLevel === 'tenant' ? tenant?.name : route.settingsLevel === 'inventory' ? inventory?.name : t('web.SettingsWorkspace.settings'));
   let levelLabel = $derived(route.settingsLevel === 'tenant' ? t('web.SettingsWorkspace.tenantSettings') : route.settingsLevel === 'inventory' ? t('web.SettingsWorkspace.inventorySettings') : '');
   let levelHref = $derived(route.settingsLevel === 'tenant' && tenant ? settingsResourceHref({ level: 'tenant', tenantId: tenant.id }) : tenant && inventory ? settingsResourceHref({ level: 'inventory', tenantId: tenant.id, inventoryId: inventory.id }) : '/settings');
+  const printingHistory=$derived(route.settingsCollection==='printing'&&route.settingsResourceId==='history');
+  const printingHref=$derived(tenant&&inventory?settingsResourceHref({level:'inventory',tenantId:tenant.id,inventoryId:inventory.id,collection:'printing'}):'/settings');
   function navigate(event: MouseEvent, href: string): void { event.preventDefault(); onNavigate(href); }
   function updateTypes(types: CustomAssetType[]): void { latestTypes = types; onSchemaChange(latestTypes, latestFields.length ? latestFields : currentFields); }
   function updateFields(fields: CustomFieldDefinition[]): void { latestFields = fields; onSchemaChange(latestTypes.length ? latestTypes : currentAssetTypes, latestFields); }
@@ -90,10 +93,10 @@
   </section>
 {:else}
   <div class="workspace-main settings-management settings-management-resource">
-    <Button.Root href={levelHref} variant="ghost" class="settings-back" onclick={(event) => navigate(event, levelHref)}><ArrowLeft /> {levelTitle}</Button.Root>
+    <Button.Root href={printingHistory?printingHref:levelHref} variant="ghost" class="settings-back" onclick={(event) => navigate(event, printingHistory?printingHref:levelHref)}><ArrowLeft /> {printingHistory?t('web.Printing.title'):levelTitle}</Button.Root>
     {#if route.settingsCollection === 'printing' && inventory && printing}
       {#key JSON.stringify([printing.apiIdentity, principal.id, tenant.id, inventory.id])}
-        <InventoryPrintingSettings scope={{tenantId: tenant.id, inventoryId: inventory.id}} repository={printing.repository} intents={printing.intents} canConfigure={hasAccessPermission(inventory.access, 'configure')} canPrint={canEditAsset(inventory)} />
+        <InventoryPrintingSettings view={printingHistory?'history':'settings'} apiBaseUrl={printing.apiIdentity} clipboard={browserTextClipboard} historyHref={`${printingHref}/history`} {onNavigate} scope={{tenantId: tenant.id, inventoryId: inventory.id}} repository={printing.repository} intents={printing.intents} canConfigure={hasAccessPermission(inventory.access, 'configure')} canPrint={canEditAsset(inventory)} />
       {/key}
     {:else if route.settingsCollection === 'notifications' && inventory && notifications}
       {#key JSON.stringify([notifications.apiIdentity, principal.id, tenant.id, inventory.id])}

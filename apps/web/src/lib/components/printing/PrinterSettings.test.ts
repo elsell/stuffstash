@@ -18,3 +18,24 @@ it('keeps a stale printer draft until explicit reload and then saves the current
  button('Reload printer')!.click();await settle();expect((document.getElementById('edit-printer-name') as HTMLInputElement).value).toBe('Renamed elsewhere');
  document.querySelector('[data-slot="dialog-content"] form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await settle();expect(repo.destinations[0].revision).toBe(3);expect(repo.destinations[0].media.presetId).toBe('brother-ql800-29x90');
 });
+
+class ControlledPrinterRepository extends FakePrintingRepository {
+ mediaRead?:Promise<void>;
+ saveWrite?:Promise<void>;
+ override async mediaProfiles(...args:Parameters<FakePrintingRepository['mediaProfiles']>){await this.mediaRead;return super.mediaProfiles(...args);}
+ override async updatePrinter(...args:Parameters<FakePrintingRepository['updatePrinter']>){await this.saveWrite;return super.updatePrinter(...args);}
+}
+it('allows closing a pending media read and ignores its late result',async()=>{
+ const repo=new ControlledPrinterRepository();await start(repo);
+ let finish!:()=>void;repo.mediaRead=new Promise<void>(resolve=>{finish=resolve;});
+ button('Edit printer')!.click();await settle();expect(button('Cancel')!.disabled).toBe(false);
+ button('Cancel')!.click();await settle();expect(document.getElementById('edit-printer-name')).toBeNull();
+ finish();await settle();expect(document.getElementById('edit-printer-name')).toBeNull();expect(repo.destinations[0].revision).toBe(1);
+});
+it('keeps a pending save locked until the write completes',async()=>{
+ const repo=new ControlledPrinterRepository();await start(repo);button('Edit printer')!.click();await settle();
+ let finish!:()=>void;repo.saveWrite=new Promise<void>(resolve=>{finish=resolve;});
+ document.querySelector('[data-slot="dialog-content"] form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await settle();
+ expect(button('Cancel')!.disabled).toBe(true);expect(document.getElementById('edit-printer-name')).not.toBeNull();
+ finish();await settle();expect(document.getElementById('edit-printer-name')).toBeNull();expect(repo.destinations[0].revision).toBe(2);
+});
