@@ -582,3 +582,21 @@ across XCTest element categories. In the pinned React Native runtime the rendere
 Image remains categorized as Other despite an explicit image role; that category
 is not proof of a missing render or a VoiceOver trait. Preserve the image role,
 assert the actual preview bounds, and review the recovered PNG screenshot.
+
+### Controlled iOS scanner acceptance
+
+The existing native-audit runner adds a `label-scanner` selection on named iPhone
+and iPad simulators. It installs the production root `scan-label` route and its
+selection-sheet presentation, native header, pending-link provider, parser,
+`OpenLabel` use case, and Expo camera adapter. Only the route's application-service
+import points to runner-owned services backed by a stateful delayed label repository.
+No fixture injection API is added to production services.
+
+Deny the actual simulator camera permission and exercise the paste fallback with
+invalid, foreign-instance, and valid old-host links. Verify recoverable lookup failure,
+retry, target navigation, and Cancel during a delayed lookup: a late repository
+result must not change the return destination or selected inventory. A controlled
+signed-out/ready transition may verify pending-label retention and its navigation
+notice; it is simulated readiness, not real OIDC authentication. Screenshots and
+result bundles identify the tested source and devices. These checks do not establish
+physical camera decoding, printed-label readability, or ordinary-camera app links.

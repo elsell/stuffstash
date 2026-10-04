@@ -10,6 +10,7 @@ on:
         default: all
         options:
           - all
+          - label-scanner
           - color-picker
           - filter-search-timing
           - search-placement
@@ -192,6 +193,11 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationFiltersReturnToTheirOwningTab'
               )
           case "$AUDIT_TEST_CASE" in
+            label-scanner)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=('-only-testing:StuffStashAuditTests/LabelScannerAuditTests')
+              ;;
+
             all)
               # This journey requires production tab paths; the legacy fixture
               # arrangement owns competing root Search/detail routes.

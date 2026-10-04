@@ -32,6 +32,21 @@ if backup.exists():
 shutil.copytree(routes, backup)
 shutil.rmtree(routes)
 routes.mkdir()
+if os.environ.get("AUDIT_TEST_CASE") == "label-scanner":
+    # Keep the production route body, header and camera adapter; only service
+    # composition changes in this disposable runner checkout.
+    production = (backup / "scan-label.tsx").read_text()
+    services = "../ui/navigation/AppServicesContext"
+    if production.count(services) != 1:
+        raise SystemExit("Scanner service composition changed; review fixture parity")
+    (routes / "scan-label.tsx").write_text(production.replace(services, "../../native-audit/LabelScannerFixture"))
+    for route, component in {"_layout": "LabelScannerLayout", "index": "LabelScannerHome",
+                             "assets/[assetId]/index": "LabelScannerDestination"}.items():
+        target = routes / f"{route}.tsx"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        source = os.path.relpath(root / "apps/mobile/native-audit/LabelScannerFixture", target.parent)
+        target.write_text(f"export {{ {component} as default }} from '{source}';\n")
+    raise SystemExit(0)
 exports = {
     "_layout": "FixtureLayoutWithoutKeyboardProvider" if os.environ.get("AUDIT_TEST_CASE") == "text-entry-no-provider" else "FixtureLayout",
     "index": "FixtureMenu",

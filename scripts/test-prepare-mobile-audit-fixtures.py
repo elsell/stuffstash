@@ -41,6 +41,16 @@ class FixtureRouteIsolationTests(unittest.TestCase):
         for layout in self.tab_layouts:
             self.assertEqual((self.routes / layout).read_text(), f"production layout {layout}\n")
 
+    def test_scanner_keeps_production_route_except_runner_service_composition(self):
+        source = Path(__file__).resolve().parents[1] / "apps/mobile/src/app/scan-label.tsx"
+        (self.routes / "scan-label.tsx").write_text(source.read_text())
+        result = self.run_script(AUDIT_TEST_CASE="label-scanner")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        expected = source.read_text().replace("../ui/navigation/AppServicesContext", "../../native-audit/LabelScannerFixture")
+        self.assertEqual((self.routes / "scan-label.tsx").read_text(), expected)
+        self.assertIn("LabelScannerLayout", (self.routes / "_layout.tsx").read_text())
+        self.assertIn("LabelScannerDestination", (self.routes / "assets/[assetId]/index.tsx").read_text())
+
     def test_customization_collection_uses_production_tab_layouts(self):
         self.assertEqual(self.run_script(AUDIT_TEST_CASE="customization-clearance").returncode, 0)
         target = self.routes / "(tabs)/(home,search)/settings/inventory/tags/index.tsx"
