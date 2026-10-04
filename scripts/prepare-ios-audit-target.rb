@@ -14,6 +14,7 @@ target.add_dependency(app)
 suite = ENV.fetch('AUDIT_SUITE', 'onboarding')
 abort 'Unknown audit suite' unless %w[onboarding fixtures].include?(suite)
 test_source = suite == 'fixtures' ? 'FixtureAuditTests.swift' : 'OnboardingAuditTests.swift'
+test_source = 'LabelScannerAuditTests.swift' if suite == 'fixtures' && ENV['AUDIT_TEST_CASE'] == 'label-scanner'
 source = project.main_group.new_file("../native-audit/#{test_source}")
 target.source_build_phase.add_file_reference(source)
 target.build_configurations.each do |configuration|

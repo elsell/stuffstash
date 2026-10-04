@@ -582,3 +582,64 @@ across XCTest element categories. In the pinned React Native runtime the rendere
 Image remains categorized as Other despite an explicit image role; that category
 is not proof of a missing render or a VoiceOver trait. Preserve the image role,
 assert the actual preview bounds, and review the recovered PNG screenshot.
+
+### Controlled iOS scanner acceptance
+
+The existing native-audit runner adds a `label-scanner` selection on named iPhone
+and iPad simulators. It installs the production root `scan-label` route and its
+selection-sheet presentation, native header, pending-link provider, parser,
+`OpenLabel` use case, and Expo camera adapter. Only the route's application-service
+import points to runner-owned services backed by a stateful delayed label repository.
+No fixture injection API is added to production services.
+
+Deny the actual simulator camera permission and exercise the paste fallback with
+invalid, foreign-instance, and valid old-host links. Verify recoverable lookup failure,
+retry, target navigation, and Cancel during a delayed lookup: a late repository
+result must not change the return destination or selected inventory. A controlled
+signed-out/ready transition may verify pending-label retention and its navigation
+notice; it is simulated readiness, not real OIDC authentication. Screenshots and
+result bundles identify the tested source and devices. These checks do not establish
+physical camera decoding, printed-label readability, or ordinary-camera app links.
+
+### Native camera permission lifecycle
+
+The scanner owns one permission request for each camera attempt while its route
+remains focused. An OS permission prompt can temporarily background the app;
+retain its pending decision through that transition instead of mounting a new
+request on foreground return. Denial exposes the existing paste fallback and
+Settings guidance without another automatic prompt. Grant mounts camera capture
+only when the scanner is focused and the app is active. Backgrounding must stop
+capture immediately; leaving the scanner invalidates late permission results.
+Verify the inactive/pending/denied and inactive/pending/granted transitions with a
+controlled permission fake, plus the actual OS denial on a named native build.
+
+The first iOS scanner run (`37176663968`, source `0a68353f4`) reached actual
+permission denial and passed retry/navigation and simulated sign-in return. Some
+remaining cases stopped before lookup because bulk XCTest typing lost a URL prefix
+or the software keyboard did not appear. Preserve that evidence; it does not prove
+normal typing reliable. The scanner's paste acceptance uses a controlled system
+clipboard and the actual native Paste action, verifies the exact complete URL,
+and retains every cancellation and navigation assertion. Do not replace input
+with direct React state changes or accept partial text.
+
+The follow-up paste run (`37178128691`, source `71c1195f3`) passed all four
+cases on iPad. On iPhone, XCTest reported an interruption-targeting error while
+tapping denial; the retained screenshot still showed the OS camera prompt.
+Treat those cases as unverified. Target the observed camera alert's denial-button
+center and require the alert to disappear before checking app fallback. Do not
+repeat denial, pregrant permission, or accept an undismissed OS prompt as success.
+
+Native run `37179475027` at `5492bdec734d72fb32c5f1f97ca821f5e45c2dd7`
+passed all four scanner cases on iPhone 17 and iPad mini (A17 Pro). The actual
+OS denial, native Paste, retry/resolution, late-result cancellation and simulated
+readiness evidence is retained in `docs/reports/printing-ios-scanner-2026-10-04/`.
+This closes that bounded simulator acceptance; the physical-camera and real iOS
+OIDC limitations above remain.
+
+### Pending-label notice after sign-in
+
+The signed-out connection screen explains that sign-in is required to open a
+retained label. Once the authenticated application is ready, its pending-label
+notice says the label is ready to open and offers the existing Open label action;
+it must not instruct an already signed-in user to sign in again. Keep warm-link
+navigation explicit so receiving a label does not replace an unrelated draft.

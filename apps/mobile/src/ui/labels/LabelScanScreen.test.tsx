@@ -1,12 +1,13 @@
 import { afterEach, expect, it } from 'vitest';
 import { LabelScanScreen } from './LabelScanScreen';
 import { MobileRenderHarness } from '../../test-support/render';
-import { setCameraAllowed } from '../../test-support/expo-camera';
+import { cameraPermissionsFake, setCameraAllowed } from '../../test-support/expo-camera';
 import { setScreenFocused } from '../../test-support/navigation';
 import { LabelFailure } from '../../application/labels/LabelWorkspace';
+import { setAppStateForTest } from '../../test-support/react-native';
 const reference = { instanceId: 'instance', labelId: 'label' };
 const target = { tenantId: 'tenant', inventoryId: 'inventory', assetId: 'asset', archived: true };
-afterEach(() => { setCameraAllowed(true); setScreenFocused(true); });
+afterEach(() => { cameraPermissionsFake.reset(); setAppStateForTest('active'); setScreenFocused(true); });
 it('resolves a repeated QR once and never navigates after leaving the scanner', async () => {
   const h = new MobileRenderHarness(); let reads = 0; let release!: (value: typeof target) => void; const navigated: string[] = [];
   try {
@@ -52,5 +53,30 @@ it('cancels an active valid resolution when a malformed incoming label supersede
     expect(signal?.aborted).toBe(true);
     await h.run(() => release(target));
     expect(navigated).toEqual([]);
+  } finally { await h.unmount(); }
+});
+
+it.each([false, true])('retains the OS permission decision while the app is backgrounded (granted=%s)', async granted => {
+  cameraPermissionsFake.reset(); setCameraAllowed(false); cameraPermissionsFake.deferDecision();
+  const h = new MobileRenderHarness(); const navigated: string[] = [];
+  try {
+    await h.render(<LabelScanScreen open={{ execute: async () => target }} parse={() => reference}
+      invalid={false} onResolved={id => navigated.push(id)} onAccount={() => {}} onServer={() => {}} />);
+    expect(cameraPermissionsFake.requests).toBe(1);
+    await h.run(() => setAppStateForTest('background'));
+    await h.run(() => cameraPermissionsFake.decide(granted));
+    expect(h.byType('CameraView')).toBeUndefined();
+    await h.run(() => setAppStateForTest('active'));
+    expect(cameraPermissionsFake.requests).toBe(1);
+    if (granted) {
+      expect(h.byType('CameraView')).toBeDefined();
+      await h.run(() => setAppStateForTest('background'));
+      expect(h.byType('CameraView')).toBeUndefined();
+    } else {
+      expect(h.byText('Camera unavailable. Allow camera access in Settings, or paste a label link.')).toBeDefined();
+      await h.changeText(h.byLabel('Paste label link'), 'https://old.example/l/v1/instance/label');
+      await h.press(h.byLabel('Open label'));
+      expect(navigated).toEqual(['asset']);
+    }
   } finally { await h.unmount(); }
 });
