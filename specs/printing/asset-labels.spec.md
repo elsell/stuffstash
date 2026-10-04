@@ -621,3 +621,11 @@ normal typing reliable. The scanner's paste acceptance uses a controlled system
 clipboard and the actual native Paste action, verifies the exact complete URL,
 and retains every cancellation and navigation assertion. Do not replace input
 with direct React state changes or accept partial text.
+
+### Pending-label notice after sign-in
+
+The signed-out connection screen explains that sign-in is required to open a
+retained label. Once the authenticated application is ready, its pending-label
+notice says the label is ready to open and offers the existing Open label action;
+it must not instruct an already signed-in user to sign in again. Keep warm-link
+navigation explicit so receiving a label does not replace an unrelated draft.
