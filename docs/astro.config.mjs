@@ -8,6 +8,8 @@ const base = process.env.STUFF_STASH_DOCS_BASE ?? '/stuffstash/';
 export default defineConfig({
   site,
   base,
+  // MDX must receive an explicit value; Astro’s Markdown processor default is not inherited.
+  markdown: { gfm: true },
   integrations: [
     starlight({
       title: 'Stuff Stash',
