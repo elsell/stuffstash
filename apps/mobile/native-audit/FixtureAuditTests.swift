@@ -3220,20 +3220,49 @@ final class FixtureAuditTests: XCTestCase {
     guard openFixtureURL("(tabs)/(home)/settings/printers/history") else { return }
     XCTAssertTrue(app.navigationBars["Print history"].waitForExistence(timeout: 10))
     capture("printing-history-\(suffix)")
-    guard openFixtureURL("(tabs)/(home)/assets/printing-item/label") else { return }
+    guard openFixtureURL("(tabs)/(home)/audit-label-entry") else { return }
+    let entry = app.buttons["Open label options"].firstMatch
+    XCTAssertTrue(entry.waitForExistence(timeout: 10)); XCTAssertTrue(entry.isHittable); entry.tap()
+    let header = app.navigationBars["Label options"].firstMatch
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    let close = header.buttons["Cancel"].firstMatch
+    XCTAssertTrue(close.waitForExistence(timeout: 10)); XCTAssertTrue(close.isHittable)
+    let sizeLabel = app.staticTexts["Label size"].firstMatch
+    XCTAssertTrue(sizeLabel.waitForExistence(timeout: 10))
+    XCTAssertGreaterThanOrEqual(sizeLabel.frame.minY, header.frame.maxY, "The first label row must not sit underneath the native sheet header")
+    let firstChoice = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Layout'")).firstMatch
+    XCTAssertTrue(firstChoice.waitForExistence(timeout: 10)); XCTAssertTrue(firstChoice.isHittable)
+    XCTAssertGreaterThanOrEqual(firstChoice.frame.minY, header.frame.maxY)
+    capture("printing-label-sheet-entry-\(suffix)")
     let preview = app.buttons["Preview label"].firstMatch
     XCTAssertTrue(preview.waitForExistence(timeout: 10))
-    verifyFooterClearsPersistentChrome(preview); XCTAssertTrue(preview.isHittable); preview.tap()
+    verifyPrintingSheetAction(preview, header: header); preview.tap()
     let retry = app.buttons["Try again"].firstMatch
     XCTAssertTrue(retry.waitForExistence(timeout: 10))
     capture("printing-label-preview-failure-\(suffix)")
-    verifyFooterClearsPersistentChrome(retry); XCTAssertTrue(retry.isHittable); retry.tap()
+    verifyPrintingSheetAction(retry, header: header); retry.tap()
     let image = app.images["Label preview"].firstMatch
     XCTAssertTrue(image.waitForExistence(timeout: 10), "Retry must perform another render, not only reload the catalog")
+    let sheetScroll = app.scrollViews.containing(.image, identifier: "Label preview").firstMatch
+    XCTAssertTrue(sheetScroll.exists)
+    XCTAssertGreaterThanOrEqual(image.frame.minX, sheetScroll.frame.minX)
+    XCTAssertLessThanOrEqual(image.frame.maxX, sheetScroll.frame.maxX, "Preview must fit the actual iPad sheet, not the full window")
     capture("printing-label-preview-recovered-\(suffix)")
     let print = app.buttons["Print…"].firstMatch
-    verifyFooterClearsPersistentChrome(print); XCTAssertTrue(print.isHittable)
+    verifyPrintingSheetAction(print, header: header)
     capture("printing-label-final-action-\(suffix)")
+    XCTAssertTrue(close.isHittable); close.tap()
+    XCTAssertTrue(entry.waitForExistence(timeout: 10)); XCTAssertTrue(entry.isHittable)
+    XCTAssertTrue(app.buttons["Start voice interaction"].firstMatch.isHittable)
+    capture("printing-label-sheet-dismissed-\(suffix)")
+  }
+
+  private func verifyPrintingSheetAction(_ action: XCUIElement, header: XCUIElement) {
+    let scroll = app.scrollViews.containing(.button, identifier: action.identifier.isEmpty ? action.label : action.identifier).firstMatch
+    XCTAssertTrue(scroll.exists)
+    func clear() -> Bool { action.exists && action.isHittable && action.frame.minY >= header.frame.maxY && action.frame.maxY <= scroll.frame.maxY }
+    for _ in 0..<8 where !clear() { scroll.swipeUp() }
+    XCTAssertTrue(clear(), "Label action must fit below the sheet header and within its scroll viewport")
   }
 
   func testVoiceAccessorySettledNavigationAppearance() {

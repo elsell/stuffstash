@@ -34,7 +34,9 @@ class FixtureRouteIsolationTests(unittest.TestCase):
     def test_printing_journey_uses_production_tabs_and_actual_screen_routes(self):
         self.assertEqual(self.run_script(AUDIT_TEST_CASE="printing-settings-and-labels").returncode, 0)
         self.assertIn("PrintingSettingsFixture", (self.routes / "(tabs)/(home,search)/settings/printers/index.tsx").read_text())
-        self.assertIn("PrintingLabelsFixture", (self.routes / "(tabs)/(home,search)/assets/printing-item/label.tsx").read_text())
+        self.assertIn("PrintingLabelsFixture", (self.routes / "assets/[assetId]/label.tsx").read_text())
+        self.assertFalse((self.routes / "(tabs)/(home,search)/assets/printing-item/label.tsx").exists())
+        self.assertIn("PrintingLabelEntryFixture", (self.routes / "(tabs)/(home,search)/audit-label-entry.tsx").read_text())
         self.assertFalse((self.routes / "audit-tabs").exists())
         for layout in self.tab_layouts:
             self.assertEqual((self.routes / layout).read_text(), f"production layout {layout}\n")

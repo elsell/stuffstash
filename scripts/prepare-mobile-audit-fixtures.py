@@ -196,9 +196,14 @@ if os.environ.get("AUDIT_TEST_CASE") == "printing-settings-and-labels":
         "settings/printers/defaults": "PrintingDefaultsFixture",
         "settings/printers/printer": "PrintingDetailFixture",
         "settings/printers/history": "PrintingHistoryFixture",
-        "assets/printing-item/label": "PrintingLabelsFixture",
+        "audit-label-entry": "PrintingLabelEntryFixture",
     }.items():
         target = routes / "(tabs)/(home,search)" / f"{route}.tsx"
         target.parent.mkdir(parents=True, exist_ok=True)
         source = os.path.relpath(root / "apps/mobile/native-audit/PrintingJourneyFixture", target.parent)
         target.write_text(f"export {{ {component} as default }} from '{source}';\n")
+
+    target = routes / "assets/[assetId]/label.tsx"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    source = os.path.relpath(root / "apps/mobile/native-audit/PrintingJourneyFixture", target.parent)
+    target.write_text(f"export {{ PrintingLabelsFixture as default }} from '{source}';\n")

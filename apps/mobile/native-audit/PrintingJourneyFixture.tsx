@@ -1,3 +1,6 @@
+import { ScrollView } from 'react-native';
+import { LabelTaskHeader } from '../src/ui/labels/LabelTaskHeader';
+import { SettingsActionRow, SettingsSection, useSettingsListStyles } from '../src/ui/screens/SettingsList';
 import { printingLabelPNG } from './PrintingLabelSample';
 import { Stack, useRouter } from 'expo-router';
 import { PrintingFake } from '../src/test-support/PrintingFake';
@@ -58,4 +61,12 @@ const labels: LabelWorkspace = {
     async deliver() { unsupported(); }
   }
 };
-export function PrintingLabelsFixture() { return <><Stack.Screen options={{ title: 'Label' }} /><LabelOptionsScreen workspace={labels} scope={scope} assetId="printing-item" /></>; }
+export function PrintingLabelsFixture() { return <><LabelTaskHeader /><LabelOptionsScreen workspace={labels} scope={scope} assetId="printing-item" /></>; }
+
+/** Explicit audit entry: navigation is exercised from the real tab host. */
+export function PrintingLabelEntryFixture() {
+  const router = useRouter(); const { styles } = useSettingsListStyles();
+  return <><Stack.Screen options={{ title: 'Label task entry' }} /><ScrollView style={styles.shell} contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic">
+    <SettingsSection><SettingsActionRow label="Open label options" onPress={() => router.push('/assets/printing-item/label' as never)} /></SettingsSection>
+  </ScrollView></>;
+}

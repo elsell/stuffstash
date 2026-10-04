@@ -123,6 +123,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       headerTitleStyle: { color: palette.text, fontWeight: '700' }
     }}>
       <Stack.Screen name="voice" options={voiceNativeSheetOptions(palette)} />
+      <Stack.Screen name="assets/[assetId]/label" options={{ ...sheets.add, title: 'Label options' }} />
       <Stack.Screen name="voice-plan-location" options={{ title: 'Containing location' }} />
       <Stack.Screen name="search" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version), headerBackVisible: false }} />
       <Stack.Screen name="browse-filters" options={sheets.filters} />
