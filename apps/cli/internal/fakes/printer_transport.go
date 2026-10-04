@@ -15,6 +15,10 @@ type PrinterTransport struct {
 	mu                            sync.Mutex
 	Connected, Paper, CoverOpen   bool
 	DropCompletion                bool
+	WaitForStatusDrain            bool
+	NotificationsDuringPrint      int
+	changed                       chan struct{}
+	closed                        bool
 	FailAfterBytes                int
 	FragmentSize                  int
 	PhysicalLabels, StartedLabels int
@@ -24,7 +28,9 @@ type PrinterTransport struct {
 	printing                      bool
 }
 
-func NewPrinterTransport() *PrinterTransport { return &PrinterTransport{Connected: true, Paper: true} }
+func NewPrinterTransport() *PrinterTransport {
+	return &PrinterTransport{Connected: true, Paper: true, changed: make(chan struct{})}
+}
 func (f *PrinterTransport) frame(kind, phase byte) []byte {
 	p := make([]byte, 32)
 	copy(p, []byte{0x80, 0x20, 0x42, 0x34, 0x38, 0x30, 0x30})
@@ -41,33 +47,47 @@ func (f *PrinterTransport) frame(kind, phase byte) []byte {
 	}
 	return p
 }
+func (f *PrinterTransport) notifyLocked() { close(f.changed); f.changed = make(chan struct{}) }
 func (f *PrinterTransport) Read(ctx context.Context, p []byte) (int, error) {
-	f.mu.Lock()
-	if !f.Connected {
-		f.mu.Unlock()
-		return 0, io.EOF
-	}
-	if len(f.output) > 0 {
-		n := len(p)
-		if f.FragmentSize > 0 && n > f.FragmentSize {
-			n = f.FragmentSize
+	for {
+		if err := ctx.Err(); err != nil {
+			return 0, err
 		}
-		if n > len(f.output) {
-			n = len(f.output)
+		f.mu.Lock()
+		if !f.Connected || f.closed {
+			f.mu.Unlock()
+			return 0, io.EOF
 		}
-		copy(p, f.output[:n])
-		f.output = f.output[n:]
+		if len(f.output) > 0 {
+			n := len(p)
+			if f.FragmentSize > 0 && n > f.FragmentSize {
+				n = f.FragmentSize
+			}
+			if n > len(f.output) {
+				n = len(f.output)
+			}
+			copy(p, f.output[:n])
+			f.output = f.output[n:]
+			f.notifyLocked()
+			f.mu.Unlock()
+			return n, nil
+		}
+		changed := f.changed
 		f.mu.Unlock()
-		return n, nil
+		select {
+		case <-ctx.Done():
+			return 0, ctx.Err()
+		case <-changed:
+		}
 	}
-	f.mu.Unlock()
-	<-ctx.Done()
-	return 0, ctx.Err()
 }
-func (f *PrinterTransport) Write(_ context.Context, p []byte) (int, error) {
+
+var errStatusBackpressure = errors.New("printer waiting for status drain")
+
+func (f *PrinterTransport) Write(ctx context.Context, p []byte) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if !f.Connected {
+	if !f.Connected || f.closed {
 		return 0, io.ErrClosedPipe
 	}
 	n := len(p)
@@ -81,11 +101,33 @@ func (f *PrinterTransport) Write(_ context.Context, p []byte) (int, error) {
 	}
 	f.written += n
 	f.input = append(f.input, p[:n]...)
-	if err := f.consume(); err != nil {
-		return n, err
+	for {
+		err := f.consume()
+		f.notifyLocked()
+		if !errors.Is(err, errStatusBackpressure) {
+			if err != nil {
+				return n, err
+			}
+			break
+		}
+		for len(f.output) > 0 {
+			changed := f.changed
+			f.mu.Unlock()
+			select {
+			case <-ctx.Done():
+				f.mu.Lock()
+				return n, ctx.Err()
+			case <-changed:
+			}
+			f.mu.Lock()
+			if f.closed || !f.Connected {
+				return n, io.ErrClosedPipe
+			}
+		}
 	}
 	if failure != nil {
 		f.Connected = false
+		f.notifyLocked()
 	}
 	return n, failure
 }
@@ -151,6 +193,12 @@ func (f *PrinterTransport) consume() error {
 				f.printing = true
 				f.StartedLabels++
 				f.output = append(f.output, f.frame(6, 1)...)
+				for i := 0; i < f.NotificationsDuringPrint; i++ {
+					f.output = append(f.output, f.frame(5, 1)...)
+				}
+				if f.WaitForStatusDrain {
+					return errStatusBackpressure
+				}
 			}
 			f.Rows = append(f.Rows, append([]byte(nil), data[3:length]...))
 			f.rows++
@@ -175,4 +223,10 @@ func (f *PrinterTransport) consume() error {
 	}
 	return nil
 }
-func (f *PrinterTransport) Close() error { return nil }
+func (f *PrinterTransport) Close() error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.closed = true
+	f.notifyLocked()
+	return nil
+}

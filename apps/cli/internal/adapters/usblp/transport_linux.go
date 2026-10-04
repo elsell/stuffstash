@@ -10,7 +10,10 @@ import (
 	"golang.org/x/sys/unix"
 	"io"
 	"sync"
+	"time"
 )
+
+const emptyCompletionBackoff = 10 * time.Millisecond
 
 type transport struct {
 	fd   int
@@ -70,21 +73,23 @@ func (t *transport) transfer(ctx context.Context, p []byte, write bool) (int, er
 		} else {
 			n, err = unix.Read(t.fd, p)
 		}
-		if err == nil {
-			if n == 0 && !write {
-				return 0, io.EOF
-			}
+		if err == nil && (n > 0 || write) {
 			return n, nil
 		}
+		// usblp can complete an empty USB IN transfer and return (0, nil).
+		// It resubmits the next read; wait for that completion rather than
+		// interpreting the empty transfer as stream EOF. Poll still detects
+		// hangup, and every retry checks cancellation.
 		if n > 0 {
 			return n, err
 		}
 		if errors.Is(err, unix.EINTR) {
 			continue
 		}
-		if !errors.Is(err, unix.EAGAIN) {
+		if err != nil && !errors.Is(err, unix.EAGAIN) {
 			return 0, err
 		}
+		emptyRead := !write && n == 0 && err == nil
 		event := int16(unix.POLLIN)
 		if write {
 			event = unix.POLLOUT
@@ -96,6 +101,17 @@ func (t *transport) transfer(ctx context.Context, p []byte, write bool) (int, er
 		}
 		if fds[0].Revents&(unix.POLLERR|unix.POLLHUP|unix.POLLNVAL) != 0 {
 			return 0, io.ErrUnexpectedEOF
+		}
+		if emptyRead {
+			// Some devices immediately complete another empty IN transfer;
+			// POLLIN alone cannot provide a delay in that case.
+			timer := time.NewTimer(emptyCompletionBackoff)
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+				return 0, ctx.Err()
+			case <-timer.C:
+			}
 		}
 	}
 }

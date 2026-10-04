@@ -24,6 +24,8 @@ type Printer interface {
 }
 
 // PrinterTransport is the bidirectional byte channel; it performs no rendering.
+// It permits one concurrent reader and writer. Read and Write honor cancellation;
+// the caller joins them before Close releases the underlying device.
 type PrinterTransport interface {
 	Read(context.Context, []byte) (int, error)
 	Write(context.Context, []byte) (int, error)

@@ -65,6 +65,16 @@ See [asset labels](../printing/asset-labels.spec.md),
   present. Other platforms received artifact integrity checks, not execution checks.
   PR #400 updates the pinned download instructions from those verified assets.
 
+- October 4 hardware regression acceptance: an actual queued test label on Paul's
+  Linux USB QL-800 printed, reached API `completed` with one completed copy, and
+  cleared its worker journal at 01:03:31 UTC. The adapter candidate drains status
+  continuously while writing raster data and treats empty USB IN completions as
+  retryable, with bounded backoff. A stateful protocol fake now requires phase
+  status draining before raster progress, preventing recurrence of the missing
+  duplex behavior. Critical race tests cover shutdown, cancellation, fragmented
+  status, queue overflow, and uncertainty without replay. The user confirmed the
+  physical output; QR scanning and alignment were not assessed.
+
 ### Hardware and delivery limits
 
 Initial hardware/media support is only Brother QL-800 over USB on Linux with
@@ -73,9 +83,9 @@ trusts the user's loaded-size selection; queued labels retain their original
 media. Templates remain independent of printers. Remote wake, additional media,
 and a shared hosted QR resolver are outside this delivery.
 
-No QL-800 was attached on the inspected host. Actual USB completion, physical QR
-scanning, host udev/service setup, and named native camera/share/print journeys
-remain unverified. Source checks and connected browser acceptance do not replace
+Actual USB completion is verified for the bounded test above. Physical QR
+scanning, label alignment, host udev/service setup, and named native
+camera/share/print journeys remain unverified. Source checks and connected browser acceptance do not replace
 those checks. Pending user-device evidence does not block unrelated delivery and
 must not be reported as a pass or as closure of existing acceptance work.
 

@@ -391,6 +391,31 @@ from the registered adapter platforms; Linux includes the Brother adapter.
 
 ## Initial Linux Brother Transport
 
+Linux `usblp` reads follow USB completion semantics, not stream EOF semantics.
+A successful zero-byte read can consume a zero-length USB IN completion; the
+kernel then submits the next read. The adapter must continue waiting under the
+same context, preserving already-read status bytes. It must still stop for
+cancellation, device errors, or poll hangup/error events. Empty USB completions
+alone neither fail an in-flight label nor establish printing completion. An empty
+completion requires a cancellable 10ms pause before retrying so a device that
+continuously returns empty transfers cannot cause a busy loop, even when poll
+immediately reports readability. Critical transport tests use a stateful
+kernel-backed peer with empty and fragmented transfers; no attached printer is
+needed. This follows Linux `usblp_read` and
+`usblp_bulk_read` in the reviewed [v6.14 driver](https://github.com/torvalds/linux/blob/v6.14/drivers/usb/class/usblp.c).
+
+Each Brother connection owns one continuous status reader from open to close,
+including while raster bytes are being written. The QL-800 can require its
+printing-phase notification to be drained before output proceeds; waiting until
+Submit finishes to read can lose reliable completion evidence. Parsed status
+frames remain ordered in a bounded 32-frame queue. Reader failures or queue
+overflow invalidate the connection and fail closed; queued success must not
+hide a known reader failure. A Submit request ending does not stop the reader.
+Close cancels and joins the reader before releasing its device descriptor, so
+no reader can outlive the connection. Transport cancellation must stop an idle
+read. Faithful protocol tests impose status backpressure during raster writes,
+verify completion after the Submit context ends, and cover shutdown and overflow.
+
 The first adapter uses Linux's bidirectional `usblp` character device through
 standard nonblocking file I/O and poll. Operators enable the kernel module,
 disable Editor Lite using the hardware control where needed, and grant a narrow
@@ -420,8 +445,14 @@ on the same connection. Reopening is not recovery evidence.
 `stuffstash printers catalog --json` exports deterministic built-in descriptors
 and media presets without probing devices. Catalog availability is distinct from
 physical verification. QL-800 with 29 x 90 mm stock is the only initial profile.
-Physical verification is pending: read-only inspection on Paul found no attached
-Brother printer or usblp node on October 3, 2026.
+On October 4, 2026 at 01:03:31 UTC, an actual queued test label on Paul's
+USB QL-800 completed through the candidate worker: the user confirmed output,
+the API recorded completed with one completed copy, and the local journal
+cleared. This verified continuous status draining during raster transmission
+and zero-length IN handling. The final cancellation-priority guard was then
+verified separately by source tests; it does not change the healthy print path.
+Physical QR scanning, label alignment, and unattended service setup remain
+unverified; this bounded acceptance does not certify every hardware condition.
 
 The built-in preset records the manufacturer's effective height 89.8 mm while
 its user-facing stock name remains 29 x 90 mm. Physical margins are 18 dots
