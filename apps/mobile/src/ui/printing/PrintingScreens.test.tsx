@@ -5,7 +5,7 @@ import { expect, it, vi } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { setScreenFocused } from '../../test-support/navigation';
 import { AssetPrintScreen } from './AssetPrintScreen';
-import { PrinterSettingsScreen } from './PrinterSettingsScreen';
+import { PrinterDefaultsScreen } from './PrinterDefaultsScreen';
 import type { PrintCatalog, PrintJob, PrintSettings, PrintingRepository, PrintingWorkspace } from '../../application/printing/PrintingWorkspace';
 const scope = { tenantId: 'tenant', inventoryId: 'inventory' };
 it('queues one label to an unavailable printer and retries a lost response without duplicate output', async () => {
@@ -22,10 +22,10 @@ it('queues one label to an unavailable printer and retries a lost response witho
 it('retains a settings draft on revision conflict and does not expose cached rows after access loss', async () => {
   const h = new MobileRenderHarness(); const fake = new PrintingFake(); const workspace = fake.workspace();
   try {
-    await h.render(<PrinterSettingsScreen workspace={workspace} scope={scope} canConfigure onJob={() => {}} />);
+    await h.render(<PrinterDefaultsScreen workspace={workspace} scope={scope} canConfigure />);
     await h.run(() => h.byLabel('Print label when adding an item')?.props.onValueChange(true));
     fake.settings = { ...fake.settings, revision: 2 };
-    await h.press(h.byLabel('Save defaults')); await h.settle();
+    await h.press(h.byLabel('Save')); await h.settle();
     expect(fake.settings.printOnCreateDefault).toBe(false);
     expect(h.byLabel('Print label when adding an item')?.props.value).toBe(true);
     fake.deny = true;

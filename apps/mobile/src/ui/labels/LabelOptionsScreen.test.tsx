@@ -22,7 +22,7 @@ it('renders an authenticated preview, invalidates it when options change and rea
   try {
     await h.render(<LabelOptionsScreen workspace={f.workspace} scope={scope} assetId="asset" />);
     await h.press(h.byLabel('Preview label')); await h.settle();
-    expect(h.byLabel('Label preview')).toBeDefined();
+    expect(h.byLabel('Label preview')?.props.accessibilityRole).toBe('image');
     await h.run(() => h.byLabel('Show reference')?.props.onValueChange(true));
     expect(h.byLabel('Label preview')).toBeUndefined();
     expect(f.counts().releases).toBe(1);
@@ -39,4 +39,28 @@ it('does not hand off a download completed after leaving the task', async () => 
     await h.run(() => setScreenFocused(false)); await h.run(() => complete(file));
     expect(f.counts().shares).toBe(0);
   } finally { await h.unmount(); setScreenFocused(true); }
+});
+
+it('retries a failed render without resetting the selection or repeating a delivery', async () => {
+  const h = new MobileRenderHarness(); const f = fixture();
+  let unavailable = true; let attempts = 0;
+  f.workspace.repository.render = async (_scope, _asset, selection) => {
+    attempts++;
+    expect(selection.showReference).toBe(true);
+    if (unavailable) throw new Error('Labels are not configured');
+    return file;
+  };
+  try {
+    await h.render(<LabelOptionsScreen workspace={f.workspace} scope={scope} assetId="asset" />);
+    await h.run(() => h.byLabel('Show reference')?.props.onValueChange(true));
+    await h.press(h.byLabel('Save or share PNG')); await h.settle();
+    expect(h.byLabel('Save or share PNG')?.props.disabled).toBe(true);
+    expect(h.byLabel('Print…')?.props.disabled).toBe(true);
+    unavailable = false;
+    await h.press(h.byLabel('Try again')); await h.settle();
+    expect(attempts).toBe(2);
+    expect(h.byLabel('Label preview')).toBeDefined();
+    expect(h.byLabel('Save or share PNG')?.props.disabled).toBe(false);
+    expect(f.counts().shares).toBe(0);
+  } finally { await h.unmount(); }
 });

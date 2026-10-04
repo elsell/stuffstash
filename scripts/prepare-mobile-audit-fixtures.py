@@ -133,7 +133,7 @@ for route, component in {
 
 # Exercise unmodified Home hrefs against their real tab ownership, without root
 # fixture routes that would intercept /search or /assets/:id.
-if os.environ.get("AUDIT_TEST_CASE") in ("home-collections", "history-journey", "voice-accessory-navigation", "inventory-clearance", "notification-journey", "customization-clearance"):
+if os.environ.get("AUDIT_TEST_CASE") in ("home-collections", "history-journey", "voice-accessory-navigation", "inventory-clearance", "notification-journey", "customization-clearance", "printing-settings-and-labels"):
     shutil.rmtree(routes / "audit-tabs")
     (routes / "search.tsx").unlink()
     (routes / "assets/[assetId]/index.tsx").unlink()
@@ -188,3 +188,22 @@ if os.environ.get("AUDIT_TEST_CASE") == "customization-clearance":
     target.parent.mkdir(parents=True, exist_ok=True)
     source = os.path.relpath(root / "apps/mobile/native-audit/CustomizationCollectionJourneyFixture", target.parent)
     target.write_text(f"export {{ CustomizationCollectionJourneyFixture as default }} from '{source}';\n")
+
+# Printing interactions retain the production tabs and voice accessory.
+if os.environ.get("AUDIT_TEST_CASE") == "printing-settings-and-labels":
+    for route, component in {
+        "settings/printers/index": "PrintingSettingsFixture",
+        "settings/printers/defaults": "PrintingDefaultsFixture",
+        "settings/printers/printer": "PrintingDetailFixture",
+        "settings/printers/history": "PrintingHistoryFixture",
+        "audit-label-entry": "PrintingLabelEntryFixture",
+    }.items():
+        target = routes / "(tabs)/(home,search)" / f"{route}.tsx"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        source = os.path.relpath(root / "apps/mobile/native-audit/PrintingJourneyFixture", target.parent)
+        target.write_text(f"export {{ {component} as default }} from '{source}';\n")
+
+    target = routes / "assets/[assetId]/label.tsx"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    source = os.path.relpath(root / "apps/mobile/native-audit/PrintingJourneyFixture", target.parent)
+    target.write_text(f"export {{ PrintingLabelsFixture as default }} from '{source}';\n")

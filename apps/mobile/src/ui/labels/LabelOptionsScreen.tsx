@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { ActivityIndicator, AppState, Image, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { AppState, Image, ScrollView, Text, View } from 'react-native';
 import type { LabelFile, LabelProfile, LabelScope, LabelSelection, LabelTemplate, LabelWorkspace } from '../../application/labels/LabelWorkspace';
-import { NativeCommandButton } from '../components/NativeCommandButton';
-import { NativeChoicePicker } from '../components/NativeChoicePicker';
-import { AppSwitchField } from '../components/AppSwitchField';
-import { useAppearancePalette } from '../theme/AppearanceContext';
+import { SettingsPickerRow } from '../components/SettingsPickerRow';
+import { SettingsActionRow, SettingsLoadingRow, SettingsNavigationRow, SettingsSection, SettingsSeparator, SettingsSwitchRow, SettingsValueRow, useSettingsListStyles } from '../screens/SettingsList';
 import { t } from '../../presentation/localization';
 
 type Preview = { uri: string; release(): void; file: LabelFile };
 export function LabelOptionsScreen({ workspace, assetId, scope, onPrintOptions }: { readonly workspace: LabelWorkspace; readonly assetId: string; readonly scope: LabelScope; readonly onPrintOptions?: () => void }) {
-  const colors = useAppearancePalette(); const dimensions = useWindowDimensions();
+  const { styles } = useSettingsListStyles();
+  const [previewWidth, setPreviewWidth] = useState(0);
   const [catalog, setCatalog] = useState<{ profiles: readonly LabelProfile[]; templates: readonly LabelTemplate[] }>();
   const [selection, setSelection] = useState<LabelSelection>();
   const [preview, setPreview] = useState<Preview>(); const previewRef = useRef<Preview | undefined>(undefined);
@@ -37,7 +36,7 @@ export function LabelOptionsScreen({ workspace, assetId, scope, onPrintOptions }
   const change = (next: LabelSelection) => { clearPreview(); setSelection(next); setError(false); };
   const run = async (action: 'preview' | 'png' | 'pdf' | 'print') => {
     const controller = lifetime.current;
-    if (!controller || controller.signal.aborted || running.current || !selection) return;
+    if (!controller || controller.signal.aborted || running.current || !selection || (error && action !== 'preview')) return;
     running.current = true; setBusy(true); setError(false);
     try {
       const file = await workspace.repository.render(scope, assetId, selection, action === 'pdf' || action === 'print' ? 'pdf' : 'png', controller.signal);
@@ -50,30 +49,40 @@ export function LabelOptionsScreen({ workspace, assetId, scope, onPrintOptions }
     } catch { if (!controller.signal.aborted) { clearPreview(); setError(true); } }
     finally { if (!controller.signal.aborted) { running.current = false; setBusy(false); } }
   };
-  const width = Math.min(dimensions.width - 48, 520);
+  const width = previewWidth;
   const rotated = preview && Math.abs(preview.file.rotation) % 180 === 90;
-  const height = preview ? width * (rotated ? preview.file.width / preview.file.height : preview.file.height / preview.file.width) : 0;
-  return <ScrollView contentContainerStyle={{ padding: 24, gap: 16, paddingBottom: 48 }} style={{ backgroundColor: colors.background }}>
-    {onPrintOptions ? <NativeCommandButton label={t('printing.mobile.options')} disabled={busy} onPress={onPrintOptions} /> : null}
-    {busy ? <View accessibilityLiveRegion="polite"><ActivityIndicator /><Text style={{ color: colors.text }}>{t('labels.mobile.loading')}</Text></View> : null}
-    {error ? <><Text accessibilityRole="alert" style={{ color: colors.danger }}>{t('labels.mobile.unavailable')}</Text><NativeCommandButton label={t('labels.mobile.retry')} disabled={busy} onPress={() => setReload(value => value + 1)} /></> : null}
-    {catalog && !selection ? <Text style={{ color: colors.text }}>{t('labels.mobile.mediaUnavailable')}</Text> : null}
-    {selection ? <>
-      <Text style={{ color: colors.text }}>{t('labels.mobile.size')}: {catalog?.profiles.find(profile => profile.media === selection.media)?.name}</Text>
-      <NativeChoicePicker label={t('labels.mobile.template')} disabled={busy} value={`${selection.template.id}/${selection.template.version}`}
+  const aspectRatio = preview ? (rotated ? preview.file.height / preview.file.width : preview.file.width / preview.file.height) : 1;
+  const height = width / aspectRatio;
+  return <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content} style={styles.shell}>
+    {selection ? <SettingsSection>
+      <SettingsValueRow label={t('labels.mobile.size')} value={catalog?.profiles.find(profile => profile.media === selection.media)?.name ?? t('labels.mobile.mediaUnavailable')} />
+      <SettingsSeparator />
+      <SettingsPickerRow label={t('labels.mobile.template')} accessibilityLabel={t('labels.mobile.template')} disabled={busy} value={`${selection.template.id}/${selection.template.version}`}
         options={(catalog?.templates ?? []).map(template => ({ value: `${template.id}/${template.version}`, label: template.name }))}
         onChange={value => { const template = catalog?.templates.find(item => `${item.id}/${item.version}` === value); if (template) change({ ...selection, template, showReference: template.showReference }); }} />
-      {selection.template.supportsReference ? <AppSwitchField label={t('labels.mobile.reference')} value={selection.showReference} disabled={busy} onValueChange={showReference => change({ ...selection, showReference })} /> : null}
-      <NativeCommandButton label={t('labels.mobile.preview')} disabled={busy} onPress={() => void run('preview')} />
-      {preview ? <View style={{ alignSelf: 'center', width, height, overflow: 'hidden', backgroundColor: '#fff' }}>
-        <Image accessible accessibilityLabel={t('labels.mobile.previewAlt')} source={{ uri: preview.uri }} resizeMode="contain"
+      {selection.template.supportsReference ? <><SettingsSeparator /><SettingsSwitchRow label={t('labels.mobile.reference')} value={selection.showReference} disabled={busy} onValueChange={showReference => change({ ...selection, showReference })} /></> : null}
+    </SettingsSection> : null}
+    <SettingsSection>
+      {busy ? <SettingsLoadingRow label={t('labels.mobile.loading')} /> : null}
+      {error ? <>
+        <View style={styles.navigationRow}><Text accessibilityRole="alert" style={styles.dangerText}>{t('labels.mobile.unavailable')}</Text></View>
+        <SettingsActionRow label={t('labels.mobile.retry')} disabled={busy} onPress={() => selection ? void run('preview') : setReload(value => value + 1)} />
+      </> : null}
+      {catalog && !selection ? <View style={styles.navigationRow}><Text style={styles.valueText}>{t('labels.mobile.mediaUnavailable')}</Text></View> : null}
+      {selection && !error ? <SettingsActionRow label={t('labels.mobile.preview')} disabled={busy} onPress={() => void run('preview')} /> : null}
+      {preview ? <View onLayout={event => setPreviewWidth(event.nativeEvent.layout.width)} style={{ alignSelf: 'center', width: '100%', maxWidth: 520, aspectRatio, overflow: 'hidden', backgroundColor: '#fff' }}>
+        <Image accessible accessibilityRole="image" accessibilityLabel={t('labels.mobile.previewAlt')} source={{ uri: preview.uri }} resizeMode="contain"
           style={{ position: 'absolute', width: rotated ? height : width, height: rotated ? width : height,
             left: rotated ? (width - height) / 2 : 0, top: rotated ? (height - width) / 2 : 0, transform: [{ rotate: `${preview.file.rotation}deg` }] }} />
       </View> : null}
-      <NativeCommandButton label={t('labels.mobile.sharePNG')} disabled={busy} onPress={() => void run('png')} />
-      <NativeCommandButton label={t('labels.mobile.sharePDF')} disabled={busy} onPress={() => void run('pdf')} />
-      <Text style={{ color: colors.textMuted }}>{t('labels.mobile.actualSize')}</Text>
-      <NativeCommandButton label={t('labels.mobile.print')} prominence="primary" disabled={busy} onPress={() => void run('print')} />
-    </> : null}
+    </SettingsSection>
+    {selection ? <SettingsSection footer={t('labels.mobile.actualSize')}>
+      <SettingsActionRow label={t('labels.mobile.sharePNG')} disabled={busy || error} onPress={() => void run('png')} />
+      <SettingsSeparator />
+      <SettingsActionRow label={t('labels.mobile.sharePDF')} disabled={busy || error} onPress={() => void run('pdf')} />
+      <SettingsSeparator />
+      <SettingsActionRow label={t('labels.mobile.print')} disabled={busy || error} onPress={() => void run('print')} />
+    </SettingsSection> : null}
+    {onPrintOptions ? <SettingsSection><SettingsNavigationRow accessibilityLabel={t('printing.mobile.options')} label={t('printing.mobile.options')} disabled={busy} onPress={onPrintOptions} /></SettingsSection> : null}
   </ScrollView>;
 }

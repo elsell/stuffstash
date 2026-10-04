@@ -1024,8 +1024,8 @@ Physical printer output remains outside this browser evidence.
 
 ### Native registered-printer media editing
 
-For inventory configurators, each printer section exposes its loaded label size
-as the existing native single-choice picker plus Save label size. Choices come
+For inventory configurators, each printer detail exposes its loaded label size
+as the existing native single-choice picker plus Save label size when changed. Choices come
 from the authenticated profile catalog for that printer's adapter; initially only
 QL-800 29 × 90 mm version 1 is available. No custom dimensions, roll detection,
 printer wake, or online-readiness requirement is introduced. Viewers retain the
@@ -1187,3 +1187,37 @@ complete active-job count from a partial page. View print history remains visibl
 History owns older-first ordering information, Load more, terminal outcomes and
 reprints. Merge overlapping pages by job ID and revision. No API ordering change
 or physical print is part of this user-interface revision.
+
+### Native printer settings hierarchy
+
+The printer settings landing screen leads with registered printers and their
+concise readiness/media summaries. A printer row opens its scoped detail screen;
+loaded media and test printing are grouped native settings controls there.
+Connection timestamps and connector diagnostics appear in a separate lower group,
+not among the landing screen's primary actions. Print defaults and print history
+are compact navigation destinations following registered printers.
+
+Inventory defaults are an explicit draft form with a native navigation-bar Save
+using `useNativeHeaderActionOptions`. Save is available only to configurators,
+and enabled only for changed, loaded settings; pending submissions lock duplicate
+commands. Failure retains the draft and revision. Background/focus refreshes must
+not silently replace unsaved edits or their original revision. The service- and
+inventory-scoped route retains only the draft while hiding/unmounting the editor
+during authorization checks; a changed inventory, service or configure permission
+starts a fresh draft owner. Leaving a dirty form requires the existing
+native discard confirmation pattern. Discard callbacks must expire with their
+focused owner. Read-only viewers retain current settings without save commands.
+
+Native picker/switch rows and separators replace standalone form controls; commands
+inside grouped settings use the existing native action-row adapter. Media changes
+remain revisioned, in-place edits, with Save label size shown only after a changed
+selection. When the only supported preset already matches the registered media,
+show a read-only size value; preserve the picker for correcting different media
+or selecting among future multiple presets. Test labels use committed defaults, and uncertain retries preserve their
+request identity. No shared/global button styling changes are required.
+
+Each destination uses automatic native scroll insets so its final content clears
+navigation, tab and voice accessory bars. Verify hierarchy, current header handlers,
+draft recovery, permission/owner changes and exactly-once command intent using
+faithful fakes. Native phone/iPad entry, scrolling, enlarged text and back/tab return
+remain explicitly separate runtime acceptance evidence.

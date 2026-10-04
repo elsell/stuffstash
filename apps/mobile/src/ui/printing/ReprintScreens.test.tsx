@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { PrintingFake } from '../../test-support/PrintingFake';
 import { MobileRenderHarness } from '../../test-support/render';
 import { ReprintLabelScreen } from './ReprintLabelScreen';
-import { PrinterSettingsScreen } from './PrinterSettingsScreen';
+import { PrinterDetailScreen } from './PrinterDetailScreen';
 import { PrintJobScreen } from './PrintJobScreen';
 const scope = { tenantId: 'tenant', inventoryId: 'inventory' };
 
@@ -31,17 +31,17 @@ it('does not expose reprint for unsettled jobs and never queues a test label on 
     expect(h.byLabel('Reprint label')).toBeUndefined();
     await h.render(<ReprintLabelScreen workspace={workspace} scope={scope} jobId="uncertain" onQueued={() => {}} />);
     expect(h.byLabel('Reprint label')).toBeUndefined();
-    await h.render(<PrinterSettingsScreen workspace={workspace} scope={scope} canConfigure canPrint onJob={id => { queued = id; }} />);
+    await h.render(<PrinterDetailScreen workspace={workspace} scope={scope} printerId="printer" canConfigure canPrint onJob={id => { queued = id; }} />);
     await h.press(h.byLabel('Refresh status')); await h.settle();
     expect(fake.submitted.size).toBe(1);
     fake.drop = true; await h.press(h.byLabel('Print test label')); await h.settle();
     expect(fake.submitted.get('request')?.kind).toBe('printer_test'); expect(fake.submitted.get('request')?.assetId).toBeUndefined();
     await h.render(<></>);
     fake.settings = { ...fake.settings, template: { id: 'qr-only', version: 1, showReference: false } };
-    await h.render(<PrinterSettingsScreen workspace={workspace} scope={scope} canConfigure canPrint onJob={id => { queued = id; }} />);
+    await h.render(<PrinterDetailScreen workspace={workspace} scope={scope} printerId="printer" canConfigure canPrint onJob={id => { queued = id; }} />);
     await h.press(h.byLabel('Retry test label')); await h.settle();
     expect(queued).toBe('request'); expect(fake.submitted.size).toBe(2);
-    await h.render(<PrinterSettingsScreen workspace={workspace} scope={scope} canConfigure={false} canPrint={false} onJob={() => {}} />);
+    await h.render(<PrinterDetailScreen workspace={workspace} scope={scope} printerId="printer" canConfigure={false} canPrint={false} onJob={() => {}} />);
     expect(h.byLabel('Print test label')).toBeUndefined();
   } finally { await h.unmount(); }
 });
