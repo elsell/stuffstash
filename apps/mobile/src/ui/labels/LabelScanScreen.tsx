@@ -54,8 +54,8 @@ export function LabelScanScreen({ open, parse, pending, invalid, onResolved, onS
     {busy ? <Text accessibilityLiveRegion="polite" style={{ color: colors.text }}>{t('labels.mobile.resolving')}</Text> : null}
     {message ? <Text accessibilityRole="alert" style={{ color: colors.danger }}>{t(message)}</Text> : null}
     {pending ? <NativeCommandButton label={t('labels.mobile.open')} disabled={busy} prominence="primary" onPress={() => void resolve(pending)} /> : null}
-    {camera && active && focused ? <View style={{ height: 280 }}>
-      <ExpoLabelCamera onCode={value => void resolve(value, true)} onUnavailable={() => { setCamera(false); setError('camera'); }} />
+    {camera && focused ? <View style={{ height: 280 }}>
+      <ExpoLabelCamera active={active} onCode={value => void resolve(value, true)} onUnavailable={() => { setCamera(false); setError('camera'); }} />
     </View> : null}
     <NativeCommandButton label={t('labels.mobile.camera')} disabled={busy} onPress={() => { failedFrame.current = undefined; setCamera(true); setError(undefined); }} />
     <Text style={{ color: colors.text }}>{t('labels.mobile.paste')}</Text>

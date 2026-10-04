@@ -548,3 +548,15 @@ on dismissal/reopening or a lost response. An uncertain request can only retry
 its original selection/key. Scope teardown, loss of edit access, or task dismissal
 before submission prevents deferred loading from starting a print. Focus returns
 to the originating asset menu after either task closes.
+
+### Native camera permission lifecycle
+
+The scanner owns one permission request for each camera attempt while its route
+remains focused. An OS permission prompt can temporarily background the app;
+retain its pending decision through that transition instead of mounting a new
+request on foreground return. Denial exposes the existing paste fallback and
+Settings guidance without another automatic prompt. Grant mounts camera capture
+only when the scanner is focused and the app is active. Backgrounding must stop
+capture immediately; leaving the scanner invalidates late permission results.
+Verify the inactive/pending/denied and inactive/pending/granted transitions with a
+controlled permission fake, plus the actual OS denial on a named native build.
