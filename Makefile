@@ -196,7 +196,7 @@ docker-build-web:
 dependency-age-check:
 	python3 scripts/check-dependency-age.py
 
-required-checks: cli-client-check-generated cli-release-build audit-action-migration-check client-message-check dependency-age-check scripts-test go-structural-check mobile-ui-structural-check test api-release-build web-install web-test web-check web-build mobile-test mobile-check api-client-test api-client-check api-client-check-generated docs-install docs-build
+required-checks: dependency-security-test cli-client-check-generated cli-release-build audit-action-migration-check client-message-check dependency-age-check scripts-test go-structural-check mobile-ui-structural-check test api-release-build web-install web-test web-check web-build mobile-test mobile-check api-client-test api-client-check api-client-check-generated docs-install docs-build
 
 release-plan-test:
 	scripts/test-release-planner.sh
@@ -230,7 +230,7 @@ scripts-test: release-plan-test release-image-signing-test selfhost-happy-path-c
 	PATH="$(DOCS_PATH)" node --check scripts/verify-mobile-oidc-pkce.mjs
 
 docs-install:
-	PATH="$(DOCS_PATH)" $(PNPM) --dir docs install --frozen-lockfile
+	cd docs && PATH="$(DOCS_PATH)" $(PNPM) install --frozen-lockfile
 
 docs-dev:
 	PATH="$(DOCS_PATH)" $(PNPM) --dir docs dev
@@ -313,3 +313,7 @@ printing-docs-generate:
 
 printing-docs-check-generated:
 	python3 scripts/generate-printing-docs.py --check $(if $(PRINTING_DOCS_OUTPUT),--output $(PRINTING_DOCS_OUTPUT))
+
+.PHONY: dependency-security-test
+dependency-security-test: web-install docs-install
+	PATH="$(DOCS_PATH)" node --test scripts/test-dependency-security.cjs

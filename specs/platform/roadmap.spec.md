@@ -589,3 +589,19 @@ Update this file when batch scope, status, acceptance or material blockers chang
 Keep it concise; do not append execution transcripts or duplicate domain specs.
 Close a gap only with implementation and the required evidence, or with an explicit
 user-approved scope decision. Removing an unmet requirement is not remediation.
+
+
+## October 4 dependency security remediation
+
+The current delivery task addresses all 151 open Dependabot alerts. Candidate
+upgrades remove affected versions for 148 alerts; three latest upstream packages
+(braces, node-forge, http-cache-semantics) remain version-flagged with reviewed
+runtime mitigations and failing-before/passing-after real-library regressions.
+The change preserves Expo 55 alignment, adds Metro image-size 2 compatibility,
+and migrates the Astro/Starlight and OpenTelemetry pipelines. API/CLI suites,
+client type checks, complete web/mobile suites, and fresh iOS/Android Hermes
+exports pass. Real SpiceDB authorization integration, dependency-age checks and
+custom-domain/project-path browser rendering pass; critic findings are resolved.
+Native device acceptance is separate. CI, default-branch alert closure and release
+are pending; do not report all alerts closed.
+Per-alert evidence lives in `docs/reports/2026-10-04-dependency-security/`.

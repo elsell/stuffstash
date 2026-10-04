@@ -24,11 +24,11 @@ func (t *Telemetry) recordClientMeasurement(ctx context.Context, fields map[stri
 	t.clientDuration.Record(ctx, duration/1000, metric.WithAttributes(attrs...))
 	var record otellog.Record
 	record.SetTimestamp(time.Now())
-	record.SetBody(otellog.StringValue(string(ports.EventClientPerformanceObserved)))
+	record.SetBody(attribute.StringValue(string(ports.EventClientPerformanceObserved)))
 	record.SetSeverity(otellog.SeverityInfo)
 	for _, attr := range attrs {
-		record.AddAttributes(otellog.String(string(attr.Key), attr.Value.AsString()))
+		record.AddAttributes(attribute.String(string(attr.Key), attr.Value.AsString()))
 	}
-	record.AddAttributes(otellog.Float64("duration_ms", duration))
+	record.AddAttributes(attribute.Float64("duration_ms", duration))
 	t.logger.Emit(ctx, record)
 }
