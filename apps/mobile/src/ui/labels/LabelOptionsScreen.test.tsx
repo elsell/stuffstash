@@ -22,7 +22,7 @@ it('renders an authenticated preview, invalidates it when options change and rea
   try {
     await h.render(<LabelOptionsScreen workspace={f.workspace} scope={scope} assetId="asset" />);
     await h.press(h.byLabel('Preview label')); await h.settle();
-    expect(h.byLabel('Label preview')).toBeDefined();
+    expect(h.byLabel('Label preview')?.props.accessibilityRole).toBe('image');
     await h.run(() => h.byLabel('Show reference')?.props.onValueChange(true));
     expect(h.byLabel('Label preview')).toBeUndefined();
     expect(f.counts().releases).toBe(1);

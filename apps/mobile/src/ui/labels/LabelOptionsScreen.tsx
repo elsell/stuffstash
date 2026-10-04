@@ -71,7 +71,7 @@ export function LabelOptionsScreen({ workspace, assetId, scope, onPrintOptions }
       {catalog && !selection ? <View style={styles.navigationRow}><Text style={styles.valueText}>{t('labels.mobile.mediaUnavailable')}</Text></View> : null}
       {selection && !error ? <SettingsActionRow label={t('labels.mobile.preview')} disabled={busy} onPress={() => void run('preview')} /> : null}
       {preview ? <View onLayout={event => setPreviewWidth(event.nativeEvent.layout.width)} style={{ alignSelf: 'center', width: '100%', maxWidth: 520, aspectRatio, overflow: 'hidden', backgroundColor: '#fff' }}>
-        <Image accessible accessibilityLabel={t('labels.mobile.previewAlt')} source={{ uri: preview.uri }} resizeMode="contain"
+        <Image accessible accessibilityRole="image" accessibilityLabel={t('labels.mobile.previewAlt')} source={{ uri: preview.uri }} resizeMode="contain"
           style={{ position: 'absolute', width: rotated ? height : width, height: rotated ? width : height,
             left: rotated ? (width - height) / 2 : 0, top: rotated ? (height - width) / 2 : 0, transform: [{ rotate: `${preview.file.rotation}deg` }] }} />
       </View> : null}

@@ -16,3 +16,8 @@ header Save persists the current draft when reopening; retrying a failed preview
 renders again and produces a visible preview. Capture normal and enlarged text
 layouts on the workflow's iPhone and iPad matrix. Source/fixture checks are separate
 from the macOS runtime evidence and cannot establish a native pass themselves.
+
+The visible label preview must expose the native image accessibility role and its
+localized label. Run 37172865963 rendered the recovered PNG successfully on iPad,
+but UIKit exposed it as `Other`, so image-role lookup failed. Preserve the native
+image-role acceptance instead of weakening it to accept an untyped element.
