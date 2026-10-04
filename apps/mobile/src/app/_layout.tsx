@@ -74,6 +74,7 @@ function ThemedApp() {
         />
         <Stack.Screen name="scan-label" options={{ ...sheetOptions.selection, title: t('labels.mobile.scan') }} />
         <Stack.Screen name="assets/[assetId]/label" options={{ ...sheetOptions.add, title: t('labels.mobile.title') }} />
+        <Stack.Screen name="assets/[assetId]/print" options={{ ...sheetOptions.add, title: t('printing.mobile.print') }} />
         <Stack.Screen name="invitations/accept" options={{ title: t('mobile.layout.invitation') }} />
         <Stack.Screen name="add" options={sheetOptions.add} />
         <Stack.Screen name="provider-profiles" options={{ headerShown: false }} />

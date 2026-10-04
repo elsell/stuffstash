@@ -71,3 +71,13 @@ its child. Restoring access retains printer, layout, reference and copies; chang
 scope resets it. A retired printer or unavailable template blocks preview/submit
 instead of silently replacing the user's destination with the new default. Pending
 ambiguous submissions still use their immutable request selection.
+
+### Print route presentation parity
+
+The production root explicitly registers `assets/[assetId]/print` with the same
+bounded `createAssetNativeSheetOptions(...).add` form-sheet presentation used by
+label options. Quick-print fallback and manual print options therefore have known
+sheet geometry and a native Cancel owner rather than inheriting a root card.
+The complete-print native fixture must use that exact presentation, including
+phone/iPad bounds. Print-job inspection and its reprint mode remain a stack
+screen; reprint Cancel returns to its job without changing the job's outcome.
