@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Text } from 'react-native';
 import type { PrintScope, PrintTemplate, PrintingWorkspace, RegisteredPrinter } from '../../application/printing/PrintingWorkspace';
 import { t } from '../../presentation/localization';
-import { NativeCommandButton } from '../components/NativeCommandButton';
+import { SettingsActionRow } from '../screens/SettingsList';
 import { useSettingsListStyles } from '../screens/SettingsList';
 
 export function PrinterTestCommand({ workspace, scope, printer, template, lifetime, onQueued }: {
@@ -24,6 +24,6 @@ export function PrinterTestCommand({ workspace, scope, printer, template, lifeti
   if (printer.retired && !request.current.locked) return null;
   return <>
     {failed ? <Text accessibilityRole="alert" style={styles.errorMessage}>{t(request.current.locked ? 'printing.mobile.unknownSubmission' : 'printing.mobile.unavailable')}</Text> : null}
-    <NativeCommandButton label={t(request.current.locked ? 'printing.mobile.retryTest' : 'printing.mobile.testLabel')} disabled={busy} onPress={() => void print()} />
+    <SettingsActionRow label={t(request.current.locked ? 'printing.mobile.retryTest' : 'printing.mobile.testLabel')} disabled={busy} onPress={() => void print()} />
   </>;
 }
