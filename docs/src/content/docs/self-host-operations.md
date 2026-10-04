@@ -274,6 +274,15 @@ backups when moving the instance. JSON/CSV imports into another instance do not
 preserve label links. An ordinary camera still needs the printed hostname to
 remain reachable after an address change.
 
+To make an independent copy, start with a fresh database, run the bootstrap
+command above, and [restore an inventory archive](../export-inventory/).
+A portable archive restore creates new inventory and asset IDs; the spreadsheet
+JSON/CSV exports are not a restore format.
+The copy gets its own instance identity and label mappings; print new labels
+for it. Do not run a full database restore as a separate instance alongside
+the original: that preserves the original label identity. The bootstrap
+command does not reset an existing identity.
+
 Downloads require current inventory access and expire after one hour by default.
 See [label configuration](../configuration/#api-labels).
 The bootstrap command has been verified with persistent SQLite; this Compose

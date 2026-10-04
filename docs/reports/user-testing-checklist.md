@@ -149,13 +149,16 @@ build and device used; browser/type checks do not establish physical print quali
   sign-in fallback and an explicit Open in Stuff Stash action; invitations and
   OIDC callbacks still work.
 
-## Brother QL-800 labels — pending hardware verification
+## Brother QL-800 labels — remaining hardware checks
 
-Implementation tests use a stateful USB protocol fake. Read-only inspection of
-Paul found no connected Brother printer; no physical print was performed.
-Verify once the connector worker is integrated:
+On October 4, 2026 at 01:03:31 UTC, a queued test label printed on Paul’s
+Linux USB QL-800. The user confirmed output, the API recorded one completed
+copy, and the worker journal cleared. This verifies the successful print path
+and that the current host could open the printer. It does not establish QR
+readability, alignment, interrupted-output recovery, or unattended setup.
+Stateful protocol fakes cover software behavior separately. Remaining checks:
 
-- Linux `usblp` binding and device permissions permit the registered QL-800 to open.
+- Persistent `usblp` permissions and unattended service startup work after a host restart.
 - The 29 × 90 mm roll produces a readable title and scannable QR in the intended orientation.
 - Completion and waiting status frames match actual output; submission alone never appears as completed.
 - Power-off, USB disconnect, empty roll, and cutter errors show useful status.

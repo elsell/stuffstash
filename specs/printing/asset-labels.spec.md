@@ -2,8 +2,9 @@
 
 ## Status And Scope
 
-Accepted design direction from the October 3, 2026 discussion; not implemented
-or hardware-verified. This spec owns label identity, rendering, QR resolution,
+Implemented in the API, web/mobile clients, and CLI. Physical queued output
+has been verified for the initial Brother profile; physical QR scanning and
+alignment remain unverified. This spec owns label identity, rendering, QR resolution,
 and web/mobile interactions. [Printer integration](printer-integration.spec.md)
 owns registered printers and jobs; [CLI](../platform/cli.spec.md) owns the local
 consumer. Implementation must follow the test-first repository workflow.
@@ -35,6 +36,10 @@ shared hosted link resolution, and automatic smart-outlet control are deferred.
 - Backups/restores used for migration preserve instance identity and label
   mappings. A separately operated clone must generate a new instance identity
   and new mappings; it must not silently impersonate the original instance.
+  The supported independent-copy workflow starts with a fresh database,
+  bootstraps its identity, then restores a portable inventory archive using
+  the supported portability flow (which allocates fresh asset IDs). A full
+  database restore is a migration of the same instance, not an independent copy. No in-place label-identity reset command is provided.
 - JSON/CSV asset import into a different instance does not preserve scannability
   of old labels in this release. Document the difference from full restore.
 - Hard deletion tombstones the label mapping without retaining the asset's
