@@ -169,9 +169,10 @@ claimed as authenticated production workflow acceptance.
 
 The full audit remains incomplete. Release success does not close these gaps:
 
-- Local-provider real-model acceptance: the pinned 4B comparison passed profile
-  diagnostics but failed the required lookup; answer replay was not reached.
-  The fixed investigation budget is exhausted; no unchanged retry.
+- Local-provider narrow real-model acceptance now passes: instrumented run
+  37173848024 at `301496f43` verified diagnostic, lookup and tool-result answer
+  with the same pinned 4B configuration. [Evidence](../../docs/reports/spec-gap-evidence-2026-10-01/local-provider/instrumented-4b/README.md)
+  is synthetic, not authenticated inventory execution or speech/latency acceptance.
 - Localization: the reviewed labels, interpolation and recovery fixes shipped.
   The residual TypeScript snapshot at `a93b524a` has a scoped caller review of
   31 files, retained as exact-string classifications. The subsequent script/template
@@ -337,7 +338,11 @@ The single Qwen3 4B comparison at `3d0ec491` passed the profile diagnostic
 (24,886 ms) but failed the required lookup assertion (47,558 ms); tool-result
 replay and final answer were not reached. Run37078513169 completed cleanup.
 The comparison is stopped with [its evidence retained](../../docs/reports/spec-gap-evidence-2026-10-01/local-provider/capacity-4b/README.md).
-Local conversation acceptance remains open.
+The October 4 instrumented run37173848024 at `301496f43` subsequently passed
+diagnostic, lookup and tool-result answer with the same model and assertions.
+[Retained evidence](../../docs/reports/spec-gap-evidence-2026-10-01/local-provider/instrumented-4b/README.md)
+closes this narrow real-model round trip, without explaining the previous failure
+or proving general quality, authenticated tool execution or voice latency.
 
 ## Android archive acceptance — scoped runtime evidence
 

@@ -435,3 +435,22 @@ This is one comparison, not a model-tuning loop. A pass verifies only this pinne
 configuration. A failure ends the comparison and remains an unmet acceptance
 requirement; do not weaken assertions, increase repeated retries, or gate the
 unrelated client-message release. Retain the first model's failure evidence.
+
+### Discriminating local acceptance follow-up
+
+The combined lookup assertion in the retained 4B run did not distinguish a
+request failure, rejected response shape, or incorrect tool selection. Permit
+one instrumented run of the same pinned configuration, without changing model
+parameters or weakening success criteria. Record separate diagnostic, lookup,
+and tool-result replay stages with independent 90-second contexts. Failed lookup
+must prevent replay and leave it explicitly unverified.
+
+A test-only transport observer may retain HTTP status, a bounded finish-reason
+category, response tool-call count, and error category. Never retain response
+bodies, tool arguments, arbitrary model text, credentials or headers. Separate
+provider failure, wrong tool count/name, invalid lookup query and invalid answer
+failures in the stage result. A length finish points to the prediction budget;
+a transport/deadline failure points to runtime availability; a structurally valid
+wrong choice points to model behavior. Choose the next implementation from that
+evidence; do not repeat this run unchanged. No production behavior changes are
+authorized merely to make this acceptance pass.
