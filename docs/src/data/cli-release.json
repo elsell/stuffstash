@@ -1,43 +1,43 @@
 {
-  "version": "v0.40.0",
-  "commit": "4afbbc7fad2fbeb1c52bb640572da2dc4c099b64",
+  "version": "v0.41.0",
+  "commit": "27346f77d59db3714ae6ee45be5201a5182af7bb",
   "assets": [
     {
       "os": "linux",
       "architecture": "amd64",
-      "name": "stuffstash_v0.40.0_linux_amd64.tar.gz",
-      "sha256": "e1db4089a382a05fca0fde0ae3873540d6cd10c249b8a05536ee2c1495752bb6",
-      "usbPrinting": false
+      "name": "stuffstash_v0.41.0_linux_amd64.tar.gz",
+      "sha256": "426e40829661918f96db4c625db20e2b05fd420859b32b71cc3dd5d3265ae6d1",
+      "usbPrinting": true
     },
     {
       "os": "linux",
       "architecture": "arm64",
-      "name": "stuffstash_v0.40.0_linux_arm64.tar.gz",
-      "sha256": "a0e53f74c55d2b9d464922422e13c9ccad23e4fa0bf13119e41a278d10a4966e",
-      "usbPrinting": false
+      "name": "stuffstash_v0.41.0_linux_arm64.tar.gz",
+      "sha256": "93b38a5579e93d60c1712de77ce6e06d6384341a8f629e32bc4996c14ce2bc64",
+      "usbPrinting": true
     },
     {
       "os": "darwin",
       "architecture": "amd64",
-      "name": "stuffstash_v0.40.0_darwin_amd64.tar.gz",
-      "sha256": "38e99d51de9cf373ba263a68a4b60889dd99160f8fcd7610695af7e6efbc54f9",
+      "name": "stuffstash_v0.41.0_darwin_amd64.tar.gz",
+      "sha256": "e036f6452924953130437f5306e4d076b9fbb376fbfd81e5dc4f4af2d34db885",
       "usbPrinting": false
     },
     {
       "os": "darwin",
       "architecture": "arm64",
-      "name": "stuffstash_v0.40.0_darwin_arm64.tar.gz",
-      "sha256": "563374ede991b1e615820a6d4e3f7fcb7dec489571087deac5e018ac425f5609",
+      "name": "stuffstash_v0.41.0_darwin_arm64.tar.gz",
+      "sha256": "c9222ebf39efaf8fd74bd092b2ccdbf95e3fd662693989ec158dd8afe0c9e59f",
       "usbPrinting": false
     },
     {
       "os": "windows",
       "architecture": "amd64",
-      "name": "stuffstash_v0.40.0_windows_amd64.zip",
-      "sha256": "e7d22d27c292ef773a8e66558f5a90261c3d517257fce7bb077f64685c241942",
+      "name": "stuffstash_v0.41.0_windows_amd64.zip",
+      "sha256": "ad1c6c9ac8663e0a8e81de4b5d05f52d4ed180819cee931e84632a8ddc58f087",
       "usbPrinting": false
     }
   ],
   "repository": "elsell/stuffstash",
-  "publishedAt": "2026-10-03T22:19:06Z"
+  "publishedAt": "2026-10-04T00:04:07Z"
 }
