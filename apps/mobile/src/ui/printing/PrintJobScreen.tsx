@@ -1,11 +1,10 @@
 import { canReprint } from '../../application/printing/PrintingWorkspace';
 import { PrintResolutionControls, printOutcomeLabel, type PendingResolution } from './PrintResolutionControls';
 import { useCallback, useRef, useState } from 'react';
-import { ScrollView, Text } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import type { PrintJob, PrintScope, PrintingWorkspace } from '../../application/printing/PrintingWorkspace';
 import { t } from '../../presentation/localization';
-import { NativeCommandButton } from '../components/NativeCommandButton';
-import { SettingsLoadingRow, useSettingsListStyles } from '../screens/SettingsList';
+import { SettingsActionRow, SettingsSection, SettingsLoadingRow, useSettingsListStyles } from '../screens/SettingsList';
 import { printJobStatus } from './PrintingStatus';
 import { usePrintingTask, type PrintingPolling } from './usePrintingTask';
 const jobPolling: PrintingPolling<PrintJob> = {
@@ -37,19 +36,20 @@ export function PrintJobScreen({ workspace, scope, jobId, canPrint, onReprint }:
     catch { if (!owner.signal.aborted) setFailed(true); }
     finally { running.current = false; setBusy(false); }
   };
-  return <ScrollView style={styles.shell} contentContainerStyle={styles.content}>
+  return <ScrollView style={styles.shell} contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic">
     {task.loading ? <SettingsLoadingRow label={t('printing.mobile.loading')} /> : null}
-    {task.error ? <Text accessibilityRole="alert" style={styles.errorMessage}>{t('printing.mobile.unavailable')}</Text> : null}
+    {task.error ? <Text accessibilityRole="alert" style={[styles.sectionFooter, styles.dangerText]}>{t('printing.mobile.unavailable')}</Text> : null}
     {job ? <>
-      <Text accessibilityRole="header" accessibilityLiveRegion="polite" style={styles.detailTitle}>{job.resolution ? t('printing.mobile.resolved') : printJobStatus(job.status)}</Text>
-      <Text style={{ color: palette.text }}>{t('printing.mobile.copyProgress', { completed: job.completedCopies, total: job.copies })}</Text>
+      <View style={styles.detailHeader}><Text accessibilityRole="header" accessibilityLiveRegion="polite" style={styles.detailTitle}>{job.resolution ? t('printing.mobile.resolved') : printJobStatus(job.status)}</Text>
+      <Text style={styles.detailSubtitle}>{t('printing.mobile.copyProgress', { completed: job.completedCopies, total: job.copies })}</Text>
       {job.status === 'uncertain' ? <Text style={{ color: palette.text }}>{t('printing.mobile.uncertain')}</Text> : null}
       {job.resolution ? <><Text style={{ color: palette.text }}>{printOutcomeLabel(job.resolution.reportedOutcome)}</Text><Text style={{ color: palette.textMuted }}>{t('printing.mobile.resolvedDetail')}</Text></> : null}
-      {canPrint && job.status === 'uncertain' ? <PrintResolutionControls key={resolutionGeneration.current} pending={pendingResolution} workspace={workspace} scope={scope} job={job} lifetime={task.lifetime} onResolved={resolved} /> : null}
-      {canPrint && onReprint && canReprint(job) ? <NativeCommandButton label={t('printing.mobile.reprint')} onPress={() => onReprint(job.id)} /> : null}
-      {canPrint && ['queued', 'claimed'].includes(job.status) ? <NativeCommandButton label={t('printing.mobile.cancel')} disabled={busy} role="destructive" onPress={() => void cancel()} /> : null}
+      </View>{canPrint && job.status === 'uncertain' ? <PrintResolutionControls key={resolutionGeneration.current} pending={pendingResolution} workspace={workspace} scope={scope} job={job} lifetime={task.lifetime} onResolved={resolved} /> : null}
+      {canPrint && ((onReprint && canReprint(job)) || ['queued', 'claimed'].includes(job.status)) ? <SettingsSection>{canPrint && onReprint && canReprint(job) ? <SettingsActionRow label={t('printing.mobile.reprint')} onPress={() => onReprint(job.id)} /> : null}
+      {canPrint && ['queued', 'claimed'].includes(job.status) ? <SettingsActionRow label={t('printing.mobile.cancel')} disabled={busy} destructive onPress={() => void cancel()} /> : null}
+      </SettingsSection> : null}
     </> : null}
-    {failed ? <Text accessibilityRole="alert" style={styles.errorMessage}>{t('printing.mobile.unavailable')}</Text> : null}
-    <NativeCommandButton label={t('printing.mobile.refresh')} disabled={busy || task.loading} onPress={refresh} />
+    {failed ? <Text accessibilityRole="alert" style={[styles.sectionFooter, styles.dangerText]}>{t('printing.mobile.unavailable')}</Text> : null}
+    <SettingsSection><SettingsActionRow label={t('printing.mobile.refresh')} disabled={busy || task.loading} onPress={refresh} /></SettingsSection>
   </ScrollView>;
 }

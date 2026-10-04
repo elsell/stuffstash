@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import type { PrintScope, PrintTemplate, PrintingWorkspace, RegisteredPrinter } from '../../application/printing/PrintingWorkspace';
 import { t } from '../../presentation/localization';
 import { SettingsActionRow } from '../screens/SettingsList';
@@ -23,7 +23,7 @@ export function PrinterTestCommand({ workspace, scope, printer, template, lifeti
   };
   if (printer.retired && !request.current.locked) return null;
   return <>
-    {failed ? <Text accessibilityRole="alert" style={styles.errorMessage}>{t(request.current.locked ? 'printing.mobile.unknownSubmission' : 'printing.mobile.unavailable')}</Text> : null}
+    {failed ? <View style={styles.navigationRow}><Text accessibilityRole="alert" style={styles.dangerText}>{t(request.current.locked ? 'printing.mobile.unknownSubmission' : 'printing.mobile.unavailable')}</Text></View> : null}
     <SettingsActionRow label={t(request.current.locked ? 'printing.mobile.retryTest' : 'printing.mobile.testLabel')} disabled={busy} onPress={() => void print()} />
   </>;
 }

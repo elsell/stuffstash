@@ -109,3 +109,52 @@ it('keeps the exact ambiguous acknowledgement on same-revision refresh and never
     expect(fake.submitted.get(old.id)?.resolution?.reportedOutcome).toBe('not_printed');
   } finally { await h.unmount(); vi.useRealTimers(); }
 });
+
+it('retries failed preview with the current draft without submitting or reloading defaults', async () => {
+  class RecoveringPreview extends PrintingFake {
+    unavailable = true;
+    override async preview() {
+      if (this.unavailable) throw new Error('Render unavailable');
+      return super.preview();
+    }
+  }
+  const fake = new RecoveringPreview(); const h = new MobileRenderHarness();
+  try {
+    await h.render(<AssetPrintScreen workspace={fake.workspace()} scope={scope} assetId="asset" onQueued={() => {}} />);
+    await h.run(() => h.byLabel('Copies')!.props.onChangeText('3'));
+    await h.run(() => h.byLabel('Show reference')!.props.onValueChange(false));
+    await h.press(h.byLabel('Preview label'));
+    expect(h.byLabel('Print label')!.props.disabled).toBe(true);
+    fake.unavailable = false;
+    await h.press(h.byLabel('Try again'));
+    expect(fake.previews).toBe(1);
+    expect(h.byLabel('Copies')!.props.value).toBe('3');
+    expect(h.byLabel('Show reference')!.props.value).toBe(false);
+    expect(h.byLabel('Print label')!.props.disabled).toBe(false);
+    expect(fake.submitted.size).toBe(0);
+  } finally { await h.unmount(); }
+});
+
+it('retains the same print draft across reauthorization and rejects a retired selection', async () => {
+  const h = new MobileRenderHarness(); const fake = new PrintingFake(); const workspace = fake.workspace(); const draftState = {};
+  const screen = () => <AssetPrintScreen workspace={workspace} scope={scope} assetId="asset" draftState={draftState} onQueued={() => {}} />;
+  try {
+    await h.render(screen());
+    await h.run(() => h.byLabel('Copies')!.props.onChangeText('3'));
+    await h.run(() => h.byLabel('Show reference')!.props.onValueChange(false));
+    await h.run(() => setScreenFocused(false));
+    await h.render(<></>);
+    fake.settings = { ...fake.settings, defaultPrinterId: null };
+    await h.run(() => setScreenFocused(true)); await h.render(screen());
+    expect(h.byLabel('Copies')!.props.value).toBe('3');
+    expect(h.byLabel('Show reference')!.props.value).toBe(false);
+    await h.press(h.byLabel('Preview label'));
+    expect(h.byLabel('Print label')!.props.disabled).toBe(false);
+    await h.run(() => setScreenFocused(false));
+    fake.printer = { ...fake.printer, retired: true };
+    await h.run(() => setScreenFocused(true));
+    expect(h.byLabel('Preview label')!.props.disabled).toBe(true);
+    expect(h.byLabel('Print label')!.props.disabled).toBe(true);
+    expect(fake.submitted.size).toBe(0);
+  } finally { await h.unmount(); setScreenFocused(true); }
+});

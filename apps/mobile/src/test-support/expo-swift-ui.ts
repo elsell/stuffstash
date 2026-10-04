@@ -17,3 +17,4 @@ export const Image='SwiftUIImage';
 
 export const List='SwiftUIList';
 export const RNHostView='SwiftUIRNHostView';
+export const Stepper='SwiftUIStepper';
