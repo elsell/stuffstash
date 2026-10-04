@@ -1,6 +1,6 @@
 import { mediaSizeLabel } from './PrintingStatus';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import type { PrintScope, PrintingWorkspace, RegisteredPrinter } from '../../application/printing/PrintingWorkspace';
 import { t } from '../../presentation/localization';
 import { SettingsActionRow } from '../screens/SettingsList';
@@ -33,10 +33,10 @@ export function PrinterMediaSettings({ workspace, scope, printer, onSaved, onRel
     {task.loading ? <SettingsLoadingRow label={t('printing.mobile.loading')} /> : null}
     {fixedMedia ? <SettingsValueRow label={t('labels.mobile.size')} value={mediaSizeLabel(printer.mediaName, printer.media)} /> : task.data?.length ? <SettingsPickerRow label={t('labels.mobile.size')} accessibilityLabel={t('labels.mobile.size')} value={selected} disabled={busy}
       options={task.data.map(value => ({ value: `${value.id}/${value.version}`, label: mediaSizeLabel(value.name, value) }))} onChange={value => { setSelected(value); setStatus('idle'); }} /> : null}
-    {task.error ? <><Text accessibilityRole="alert" style={styles.errorMessage}>{t('printing.mobile.unavailable')}</Text><SettingsActionRow label={t('printing.mobile.reloadSizes')} onPress={task.reload} /></> : null}
-    {!task.loading && task.data?.length === 0 ? <Text style={{ color: palette.textMuted }}>{t('printing.mobile.noSizes')}</Text> : null}
+    {task.error ? <><View style={styles.navigationRow}><Text accessibilityRole="alert" style={styles.dangerText}>{t('printing.mobile.unavailable')}</Text></View><SettingsActionRow label={t('printing.mobile.reloadSizes')} onPress={task.reload} /></> : null}
+    {!task.loading && task.data?.length === 0 ? <View style={styles.navigationRow}><Text style={styles.secondaryText}>{t('printing.mobile.noSizes')}</Text></View> : null}
     {dirty ? <SettingsActionRow label={t('printing.mobile.saveSize')} disabled={busy || !preset} onPress={() => void save()} /> : null}
-    {status !== 'idle' ? <Text accessibilityLiveRegion="polite" style={{ color: status === 'failed' ? palette.danger : palette.text }}>{t(status === 'failed' ? 'printing.mobile.sizeFailed' : 'printing.mobile.sizeSaved')}</Text> : null}
+    {status !== 'idle' ? <View style={styles.navigationRow}><Text accessibilityLiveRegion="polite" style={{ color: status === 'failed' ? palette.danger : palette.text }}>{t(status === 'failed' ? 'printing.mobile.sizeFailed' : 'printing.mobile.sizeSaved')}</Text></View> : null}
     {status === 'failed' ? <SettingsActionRow label={t('printing.mobile.reloadPrinter')} disabled={busy} onPress={onReload} /> : null}
   </>;
 }

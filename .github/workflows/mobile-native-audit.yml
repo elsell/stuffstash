@@ -11,6 +11,7 @@ on:
         options:
           - all
           - label-scanner
+          - printing-complete-flow
           - color-picker
           - filter-search-timing
           - search-placement
@@ -124,6 +125,7 @@ jobs:
       EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN: ''
       EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED: 'false'
       EXPO_PUBLIC_STUFF_STASH_ARCHIVE_AUDIT_URL: 'http://127.0.0.1:18889'
+      EXPO_PUBLIC_STUFF_STASH_PRINT_AUDIT_URL: 'http://127.0.0.1:18890'
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -165,6 +167,16 @@ jobs:
             sleep 1
           done
           exit 1
+      - name: Start loopback printing artifact peer
+        if: matrix.suite == 'fixtures' && inputs.test_case == 'printing-complete-flow'
+        run: |
+          python3 scripts/test-native-print-artifact-server.py
+          python3 scripts/native-print-artifact-server.py --port 18890 > "$RUNNER_TEMP/print-artifact-peer.log" 2>&1 &
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:18890/health > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
       - name: Run native interaction audit
         env:
           AUDIT_DEVICE: ${{ matrix.device }}
@@ -193,6 +205,9 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationFiltersReturnToTheirOwningTab'
               )
           case "$AUDIT_TEST_CASE" in
+            printing-complete-flow)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=('-only-testing:StuffStashAuditTests/CompletePrintingAuditTests') ;;
             label-scanner)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=('-only-testing:StuffStashAuditTests/LabelScannerAuditTests')

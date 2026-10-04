@@ -32,6 +32,14 @@ if backup.exists():
 shutil.copytree(routes, backup)
 shutil.rmtree(routes)
 routes.mkdir()
+if os.environ.get("AUDIT_TEST_CASE") == "printing-complete-flow":
+    for route, component in {"_layout": "CompletePrintingLayout", "index": "CompletePrintingHome",
+                             "assets/[assetId]/print": "CompletePrintingTask", "print-jobs/[jobId]": "CompletePrintingJob"}.items():
+        target = routes / f"{route}.tsx"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        source = os.path.relpath(root / "apps/mobile/native-audit/CompletePrintingFixture", target.parent)
+        target.write_text(f"export {{ {component} as default }} from '{source}';\n")
+    raise SystemExit(0)
 if os.environ.get("AUDIT_TEST_CASE") == "label-scanner":
     # Keep the production route body, header and camera adapter; only service
     # composition changes in this disposable runner checkout.

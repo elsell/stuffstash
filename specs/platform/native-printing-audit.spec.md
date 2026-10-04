@@ -36,3 +36,48 @@ The exported screenshots and hierarchies are retained as workflow artifacts.
 This fixture does not invoke physical output or establish VoiceOver, camera
 decoding, system share-sheet or physical printer acceptance. The existing voice
 accessory's maximum-text clipping remains a separate shared limitation.
+
+## Remaining print-task coverage (October 4 follow-through)
+
+The earlier verified fixture covered settings and label export, not the separate
+registered-printer form, quick-print fallback, reprint, print-job detail or uncertain
+output resolution. Those surfaces require their own source and native acceptance;
+the earlier pass must not be presented as evidence for them.
+
+Registered printing uses a bounded task with an explicit native Cancel action.
+Transfer the grouped choice hierarchy from Settings and the single task completion
+from the reference layout reset: printer/readiness, layout/reference/copies, preview
+and recovery, then one padded primary Print command. Flat choices retain native
+pickers; reference and acknowledgement use inset native switch rows. Copies uses the pinned Expo SwiftUI Stepper on iOS, because the common task is
+incrementing one label to two without a keyboard. Its range is positive safe
+integers, not an invented server copy limit. Android retains an explicitly
+labeled numeric TextInput with keyboard dismissal and validation. Native stepper
+events must honor current locked state and teardown. Preview width comes from its measured containing
+sheet, not the device window. Changing selection invalidates the old preview. A failed preview offers Retry that
+re-renders the current draft; it must not refresh the catalog and reset choices.
+
+Print-job detail has an inset status/progress heading and grouped contextual
+Reprint, Cancel and Refresh actions. Unknown-output reporting is a separate grouped
+form retaining acknowledgement, idle guard and immutable retry identity. Quick
+print and reprint recovery reuse these controls and retain their current request
+ownership and no-duplicate-submission guarantees. Cancel dismisses the UI and does
+not cancel a possibly submitted physical job; only the explicit job Cancel action
+does that. Native review must include these destinations on phone/tablet, enlarged
+text, keyboard entry/dismissal, preview failure/retry and task cancellation. Source
+checks alone do not establish those runtime results.
+
+The route retains the scoped print draft while focus-bound authorization hides
+its child. Restoring access retains printer, layout, reference and copies; changing
+scope resets it. A retired printer or unavailable template blocks preview/submit
+instead of silently replacing the user's destination with the new default. Pending
+ambiguous submissions still use their immutable request selection.
+
+### Print route presentation parity
+
+The production root explicitly registers `assets/[assetId]/print` with the same
+bounded `createAssetNativeSheetOptions(...).add` form-sheet presentation used by
+label options. Quick-print fallback and manual print options therefore have known
+sheet geometry and a native Cancel owner rather than inheriting a root card.
+The complete-print native fixture must use that exact presentation, including
+phone/iPad bounds. Print-job inspection and its reprint mode remain a stack
+screen; reprint Cancel returns to its job without changing the job's outcome.

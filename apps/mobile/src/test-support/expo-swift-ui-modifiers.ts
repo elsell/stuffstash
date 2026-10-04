@@ -26,3 +26,4 @@ export const shapes={rectangle:()=>({type:'rectangle'})};
 export const font=modifier('font');
 export const foregroundStyle=modifier('foregroundStyle');
 export const listStyle=modifier('listStyle');
+export const padding=modifier('padding');

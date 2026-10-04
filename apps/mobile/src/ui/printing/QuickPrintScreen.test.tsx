@@ -30,3 +30,18 @@ it('does not enqueue when the scope task leaves while its render is outstanding'
   await h.render(<QuickPrintScreen workspace={fake.workspace()} scope={scope} assetId="asset" onQueued={() => {}} />);
   await h.unmount(); release(); await h.settle(); expect(fake.submitted.size).toBe(0);
 });
+it('restores edited fallback options after route reauthorization without automatically printing defaults', async () => {
+  const h = new MobileRenderHarness(); const fake = new PrintingFake(); const workspace = fake.workspace(); const draftState = {};
+  fake.settings = { ...fake.settings, defaultPrinterId: null };
+  const screen = () => <QuickPrintScreen workspace={workspace} scope={scope} assetId="asset" draftState={draftState} onQueued={() => {}} />;
+  try {
+    await h.render(screen());
+    await h.run(() => h.byLabel('Copies')!.props.onChangeText('3'));
+    await h.render(<></>);
+    fake.settings = { ...fake.settings, defaultPrinterId: fake.printer.id };
+    await h.render(screen());
+    expect(h.byLabel('Copies')!.props.value).toBe('3');
+    expect(h.byLabel('Preview label')).toBeDefined();
+    expect(fake.previews).toBe(0); expect(fake.submitted.size).toBe(0);
+  } finally { await h.unmount(); }
+});

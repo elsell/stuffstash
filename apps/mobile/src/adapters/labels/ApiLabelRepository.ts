@@ -1,7 +1,6 @@
 import { LabelsClient, type LabelMedia as WireMedia } from '@stuff-stash/api-client';
 import type { LabelFile, LabelMedia, LabelReference, LabelRepository, LabelScope, LabelSelection } from '../../application/labels/LabelWorkspace';
 import { assertReadActive } from '../../application/shared/ReadRequest';
-import { labelBlobBytes } from './LabelBlobBytes';
 
 export class ApiLabelRepository implements LabelRepository {
   constructor(private readonly client: LabelsClient) {}
@@ -29,8 +28,8 @@ export class ApiLabelRepository implements LabelRepository {
       media: toWireMedia(selection.media), format
     }, signal);
     assertReadActive(signal);
-    const blob = await this.client.content(scope.tenantId, scope.inventoryId, rendered.id, signal);
-    const bytes = await labelBlobBytes(blob); assertReadActive(signal);
+    const bytes = await this.client.contentBytes(scope.tenantId, scope.inventoryId, rendered.id, format, signal);
+    assertReadActive(signal);
     return { bytes, format, width: rendered.widthPixels, height: rendered.heightPixels, rotation: rendered.displayRotation };
   }
 }

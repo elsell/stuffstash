@@ -257,3 +257,21 @@ unverified beyond source and stateful-fake checks.
   Changing the count must clear the old preview. A rejected server limit leaves
   the draft editable; a lost submission response keeps the count locked for retry.
   Quick Print label, create-and-print, and test labels still request one copy.
+
+### Print preview and recovery follow-up
+
+Native run `37204262877` at `a7c134b6b` passed the complete normal-text print
+journey on iPhone 17 and iPad mini A17 Pro in dark appearance: real HTTP PNG bytes
+recovered through the native file/image adapters, followed by synthetic queue,
+cancel, reprint and uncertainty resolution. This did not send a physical label.
+
+The largest-text cases stopped at a test-driver check on the Copies stepper;
+the Increment child was visible. The driver now targets that child, but this
+correction has not run natively. Full largest-text acceptance remains unverified.
+
+- [ ] On the new released build, preview and print a label with your registered
+  printer. Confirm the preview, reported result and actual paper output.
+- [ ] With the largest text size, edit Copies and complete preview/recovery and
+  job actions. Confirm controls remain reachable without clipped content.
+
+Both real-user checks remain pending; no release version is assumed here.

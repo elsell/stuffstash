@@ -643,3 +643,16 @@ retained label. Once the authenticated application is ready, its pending-label
 notice says the label is ready to open and offers the existing Open label action;
 it must not instruct an already signed-in user to sign in again. Keep warm-link
 navigation explicit so receiving a label does not replace an unrelated draft.
+
+### Native binary artifact transport
+
+Mobile label preview, PNG/PDF export and registered-printer preview must read
+artifact responses as raw bytes through the generated authenticated transport.
+Expo fetch's Blob conversion constructs an ArrayBuffer-backed Blob, which React
+Native does not support. Do not route mobile artifacts through Blob conversion;
+retain the browser Blob API for browser consumers. Byte reads retain the same
+inventory authorization, cancellation, media type validation and private file
+handling. Regression coverage must include a faithful Expo response whose byte
+reader works while Blob conversion is unsupported, exercising both mobile
+repositories through the actual SDK. Native acceptance must exercise Expo fetch
+and private file writing rather than only data-URL fixtures.

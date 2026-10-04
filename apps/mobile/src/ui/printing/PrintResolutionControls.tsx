@@ -2,10 +2,8 @@ import { useRef, useState } from 'react';
 import { Text } from 'react-native';
 import type { PrintJob, PrintOutcome, PrintScope, PrintingWorkspace } from '../../application/printing/PrintingWorkspace';
 import { t } from '../../presentation/localization';
-import { AppSwitchField } from '../components/AppSwitchField';
-import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
-import { useSettingsListStyles } from '../screens/SettingsList';
+import { SettingsSection, SettingsSeparator, SettingsSwitchRow, SettingsActionRow, useSettingsListStyles } from '../screens/SettingsList';
 
 export type PendingResolution = { job: PrintJob; outcome: PrintOutcome };
 
@@ -14,7 +12,7 @@ export function PrintResolutionControls({ workspace, scope, job, lifetime, pendi
   readonly pending: { current: PendingResolution | undefined };
   readonly lifetime: { current: AbortController | undefined }; readonly onResolved: (job: PrintJob) => void;
 }) {
-  const { styles, palette } = useSettingsListStyles();
+  const { styles } = useSettingsListStyles();
   const [outcome, setOutcome] = useState<PrintOutcome | ''>(pending.current?.outcome ?? ''); const [acknowledged, setAcknowledged] = useState(!!pending.current);
   const [busy, setBusy] = useState(false); const [failed, setFailed] = useState(false); const running = useRef(false);
   const locked = busy || !!pending.current;
@@ -29,15 +27,15 @@ export function PrintResolutionControls({ workspace, scope, job, lifetime, pendi
     } catch { if (!owner.signal.aborted) setFailed(true); }
     finally { running.current = false; setBusy(false); }
   };
-  return <>
-    {!job.idleConfirmed ? <Text style={{ color: palette.text }}>{t('printing.mobile.waitingForIdle')}</Text> : null}
+  return <SettingsSection>
+    {!job.idleConfirmed ? <Text style={styles.sectionFooter}>{t('printing.mobile.waitingForIdle')}</Text> : null}
     <SettingsPickerRow label={t('printing.mobile.outcome')} accessibilityLabel={t('printing.mobile.outcome')} value={outcome} disabled={locked || !job.idleConfirmed}
       options={[{ value: '', label: t('printing.mobile.outcome.choose') }, { value: 'printed', label: t('printing.mobile.outcome.printed') }, { value: 'not_printed', label: t('printing.mobile.outcome.not_printed') }, { value: 'unknown', label: t('printing.mobile.outcome.unknown') }]}
       onChange={setOutcome} />
-    <AppSwitchField label={t('printing.mobile.acknowledge')} value={acknowledged} disabled={locked || !job.idleConfirmed} onValueChange={setAcknowledged} />
+    <SettingsSeparator /><SettingsSwitchRow label={t('printing.mobile.acknowledge')} value={acknowledged} disabled={locked || !job.idleConfirmed} onValueChange={setAcknowledged} />
     {failed ? <Text accessibilityRole="alert" style={styles.errorMessage}>{t('printing.mobile.unavailable')}</Text> : null}
-    <NativeCommandButton label={t(pending.current ? 'printing.mobile.resolveRetry' : 'printing.mobile.resolve')} disabled={busy || !job.idleConfirmed || !outcome || !acknowledged} onPress={() => void resolve()} />
-  </>;
+    <SettingsSeparator /><SettingsActionRow label={t(pending.current ? 'printing.mobile.resolveRetry' : 'printing.mobile.resolve')} disabled={busy || !job.idleConfirmed || !outcome || !acknowledged} onPress={() => void resolve()} />
+  </SettingsSection>;
 }
 
 export function printOutcomeLabel(outcome: PrintOutcome) {

@@ -31,6 +31,13 @@ class FixtureRouteIsolationTests(unittest.TestCase):
                "AUDIT_SUITE": "fixtures", "AUDIT_TEST_CASE": "all", **settings}
         return subprocess.run(["python3", str(self.script)], env=env, capture_output=True, text=True)
 
+    def test_complete_print_flow_has_isolated_native_task_and_job_routes(self):
+        self.assertEqual(self.run_script(AUDIT_TEST_CASE="printing-complete-flow").returncode, 0)
+        for route, component in {"_layout": "CompletePrintingLayout", "index": "CompletePrintingHome", "assets/[assetId]/print": "CompletePrintingTask", "print-jobs/[jobId]": "CompletePrintingJob"}.items():
+            self.assertIn(component, (self.routes / f"{route}.tsx").read_text())
+        self.assertFalse((self.routes / "audit-add.tsx").exists())
+        self.assertTrue((self.runner / "production-mobile-routes/index.tsx").exists())
+
     def test_printing_journey_uses_production_tabs_and_actual_screen_routes(self):
         self.assertEqual(self.run_script(AUDIT_TEST_CASE="printing-settings-and-labels").returncode, 0)
         self.assertIn("PrintingSettingsFixture", (self.routes / "(tabs)/(home,search)/settings/printers/index.tsx").read_text())
