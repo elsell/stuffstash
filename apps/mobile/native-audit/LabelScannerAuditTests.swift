@@ -30,11 +30,14 @@ final class LabelScannerAuditTests: XCTestCase {
     let prompted = permission.waitForExistence(timeout: requireDenial ? 10 : 3)
     if requireDenial { XCTAssertTrue(prompted, "Permission denial requires the real OS prompt; camera mount failure is not equivalent") }
     if prompted {
-      let deny = permission.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Allow")).allElementsBoundByIndex.first {
-        $0.label.lowercased().contains("don")
-      }
-      XCTAssertNotNil(deny, "Expected the actual OS camera permission denial action")
-      deny?.tap()
+      XCTAssertTrue(permission.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "Camera")).firstMatch.exists,
+                    "Only handle the actual camera permission prompt")
+      let deny = permission.buttons.matching(NSPredicate(format: "label == %@ OR label == %@", "Don’t Allow", "Don't Allow")).firstMatch
+      XCTAssertTrue(deny.isHittable, "Expected the actual OS camera permission denial action")
+      capture("scanner-os-camera-prompt")
+      // Element.tap() left this iOS alert visible after an XCTest interruption-targeting error.
+      deny.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+      XCTAssertTrue(permission.waitForNonExistence(timeout: 10), "The OS must receive the denial before testing app fallback")
     }
     XCTAssertTrue(app.staticTexts["Camera unavailable. Allow camera access in Settings, or paste a label link."].waitForExistence(timeout: 10))
     XCTAssertTrue(app.navigationBars.buttons["Cancel"].isHittable)

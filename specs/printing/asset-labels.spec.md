@@ -622,6 +622,13 @@ clipboard and the actual native Paste action, verifies the exact complete URL,
 and retains every cancellation and navigation assertion. Do not replace input
 with direct React state changes or accept partial text.
 
+The follow-up paste run (`37178128691`, source `71c1195f3`) passed all four
+cases on iPad. On iPhone, XCTest reported an interruption-targeting error while
+tapping denial; the retained screenshot still showed the OS camera prompt.
+Treat those cases as unverified. Target the observed camera alert's denial-button
+center and require the alert to disappear before checking app fallback. Do not
+repeat denial, pregrant permission, or accept an undismissed OS prompt as success.
+
 ### Pending-label notice after sign-in
 
 The signed-out connection screen explains that sign-in is required to open a
