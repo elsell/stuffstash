@@ -59,6 +59,7 @@ final class FixtureAuditTests: XCTestCase {
     let entry = (name.contains("testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs")
       || name.contains("testHistoryJourneyClearsPersistentChrome")
       || name.contains("testVoiceAccessorySettledNavigationAppearance")
+      || name.contains("testPrintingSettingsAndLabels")
       || name.contains("testInventoryCollectionClearsPersistentChrome")
       || name.contains("testCustomizationCollectionClearsPersistentChrome")
       || name.contains("testNotificationJourneyRetainsTabsAndClearsFooter"))
@@ -3170,6 +3171,69 @@ final class FixtureAuditTests: XCTestCase {
     capture("inventory-collection-footer")
     XCTAssertTrue(footer.isHittable)
     XCTAssertTrue(headingClearsHeader, "Inventory heading must clear the navigation header at entry")
+  }
+
+  func testPrintingSettingsAndLabels() { auditPrintingSettingsAndLabels(largeText: false) }
+
+  func testPrintingSettingsAndLabelsAtAccessibilityTextSize() { auditPrintingSettingsAndLabels(largeText: true) }
+
+  private func auditPrintingSettingsAndLabels(largeText: Bool) {
+    let suffix = largeText ? "large-text" : "normal-text"
+    if largeText {
+      app.terminate()
+      app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+      app.launch()
+      XCTAssertTrue(app.buttons["View all recently changed assets"].waitForExistence(timeout: 30))
+    }
+    guard openFixtureURL("(tabs)/(home)/settings/printers") else { return }
+    let garage = app.buttons["Garage"].firstMatch
+    XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertTrue(garage.isHittable)
+    XCTAssertGreaterThanOrEqual(garage.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+    capture("printing-settings-entry-\(suffix)")
+    let refresh = app.buttons["Refresh status"].firstMatch
+    verifyFooterClearsPersistentChrome(refresh); XCTAssertTrue(refresh.isHittable)
+    capture("printing-settings-footer-\(suffix)")
+    let defaults = app.buttons["Print defaults"].firstMatch
+    for _ in 0..<6 where !defaults.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(defaults.isHittable); defaults.tap()
+    let automatic = app.switches["Print label when adding an item"].firstMatch
+    XCTAssertTrue(automatic.waitForExistence(timeout: 10))
+    verifyFooterClearsPersistentChrome(automatic); XCTAssertTrue(automatic.isHittable)
+    XCTAssertEqual(automatic.value as? String, "0"); automatic.tap()
+    let save = app.navigationBars.firstMatch.buttons["Save"].firstMatch
+    XCTAssertTrue(save.waitForExistence(timeout: 10)); XCTAssertTrue(save.isHittable); XCTAssertTrue(save.isEnabled)
+    capture("printing-defaults-edited-\(suffix)"); save.tap()
+    XCTAssertTrue(app.staticTexts["Defaults saved"].waitForExistence(timeout: 10))
+    app.navigationBars.firstMatch.buttons.firstMatch.tap()
+    XCTAssertTrue(defaults.waitForExistence(timeout: 10)); defaults.tap()
+    XCTAssertTrue(automatic.waitForExistence(timeout: 10))
+    XCTAssertEqual(automatic.value as? String, "1", "Header Save must persist the current edited draft")
+    capture("printing-defaults-reopened-\(suffix)")
+    guard openFixtureURL("(tabs)/(home)/settings/printers/printer") else { return }
+    let testLabel = app.buttons["Print test label"].firstMatch
+    XCTAssertTrue(testLabel.waitForExistence(timeout: 10))
+    verifyFooterClearsPersistentChrome(testLabel); XCTAssertTrue(testLabel.isHittable)
+    capture("printing-printer-detail-\(suffix)")
+    verifyFooterClearsPersistentChrome(refresh); XCTAssertTrue(refresh.isHittable)
+    capture("printing-printer-detail-footer-\(suffix)")
+    // Hittability only: the audit must never submit even a synthetic print.
+    guard openFixtureURL("(tabs)/(home)/settings/printers/history") else { return }
+    XCTAssertTrue(app.navigationBars["Print history"].waitForExistence(timeout: 10))
+    capture("printing-history-\(suffix)")
+    guard openFixtureURL("(tabs)/(home)/assets/printing-item/label") else { return }
+    let preview = app.buttons["Preview label"].firstMatch
+    XCTAssertTrue(preview.waitForExistence(timeout: 10))
+    verifyFooterClearsPersistentChrome(preview); XCTAssertTrue(preview.isHittable); preview.tap()
+    let retry = app.buttons["Try again"].firstMatch
+    XCTAssertTrue(retry.waitForExistence(timeout: 10))
+    capture("printing-label-preview-failure-\(suffix)")
+    verifyFooterClearsPersistentChrome(retry); XCTAssertTrue(retry.isHittable); retry.tap()
+    let image = app.images["Label preview"].firstMatch
+    XCTAssertTrue(image.waitForExistence(timeout: 10), "Retry must perform another render, not only reload the catalog")
+    capture("printing-label-preview-recovered-\(suffix)")
+    let print = app.buttons["Print…"].firstMatch
+    verifyFooterClearsPersistentChrome(print); XCTAssertTrue(print.isHittable)
+    capture("printing-label-final-action-\(suffix)")
   }
 
   func testVoiceAccessorySettledNavigationAppearance() {
