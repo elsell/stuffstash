@@ -5,7 +5,9 @@ AssetPrintScreen, QuickPrintScreen, PrintJobScreen or uncertain-job controls.
 A focused `printing-complete-flow` native audit must exercise those production
 components on named iPhone and iPad simulators at normal and accessibility text.
 Use the native task header and selection-sheet presentation, with a real return
-screen. Preserve native Cancel, Copies editing, scrolling and footer reachability.
+screen. Preserve native Cancel, the iOS Copies stepper, scrolling and footer reachability.
+Assert the edited value and full preview containment within the sheet scroll area.
+Repository fakes must declare port return types rather than narrower inferred buffers.
 
 The quick-print entry first encounters a controlled preview failure and falls back
 to options. Verify a visible failed manual preview, then recover a real PNG. Fetch

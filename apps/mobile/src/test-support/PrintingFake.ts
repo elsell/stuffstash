@@ -21,7 +21,7 @@ export class PrintingFake implements PrintingRepository {
     return this.printer;
   }
   async saveSettings(_scope: typeof scope, value: PrintSettings) { if (value.revision !== this.settings.revision) throw new Error('Conflict'); this.settings = { ...value, revision: value.revision + 1 }; return this.settings; }
-  async preview() { this.previews++; return { file: { bytes: new Uint8Array([1]), format: 'png' as const, width: 306, height: 991, rotation: 90 }, fingerprint: 'selection' }; }
+  async preview(): ReturnType<PrintingRepository['preview']> { this.previews++; return { file: { bytes: new Uint8Array([1]), format: 'png' as const, width: 306, height: 991, rotation: 90 }, fingerprint: 'selection' }; }
   async submit(_scope: typeof scope, assetId: string, selection: PrintSelection, key: string) {
     const job = this.submitted.get(key) ?? { id: key, assetId, printerId: selection.printerId, status: 'queued', revision: 1, copies: selection.copies, completedCopies: 0 };
     this.submitted.set(key, job);

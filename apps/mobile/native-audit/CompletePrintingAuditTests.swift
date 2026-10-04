@@ -10,7 +10,11 @@ final class CompletePrintingAuditTests: XCTestCase {
   }
   private func reveal(_ element: XCUIElement) {
     XCTAssertTrue(element.waitForExistence(timeout: 10))
-    for _ in 0..<10 where !element.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    for _ in 0..<10 {
+      if element.isHittable && element.frame.minY >= app.navigationBars.firstMatch.frame.maxY && element.frame.maxY <= app.frame.maxY - 20 { break }
+      if element.frame.minY < app.navigationBars.firstMatch.frame.maxY { app.scrollViews.firstMatch.swipeDown() }
+      else { app.scrollViews.firstMatch.swipeUp() }
+    }
     XCTAssertTrue(element.isHittable)
     XCTAssertGreaterThanOrEqual(element.frame.minY, app.navigationBars.firstMatch.frame.maxY)
     XCTAssertLessThanOrEqual(element.frame.maxY, app.frame.maxY)
@@ -23,23 +27,26 @@ final class CompletePrintingAuditTests: XCTestCase {
     app.launchArguments = large ? ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] : []
     app.launch(); let suffix = large ? "large" : "normal"
     action("Open quick print")
-    let copies = app.textFields["Copies"].firstMatch
+    let copies = app.steppers["Copies"].firstMatch
     reveal(copies)
     capture("complete-print-options-\(suffix)")
-    copies.tap(); XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
-    copies.typeText(XCUIKeyboardKey.delete.rawValue + "2")
+    let increment = copies.buttons["Increment"].firstMatch
+    XCTAssertTrue(increment.isHittable); increment.tap()
     let complete = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "2"), object: copies)
-    XCTAssertEqual(XCTWaiter.wait(for: [complete], timeout: 5), .completed)
-    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
-    XCTAssertTrue(dismiss.isHittable); dismiss.tap()
-    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(XCTWaiter.wait(for: [complete], timeout: 5), .completed, "Native Copies stepper must retain the edited value")
     action("Preview label")
     see("Printing is unavailable. Check your connection and inventory access, then try again.")
     capture("complete-print-preview-failure-\(suffix)")
-    action("Preview label")
+    action("Try again")
     let preview = app.descendants(matching: .any).matching(identifier: "Label preview").firstMatch
     XCTAssertTrue(preview.waitForExistence(timeout: 15), "Success must fetch and decode real PNG bytes through ExpoLabelFiles")
     reveal(preview); XCTAssertGreaterThan(preview.frame.width, 0); XCTAssertGreaterThan(preview.frame.height, 0)
+    let sheet = app.scrollViews.containing(.any, identifier: "Label preview").firstMatch
+    XCTAssertTrue(sheet.exists)
+    XCTAssertGreaterThanOrEqual(preview.frame.minX, sheet.frame.minX)
+    XCTAssertLessThanOrEqual(preview.frame.maxX, sheet.frame.maxX)
+    XCTAssertGreaterThanOrEqual(preview.frame.minY, max(sheet.frame.minY, app.navigationBars.firstMatch.frame.maxY))
+    XCTAssertLessThanOrEqual(preview.frame.maxY, sheet.frame.maxY)
     capture("complete-print-native-png-\(suffix)")
     action("Print label"); see("Queued"); see("0 of 2 copies confirmed")
     capture("complete-print-queued-\(suffix)")
