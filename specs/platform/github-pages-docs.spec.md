@@ -90,3 +90,9 @@ The first Pages-branch publication must also preserve a concurrently initialized
 branch. Verify these cases using real temporary clones and a local bare Git remote,
 including conflicting same-path writes and a rejecting receive hook. Tests must
 not fake Git commands or use a network service.
+
+The local Git publication fixtures disable automatic garbage collection and
+maintenance for all Git commands, including publisher subprocesses and hooks.
+Their repositories are short-lived; detached pack writers must not outlive the
+fixture and race temporary-directory cleanup. This does not change production
+Git settings or suppress cleanup failures.

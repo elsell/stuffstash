@@ -11,6 +11,13 @@ SCRIPT = Path(__file__).with_name('push-pages.sh').resolve()
 
 class PagesPushTests(unittest.TestCase):
     def setUp(self):
+        # Detached maintenance can keep writing packs after the fixture is done.
+        # Pass these settings to the publisher and hooks as well as direct Git calls.
+        self.git_environment = {
+            **os.environ, 'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_COUNT': '2',
+            'GIT_CONFIG_KEY_0': 'gc.auto', 'GIT_CONFIG_VALUE_0': '0',
+            'GIT_CONFIG_KEY_1': 'maintenance.auto', 'GIT_CONFIG_VALUE_1': 'false',
+        }
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
@@ -28,7 +35,7 @@ class PagesPushTests(unittest.TestCase):
 
     def git(self, cwd, *args, check=True):
         return subprocess.run(['git', *args], cwd=cwd, text=True, capture_output=True,
-                              check=check, env={**os.environ, 'GIT_CONFIG_NOSYSTEM': '1'})
+                              check=check, env=self.git_environment)
 
     def clone(self, name):
         path = self.root / name
@@ -48,7 +55,8 @@ class PagesPushTests(unittest.TestCase):
         self.git(repo, 'commit', '-m', message)
 
     def push(self, repo, succeeds=True):
-        result = subprocess.run(['bash', str(SCRIPT)], cwd=repo, text=True, capture_output=True)
+        result = subprocess.run(['bash', str(SCRIPT)], cwd=repo, text=True, capture_output=True,
+                                env=self.git_environment)
         self.assertEqual(result.returncode == 0, succeeds, result.stdout + result.stderr)
         return result
 

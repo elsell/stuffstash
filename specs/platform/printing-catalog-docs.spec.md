@@ -64,6 +64,14 @@ are reference documentation, not a user-managed media catalog in the app.
   `templates.mdx`. Generated PNGs live in `docs/src/assets/printing/generated/`.
   Link setup guidance from printer entries; keep model/platform/transport/size
   and known limitations easy to scan. Avoid one thin page per registry entry.
+- Catalog comparisons use semantic HTML tables with column headers, inheriting
+  Starlight's horizontal scrolling at narrow widths without widening the page.
+  Enable GFM explicitly for both Markdown and MDX; a dependency default must not
+  turn catalog tables into pipe-delimited paragraphs. The docs build must check
+  the rendered HTML of every generated page, require tables and headers wherever
+  the generated source declares a table, and reject raw table syntax in prose.
+  Verify the built catalog at desktop and phone widths; Markdown-only checks do
+  not establish browser rendering.
 - Show one PNG for each supported built-in template/default-options and media
   preset combination. Deduplicate identical presets shared by multiple printers;
   do not render every impossible Cartesian combination. Include additional
@@ -179,3 +187,13 @@ not skip arbitrary replacement modules. A dirty profile prevents a release build
 CI provisions the exact exporter build dependency graph into a job-local module
 cache and verifies downloaded module contents before offline rendering. A restored
 compiled/package cache does not substitute for module integrity verification.
+
+## Rendered Catalog Regression — October 4, 2026
+
+Astro 6.4.6 with the pinned MDX integration rendered generated comparison tables
+as pipe-delimited paragraphs when GFM was left implicit. The rendered-HTML check
+failed on that build and passes with explicit shared GFM configuration. The
+26-page build, registry regeneration/drift check, and ownership tests pass. Browser
+checks of all three generated pages at 390 and 1280 pixels found semantic table
+headers and no page overflow; narrow comparisons scroll within their table.
+This is documentation rendering evidence, not printer or native-app acceptance.
