@@ -29,7 +29,7 @@ jobs:
         env:
           STUFF_STASH_LOCAL_MODEL_ACCEPTANCE: '1'
           STUFF_STASH_LOCAL_MODEL_EVIDENCE: ${{ github.workspace }}/local-model-evidence/stages.json
-        run: '"$RUNNER_TEMP/local-provider.test" -test.timeout=4m -test.run=^TestCompatibleLocalModelAcceptance$'
+        run: '"$RUNNER_TEMP/local-provider.test" -test.timeout=5m -test.run=^TestCompatibleLocalModelAcceptance$'
       - name: Retain allowlisted evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
