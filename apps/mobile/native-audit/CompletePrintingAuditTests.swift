@@ -10,14 +10,19 @@ final class CompletePrintingAuditTests: XCTestCase {
   }
   private func reveal(_ element: XCUIElement) {
     XCTAssertTrue(element.waitForExistence(timeout: 10))
+    let identifier = element.identifier.isEmpty ? element.label : element.identifier
+    let scroll = app.scrollViews.containing(.any, identifier: identifier).firstMatch
+    XCTAssertTrue(scroll.exists, "The target must belong to the active task scroll viewport")
+    let top = max(scroll.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+    let bottom = min(scroll.frame.maxY, app.frame.maxY - 20)
     for _ in 0..<10 {
-      if element.isHittable && element.frame.minY >= app.navigationBars.firstMatch.frame.maxY && element.frame.maxY <= app.frame.maxY - 20 { break }
-      if element.frame.minY < app.navigationBars.firstMatch.frame.maxY { app.scrollViews.firstMatch.swipeDown() }
-      else { app.scrollViews.firstMatch.swipeUp() }
+      if element.isHittable && element.frame.minY >= top && element.frame.maxY <= bottom { break }
+      if element.frame.minY < top { scroll.swipeDown() }
+      else { scroll.swipeUp() }
     }
     XCTAssertTrue(element.isHittable)
-    XCTAssertGreaterThanOrEqual(element.frame.minY, app.navigationBars.firstMatch.frame.maxY)
-    XCTAssertLessThanOrEqual(element.frame.maxY, app.frame.maxY)
+    XCTAssertGreaterThanOrEqual(element.frame.minY, top)
+    XCTAssertLessThanOrEqual(element.frame.maxY, bottom)
   }
   private func action(_ label: String) { let button = app.buttons[label].firstMatch; reveal(button); button.tap() }
   private func see(_ label: String) { XCTAssertTrue(app.staticTexts[label].firstMatch.waitForExistence(timeout: 10)) }

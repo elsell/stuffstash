@@ -26,7 +26,7 @@ function CompletePrintingNavigation() {
   const palette = useAppearancePalette(); const sheets = createAssetNativeSheetOptions(palette);
   return <AppFeedbackProvider noticePlacement="screen"><Stack screenLayout={AppNoticeScreenLayout} screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
     <Stack.Screen name="index" options={{ title: 'Printing acceptance' }} />
-    <Stack.Screen name="assets/[assetId]/print" options={{ ...sheets.selection, title: 'Print label' }} />
+    <Stack.Screen name="assets/[assetId]/print" options={{ ...sheets.add, title: 'Print label' }} />
     <Stack.Screen name="print-jobs/[jobId]" options={{ title: 'Print job' }} />
   </Stack></AppFeedbackProvider>;
 }
