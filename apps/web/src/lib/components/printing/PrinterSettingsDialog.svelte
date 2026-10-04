@@ -1,5 +1,5 @@
 <script lang="ts">
-import {onMount,onDestroy,untrack} from 'svelte';
+import {onMount,onDestroy,untrack,tick} from 'svelte';
 import * as Dialog from '$lib/components/ui/dialog/index.js';
 import {Button} from '$lib/components/ui/button/index.js';
 import {Input} from '$lib/components/ui/input/index.js';
@@ -9,11 +9,17 @@ import {t} from '$lib/presentation/localization';
 import {labelMediaName,printingFailureMessage} from '$lib/presentation/printing';
 import {PrintingFailure,type RegisteredPrinter,type PrinterMediaChoice,type PrintScope} from '$lib/domain/printing';
 import type {PrintingRepository} from '$lib/ports/printingRepository';
+import WorkspaceConfirmationDialog from '$lib/components/workspace/action-surface/WorkspaceConfirmationDialog.svelte';
 import PairingChoice from './PairingChoice.svelte';
 let {scope,printer,repository,onSaved,onClose,onRestoreFocus}:{scope:PrintScope;printer:RegisteredPrinter;repository:PrintingRepository;onSaved:(printer:RegisteredPrinter)=>void;onClose:()=>void;onRestoreFocus:()=>void}=$props();
 let current=$state(untrack(()=>({...printer}))),name=$state(untrack(()=>printer.name)),retired=$state(untrack(()=>printer.retired));
 let media=$state<PrinterMediaChoice[]>([]),mediaKey=$state(untrack(()=>`${printer.media.presetId}:${printer.media.version}`));
 let busy=$state(true),mustReload=$state(false),error=$state('');let alive=true;
+let discardOpen=$state(false),discardRequested=false;
+function finishDiscardDialog(event:Event){event.preventDefault();if(discardRequested){onClose();void tick().then(onRestoreFocus);}else{void tick().then(()=>nameInput?.focus());}}
+let nameInput=$state<HTMLInputElement|null>(null);
+const dirty=$derived(name!==current.name||retired!==current.retired||mediaKey!==`${current.media.presetId}:${current.media.version}`);
+function requestClose(){if(busy)return;if(dirty)discardOpen=true;else onClose();}
 const selected=$derived(media.find(m=>`${m.media.presetId}:${m.media.version}`===mediaKey));
 onDestroy(()=>{alive=false;});onMount(()=>{void load(false);});
 async function load(refresh:boolean){
@@ -36,16 +42,20 @@ async function save(event:SubmitEvent){
  finally{if(alive)busy=false;}
 }
 </script>
-<Dialog.Root open onOpenChange={open=>{if(!open)onClose();}}>
- <Dialog.Content onCloseAutoFocus={event=>{event.preventDefault();onRestoreFocus();}}>
+<Dialog.Root open onOpenChange={open=>{if(!open)requestClose();}}>
+ <Dialog.Content showCloseButton={false} onEscapeKeydown={event=>{event.preventDefault();if(!discardOpen)requestClose();}} onInteractOutside={event=>{event.preventDefault();if(!discardOpen)requestClose();}} onCloseAutoFocus={event=>{event.preventDefault();onRestoreFocus();}}>
   <Dialog.Header><Dialog.Title>{t('web.Printing.editPrinter')}</Dialog.Title><Dialog.Description>{t('web.Printing.editPrinterHelp')}</Dialog.Description></Dialog.Header>
   {#if error}<p role="alert">{error}</p>{/if}
   <form onsubmit={save}>
-   <div><Label for="edit-printer-name">{t('web.Printing.printerName')}</Label><Input id="edit-printer-name" bind:value={name} disabled={busy||mustReload} required/></div>
+   <div><Label for="edit-printer-name">{t('web.Printing.printerName')}</Label><Input bind:ref={nameInput} id="edit-printer-name" bind:value={name} disabled={busy||mustReload} required/></div>
    <PairingChoice id="edit-printer-media" label={t('web.Printing.registeredMedia')} value={mediaKey} options={media.map(choice=>({value:`${choice.media.presetId}:${choice.media.version}`,label:labelMediaName(choice.media)}))} disabled={busy||mustReload} onChange={value=>{mediaKey=value;}}/>
    <div class="check-row"><Checkbox id="edit-printer-retired" bind:checked={retired} disabled={busy||mustReload}/><Label for="edit-printer-retired">{t('web.Printing.retirePrinter')}</Label></div>
-   <Dialog.Footer>{#if mustReload}<Button variant="outline" disabled={busy} onclick={()=>void load(true)}>{t('web.Printing.reloadPrinter')}</Button>{/if}<Button type="submit" disabled={busy||mustReload||!selected||!name.trim()}>{t('web.Printing.savePrinter')}</Button></Dialog.Footer>
+   <Dialog.Footer><Button variant="ghost" disabled={busy} onclick={requestClose}>{t('web.Printing.cancel')}</Button>{#if mustReload}<Button variant="outline" disabled={busy} onclick={()=>void load(true)}>{t('web.Printing.reloadPrinter')}</Button>{/if}<Button type="submit" disabled={busy||mustReload||!selected||!name.trim()}>{t('web.Printing.savePrinter')}</Button></Dialog.Footer>
   </form>
  </Dialog.Content>
 </Dialog.Root>
+<WorkspaceConfirmationDialog onCloseAutoFocus={finishDiscardDialog} open={discardOpen} title={t('web.Printing.discardTitle')} description={t('web.Printing.discardHelp')} onOpenChange={value=>{discardOpen=value;}}>
+ {#snippet cancel()}<Button variant="outline" onclick={()=>{discardOpen=false;}}>{t('web.Printing.keepEditing')}</Button>{/snippet}
+ {#snippet action()}<Button variant="destructive" onclick={()=>{discardRequested=true;discardOpen=false;}}>{t('web.Printing.discardChanges')}</Button>{/snippet}
+</WorkspaceConfirmationDialog>
 <style>form{display:grid;gap:var(--space-4)}.check-row{display:flex;align-items:center;gap:var(--space-3)}p{overflow-wrap:anywhere}</style>

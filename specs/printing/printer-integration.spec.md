@@ -1125,3 +1125,38 @@ already authorized outside the transaction. Production-database concurrency
 coverage controls transaction scheduling while retaining real row locks and
 foreign-key behavior; neither a lock error nor a partially created aggregate is
 an acceptable result of an otherwise valid competing request.
+
+### Web printing settings hierarchy
+
+The web settings page prioritizes the household tasks of checking a printer,
+printing a test, choosing defaults, and checking an outcome. Show registered
+printers before defaults, with concise readiness and locally grouped actions.
+Defaults occupy a bounded form with an intrinsic-width save action. On desktop,
+use the available width for printer status and defaults; reflow to one column on
+narrow screens. Do not place every operational field in the initial scan path.
+
+Computer connection details and printer report timestamps are supplementary
+native HTML disclosures. Setup instructions have their own disclosure. Failures,
+offline readiness, permission limits and uncertain-output recovery remain visible
+without opening diagnostics. Job rows lead with the printer and explicit outcome;
+a user report never becomes device-confirmed completion. Keep raw actor identifiers
+and report timestamps available inside a report-details disclosure, with wrapping.
+
+Retain existing permission checks, revision conflicts, immutable retry intents,
+polling without draft replacement, and dialog focus restoration. Use browser
+semantics and existing shadcn primitives. Verify keyboard disclosure and dialog
+return, 390px/desktop reflow, long identifiers, viewer state and uncertain recovery.
+This is a focused refactor authorized by the October 4 user UI audit request;
+it does not introduce a new navigation model or require a separate design gate.
+The printer editor must protect an unsaved name, media or retirement draft on
+Cancel, Escape and outside dismissal with Keep editing / Discard changes. Saving
+and initial loading cannot dismiss the editor. The successful save still closes
+and restores the triggering control. A saved-defaults notice clears when any
+field is changed, including a checkbox. Catalog display names may supplement
+registered media by adapter/preset/version identity without altering dimensions.
+For a settled uncertain job, lead with Reported printed / Reported not printed /
+Outcome unresolved and a concise statement that a person reported the outcome,
+not the printer. Hardware-confirmed copy counts remain available in Report
+details alongside the original report; do not imply zero labels physically
+printed merely because hardware confirmation was unavailable. Explain the optional
+label reference as a short, readable ID on the label.

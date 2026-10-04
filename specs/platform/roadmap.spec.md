@@ -22,6 +22,14 @@ provider and database acceptance; implementation-mirroring tests were excluded.
 See [asset labels](../printing/asset-labels.spec.md),
 [printer integration](../printing/printer-integration.spec.md), and [CLI](cli.spec.md).
 
+### Web printing usability follow-up
+
+The October 4 website audit prioritizes printer readiness, groups label defaults,
+and moves diagnostic fields behind disclosures. Its refactor protects printer
+drafts on dismissal and distinguishes reported output from device confirmation.
+See [the scoped audit](../../docs/reports/web-printing-ux-audit.md) for browser
+coverage, screenshots, and explicit limitations.
+
 ### Verified behavior
 
 - HTTP authorization and isolation checks cover human and connector boundaries.
