@@ -15,10 +15,10 @@ It does not define application deployment, API hosting, or generated API client 
 ## Decisions
 
 - The documentation site is built from `docs/` with Astro and Starlight.
-- The canonical production site is `https://elsell.github.io/stuffstash/`.
+- The canonical production site follows the repository Pages configuration, currently `https://stuffstash.org/`.
 - The production Pages content is published at the root of the `gh-pages` branch.
 - Pull request previews are published under `pr-<number>/` on the same GitHub Pages site.
-- Pull request preview URLs therefore use `https://elsell.github.io/stuffstash/pr-<number>/`.
+- Pull request preview URLs append `pr-<number>/` to the configured production URL.
 - Pull request previews are deployed only for pull requests whose source branch is in the same repository, because forked pull requests do not receive a write-capable `GITHUB_TOKEN` and must not run trusted deployment code from untrusted changes.
 - When a pull request is closed, the corresponding `pr-<number>/` directory must be removed from `gh-pages`.
 - The workflow must use GitHub Actions and GitHub Pages only; no external preview hosting service is allowed.
@@ -29,10 +29,18 @@ It does not define application deployment, API hosting, or generated API client 
 
 - `docs/astro.config.mjs` must read the public site origin from `STUFF_STASH_DOCS_SITE`.
 - `docs/astro.config.mjs` must read the deployment base path from `STUFF_STASH_DOCS_BASE`.
-- If these variables are not set, local builds must default to the default GitHub Pages origin and project base path.
+- If these variables are not set, local builds retain the default GitHub Pages origin and project base path; production always uses the repository Pages configuration.
 - The base path must include leading and trailing slashes, such as `/stuffstash/` or `/stuffstash/pr-123/`.
-- Production builds must use `/stuffstash/` as the base path.
-- Pull request preview builds must use `/stuffstash/pr-<number>/` as the base path so Starlight links, scripts, styles, sitemap links, and asset URLs resolve under the preview directory.
+- Builds read the repository Pages API using read-only Pages permission and derive
+  the site origin and base from `html_url`. A custom domain uses `/`; without a
+  custom domain, preserve the configured GitHub project path such as `/stuffstash/`.
+  Invalid or unavailable configuration fails the build rather than deploying an
+  assumed path. Preview builds append `pr-<number>/` to that base; summaries use
+  the same derived public URL.
+- Production publication restores the API-configured `CNAME` after replacing root
+  content. Preview publication and cleanup preserve the root domain configuration.
+- Critical checks cover custom-domain and project-path production/previews,
+  generated CSS/script/image URLs, semantic tables, and responsive browser output.
 
 ## Workflow Requirements
 
@@ -67,7 +75,7 @@ It does not define application deployment, API hosting, or generated API client 
 a Printing section generated from executable printer/template/media registries,
 including PNG examples from the production renderer. PR generation and drift
 checks, preview builds, and production publishing must include these outputs
-without exposing deployment credentials to untrusted PR code. Not yet implemented.
+without exposing deployment credentials to untrusted PR code. These outputs are implemented.
 
 ## Concurrent Pages publication
 
