@@ -17,4 +17,13 @@ it.each([401,403,404])('does not return asset or artifact data after access is r
   const client=new LabelsClient({baseUrl:'https://api.example',tokenProvider:()=> 'expired',fetch:async()=>new Response(JSON.stringify({error:{code:'forbidden'}}),{status,headers:{'content-type':'application/json'}})});
   await expect(client.resolve('instance','label')).rejects.toMatchObject({status});
   await expect(client.content('tenant','inventory','render')).rejects.toMatchObject({status});
+  await expect(client.contentBytes('tenant','inventory','render','png')).rejects.toMatchObject({status});
+});
+
+it('rejects mismatched native artifact types and cancelled reads', async () => {
+  const client = new LabelsClient({ baseUrl: 'https://api.example', tokenProvider: () => 'session',
+    fetch: async () => new Response('%PDF-1.4', { headers: { 'Content-Type': 'application/pdf' } }) });
+  await expect(client.contentBytes('tenant','inventory','render','png')).rejects.toMatchObject({ status: 502, code: 'invalid_label' });
+  const controller = new AbortController(); controller.abort();
+  await expect(client.contentBytes('tenant','inventory','render','pdf',controller.signal)).rejects.toMatchObject({ name: 'AbortError' });
 });

@@ -2,7 +2,6 @@ import { PrintRequestRejected } from '../../application/printing/PrintSubmission
 import { PrintingClient, LabelsClient, StuffStashAPIError } from '@stuff-stash/api-client';
 import type { PrintCatalog, PrintJob, PrintMediaPreset, PrintOutcome, PrintScope, PrintSelection, PrintSettings, PrintTemplate, PrintingRepository, RegisteredPrinter } from '../../application/printing/PrintingWorkspace';
 import { assertReadActive } from '../../application/shared/ReadRequest';
-import { labelBlobBytes } from '../labels/LabelBlobBytes';
 
 type WireSettings = Awaited<ReturnType<PrintingClient['settings']>>;
 type WireJob = Awaited<ReturnType<PrintingClient['job']>>;
@@ -37,7 +36,7 @@ export class ApiPrintingRepository implements PrintingRepository {
         margins_micrometers: media.margins, resolution_dpi: media.resolutionDPI, raster_width: media.rasterWidth, raster_height: media.rasterHeight, orientation: media.orientation,
         color_mode: media.colorMode, cut_policy: media.cutPolicy, display_rotation: media.displayRotation } });
     assertReadActive(signal);
-    const bytes = await labelBlobBytes(await this.client.content(scope, rendered.id)); assertReadActive(signal);
+    const bytes = await this.labels.contentBytes(scope.tenantId, scope.inventoryId, rendered.id, 'png', signal); assertReadActive(signal);
     return { fingerprint: rendered.selectionFingerprint, file: { bytes, format: 'png' as const, width: rendered.widthPixels, height: rendered.heightPixels, rotation: rendered.displayRotation } };
   }
   async submit(scope: PrintScope, assetId: string, selection: PrintSelection, key: string) {

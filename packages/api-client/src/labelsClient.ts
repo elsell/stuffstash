@@ -25,6 +25,16 @@ export class LabelsClient {
   async render(tenantId:string,inventoryId:string,assetId:string,body:LabelRenderRequest,signal?:AbortSignal) {
     return unwrap(await this.transport.POST(`${scope}/assets/{assetId}/label-renders`, {params:{path:{tenantId,inventoryId,assetId}},body,signal})).data;
   }
+  /** Native runtimes cannot construct a Blob from Expo's ArrayBuffer response. */
+  async contentBytes(tenantId:string,inventoryId:string,renderId:string,format:'png'|'pdf',signal?:AbortSignal):Promise<Uint8Array> {
+    const result = await this.transport.GET(`${scope}/label-renders/{renderId}/content`, {params:{path:{tenantId,inventoryId,renderId}},parseAs:'arrayBuffer',signal});
+    const content = unwrap(result);
+    const expected = format === 'png' ? 'image/png' : 'application/pdf';
+    if (result.response.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase() !== expected) {
+      throw new StuffStashAPIError(502,'invalid_label','Invalid label content.');
+    }
+    return new Uint8Array(content);
+  }
   async content(tenantId:string,inventoryId:string,renderId:string,signal?:AbortSignal):Promise<Blob> {
     return unwrap(await this.transport.GET(`${scope}/label-renders/{renderId}/content`, {params:{path:{tenantId,inventoryId,renderId}},parseAs:'blob',signal}));
   }
