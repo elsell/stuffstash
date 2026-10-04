@@ -12,9 +12,9 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 
 - Node.js for documentation CI: `24.17.0`.
 - pnpm for documentation CI: `11.0.7`.
-- Astro: `astro 6.4.4`.
-- Starlight: `@astrojs/starlight 0.39.3`.
-- Starlight Lucode theme: `lucode-starlight 0.1.6`.
+- Astro: `astro 7.3.5`.
+- Starlight: `@astrojs/starlight 0.42.2`.
+- Starlight Lucode theme: `lucode-starlight 1.0.0`.
 - Geist Sans documentation font package: `@fontsource/geist-sans 5.2.5`.
 
 ## Pinned Web And Client Tooling
@@ -30,7 +30,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - React DOM for Expo Router web peer alignment: `react-dom 19.2.0`.
 - TypeScript for mobile: `typescript 5.9.2`.
 - React types for mobile: `@types/react 19.2.17`.
-- Vitest for mobile application tests: `vitest 4.1.8`.
+- Vitest for mobile application tests: `vitest 4.1.11`.
 - React Native Testing Library for behavioral mobile component tests: `@testing-library/react-native 14.0.1`. It is used with behavioral fakes and the real React reconciler so navigation, effects, and component state are exercised without module mocks or hand-indexed hook emulation.
 - React 19 test renderer used by React Native Testing Library: `test-renderer 1.2.0`. This is the modern custom renderer required by React Native Testing Library 14, not the deprecated `react-test-renderer`; its React `^19.0.0` peer range is compatible with the pinned React `19.2.0` and React Native `0.83.6` stack.
 - Reviewed `@jest/schemas 30.4.1` transitive schema dependency: `@sinclair/typebox 0.34.49`. The workspace override prevents the test renderer stack from floating to a release newer than the dependency-review cutoff while preserving the older React Native/Jest 29 dependency line independently.
@@ -65,20 +65,20 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - React Native SVG runtime for Expo SDK 55 icon rendering: `react-native-svg 15.15.3`.
 - React Native screens for Expo SDK 55 navigation: `react-native-screens 4.23.0`.
 - React Native safe area context for Expo SDK 55 navigation: `react-native-safe-area-context 5.6.2`.
-- Expo/Metro transitive overrides required by the dependency-age gate: `@0no-co/graphql.web 1.2.0`, `baseline-browser-mapping 2.10.34`, `caniuse-lite 1.0.30001797`, `dnssd-advertise 1.1.4`, `electron-to-chromium 1.5.368`, `node-releases 2.0.47`, `regjsparser 0.13.1`, `semver 7.8.2`, and `yargs 17.7.2`.
-- SvelteKit: `@sveltejs/kit 2.63.0`.
+- Expo/Metro transitive overrides required by the dependency-age gate: `@0no-co/graphql.web 1.2.0`, `baseline-browser-mapping 2.11.0`, `caniuse-lite 1.0.30001797`, `dnssd-advertise 1.1.4`, `electron-to-chromium 1.5.368`, `node-releases 2.0.47`, `regjsparser 0.13.1`, `semver 7.8.2`, and `yargs 17.7.2`.
+- SvelteKit: `@sveltejs/kit 2.70.2`.
 - Svelte: `svelte 5.56.2`.
 - Svelte Vite plugin: `@sveltejs/vite-plugin-svelte 7.1.2`.
 - Svelte static adapter: `@sveltejs/adapter-static 3.0.10`.
 - Vite: `vite 8.0.16`.
 - TypeScript: `typescript 5.9.3`.
 - Svelte check: `svelte-check 4.6.0`.
-- Vitest: `vitest 4.1.8`.
+- Vitest: `vitest 4.1.11`.
 - Playwright browser smoke runner: `@playwright/test 1.60.0`.
 - Playwright Chromium browser runtime must be installed through `pnpm --dir apps/web install:e2e-browsers`, which uses the pinned Playwright package to select the browser revision.
 - jsdom: `jsdom 29.1.1`.
-- nanoid transitive override for Vite/PostCSS tooling: `nanoid 3.3.12`.
-- Undici test-environment override for jsdom: `undici 7.27.1`.
+- nanoid transitive override for Vite/PostCSS tooling: `nanoid 3.3.18`.
+- Undici test-environment override for jsdom: `undici 7.29.1`.
 - OpenAPI TypeScript generator: `openapi-typescript 7.13.0`.
 - OpenAPI fetch runtime: `openapi-fetch 0.17.0`.
 - shadcn-svelte CLI: `shadcn-svelte 1.3.0`.
@@ -104,7 +104,7 @@ This spec tracks the first tooling versions used by the secure tracer bullet.
 - Authzed Go client: `github.com/authzed/authzed-go v1.10.0`.
 - OIDC verifier: `github.com/coreos/go-oidc/v3 v3.18.0`.
 - OAuth2 support: `golang.org/x/oauth2 v0.36.0`.
-- gRPC: `google.golang.org/grpc v1.80.0`.
+- gRPC: `google.golang.org/grpc v1.83.1`.
 - GORM: `gorm.io/gorm v1.31.1`.
 - GORM Postgres driver: `gorm.io/driver/postgres v1.6.0`.
 - GORM SQLite driver: `gorm.io/driver/sqlite v1.6.0`.
@@ -228,9 +228,10 @@ search workflows and CocoaPods resolution, not a second transformation in CI.
 
 ## October 2026 backlog dependency refresh
 
-The reviewed catch-up batch pins Astro to 6.4.6 and Go's crypto, net, and sys
-modules to 0.52.0, 0.54.0, and 0.45.0 respectively, with their committed
-lockfiles. CI must validate the combined docs build and API/security suites.
+The security remediation pins Astro to 7.3.5 and Go's crypto, net, and sys
+modules to 0.54.0, 0.57.0, and 0.47.0 respectively. OpenTelemetry stable modules
+use 1.45.0 and log modules use 0.21.0. Committed lockfiles, narrow upstream
+mitigations, and reviewed age exceptions follow the dependency security spec.
 
 ## Pinned CLI Tooling
 
@@ -259,3 +260,5 @@ lockfiles. CI must validate the combined docs build and API/security suites.
   operator-managed; Stuff Stash does not download or replace the host kernel.
 - CLI poll/nonblocking syscall adapter: `golang.org/x/sys v0.39.0`, already pinned
   transitively by its reviewed credential adapter, now direct for Linux printer I/O.
+
+Security remediation and verification follow [dependency security remediation](dependency-security-remediation.spec.md).

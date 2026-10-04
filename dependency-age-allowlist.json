@@ -40,5 +40,117 @@
     "version": "55.0.17",
     "reason": "System-browser OIDC session completion for mobile OIDC.",
     "compensatingVerification": "Pinned exact version, lockfile review, pnpm --dir apps/mobile test, and pnpm --dir apps/mobile check."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/compiler-binding",
+    "version": "0.5.1",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/compiler-binding-android-arm64",
+    "version": "0.5.1",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/compiler-binding-darwin-arm64",
+    "version": "0.5.1",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/compiler-binding-darwin-x64",
+    "version": "0.5.1",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/compiler-binding-linux-arm64-gnu",
+    "version": "0.5.1",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/compiler-binding-linux-arm64-musl",
+    "version": "0.5.1",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/compiler-binding-linux-x64-gnu",
+    "version": "0.5.1",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/compiler-binding-linux-x64-musl",
+    "version": "0.5.1",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/compiler-binding-wasm32-wasi",
+    "version": "0.5.1",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/compiler-binding-win32-arm64-msvc",
+    "version": "0.5.1",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/compiler-binding-win32-x64-msvc",
+    "version": "0.5.1",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/compiler-rs",
+    "version": "0.5.1",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/markdown-satteri",
+    "version": "0.4.2",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "@astrojs/mdx",
+    "version": "8.0.2",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "astro",
+    "version": "7.3.5",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "smol-toml",
+    "version": "1.9.0",
+    "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
+    "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
   }
 ]

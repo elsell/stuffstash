@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/stuffstash/stuff-stash/internal/ports"
-	otellog "go.opentelemetry.io/otel/log"
+	"go.opentelemetry.io/otel/attribute"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
@@ -40,14 +40,14 @@ func TestClientMeasurementsExportDurationAndSafeLogs(t *testing.T) {
 		t.Fatal("client log validation or privacy failed")
 	}
 	expected := map[string]string{"platform": "ios", "operation": "image", "surface": "gallery", "variant": "medium", "outcome": "success"}
-	logs.records[0].WalkAttributes(func(value otellog.KeyValue) bool {
+	logs.records[0].WalkAttributes(func(value attribute.KeyValue) bool {
 		if value.Key == "duration_ms" {
 			if value.Value.AsFloat64() != 125.5 {
 				t.Fatal("log duration changed")
 			}
 			return true
 		}
-		if expected[value.Key] != value.Value.AsString() || strings.Contains(fmt.Sprint(value), "private") {
+		if expected[string(value.Key)] != value.Value.AsString() || strings.Contains(fmt.Sprint(value), "private") {
 			t.Fatal("unsafe client log attributes")
 		}
 		return true

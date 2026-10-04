@@ -73,7 +73,8 @@ jobs:
           corepack prepare pnpm@11.0.7 --activate
 
       - name: Install docs dependencies
-        run: pnpm --dir docs install --frozen-lockfile
+        working-directory: docs
+        run: pnpm install --frozen-lockfile
 
       - name: Configure public Pages destination
         id: pages

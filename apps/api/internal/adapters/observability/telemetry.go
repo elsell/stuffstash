@@ -72,13 +72,13 @@ func (t *Telemetry) Record(ctx context.Context, event ports.Event) {
 	}
 	var record otellog.Record
 	record.SetTimestamp(time.Now())
-	record.SetBody(otellog.StringValue(string(event.Name)))
+	record.SetBody(attribute.StringValue(string(event.Name)))
 	record.SetSeverity(otellog.SeverityInfo)
 	// Field names AND values are allowlisted so a user-derived string cannot leak
 	// through an otherwise safe field or create unbounded values.
 	for key, value := range event.Fields {
 		if safeTelemetryField(key, value) {
-			record.AddAttributes(otellog.String(key, value))
+			record.AddAttributes(attribute.String(key, value))
 		}
 	}
 	t.logger.Emit(ctx, record)
