@@ -559,7 +559,8 @@ use native action rows rather than a stack of tinted capsule buttons. This follo
 and the existing project settings adapters. It does not change shared button styles.
 
 The scrolling task opts into native automatic content insets so the first and last
-controls remain reachable around the sheet header and system bars. Native runtime
+controls remain reachable around the sheet header and system bars. Preview sizing
+uses the actual sheet content width, including on iPad, rather than the full window. Native runtime
 verification must cover narrow and enlarged-text layouts; source tests alone do not
 establish visual clearance.
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { AppState, Image, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { AppState, Image, ScrollView, Text, View } from 'react-native';
 import type { LabelFile, LabelProfile, LabelScope, LabelSelection, LabelTemplate, LabelWorkspace } from '../../application/labels/LabelWorkspace';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { SettingsActionRow, SettingsLoadingRow, SettingsNavigationRow, SettingsSection, SettingsSeparator, SettingsSwitchRow, SettingsValueRow, useSettingsListStyles } from '../screens/SettingsList';
@@ -8,7 +8,8 @@ import { t } from '../../presentation/localization';
 
 type Preview = { uri: string; release(): void; file: LabelFile };
 export function LabelOptionsScreen({ workspace, assetId, scope, onPrintOptions }: { readonly workspace: LabelWorkspace; readonly assetId: string; readonly scope: LabelScope; readonly onPrintOptions?: () => void }) {
-  const { styles } = useSettingsListStyles(); const dimensions = useWindowDimensions();
+  const { styles } = useSettingsListStyles();
+  const [previewWidth, setPreviewWidth] = useState(0);
   const [catalog, setCatalog] = useState<{ profiles: readonly LabelProfile[]; templates: readonly LabelTemplate[] }>();
   const [selection, setSelection] = useState<LabelSelection>();
   const [preview, setPreview] = useState<Preview>(); const previewRef = useRef<Preview | undefined>(undefined);
@@ -48,9 +49,10 @@ export function LabelOptionsScreen({ workspace, assetId, scope, onPrintOptions }
     } catch { if (!controller.signal.aborted) { clearPreview(); setError(true); } }
     finally { if (!controller.signal.aborted) { running.current = false; setBusy(false); } }
   };
-  const width = Math.min(dimensions.width - 48, 520);
+  const width = previewWidth;
   const rotated = preview && Math.abs(preview.file.rotation) % 180 === 90;
-  const height = preview ? width * (rotated ? preview.file.width / preview.file.height : preview.file.height / preview.file.width) : 0;
+  const aspectRatio = preview ? (rotated ? preview.file.height / preview.file.width : preview.file.width / preview.file.height) : 1;
+  const height = width / aspectRatio;
   return <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content} style={styles.shell}>
     {selection ? <SettingsSection>
       <SettingsValueRow label={t('labels.mobile.size')} value={catalog?.profiles.find(profile => profile.media === selection.media)?.name ?? t('labels.mobile.mediaUnavailable')} />
@@ -68,7 +70,7 @@ export function LabelOptionsScreen({ workspace, assetId, scope, onPrintOptions }
       </> : null}
       {catalog && !selection ? <View style={styles.navigationRow}><Text style={styles.valueText}>{t('labels.mobile.mediaUnavailable')}</Text></View> : null}
       {selection && !error ? <SettingsActionRow label={t('labels.mobile.preview')} disabled={busy} onPress={() => void run('preview')} /> : null}
-      {preview ? <View style={{ alignSelf: 'center', width, height, overflow: 'hidden', backgroundColor: '#fff' }}>
+      {preview ? <View onLayout={event => setPreviewWidth(event.nativeEvent.layout.width)} style={{ alignSelf: 'center', width: '100%', maxWidth: 520, aspectRatio, overflow: 'hidden', backgroundColor: '#fff' }}>
         <Image accessible accessibilityLabel={t('labels.mobile.previewAlt')} source={{ uri: preview.uri }} resizeMode="contain"
           style={{ position: 'absolute', width: rotated ? height : width, height: rotated ? width : height,
             left: rotated ? (width - height) / 2 : 0, top: rotated ? (height - width) / 2 : 0, transform: [{ rotate: `${preview.file.rotation}deg` }] }} />
