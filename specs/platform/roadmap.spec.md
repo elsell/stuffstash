@@ -148,8 +148,10 @@ API v0.28.26 remains deployed. Infra revision
 `07396debd7cc8d23d5ec17b4d1b95df829906821` corrected the voice origin allowlist
 behind TLS termination; eight deployed origin/authentication checks pass.
 [Voice evidence](../../docs/reports/spec-gap-evidence-2026-10-01/voice-origin/README.md)
-does not claim an authenticated speech roundtrip. #335 records the operator
-guidance and pending speech check.
+records the deployed boundary checks. The user confirmed voice works on
+October 4, 2026; the [device checklist](../../docs/reports/user-testing-checklist.md)
+records this separately from instrumented evidence, without unspecified build
+or device details. #335 records the operator guidance.
 
 Sharing #239 remains open after v0.28.29: initial confirmation presentation has
 native evidence, but full recovery remains unverified. Two bounded runs exhausted
@@ -180,9 +182,11 @@ and [API rollout](../../docs/reports/spec-gap-evidence-2026-10-01/deployments/re
 record pinned images, Flux revision, ready replicas and HTTP200 health checks.
 The API fixes return cancellation incorrectly rejected as stale after PostgreSQL
 truncated timestamps. Real PostgreSQL reproduces the original failure and verifies
-the correction plus scope/stale-edit guards. The user-device retest stays on the
-checklist. API publication and rollout did not wait for TestFlight; neither is
-claimed as authenticated production workflow acceptance.
+the correction plus scope/stale-edit guards. The user confirmed return
+cancellation works on October 4, 2026; the checklist records that user-reported
+acceptance without inferring build/device details. API publication and rollout
+did not wait for TestFlight. Printer-settings verification is owned by the user
+in a separate session; it is not a duplicate test request here.
 
 The full audit remains incomplete. Release success does not close these gaps:
 
