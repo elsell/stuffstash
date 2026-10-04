@@ -32,7 +32,7 @@ final class CompletePrintingAuditTests: XCTestCase {
     app.launchArguments = large ? ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] : []
     app.launch(); let suffix = large ? "large" : "normal"
     action("Open quick print")
-    let copies = app.steppers["Copies"].firstMatch
+    let copies = app.steppers.matching(NSPredicate(format: "label BEGINSWITH %@", "Copies:")).firstMatch
     reveal(copies)
     capture("complete-print-options-\(suffix)")
     let increment = copies.buttons["Increment"].firstMatch

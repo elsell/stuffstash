@@ -16,7 +16,7 @@ import { PrintJobScreen } from '../src/ui/printing/PrintJobScreen';
 import { ReprintLabelScreen } from '../src/ui/printing/ReprintLabelScreen';
 
 const Workspace = createContext<PrintingWorkspace | undefined>(undefined);
-const appearance = new AppearancePreferenceController({ load: async () => 'system', save: async () => {} });
+const appearance = new AppearancePreferenceController({ load: async () => 'dark', save: async () => {} });
 function useWorkspace() { const value = useContext(Workspace); if (!value) throw new Error('Printing audit services missing'); return value; }
 export function CompletePrintingLayout() {
   const [workspace] = useState(createCompletePrintingWorkspace);
@@ -24,7 +24,7 @@ export function CompletePrintingLayout() {
 }
 function CompletePrintingNavigation() {
   const palette = useAppearancePalette(); const sheets = createAssetNativeSheetOptions(palette);
-  return <AppFeedbackProvider noticePlacement="screen"><Stack screenLayout={AppNoticeScreenLayout} screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
+  return <AppFeedbackProvider noticePlacement="screen"><Stack screenLayout={AppNoticeScreenLayout} screenOptions={{ headerTintColor: palette.action, headerStyle: { backgroundColor: palette.surface }, headerTitleStyle: { color: palette.text, fontWeight: '700' }, contentStyle: { backgroundColor: palette.background } }}>
     <Stack.Screen name="index" options={{ title: 'Printing acceptance' }} />
     <Stack.Screen name="assets/[assetId]/print" options={{ ...sheets.add, title: 'Print label' }} />
     <Stack.Screen name="print-jobs/[jobId]" options={{ title: 'Print job' }} />

@@ -31,3 +31,16 @@ binary delivery or image rendering. This audit does not verify real OIDC, backen
 authorization, physical printing, camera decoding, system sharing recipients or
 VoiceOver. Record failed stages honestly and retain the existing bounded native
 investigation budget.
+
+## Observed run and bounded correction
+
+Run 37203011624 at 062f5b89f15c73907bcf796d442145e3abeb0559 reached
+the native print-options sheet in light appearance. Both iPhone cases stopped
+before editing copies because SwiftUI exposes the stepper label as
+`Copies: 1, Copies`, not the exact `Copies` queried by the driver. This establishes
+entry rendering only; binary recovery and job journeys remain unverified.
+
+Match the observed stepper label prefix while preserving the exact edited value
+assertion. The corrected run uses the production appearance provider with a dark
+preference and production header surface/text styling to match the reported user
+mode. Corrected native acceptance remains pending.
