@@ -20,7 +20,7 @@ it('opens custom options without printing when no default is configured', async 
   const h = new MobileRenderHarness(); const fake = new PrintingFake(); fake.settings = { ...fake.settings, defaultPrinterId: null };
   try {
     await h.render(<QuickPrintScreen workspace={fake.workspace()} scope={scope} assetId="asset" onQueued={() => {}} />);
-    expect(fake.submitted.size).toBe(0); expect(h.byLabel('Preview label')).toBeDefined();
+    expect(fake.submitted.size).toBe(0); expect(h.byLabel('Preview label')).toBeUndefined();
   } finally { await h.unmount(); }
 });
 it('does not enqueue when the scope task leaves while its render is outstanding', async () => {
@@ -41,7 +41,7 @@ it('restores edited fallback options after route reauthorization without automat
     fake.settings = { ...fake.settings, defaultPrinterId: fake.printer.id };
     await h.render(screen());
     expect(h.byLabel('Copies')!.props.value).toBe('3');
-    expect(h.byLabel('Preview label')).toBeDefined();
-    expect(fake.previews).toBe(0); expect(fake.submitted.size).toBe(0);
+    expect(h.byLabel('Preview label')).toBeUndefined();
+    expect(fake.previews).toBe(2); expect(fake.submitted.size).toBe(0);
   } finally { await h.unmount(); }
 });

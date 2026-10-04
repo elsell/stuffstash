@@ -10,8 +10,10 @@ Assert the edited value and full preview containment within the sheet scroll are
 Scroll the viewport containing the target control, never an underlying screen.
 Repository fakes must declare port return types rather than narrower inferred buffers.
 
-The quick-print entry first encounters a controlled preview failure and falls back
-to options. Verify a visible failed manual preview, then recover a real PNG. Fetch
+The direct label entry displays the production AssetLabelTask with registered
+printing and secondary exports on one sheet. Its automatic preview first encounters
+a controlled failure. Verify no Preview label or Print options button, then retry
+and recover a real PNG. Fetch
 its bytes through the production generated SDK and ApiPrintingRepository using
 actual Expo fetch against a loopback HTTP peer. Write through ExpoLabelFiles and
 verify native image decoding; a data URI or fake local file must not stand in for

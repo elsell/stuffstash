@@ -12,7 +12,7 @@ it('queues one label to an unavailable printer and retries a lost response witho
   const h = new MobileRenderHarness(); const fake = new PrintingFake(); fake.drop = true; let queued = '';
   try {
     await h.render(<AssetPrintScreen workspace={fake.workspace()} scope={scope} assetId="asset" onQueued={id => { queued = id; }} />);
-    await h.press(h.byLabel('Preview label')); await h.settle();
+    await h.settle(); await h.settle();
     await h.press(h.byLabel('Print label')); await h.settle();
     expect(fake.submitted.size).toBe(1); expect(queued).toBe('');
     await h.press(h.byLabel('Try again')); await h.settle();
@@ -38,7 +38,7 @@ it('recovers a lost submission after leaving the task without generating another
   const h = new MobileRenderHarness(); const fake = new PrintingFake(); fake.drop = true; const workspace = fake.workspace(); let queued = '';
   try {
     await h.render(<AssetPrintScreen workspace={workspace} scope={scope} assetId="asset" onQueued={id => { queued = id; }} />);
-    await h.press(h.byLabel('Preview label')); await h.settle();
+    await h.settle(); await h.settle();
     await h.press(h.byLabel('Print label')); await h.settle();
     await h.render(<></>);
     await h.render(<AssetPrintScreen workspace={workspace} scope={scope} assetId="asset" onQueued={id => { queued = id; }} />);
@@ -123,7 +123,7 @@ it('retries failed preview with the current draft without submitting or reloadin
     await h.render(<AssetPrintScreen workspace={fake.workspace()} scope={scope} assetId="asset" onQueued={() => {}} />);
     await h.run(() => h.byLabel('Copies')!.props.onChangeText('3'));
     await h.run(() => h.byLabel('Show reference')!.props.onValueChange(false));
-    await h.press(h.byLabel('Preview label'));
+    await h.settle();
     expect(h.byLabel('Print label')!.props.disabled).toBe(true);
     fake.unavailable = false;
     await h.press(h.byLabel('Try again'));
@@ -148,12 +148,12 @@ it('retains the same print draft across reauthorization and rejects a retired se
     await h.run(() => setScreenFocused(true)); await h.render(screen());
     expect(h.byLabel('Copies')!.props.value).toBe('3');
     expect(h.byLabel('Show reference')!.props.value).toBe(false);
-    await h.press(h.byLabel('Preview label'));
+    await h.settle();
     expect(h.byLabel('Print label')!.props.disabled).toBe(false);
     await h.run(() => setScreenFocused(false));
     fake.printer = { ...fake.printer, retired: true };
     await h.run(() => setScreenFocused(true));
-    expect(h.byLabel('Preview label')!.props.disabled).toBe(true);
+    expect(h.byLabel('Print label')!.props.disabled).toBe(true);
     expect(h.byLabel('Print label')!.props.disabled).toBe(true);
     expect(fake.submitted.size).toBe(0);
   } finally { await h.unmount(); setScreenFocused(true); }

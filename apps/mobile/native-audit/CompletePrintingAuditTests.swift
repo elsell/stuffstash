@@ -31,16 +31,17 @@ final class CompletePrintingAuditTests: XCTestCase {
   private func audit(large: Bool) {
     app.launchArguments = large ? ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] : []
     app.launch(); let suffix = large ? "large" : "normal"
-    action("Open quick print")
+    action("Open label")
     let copies = app.steppers.matching(NSPredicate(format: "label BEGINSWITH %@", "Copies:")).firstMatch
     XCTAssertTrue(copies.waitForExistence(timeout: 10))
+    XCTAssertFalse(app.buttons["Preview label"].exists)
+    XCTAssertFalse(app.buttons["Print options"].exists)
     let increment = copies.buttons["Increment"].firstMatch
     reveal(increment)
     capture("complete-print-options-\(suffix)")
     XCTAssertTrue(increment.isHittable); increment.tap()
     let complete = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "2"), object: copies)
     XCTAssertEqual(XCTWaiter.wait(for: [complete], timeout: 5), .completed, "Native Copies stepper must retain the edited value")
-    action("Preview label")
     see("Printing is unavailable. Check your connection and inventory access, then try again.")
     capture("complete-print-preview-failure-\(suffix)")
     action("Try again")
@@ -61,7 +62,7 @@ final class CompletePrintingAuditTests: XCTestCase {
     let cancel = app.navigationBars.firstMatch.buttons["Cancel"].firstMatch
     XCTAssertTrue(cancel.waitForExistence(timeout: 10)); XCTAssertTrue(cancel.isHittable); cancel.tap()
     see("Canceled")
-    action("Reprint label"); action("Preview label")
+    action("Reprint label")
     XCTAssertTrue(preview.waitForExistence(timeout: 15)); action("Reprint label")
     see("Queued"); see("0 of 1 copies confirmed")
     capture("complete-print-reprint-\(suffix)")

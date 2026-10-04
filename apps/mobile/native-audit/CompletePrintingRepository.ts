@@ -1,3 +1,5 @@
+import { ApiLabelRepository } from '../src/adapters/labels/ApiLabelRepository';
+import type { LabelWorkspace } from '../src/application/labels/LabelWorkspace';
 import { Image } from 'react-native';
 import { fetch as expoFetch } from 'expo/fetch';
 import { LabelsClient, PrintingClient } from '@stuff-stash/api-client';
@@ -17,7 +19,7 @@ class CompletePrintingRepository extends PrintingFake {
   }
   override async preview(scope?: PrintScope, assetId?: string, printer?: RegisteredPrinter, template?: PrintTemplate, signal?: AbortSignal) {
     if (!scope || !assetId || !printer || !template || !signal) throw new Error('Preview context required');
-    if (++this.attempts <= 2) throw new Error('Controlled quick/manual preview failure');
+    if (++this.attempts <= 1) throw new Error('Controlled automatic preview failure');
     return this.binary.preview(scope, assetId, printer, template, signal);
   }
 }
@@ -38,4 +40,10 @@ export function createCompletePrintingWorkspace(): PrintingWorkspace {
     },
     async deliver() { throw new Error('This audit must never send physical output'); }
   } };
+}
+
+export function createCompleteLabelWorkspace(printing: PrintingWorkspace): LabelWorkspace {
+  const baseUrl = process.env.EXPO_PUBLIC_STUFF_STASH_PRINT_AUDIT_URL;
+  if (!baseUrl || new URL(baseUrl).hostname !== '127.0.0.1') throw new Error('A loopback print audit peer is required');
+  return { repository: new ApiLabelRepository(new LabelsClient({ baseUrl, tokenProvider: async () => null, fetch: createExpoArchiveFetch(expoFetch) })), files: printing.files, parse: () => { throw new Error('Not a scanner fixture'); } };
 }

@@ -545,9 +545,11 @@ or incompatible defaults open the existing selection/preview task instead; no
 other printer is silently selected. Offline readiness alone does not prevent
 queueing. A definite compatibility rejection allows correcting the selection.
 
-Label options retains download/system print and exposes Printer options for
-editors. This replaces the current task rather than nesting dialogs; choosing
-options never auto-prints. The selection task retains fresh preview requirements.
+Label options puts registered-printer selection and the explicit Print label command
+on the same sheet as layout, reference, copies and the automatically rendered preview.
+PNG/PDF sharing stays secondary and supplies the system printing path; there is no
+separate system-print button or Printer options detour. Opening this sheet never
+auto-prints. The selection task retains fresh preview requirements.
 Both entry points share the scoped retained intent, preventing duplicate jobs
 on dismissal/reopening or a lost response. An uncertain request can only retry
 its original selection/key. Scope teardown, loss of edit access, or task dismissal
@@ -557,8 +559,8 @@ to the originating asset menu after either task closes.
 ## Native label options recovery and hierarchy
 
 Label options uses an inset grouped task: committed media size, layout and reference
-choices; a preview with its recovery state; and separate download/system-print
-actions. Registered-printer options remain a navigation row. Secondary commands
+choices; a preview with its recovery state; and secondary PNG/PDF sharing
+actions. Registered-printer printing is the primary command on this same sheet. Secondary commands
 use native action rows rather than a stack of tinted capsule buttons. This follows
 [Apple’s button hierarchy guidance](https://developer.apple.com/design/human-interface-guidelines/buttons)
 and the existing project settings adapters. It does not change shared button styles.
@@ -569,7 +571,7 @@ uses the actual sheet content width, including on iPad, rather than the full win
 verification must cover narrow and enlarged-text layouts; source tests alone do not
 establish visual clearance.
 
-A failed render clears the preview and disables export/system-print actions until
+A failed render clears the preview and disables export actions until
 a successful preview retry or a new selection. Retry after a render failure renders
 the current selection again; it must not just reload the catalog and clear the error,
 nor repeat a physical print or share handoff. Catalog failure retries catalog loading.
@@ -656,3 +658,21 @@ handling. Regression coverage must include a faithful Expo response whose byte
 reader works while Blob conversion is unsupported, exercising both mobile
 repositories through the actual SDK. Native acceptance must exercise Expo fetch
 and private file writing rather than only data-URL fixtures.
+
+## Direct mobile label task and automatic previews
+
+Editors with registered printers see printer selection, layout, reference, copies,
+preview and Print label together on the asset label sheet. Prefer the inventory
+default; when no default exists, the explicit options task may preselect its sole
+active printer without submitting anything. More than one printer requires a choice.
+Viewers and inventories without printers retain the export-only label task. A failed
+printer catalog read exposes recovery instead of pretending no printers exist.
+The quick-print asset-menu command retains its existing explicit-command semantics.
+
+Preview automatically on entry and after printer, media, layout or reference changes.
+There is no Preview label command. Clear obsolete previews immediately and discard
+late results when selection, scope or focus changes. Changing copies alone does not
+change the image. Failures expose one explicit retry and never create a retry loop.
+Exports independently render/authorize the currently visible media and layout.
+Explain Show reference beside the choice: it shows the label ID as readable text alongside
+the QR code. Never imply it is a serial number or promise lookup behavior.

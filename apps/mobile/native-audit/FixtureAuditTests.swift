@@ -3234,9 +3234,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(firstChoice.waitForExistence(timeout: 10)); XCTAssertTrue(firstChoice.isHittable)
     XCTAssertGreaterThanOrEqual(firstChoice.frame.minY, header.frame.maxY)
     capture("printing-label-sheet-entry-\(suffix)")
-    let preview = app.buttons["Preview label"].firstMatch
-    XCTAssertTrue(preview.waitForExistence(timeout: 10))
-    verifyPrintingSheetAction(preview, header: header); preview.tap()
+    XCTAssertFalse(app.buttons["Preview label"].exists)
     let retry = app.buttons["Try again"].firstMatch
     XCTAssertTrue(retry.waitForExistence(timeout: 10))
     capture("printing-label-preview-failure-\(suffix)")
@@ -3256,8 +3254,7 @@ final class FixtureAuditTests: XCTestCase {
       verifyPrintingSheetAction(export, header: header)
       capture("printing-label-export-\(format)-\(suffix)")
     }
-    let print = app.buttons["Print…"].firstMatch
-    verifyPrintingSheetAction(print, header: header)
+    XCTAssertFalse(app.buttons["Print…"].exists)
     capture("printing-label-final-action-\(suffix)")
     XCTAssertTrue(close.isHittable); close.tap()
     XCTAssertTrue(entry.waitForExistence(timeout: 10)); XCTAssertTrue(entry.isHittable)
