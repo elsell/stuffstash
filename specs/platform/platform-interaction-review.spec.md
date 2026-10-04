@@ -1910,3 +1910,12 @@ unrelated authenticated principals. This acceptance uses real API calls and
 OIDC sessions, never intercepted routes or fabricated identity tokens. A generated
 pairing public key is a controlled connector fixture; no device is opened and
 no output is sent. Retain a screenshot of the queued offline-printer state.
+
+### Native action-row text at accessibility sizes
+
+Native action rows must wrap their full visible command label and grow vertically
+with Dynamic Type. A full accessibility label alone is insufficient: commands such
+as PNG and PDF export must remain visually distinguishable. The iPhone printing
+audit at maximum text exposed identical truncated export labels; the shared SwiftUI
+text must retain its ideal vertical size inside the measured native host. Review
+other action-row consumers when changing this shared adapter.
