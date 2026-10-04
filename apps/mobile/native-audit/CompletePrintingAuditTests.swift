@@ -33,9 +33,10 @@ final class CompletePrintingAuditTests: XCTestCase {
     app.launch(); let suffix = large ? "large" : "normal"
     action("Open quick print")
     let copies = app.steppers.matching(NSPredicate(format: "label BEGINSWITH %@", "Copies:")).firstMatch
-    reveal(copies)
-    capture("complete-print-options-\(suffix)")
+    XCTAssertTrue(copies.waitForExistence(timeout: 10))
     let increment = copies.buttons["Increment"].firstMatch
+    reveal(increment)
+    capture("complete-print-options-\(suffix)")
     XCTAssertTrue(increment.isHittable); increment.tap()
     let complete = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "2"), object: copies)
     XCTAssertEqual(XCTWaiter.wait(for: [complete], timeout: 5), .completed, "Native Copies stepper must retain the edited value")

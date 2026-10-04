@@ -44,3 +44,17 @@ Match the observed stepper label prefix while preserving the exact edited value
 assertion. The corrected run uses the production appearance provider with a dark
 preference and production header surface/text styling to match the reported user
 mode. Corrected native acceptance remains pending.
+
+Run 37204262877 at a7c134b6b3fec00bca8b8a8d4d6d561ac2a82591 passed the
+complete normal-text flow on iPhone 17 (242.072 seconds) and iPad mini A17 Pro
+(156.107 seconds), in dark appearance. Both recovered a real HTTP PNG through
+Expo fetch, the generated SDK, ExpoLabelFiles and native image decoding, then
+completed the synthetic queue, cancel, reprint and uncertainty-resolution flow.
+
+Both maximum-accessibility-text cases stopped at the driver assertion that the
+whole Copies stepper was hittable. Their captured hierarchies and screenshots
+show the Increment child visible inside the scrolled viewport. Reveal and check
+that actionable child, while retaining the stepper's exact edited-value assertion.
+This source correction has not been rerun natively: the two-experiment budget is
+exhausted. Full enlarged-text acceptance remains unverified; no real printer,
+production API, physical output or new security acceptance is claimed.
