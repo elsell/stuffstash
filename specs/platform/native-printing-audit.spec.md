@@ -81,3 +81,27 @@ sheet geometry and a native Cancel owner rather than inheriting a root card.
 The complete-print native fixture must use that exact presentation, including
 phone/iPad bounds. Print-job inspection and its reprint mode remain a stack
 screen; reprint Cancel returns to its job without changing the job's outcome.
+
+## Automatic registered-label previews
+
+Registered print and reprint forms render a label automatically on entry and when
+printer, media, layout or reference changes. There is no Preview label command.
+Copies changes retain the same rendered image. Show reference has concise inline
+help explaining the printed human-readable label identifier. Diagnostic test labels
+retain their dedicated server-generated behavior rather than rendering an asset.
+
+A preview belongs to its current authorized task and exact rendering selection.
+Changing that selection or leaving the task cancels the read, releases any local
+file, and prevents stale completion from enabling Print. A failed preview remains
+failed until explicit Try again or a new rendering selection; there is no automatic
+retry loop. Changing copies alone neither retries nor hides a preview failure.
+An ambiguous submit retains its original immutable request and must never trigger
+a new auto-preview or fresh submission. These guarantees need controlled fake
+coverage; native automatic preview acceptance is recorded separately.
+
+When exactly one active registered printer exists and no default is configured,
+initialize that printer once; never override a retained draft. Optional secondary
+PNG/PDF sharing on this same form uses the selected printer's media and full
+catalog template, through the authenticated label workspace. It does not submit a
+print job or open system printing. A canceled/unauthorized task cannot deliver a
+late render. Disable editing/output while sharing and retain a recoverable error.

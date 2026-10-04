@@ -17,10 +17,10 @@ it('uses the configured server copy limit, preserves rejected drafts and freezes
   try {
     await h.render(<AssetPrintScreen workspace={workspace} scope={scope} assetId="asset" onQueued={id => { queued = id; }} />);
     await h.run(() => h.byLabel('Copies')!.props.onChangeText('31'));
-    await h.press(h.byLabel('Preview label')); await h.press(h.byLabel('Print label')); await h.settle();
+    await h.settle(); await h.press(h.byLabel('Print label')); await h.settle();
     expect(fake.submitted.size).toBe(0); expect(h.byLabel('Copies')!.props.value).toBe('31'); expect(h.byLabel('Copies')!.props.editable).toBe(true);
-    await h.run(() => h.byLabel('Copies')!.props.onChangeText('25')); expect(h.byLabel('Print label')!.props.disabled).toBe(true);
-    await h.press(h.byLabel('Preview label')); fake.drop = true; await h.press(h.byLabel('Print label')); await h.settle();
+    await h.run(() => h.byLabel('Copies')!.props.onChangeText('25')); expect(h.byLabel('Print label')!.props.disabled).toBe(false);
+    await h.settle(); fake.drop = true; await h.press(h.byLabel('Print label')); await h.settle();
     expect(fake.accepted.size).toBe(1); expect([...fake.accepted.values()][0].copies).toBe(25); expect(h.byLabel('Copies')!.props.editable).toBe(false);
     await h.render(<></>); await h.render(<AssetPrintScreen workspace={workspace} scope={scope} assetId="asset" onQueued={id => { queued = id; }} />);
     expect(h.byLabel('Copies')!.props.value).toBe('25'); await h.press(h.byLabel('Try again')); await h.settle();
@@ -33,7 +33,7 @@ it('does not submit invalid copy counts', async () => {
     await h.render(<AssetPrintScreen workspace={fake.workspace()} scope={scope} assetId="asset" onQueued={() => {}} />);
     for (const value of ['', '0', '-1', '1.5', 'NaN', '9007199254740992']) {
       await h.run(() => h.byLabel('Copies')!.props.onChangeText(value));
-      expect(h.byLabel('Preview label')!.props.disabled).toBe(true); expect(h.byLabel('Print label')!.props.disabled).toBe(true);
+      expect(h.byLabel('Print label')!.props.disabled).toBe(true);
     }
     expect(fake.submitted.size).toBe(0);
   } finally { await h.unmount(); }

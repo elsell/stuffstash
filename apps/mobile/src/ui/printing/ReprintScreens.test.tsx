@@ -11,8 +11,8 @@ it('links a reprint with fresh preview and retries one retained request after it
   fake.submitted.set('original', { id: 'original', assetId: 'asset', printerId: 'printer', status: 'completed', revision: 1, copies: 1, completedCopies: 1 });
   try {
     await h.render(<ReprintLabelScreen workspace={workspace} scope={scope} jobId="original" onQueued={id => { queued = id; }} />);
-    expect(h.byLabel('Reprint label')?.props.disabled).toBe(true);
-    await h.press(h.byLabel('Preview label')); await h.settle();
+    expect(h.byLabel('Reprint label')?.props.disabled).toBe(false);
+    await h.settle(); await h.settle();
     fake.drop = true; await h.press(h.byLabel('Reprint label')); await h.settle();
     expect(fake.submitted.size).toBe(2); expect(fake.submitted.get('request')?.predecessor).toBe('original');
     await h.render(<></>); fake.submitted.delete('original');
