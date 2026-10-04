@@ -1,0 +1,32 @@
+{
+  "stages": [
+    {
+      "name": "profile-diagnostic",
+      "passed": true,
+      "elapsedMs": 42531,
+      "outcome": "passed"
+    },
+    {
+      "name": "lookup",
+      "passed": true,
+      "elapsedMs": 40677,
+      "outcome": "passed",
+      "response": {
+        "httpStatus": 200,
+        "finishReason": "tool_calls",
+        "toolCallCount": 1
+      }
+    },
+    {
+      "name": "tool-result-answer",
+      "passed": true,
+      "elapsedMs": 35797,
+      "outcome": "passed",
+      "response": {
+        "httpStatus": 200,
+        "finishReason": "tool_calls",
+        "toolCallCount": 1
+      }
+    }
+  ]
+}
