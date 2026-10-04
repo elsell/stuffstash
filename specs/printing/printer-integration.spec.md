@@ -1149,8 +1149,9 @@ return, 390px/desktop reflow, long identifiers, viewer state and uncertain recov
 This is a focused refactor authorized by the October 4 user UI audit request;
 it does not introduce a new navigation model or require a separate design gate.
 The printer editor must protect an unsaved name, media or retirement draft on
-Cancel, Escape and outside dismissal with Keep editing / Discard changes. Saving
-and initial loading cannot dismiss the editor. The successful save still closes
+Cancel, Escape and outside dismissal with Keep editing / Discard changes. Only a pending save locks dismissal. Catalog loading and refresh reads remain
+cancelable; closing ignores their late results. A dirty draft still requires
+Keep editing / Discard changes during a refresh. The successful save still closes
 and restores the triggering control. A saved-defaults notice clears when any
 field is changed, including a checkbox. Catalog display names may supplement
 registered media by adapter/preset/version identity without altering dimensions.
@@ -1160,3 +1161,7 @@ not the printer. Hardware-confirmed copy counts remain available in Report
 details alongside the original report; do not imply zero labels physically
 printed merely because hardware confirmation was unavailable. Explain the optional
 label reference as a short, readable ID on the label.
+
+The web list is named Print history: current cursor pagination is ascending by
+job ID. Do not claim recent-first presentation or reverse only one loaded page.
+A latest-first API cursor contract is a separate follow-up for larger histories.

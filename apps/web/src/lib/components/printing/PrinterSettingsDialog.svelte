@@ -14,18 +14,20 @@ import PairingChoice from './PairingChoice.svelte';
 let {scope,printer,repository,onSaved,onClose,onRestoreFocus}:{scope:PrintScope;printer:RegisteredPrinter;repository:PrintingRepository;onSaved:(printer:RegisteredPrinter)=>void;onClose:()=>void;onRestoreFocus:()=>void}=$props();
 let current=$state(untrack(()=>({...printer}))),name=$state(untrack(()=>printer.name)),retired=$state(untrack(()=>printer.retired));
 let media=$state<PrinterMediaChoice[]>([]),mediaKey=$state(untrack(()=>`${printer.media.presetId}:${printer.media.version}`));
+let saving=$state(false);
 let busy=$state(true),mustReload=$state(false),error=$state('');let alive=true;
 let discardOpen=$state(false),discardRequested=false;
 function finishDiscardDialog(event:Event){event.preventDefault();if(discardRequested){onClose();void tick().then(onRestoreFocus);}else{void tick().then(()=>nameInput?.focus());}}
 let nameInput=$state<HTMLInputElement|null>(null);
 const dirty=$derived(name!==current.name||retired!==current.retired||mediaKey!==`${current.media.presetId}:${current.media.version}`);
-function requestClose(){if(busy)return;if(dirty)discardOpen=true;else onClose();}
+function requestClose(){if(saving)return;if(dirty)discardOpen=true;else onClose();}
 const selected=$derived(media.find(m=>`${m.media.presetId}:${m.media.version}`===mediaKey));
 onDestroy(()=>{alive=false;});onMount(()=>{void load(false);});
 async function load(refresh:boolean){
  if(!alive)return;busy=true;error='';
  try{
   const choices=await repository.mediaProfiles(scope);
+  if(!alive)return;
   const actual=refresh?(await repository.printers(scope)).find(p=>p.id===current.id):current;
   if(!alive)return;if(!actual)throw new PrintingFailure('invalid');
   current=actual;media=choices.filter(choice=>choice.adapterId===actual.adapterId);
@@ -34,12 +36,12 @@ async function load(refresh:boolean){
  finally{if(alive)busy=false;}
 }
 async function save(event:SubmitEvent){
- event.preventDefault();if(busy||mustReload||!selected||!name.trim())return;busy=true;error='';
+ event.preventDefault();if(busy||mustReload||!selected||!name.trim())return;busy=true;saving=true;error='';
  try{
   const updated=await repository.updatePrinter(scope,current,name.trim(),retired,selected.media);
   if(alive){onSaved(updated);onClose();}
  }catch(caught){if(alive){error=printingFailureMessage(caught);mustReload=!(caught instanceof PrintingFailure&&caught.kind==='invalid');}}
- finally{if(alive)busy=false;}
+ finally{if(alive){busy=false;saving=false;}}
 }
 </script>
 <Dialog.Root open onOpenChange={open=>{if(!open)requestClose();}}>
@@ -50,7 +52,7 @@ async function save(event:SubmitEvent){
    <div><Label for="edit-printer-name">{t('web.Printing.printerName')}</Label><Input bind:ref={nameInput} id="edit-printer-name" bind:value={name} disabled={busy||mustReload} required/></div>
    <PairingChoice id="edit-printer-media" label={t('web.Printing.registeredMedia')} value={mediaKey} options={media.map(choice=>({value:`${choice.media.presetId}:${choice.media.version}`,label:labelMediaName(choice.media)}))} disabled={busy||mustReload} onChange={value=>{mediaKey=value;}}/>
    <div class="check-row"><Checkbox id="edit-printer-retired" bind:checked={retired} disabled={busy||mustReload}/><Label for="edit-printer-retired">{t('web.Printing.retirePrinter')}</Label></div>
-   <Dialog.Footer><Button variant="ghost" disabled={busy} onclick={requestClose}>{t('web.Printing.cancel')}</Button>{#if mustReload}<Button variant="outline" disabled={busy} onclick={()=>void load(true)}>{t('web.Printing.reloadPrinter')}</Button>{/if}<Button type="submit" disabled={busy||mustReload||!selected||!name.trim()}>{t('web.Printing.savePrinter')}</Button></Dialog.Footer>
+   <Dialog.Footer><Button variant="ghost" disabled={saving} onclick={requestClose}>{t('web.Printing.cancel')}</Button>{#if mustReload}<Button variant="outline" disabled={busy} onclick={()=>void load(true)}>{t('web.Printing.reloadPrinter')}</Button>{/if}<Button type="submit" disabled={busy||mustReload||!selected||!name.trim()}>{t('web.Printing.savePrinter')}</Button></Dialog.Footer>
   </form>
  </Dialog.Content>
 </Dialog.Root>

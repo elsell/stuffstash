@@ -2,10 +2,12 @@ import {expect,test} from '@playwright/test';
 import {installPrintingSettings} from './printing-settings-fixture';
 const path='/settings/tenants/tenant-home/inventories/inventory-household/printing';
 test('printer settings protect drafts and disclose report details inside the workspace',async({page},testInfo)=>{
- const printer=await installPrintingSettings(page);await page.goto(path);
+ let pendingProfiles:Promise<void>|undefined;
+ const printer=await installPrintingSettings(page,()=>pendingProfiles);await page.goto(path);
  await expect(page.getByRole('heading',{name:'Registered printers',exact:true})).toBeVisible();
  await expect(page.getByText('29 × 90 mm (DK-11201)',{exact:true})).toBeVisible();
  await expect(page.getByText('Reported printed',{exact:true})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Print history',exact:true})).toBeVisible();
  const actor=page.getByText('Reported by oidc_', {exact:false});await expect(actor).not.toBeVisible();
  await page.getByText('Report details',{exact:true}).focus();await page.keyboard.press('Enter');await expect(actor).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -26,4 +28,9 @@ test('printer settings protect drafts and disclose report details inside the wor
  await expect(page.getByLabel('Printer name',{exact:true})).toHaveValue('Discard me');
  await page.getByRole('button',{name:'Cancel',exact:true}).click();await page.getByRole('button',{name:'Discard changes',exact:true}).click();
  await expect(edit).toBeFocused();expect(printer.name).toBe('Workshop Brother');
+ let release!:()=>void;pendingProfiles=new Promise<void>(resolve=>{release=resolve;});
+ try{await edit.click();await expect(page.getByLabel('Printer name',{exact:true})).toBeDisabled();
+ await expect(page.getByRole('button',{name:'Cancel',exact:true})).toBeEnabled();await page.keyboard.press('Escape');
+ await expect(page.getByRole('dialog')).not.toBeVisible();await expect(edit).toBeFocused();}
+ finally{release();}
 });

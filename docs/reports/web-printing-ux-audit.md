@@ -11,7 +11,7 @@ and its shared printer, test-label, asset-print and job-recovery components.
 | Defaults precede printer status; every control spans the page | Users must read setup fields to find whether printing works | Printer status/actions first, bounded defaults beside it on desktop and below on narrow screens |
 | Report timestamps, CLI instructions and computers compete with daily tasks | Technical content obscures the action | Named keyboard disclosures; offline and authorization problems remain visible |
 | Raw identity strings dominate resolved jobs | Overflow and misleading emphasis on implementation details | Reported outcome leads; report details retain actor, time and device confirmation separately |
-| Printer edits disappear on dismissal | Accidental Escape or outside click loses work | Keep editing / Discard changes; save/loading lock dismissal; restore focus after both dialogs settle |
+| Printer edits disappear on dismissal | Accidental Escape or outside click loses work | Keep editing / Discard changes; only a pending save locks dismissal; catalog reads remain cancelable; restore focus after both dialogs settle |
 | Saved-defaults notice survives checkbox changes | Unsaved work looks saved | Notice reflects the saved draft, including checkbox changes |
 | Registered media omits its friendly name | 29 × 89.8 mm looks different from the purchased 29 × 90 mm roll | Match catalog display name by adapter, preset and version; never change physical geometry |
 
@@ -74,3 +74,15 @@ checks; docs production build and rendered-table check. The pre-commit runner wa
 not installed in this worktree; its applicable commands were run directly.
 Type checking retains one unrelated, existing unused `h4` selector warning.
 The final code-critic review reported no confirmed blockers.
+
+Follow-up: the API currently paginates jobs by ascending ID
+(`printing_jobs_repository.go:33`), so old jobs can precede newer outcomes beyond
+the first page. The web heading now says Print history. This patch does not
+reverse a partial page or pretend it fetched the newest jobs; a latest-first
+API cursor contract remains separate work for larger histories.
+
+Follow-up validation reproduced the pending-read dismissal trap before correction.
+Four focused printer tests then passed, including canceling a pending read with
+late-result suppression and keeping a pending write locked. Both workspace browser
+projects also passed Escape during loading with trigger-focus restoration. Type
+checking, production build and the follow-up code-critic review passed.

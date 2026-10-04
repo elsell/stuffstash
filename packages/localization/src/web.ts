@@ -75,7 +75,7 @@ export const webMessages = {
   "web.Printing.revoked": "Revoked",
   "web.Printing.awaiting": "Waiting for activation",
   "web.Printing.pendingAuth": "Waiting for access setup",
-  "web.Printing.jobs": "Recent print jobs",
+  "web.Printing.jobs": "Print history",
   "web.Printing.emptyJobs": "No print jobs yet",
   "web.Printing.moreJobs": "Load more jobs",
   "web.Printing.queued": "Queued",
