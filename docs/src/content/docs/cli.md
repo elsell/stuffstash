@@ -216,9 +216,10 @@ To uninstall, stop and disable the service, remove its unit and binary, and revo
 the connector in Stuff Stash. Retain journal and credential files until pending
 attempts have been reconciled.
 
-The worker and recovery flows are verified with stateful API and USB protocol
-fakes. Physical printing, the example udev rule, and service operation still need
-verification on your host; no attached QL-800 was available during development.
+The worker and recovery flows have stateful API and USB protocol checks, plus
+[scoped physical-print evidence](../printing/setup/#what-is-available) for a
+candidate USB status fix. The example udev rule and service operation still need
+verification on your host.
 
 ## Request and inspect labels
 

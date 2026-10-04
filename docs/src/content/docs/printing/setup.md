@@ -18,8 +18,16 @@ may not include every command; check [versioned downloads](../../cli-downloads/)
 or [build from source](../../cli/#install-from-source).
 
 Initial hardware support is **Brother QL-800, USB, Linux, with 29 × 90 mm labels**.
-Physical printing and scanning still need device verification. Other printer models,
-roll sizes, and remote wake are not part of the initial supported setup.
+Other printer models, roll sizes, and remote wake are outside the initial setup.
+
+A candidate USB status fix has printed a label on a real QL-800 and reported one
+completed copy through the normal queue and CLI worker. That fix is not in
+v0.41.0, which can print a label while leaving its outcome unconfirmed. Check the
+physical label before requesting another copy.
+
+Phone QR scanning, label alignment, and native client journeys still need device
+verification. The catalog's **Not yet verified** status refers to this broader
+physical acceptance.
 
 ## Request a label
 

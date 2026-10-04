@@ -13,14 +13,15 @@ import (
 type Connection struct {
 	finished                   *printing.Submission
 	transport                  ports.PrinterTransport
+	reader                     *statusReader
 	active                     *printing.Submission
 	ready, complete, uncertain bool
 }
 
 func NewConnection(transport ports.PrinterTransport) *Connection {
-	return &Connection{transport: transport}
+	return &Connection{transport: transport, reader: newStatusReader(transport)}
 }
-func (c *Connection) Close() error { return c.transport.Close() }
+func (c *Connection) Close() error { c.reader.close(); return c.transport.Close() }
 func (c *Connection) Readiness(ctx context.Context) (printing.Readiness, error) {
 	if c.active != nil || c.uncertain {
 		return printing.Readiness{State: printing.Busy, Reason: printing.ActiveSubmission}, nil
@@ -30,7 +31,7 @@ func (c *Connection) Readiness(ctx context.Context) (printing.Readiness, error) 
 		return printing.Readiness{State: printing.Unavailable, Reason: printing.Disconnected}, nil
 	}
 	for i := 0; i < 32; i++ {
-		s, err := c.readStatus(ctx)
+		s, err := c.reader.next(ctx)
 		if err != nil {
 			return printing.Readiness{State: printing.Unknown, Reason: printing.InvalidStatus}, err
 		}
@@ -56,6 +57,9 @@ func (c *Connection) Submit(ctx context.Context, label printing.Label) (printing
 	if c.active != nil || !c.ready {
 		return empty, &printing.SubmissionError{Outcome: printing.NoOutput, Reason: printing.ActiveSubmission}
 	}
+	if c.reader.err() != nil {
+		return empty, &printing.SubmissionError{Outcome: printing.NoOutput, Reason: printing.Interrupted}
+	}
 	data, err := encode(label)
 	if err != nil {
 		return empty, &printing.SubmissionError{Outcome: printing.NoOutput, Reason: printing.InvalidArtifact}
@@ -68,6 +72,9 @@ func (c *Connection) Submit(ctx context.Context, label printing.Label) (printing
 	c.ready = false
 	c.complete = false
 	sent, err := writeAll(ctx, c.transport, data)
+	if err == nil {
+		err = c.reader.err()
+	}
 	if err != nil {
 		outcome := printing.NoOutput
 		if sent > 0 {
@@ -89,7 +96,7 @@ func (c *Connection) Observe(ctx context.Context, submission printing.Submission
 	if c.uncertain {
 		return printing.Observation{Outcome: printing.Uncertain, Reason: printing.Interrupted}, nil
 	}
-	s, err := c.readStatus(ctx)
+	s, err := c.reader.next(ctx)
 	if err != nil || s.reason != printing.NoReason {
 		c.uncertain = true
 		reason := s.reason
@@ -108,21 +115,6 @@ func (c *Connection) Observe(ctx context.Context, submission printing.Submission
 		return printing.Observation{Outcome: printing.Completed}, nil
 	}
 	return printing.Observation{Outcome: printing.Pending}, nil
-}
-func (c *Connection) readStatus(ctx context.Context) (status, error) {
-	var packet [32]byte
-	read := 0
-	for read < len(packet) {
-		n, err := c.transport.Read(ctx, packet[read:])
-		read += n
-		if err != nil {
-			return status{}, err
-		}
-		if n == 0 {
-			return status{}, io.ErrNoProgress
-		}
-	}
-	return parseStatus(packet[:])
 }
 func writeAll(ctx context.Context, transport ports.PrinterTransport, data []byte) (int, error) {
 	written := 0

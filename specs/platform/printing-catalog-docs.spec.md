@@ -2,9 +2,10 @@
 
 ## Status And Scope
 
-Implementation candidate October 3, 2026. Offline executable registry export,
-production-rendered examples, owned-output drift checks, and docs build wiring
-are implemented in the candidate; physical printing remains unverified. The Astro/Starlight documentation site
+Updated October 4, 2026. Offline executable registry export, production-rendered
+examples, owned-output drift checks, and docs build wiring are implemented. A
+candidate USB status fix has real QL-800 printing and completion evidence, as
+scoped below; broader physical-profile acceptance remains unverified. The Astro/Starlight documentation site
 must have a Printing section showing first-party printers, supported label sizes,
 and templates with generated PNG examples. The initial supported hardware/media
 scope is exactly Brother QL-800 over USB on Linux with 29 x 90 mm labels; no
@@ -47,11 +48,19 @@ are reference documentation, not a user-managed media catalog in the app.
   experimental/unverified, and deprecated support, with concise limitations and
   checked-in evidence references where available. Never upgrade a status solely
   because a PNG renders or the registry contains a model name.
-- Initial QL-800/Linux/USB/29 x 90 mm support is planned in this spec, not evidence
-  of a shipped adapter. Until implementation exists, public docs must not present
-  it as working support. Generated PR previews describe the candidate branch;
-  production docs follow the existing publishing policy and label unreleased
-  capabilities clearly rather than implying an already downloadable release.
+- The built-in QL-800/Linux/USB/29 x 90 mm adapter is implemented. Generated PR
+  previews describe the candidate branch; production docs must distinguish
+  candidate-fix evidence from the behavior of downloadable releases.
+- On October 4, a candidate fix continuously drained USB status while submitting
+  output and handled zero-length USB reads without treating them as EOF. On the
+  actual QL-800 attached to Paul, the normal API queue/CLI worker completed one
+  copy, cleared its journal, and the user confirmed the label printed. This
+  verifies that candidate's physical output and completion path, not v0.41.0,
+  which could print while leaving the outcome unconfirmed. Phone QR scanning,
+  physical alignment, and native client journeys remain unverified. Keep the
+  registry's `PhysicallyVerified` flag false until broader profile acceptance;
+  explain this scope in the curated setup guide instead of hand-editing generated
+  support claims.
 
 ## Public Pages And PNG Examples
 

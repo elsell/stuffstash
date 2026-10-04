@@ -31,6 +31,7 @@ func TestCopyRequiresPhysicalCompletionAndCorrectPinPlacement(t *testing.T) {
 	device := fakes.NewPrinterTransport()
 	device.FragmentSize = 7
 	connection := NewConnection(device)
+	t.Cleanup(func() { _ = connection.Close() })
 	ctx := context.Background()
 	state, err := connection.Readiness(ctx)
 	if err != nil || state.State != printing.Ready {
@@ -77,6 +78,7 @@ func TestUnavailableAndUncertainOutputAreNotRetried(t *testing.T) {
 		t.Run(scenario, func(t *testing.T) {
 			device := fakes.NewPrinterTransport()
 			connection := NewConnection(device)
+			t.Cleanup(func() { _ = connection.Close() })
 			ctx := context.Background()
 			if scenario == "paper" {
 				device.Paper = false
@@ -139,6 +141,7 @@ func TestIdleConfirmationDoesNotSubmitAndRejectsActiveDevice(t *testing.T) {
 	ctx := context.Background()
 	device := fakes.NewPrinterTransport()
 	connection := NewConnection(device)
+	t.Cleanup(func() { _ = connection.Close() })
 	if err := connection.ConfirmIdle(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -150,5 +153,90 @@ func TestIdleConfirmationDoesNotSubmitAndRejectsActiveDevice(t *testing.T) {
 	}
 	if connection.ConfirmIdle(ctx) == nil {
 		t.Fatal("active submission confirmed idle")
+	}
+}
+
+func TestStatusDrainsWhileRasterWriteWaitsForPrinter(t *testing.T) {
+	device := fakes.NewPrinterTransport()
+	device.WaitForStatusDrain = true
+	device.FragmentSize = 7
+	connection := NewConnection(device)
+	t.Cleanup(func() { _ = connection.Close() })
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if state, err := connection.Readiness(ctx); err != nil || state.State != printing.Ready {
+		t.Fatal(state, err)
+	}
+	submitCtx, finishSubmit := context.WithCancel(ctx)
+	submission, err := connection.Submit(submitCtx, label(t))
+	finishSubmit()
+	if err != nil {
+		t.Fatalf("printer stalled waiting for phase status drain during raster output: %v", err)
+	}
+	for {
+		result, err := connection.Observe(ctx, submission)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result.Outcome == printing.Completed {
+			break
+		}
+		if result.Outcome != printing.Pending {
+			t.Fatalf("physical completion lost: %#v", result)
+		}
+	}
+	if device.PhysicalLabels != 1 {
+		t.Fatalf("physical labels=%d", device.PhysicalLabels)
+	}
+}
+
+func TestStatusOverflowFailsClosedWithoutReplayingOutput(t *testing.T) {
+	device := fakes.NewPrinterTransport()
+	device.WaitForStatusDrain = true
+	device.NotificationsDuringPrint = 64
+	connection := NewConnection(device)
+	t.Cleanup(func() { _ = connection.Close() })
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if state, err := connection.Readiness(ctx); err != nil || state.State != printing.Ready {
+		t.Fatal(state, err)
+	}
+	_, err := connection.Submit(ctx, label(t))
+	var failure *printing.SubmissionError
+	if !errors.As(err, &failure) || failure.Outcome != printing.Uncertain {
+		t.Fatalf("status flood was not uncertain: %v", err)
+	}
+	if _, err := connection.Submit(context.Background(), label(t)); err == nil || device.StartedLabels != 1 {
+		t.Fatal("status failure replayed physical output", err)
+	}
+	if err := connection.Close(); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-connection.reader.done:
+	default:
+		t.Fatal("reader survived Close")
+	}
+}
+
+func TestCloseJoinsIdleStatusReader(t *testing.T) {
+	connection := NewConnection(fakes.NewPrinterTransport())
+	closed := make(chan error, 1)
+	go func() { closed <- connection.Close() }()
+	select {
+	case err := <-closed:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("Close leaked blocked status reader")
+	}
+	select {
+	case <-connection.reader.done:
+	default:
+		t.Fatal("reader survived Close")
+	}
+	if state, _ := connection.Readiness(context.Background()); state.State == printing.Ready {
+		t.Fatal("closed connection accepted readiness")
 	}
 }
