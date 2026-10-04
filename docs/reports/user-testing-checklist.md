@@ -65,10 +65,11 @@ skip it unless you already use VoiceOver or TalkBack or want to try it.
 ## 4. Return cancellation after the API fix is deployed
 
 Status: the reported failure was reproduced against PostgreSQL. The fix passed
-backend regression tests and is deployed to Paul in API v0.28.26. The device
-retest below remains unverified. No new iPhone build is required.
+backend regression tests and was deployed to Paul in API v0.28.26. The user
+confirmed return cancellation works on October 4, 2026. Build/device/OS details
+were not supplied; this is user-reported acceptance, not a new instrumented run.
 
-- [ ] With a checked-out test item, tap Return on Home, then Cancel return in the
+- [x] With a checked-out test item, tap Return on Home, then Cancel return in the
   Return details sheet.
   **Expected:** the sheet closes and the same item is checked out again; no
   “Could not cancel return” message appears. Reopen Details to confirm its state.
@@ -94,9 +95,11 @@ Evidence: [bounded native results](spec-gap-evidence-2026-10-01/sharing-direct-c
 
 Status: the reported voice request was rejected with HTTP403 before session
 creation. Infra commit 07396de adds the exact public API origin behind TLS
-termination. No app update is required. Authenticated speech remains unverified.
+termination. The user confirmed voice works on October 4, 2026. Build/device/OS
+details were not supplied; no new server trace or broader speech-quality result
+is inferred from this confirmation.
 
-- [ ] Reopen Conversation and speak a short inventory question.
+- [x] Reopen Conversation and speak a short inventory question.
   **Expected:** it connects and responds without the connection-interrupted error.
   If it fails, note the time so the server request can be correlated.
 
@@ -118,8 +121,15 @@ These are decisions, not failed tests, and do not block other work.
   [#239](https://github.com/elsell/stuffstash/issues/239), not an unverified test.
   The targeted post-release check is listed above.
 
-Local-model acceptance needs a new model/host decision after its bounded failed
-comparison. It is an engineering follow-up, not a device test for this checklist.
+The pinned local-model synthetic round trip passed in PR #410. Its evidence
+is separate from the user-confirmed mobile voice check above; no model/host
+decision or repeat device test is requested.
+
+## Printing checks: owned by a separate session
+
+The user will verify printer settings in another session (October 4, 2026).
+Keep the checks below for that session; do not request duplicate testing here.
+This handoff does not mark them passed.
 
 ## Label downloads and scanning
 
