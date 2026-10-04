@@ -600,3 +600,15 @@ signed-out/ready transition may verify pending-label retention and its navigatio
 notice; it is simulated readiness, not real OIDC authentication. Screenshots and
 result bundles identify the tested source and devices. These checks do not establish
 physical camera decoding, printed-label readability, or ordinary-camera app links.
+
+### Native camera permission lifecycle
+
+The scanner owns one permission request for each camera attempt while its route
+remains focused. An OS permission prompt can temporarily background the app;
+retain its pending decision through that transition instead of mounting a new
+request on foreground return. Denial exposes the existing paste fallback and
+Settings guidance without another automatic prompt. Grant mounts camera capture
+only when the scanner is focused and the app is active. Backgrounding must stop
+capture immediately; leaving the scanner invalidates late permission results.
+Verify the inactive/pending/denied and inactive/pending/granted transitions with a
+controlled permission fake, plus the actual OS denial on a named native build.
