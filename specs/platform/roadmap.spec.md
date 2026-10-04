@@ -1,6 +1,6 @@
 # Roadmap Spec
 
-## In Progress: Labels, Printers, And CLI — October 3, 2026
+## Labels, Printers, And CLI: Released — October 4, 2026
 
 Design PR #337 is merged. The integrated implementation now includes registered
 printers and connectors, server-rendered QR labels, inventory print defaults,
@@ -12,16 +12,13 @@ foreground worker use the generated Go SDK. SpiceDB scopes connector principals;
 claim tokens fence attempts. Browser PKCE and provider-enabled device-code login
 remain available for human commands.
 
-Delivery continues through small PRs in the native GitHub stack. Required CI,
-final stack integration and release verification are not complete. Printer retirement now atomically cancels safe
-pending jobs and clears defaults while preserving started/uncertain evidence.
+The implementation stack is merged through `27346f77d`; its source tree matches
+the integrated tree tested at `4128e468e` and is published in v0.41.0.
+Printer retirement atomically cancels safe pending jobs and clears defaults while preserving started/uncertain evidence.
 Both clients support one-action default printing and custom copy counts.
-Inventory deletion now revokes connectors and preserves printing history through
-tenant deletion. Real PostgreSQL tests verify both creation/deletion race outcomes
-using inventory-before-printer lock ordering; the prior inversion was reproduced
-before the fix.
-Critical tests use faithful stateful fakes; tests that merely repeat implementation
-are outside the delivery goal. Keep parallel implementation in isolated worktrees.
+Inventory deletion revokes connectors and preserves printing history through
+tenant deletion. Critical tests use faithful stateful fakes alongside real
+provider and database acceptance; implementation-mirroring tests were excluded.
 See [asset labels](../printing/asset-labels.spec.md),
 [printer integration](../printing/printer-integration.spec.md), and [CLI](cli.spec.md).
 
@@ -29,7 +26,10 @@ See [asset labels](../printing/asset-labels.spec.md),
 
 - HTTP authorization and isolation checks cover human and connector boundaries.
   Real PostgreSQL checks verify exclusive claims, scoped recovery, atomic rollback,
-  and concurrent create retries producing exactly one asset and print job.
+  and concurrent create retries producing exactly one asset and print job. Both
+  create-versus-delete race outcomes pass with real row and foreign-key locks.
+  The prior lock-order inversion was reproduced, corrected to lock inventory
+  before printer, and reviewed before merge.
 - Real-SpiceDB HTTP acceptance verifies permission loss between claim and start,
   rotation without privilege changes, pending/reordered synchronization, and
   retirement outcome/reconciliation. CI runs these alongside adapter grant,
@@ -38,7 +38,9 @@ See [asset labels](../printing/asset-labels.spec.md),
 - Actual CLI browser PKCE with Dex verified S256/state/nonce, an ephemeral
   loopback callback, the separate CLI audience, protected credential storage,
   authorized API reads, and logout removal/denial. The local acceptance used the
-  explicit HTTP development opt-in; this is not a hardware print check.
+  explicit HTTP development opt-in. Device-code login was also exercised against
+  Dex and the API, including owner-only credential persistence and generated-SDK
+  asset create/list calls. Neither authentication check establishes hardware output.
 - Stateful worker checks cover lost responses, durable journals, readiness fencing,
   revocation, and uncertain output. Client checks cover retained request identities,
   scope changes, and fresh acknowledgement after a newer uncertain attempt.
@@ -53,12 +55,15 @@ See [asset labels](../printing/asset-labels.spec.md),
   for PNG/PDF examples. Offline drift checks validate owned outputs; QR decoding,
   dimensions, deterministic rendering, and responsive catalog views are verified.
   See [generated printing docs](printing-catalog-docs.spec.md).
-- Release publication has shipped five-platform CLI archives, checksums, and
-  embedded tag/commit metadata. The downloaded v0.38.1 and v0.40.0 Linux archives,
-  checksums, and embedded version/commit metadata were verified. This evidence predates the USB
-  capability metadata correction in #370; verification of a published release
-  containing the final implementation remains pending. Verified release metadata
-  updates pinned download commands through a maintenance PR.
+- [Release v0.41.0](https://github.com/elsell/stuffstash/releases/tag/v0.41.0)
+  published on October 4 at 00:04:07 UTC from
+  `27346f77d59db3714ae6ee45be5201a5182af7bb`. All five downloaded CLI archives
+  matched their checksum files, release manifest, and GitHub asset digests.
+  The released Linux amd64 binary reported the exact tag/commit and
+  `usbPrinting: true`; its catalog contained only the Linux USB QL-800/29 × 90 mm
+  profile, with wake and physical verification both false. License notices were
+  present. Other platforms received artifact integrity checks, not execution checks.
+  PR #400 updates the pinned download instructions from those verified assets.
 
 ### Hardware and delivery limits
 
