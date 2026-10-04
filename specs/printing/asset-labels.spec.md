@@ -629,6 +629,13 @@ Treat those cases as unverified. Target the observed camera alert's denial-butto
 center and require the alert to disappear before checking app fallback. Do not
 repeat denial, pregrant permission, or accept an undismissed OS prompt as success.
 
+Native run `37179475027` at `5492bdec734d72fb32c5f1f97ca821f5e45c2dd7`
+passed all four scanner cases on iPhone 17 and iPad mini (A17 Pro). The actual
+OS denial, native Paste, retry/resolution, late-result cancellation and simulated
+readiness evidence is retained in `docs/reports/printing-ios-scanner-2026-10-04/`.
+This closes that bounded simulator acceptance; the physical-camera and real iOS
+OIDC limitations above remain.
+
 ### Pending-label notice after sign-in
 
 The signed-out connection screen explains that sign-in is required to open a

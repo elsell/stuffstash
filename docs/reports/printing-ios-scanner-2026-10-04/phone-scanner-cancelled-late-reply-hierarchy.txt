@@ -1,0 +1,53 @@
+Attributes: Application, 0x115b80000, pid: 33097, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x115b80000, pid: 33097, label: 'Stuff Stash'
+    Window (Main), 0x115b80140, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x115b80280, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x115b81e00, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x115b81f40, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x115b82080, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x115b821c0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x115b82300, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x115b82440, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x115b82580, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x115b826c0, {{0.0, 0.0}, {402.0, 874.0}}
+                        NavigationBar, 0x115b82800, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'Scanner acceptance'
+                          StaticText, 0x115b82940, {{119.7, 73.7}, {162.7, 20.7}}, label: 'Scanner acceptance'
+                        Other, 0x115b82a80, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x115b82bc0, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x115b82d00, {{0.0, 116.0}, {402.0, 758.0}}
+                              Other, 0x115b82e40, {{0.0, 116.0}, {402.0, 758.0}}
+                                Other, 0x115b82f80, {{0.0, 116.0}, {402.0, 758.0}}
+                                  Other, 0x115b830c0, {{0.0, 116.0}, {402.0, 758.0}}
+                                    ScrollView, 0x115b83200, {{0.0, 116.0}, {402.0, 758.0}}
+                                      Other, 0x115b83480, {{0.0, 116.0}, {402.0, 284.0}}
+                                        Other, 0x115b835c0, {{0.0, 116.0}, {402.0, 284.0}}
+                                          StaticText, 0x115b83700, {{20.0, 136.0}, {362.0, 17.0}}, label: 'Scanner acceptance home'
+                                            StaticText, 0x115b83840, {{20.0, 136.0}, {362.0, 17.0}}, label: 'Scanner acceptance home'
+                                          Button, 0x115b83980, {{20.0, 169.0}, {362.0, 37.7}}, label: 'Open scanner'
+                                          Button, 0x115b83ac0, {{20.0, 222.7}, {362.0, 37.7}}, label: 'Complete delayed lookup'
+                                          StaticText, 0x115b83c00, {{20.0, 276.3}, {362.0, 17.0}}, identifier: 'scanner-evidence', label: '{"reads":1,"lateReplies":1,"cancelled":true,"selected":0}'
+                                            StaticText, 0x115b83d40, {{20.0, 276.3}, {362.0, 17.0}}, label: '{"reads":1,"lateReplies":1,"cancelled":true,"selected":0}'
+                                          Button, 0x115b83e80, {{20.0, 309.3}, {362.0, 37.7}}, label: 'Capture label before simulated sign-in'
+                                          StaticText, 0x115b770c0, {{20.0, 363.0}, {362.0, 17.0}}, label: 'No pending label'
+                                            StaticText, 0x115b77200, {{20.0, 363.0}, {362.0, 17.0}}, label: 'No pending label'
+                                      Other, 0x115b77340, {{369.0, 144.0}, {30.0, 668.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                        Other, 0x115b74000, {{396.0, 587.0}, {3.0, 222.0}}
+                                      Other, 0x115b743c0, {{62.0, 807.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x115b74500, {{65.0, 834.0}, {272.0, 3.0}}
+                                      Other, 0x115b74640, {{369.0, 144.0}, {30.0, 668.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                        Other, 0x115b74780, {{396.0, 587.0}, {3.0, 222.0}}
+                                      Other, 0x115b76e40, {{62.0, 807.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x115b76f80, {{65.0, 834.0}, {272.0, 3.0}}
+                        Other, 0x115b74c80, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x115b74dc0, {{0.0, 0.0}, {402.0, 874.0}}
+    Window, 0x115b74f00, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x115b75040, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x115b75180, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x115b80000, pid: 33097, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x115b752c0, pid: 33097, label: 'Stuff Stash'
+  }
