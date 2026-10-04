@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 final class LabelScannerAuditTests: XCTestCase {
   private let app = XCUIApplication(bundleIdentifier: "org.stuffstash.mobile")
@@ -40,12 +41,18 @@ final class LabelScannerAuditTests: XCTestCase {
   }
   private func paste(_ source: String) {
     let field = app.textFields["Paste label link"]
-    XCTAssertTrue(field.waitForExistence(timeout: 10)); field.tap()
-    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 10))
-    field.typeText(source)
+    XCTAssertTrue(field.waitForExistence(timeout: 10))
+    UIPasteboard.general.string = source
+    field.press(forDuration: 1.2)
+    let paste = app.menuItems["Paste"].firstMatch
+    let pasteButton = app.buttons["Paste"].firstMatch
+    let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      paste.exists || pasteButton.exists
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed, "Use the real native Paste action")
+    if paste.exists { paste.tap() } else { pasteButton.tap() }
     let entered = NSPredicate(format: "value == %@", source)
-    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: entered, object: field)], timeout: 5), .completed)
-    field.typeText("\n")
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: entered, object: field)], timeout: 5), .completed, "Pasting must retain the complete label link")
     let open = app.buttons["Open label"].firstMatch
     if !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable); open.tap()

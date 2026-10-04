@@ -612,3 +612,12 @@ only when the scanner is focused and the app is active. Backgrounding must stop
 capture immediately; leaving the scanner invalidates late permission results.
 Verify the inactive/pending/denied and inactive/pending/granted transitions with a
 controlled permission fake, plus the actual OS denial on a named native build.
+
+The first iOS scanner run (`37176663968`, source `0a68353f4`) reached actual
+permission denial and passed retry/navigation and simulated sign-in return. Some
+remaining cases stopped before lookup because bulk XCTest typing lost a URL prefix
+or the software keyboard did not appear. Preserve that evidence; it does not prove
+normal typing reliable. The scanner's paste acceptance uses a controlled system
+clipboard and the actual native Paste action, verifies the exact complete URL,
+and retains every cancellation and navigation assertion. Do not replace input
+with direct React state changes or accept partial text.
