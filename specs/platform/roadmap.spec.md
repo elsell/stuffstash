@@ -89,8 +89,10 @@ coverage, screenshots, and explicit limitations.
 User-device screenshots exposed obscured scrolling controls, competing tinted
 commands, and weak settings hierarchy. The current follow-up uses grouped native
 settings/actions and automatic scroll insets; label-render failure recovery must
-retry the selected render without repeating a physical handoff. A focused native
-runtime audit will verify clearance and recovery before visual acceptance.
+retry the selected render without repeating a physical handoff. Native run 37176721922 at `00ecca23c` passed the focused iPhone 17 and
+iPad mini audit at normal and maximum text. Reviewed captures verify action
+clearance, preview recovery, saved defaults and dismissal; see
+[the acceptance scope](native-printing-audit.spec.md). Release delivery is next.
 
 The deployed label instance was also uninitialized. An explicit bootstrap restored
 public instance readiness and an authenticated CLI PNG render; GitOps now runs the

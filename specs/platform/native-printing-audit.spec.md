@@ -17,7 +17,22 @@ renders again and produces a visible preview. Capture normal and enlarged text
 layouts on the workflow's iPhone and iPad matrix. Source/fixture checks are separate
 from the macOS runtime evidence and cannot establish a native pass themselves.
 
-The visible label preview must expose the native image accessibility role and its
-localized label. Run 37172865963 rendered the recovered PNG successfully on iPad,
-but UIKit exposed it as `Other`, so image-role lookup failed. Preserve the native
-image-role acceptance instead of weakening it to accept an untyped element.
+The visible label preview must declare the native image accessibility role and its
+localized label. The pinned React Native runtime categorizes the rendered preview
+as `Other` in XCTest even with the explicit image role. The fixture locates its
+unique accessible label across element categories and verifies positive dimensions
+and containment within the actual sheet. This proves rendered geometry, not
+VoiceOver traits; do not claim assistive-technology acceptance from XCTest category
+or source props alone. Preserve the explicit image role in production.
+
+## Verified runtime evidence
+
+[Run 37176721922](https://github.com/elsell/stuffstash/actions/runs/37176721922)
+passed on iPhone 17 and iPad mini (A17 Pro) for source
+`00ecca23c65b6589ef6098d9ba999193e783b5f0`. Normal and maximum-text captures
+verify grouped export rows without overlap, preview containment, reachable final
+Print and Cancel actions, settings navigation and native Save persistence.
+The exported screenshots and hierarchies are retained as workflow artifacts.
+This fixture does not invoke physical output or establish VoiceOver, camera
+decoding, system share-sheet or physical printer acceptance. The existing voice
+accessory's maximum-text clipping remains a separate shared limitation.
