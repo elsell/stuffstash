@@ -92,11 +92,26 @@ settings/actions and automatic scroll insets; label-render failure recovery must
 retry the selected render without repeating a physical handoff. Native run 37176721922 at `00ecca23c` passed the focused iPhone 17 and
 iPad mini audit at normal and maximum text. Reviewed captures verify action
 clearance, preview recovery, saved defaults and dismissal; see
-[the acceptance scope](native-printing-audit.spec.md). Release delivery is next.
+[the acceptance scope](native-printing-audit.spec.md). PR #409 merged as
+`ff03ab2c0` and shipped in v0.42.1. Release run 37178727071 verified
+TestFlight build 238.1 at 05:41 UTC on October 4.
 
 The deployed label instance was also uninitialized. An explicit bootstrap restored
 public instance readiness and an authenticated CLI PNG render; GitOps now runs the
 idempotent bootstrap after migrations, preserving the existing instance identity.
+
+### Native scanner recovery acceptance — October 4, 2026
+
+PR #414 merged as `b05f5bc7d`. The camera adapter retains an OS permission request
+while the system dialog makes its task inactive; actual capture remains
+foreground-only. Native run 37179475027
+at `5492bdec7` passed four cases on iPhone 17 and iPad mini: real OS denial and
+paste fallback, invalid/foreign links, retry with old-host resolution, and Cancel
+with a late response. Retained links also survive simulated sign-in readiness.
+[The iOS report](../../docs/reports/printing-ios-scanner-2026-10-04/README.md)
+separates fixture evidence from real authentication. The normal Android APK
+separately verified real Dex return and unrelated-account denial; see
+[connected Android evidence](../../docs/reports/printing-android-2026-10-04/README.md).
 
 ### Hardware and delivery limits
 
@@ -107,9 +122,9 @@ media. Templates remain independent of printers. Remote wake, additional media,
 and a shared hosted QR resolver are outside this delivery.
 
 Actual USB completion is verified for the bounded test above. Physical QR
-scanning, label alignment, host udev/service setup, and named native
-camera/share/print journeys remain unverified. Source checks and connected browser acceptance do not replace
-those checks. Pending user-device evidence does not block unrelated delivery and
+scanning, label alignment, host udev/service setup, camera image decoding, and
+system share/print journeys remain unverified. Source and fixture checks do not
+replace those checks. Pending user-device evidence does not block unrelated delivery and
 must not be reported as a pass or as closure of existing acceptance work.
 
 ## Integration priority clarification — October 2, 2026
@@ -606,10 +621,12 @@ server-rendered PNG/PDF delivery, Browse camera/paste scanning, and retained
 label navigation through authentication/server changes. Critical parser,
 transport, cancellation, permission, and native action tests are required with
 client checks. Native ExpoCamera/ExpoPrint pod lock regeneration uses CI's actual
-macOS resolver. Physical QL-800 printing and named-device camera/share/print
-acceptance remain unverified in the consolidated user checklist. Registered
-printer controls, settings, and recovery are now part of the integrated delivery
-tracked above; their source checks do not establish native-device acceptance.
+macOS resolver. The bounded QL-800 output and API completion check is verified
+above; it does not establish physical QR decoding or interruption recovery.
+Registered printer controls, settings and recovery are delivered, with named
+iPhone/iPad settings and label-sheet evidence in
+[native printing acceptance](native-printing-audit.spec.md). Camera decoding,
+system share/print and assistive-technology acceptance remain separate checks.
 
 ## Maintenance
 
@@ -621,8 +638,8 @@ user-approved scope decision. Removing an unmet requirement is not remediation.
 
 ## October 4 dependency security remediation
 
-The current delivery task addresses all 151 open Dependabot alerts. Candidate
-upgrades remove affected versions for 148 alerts; three latest upstream packages
+PR #407 shipped remediation for the original 151 Dependabot alerts. Reviewed
+upgrades removed affected versions for 148 alerts; three upstream packages
 (braces, node-forge, http-cache-semantics) remain version-flagged with reviewed
 runtime mitigations and failing-before/passing-after real-library regressions.
 The change preserves Expo 55 alignment, adds Metro image-size 2 compatibility,
@@ -630,6 +647,9 @@ and migrates the Astro/Starlight and OpenTelemetry pipelines. API/CLI suites,
 client type checks, complete web/mobile suites, and fresh iOS/Android Hermes
 exports pass. Real SpiceDB authorization integration, dependency-age checks and
 custom-domain/project-path browser rendering pass; critic findings are resolved.
-Native device acceptance is separate. CI, default-branch alert closure and release
-are pending; do not report all alerts closed.
+PR #407 passed CI and shipped in v0.41.2 and v0.42.0. GitHub reconciliation
+leaves the three patched, version-flagged alerts open; do not report zero alerts.
+PR #411 also removes the subsequently disclosed grpc-go vulnerable version; its
+GitHub alert is closed. Native acceptance and current release rollout remain
+separate evidence from dependency checks.
 Per-alert evidence lives in `docs/reports/2026-10-04-dependency-security/`.
