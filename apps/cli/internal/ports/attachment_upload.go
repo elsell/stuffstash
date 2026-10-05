@@ -19,3 +19,8 @@ type AttachmentUploads interface {
 	StartAttachmentUpload(context.Context, Scope, string, io.Reader) (Result[DirectUpload], error)
 	CompleteAttachmentUpload(context.Context, Scope, string, string) (Result[Attachment], error)
 }
+
+// UploadTransfer sends file bytes without API credentials. The caller owns source.
+type UploadTransfer interface {
+	Send(context.Context, DirectUpload, string, string, int64, io.Reader) error
+}

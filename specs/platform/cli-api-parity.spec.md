@@ -521,3 +521,17 @@ not permission for the authenticated API client to visit the storage URL.
 Never retry a create or completion automatically; an uncertain result must be
 resolved by the calling workflow. File upload guidance, storage transfer and
 recovery commands remain required before these operations count as complete.
+
+### Direct storage upload adapter
+
+A separate storage-transfer port streams a known-length file to the issued
+storage destination. Support multipart POST policies (all form fields before the
+file) and raw PUT. Compute the request length without buffering the file. The
+caller owns the file reader. Use HTTPS; explicit local-development configuration
+may permit HTTP only to a literal loopback address or localhost. Reject userinfo,
+fragments, unsupported methods, credential headers, and conflicting framing
+headers before sending data. The storage client has no cookie jar, API request
+editor or automatic redirect following. Do not retry requests. Do not include
+signed URLs or storage response bodies in errors. A canceled transfer returns
+cancellation; short input and non-success responses must never trigger completion.
+The CLI workflow must verify success before calling the completion API.
