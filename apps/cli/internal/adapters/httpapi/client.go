@@ -44,31 +44,33 @@ func New(server, token string, httpClient *http.Client, options ...Options) (*Cl
 func read[T any](response *http.Response, err error) (T, error) {
 	var zero T
 	if err != nil {
-		return zero, ports.Failure("network", "could not reach Stuff Stash")
+		return zero, ports.Failure("network", "Could not reach Stuff Stash. Check your connection and server address. Check the current state before you repeat a change.")
 	}
 	defer response.Body.Close()
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		category, message := "api", "Stuff Stash rejected the request"
+		category, message := "api", "Stuff Stash did not return a successful result. Check the current state before you repeat a change."
 		switch response.StatusCode {
 		case 401:
-			category, message = "authentication", "session expired or invalid; log in again"
+			category, message = "authentication", "Your session is not valid. Run stuffstash login and try again."
 		case 403:
-			category, message = "forbidden", "you do not have permission for this action"
+			category, message = "forbidden", "You do not have permission for this action. Ask a household or inventory owner to check your access."
 		case 404:
-			category, message = "not_found", "resource not found"
+			category, message = "not_found", "The resource was not found. Check its ID and the selected household and inventory."
 		case 409:
-			category, message = "conflict", "the resource changed or the operation conflicts; refresh and retry"
+			category, message = "conflict", "The request conflicts with the current state. Read the resource again and review your change before you submit it."
 		case 400, 422:
-			category, message = "validation", "request is invalid; check the supplied values"
+			category, message = "validation", "The request is not valid. Check the input values against the command help and API requirements."
+		case 429:
+			category, message = "api", "Too many requests were sent. Wait before you send another request. Check the current state before you repeat a change."
 		case 503:
-			category, message = "unavailable", "service or login method unavailable"
+			category, message = "unavailable", "The service is not available. Wait for it to recover. Check the current state before you repeat a change."
 		}
 		return zero, ports.Failure(category, message)
 	}
 	decoder := json.NewDecoder(io.LimitReader(response.Body, 16<<20))
 	decoder.UseNumber()
 	if err := decoder.Decode(&zero); err != nil {
-		return zero, ports.Failure("protocol", "invalid Stuff Stash response")
+		return zero, ports.Failure("protocol", "The server response is not valid. Check the current state before you repeat a change. Contact the server operator if this continues.")
 	}
 	return zero, nil
 }

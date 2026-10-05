@@ -797,3 +797,17 @@ Use a shared binary-content transport contract for attachments and archives.
 No server filename is interpreted as a local path by these adapters. Critical
 checks cover byte integrity, scope, headers, streaming before EOF, denial and
 redirect safety. Destination and input-file UX remain separate pending decisions.
+
+### Shared API recovery messages
+
+Shared transport errors retain existing machine categories and exit behavior,
+but tell users what to do next. Authentication errors name `stuffstash login`;
+permission errors direct users to an inventory owner; missing resources direct
+users to check the ID and selected household/inventory. Conflict guidance requires
+inspection of current state before another change, rather than an automatic retry.
+Network, unavailable, malformed-response and unknown server errors must not imply
+that a mutation failed to apply. Their recovery guidance requires checking current
+state before repeating a change. Rate limiting gives wait guidance with the same
+existing `api` category. No error includes raw server bodies, credentials or URLs
+from transport exceptions. Critical tests verify categories, actionable recovery
+and private-body suppression at real SDK HTTP boundaries.
