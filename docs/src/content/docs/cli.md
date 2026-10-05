@@ -489,3 +489,9 @@ run `stuffstash notification-devices remove DEVICE_ID --revision N` using the
 returned device ID and revision. Removal asks for confirmation; scripts must
 add `--yes`. A revision conflict requires reviewing the current registration
 before retrying. The CLI does not replace your supplied revision automatically.
+
+Use `stuffstash notification-preferences show` to inspect notification defaults,
+type overrides, timezone, and revision. Initialize preferences with
+`stuffstash notification-preferences initialize --timezone America/New_York`.
+An interactive terminal can ask for the timezone when omitted. Scripts can also
+supply `--input FILE` or pipe a JSON object through `--input -`.

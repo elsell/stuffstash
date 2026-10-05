@@ -13,7 +13,7 @@ func isTagWrite(o Options) bool {
 	return isTagCommand(o) && len(o.Command) > 1 && (o.Command[1] == "create" || o.Command[1] == "update")
 }
 func acceptsBody(o Options) bool {
-	return isDirectoryWrite(o) || isTagWrite(o) || isAssetWrite(o) || isCheckoutWrite(o)
+	return isPreferenceWrite(o) || isDirectoryWrite(o) || isTagWrite(o) || isAssetWrite(o) || isCheckoutWrite(o)
 }
 func validateTags(o Options, requireScope bool) error {
 	if len(o.Command) < 2 {

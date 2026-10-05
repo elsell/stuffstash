@@ -590,3 +590,12 @@ missing revision, but must never fetch or substitute a newer one automatically.
 A conflict must instruct the user to review the current registration. Human
 output includes ID, installation ID, transport, revision and active state; JSON
 retains the response envelope. Registration remains a separate unfinished flow.
+
+`notification-preferences show` displays current defaults, timezone, push state,
+revision and all type overrides. `notification-preferences initialize --timezone
+ZONE` initializes preferences with an explicit timezone; a terminal prompts for
+it when omitted. Also accept `--input FILE|-` for the complete JSON request,
+mutually exclusive with --timezone. Never infer timezone from the workstation.
+The server validates supported timezone identifiers. Noninteractive calls with
+missing input fail without issuing the mutation. Both commands retain full
+JSON envelopes; initialization shows effective mutation scope on stderr.

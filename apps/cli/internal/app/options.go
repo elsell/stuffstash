@@ -11,6 +11,7 @@ import (
 )
 
 type Options struct {
+	Timezone                                                              string
 	Revision                                                              int64
 	UnreadOnly                                                            bool
 	Expiration                                                            ports.ExpirationQuery
@@ -63,6 +64,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	flags.StringVar(&o.Color, "color", "auto", "color output: auto, always, or never")
 	flags.StringVar(&o.Selection.Context, "context", environment.Context, "saved context name")
 	flags.BoolVar(&o.Yes, "yes", false, "confirm the requested action without a prompt")
+	flags.StringVar(&o.Timezone, "timezone", "", "notification timezone, such as America/New_York")
 	flags.Int64Var(&o.Revision, "revision", -1, "current resource revision")
 	flags.BoolVar(&o.UnreadOnly, "unread-only", false, "show unread notifications only")
 	flags.BoolVar(&o.NoInput, "no-input", false, "do not ask for input")
@@ -160,6 +162,9 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if o.Timezone != "" && !isPreferenceWrite(o) {
+		return o, ports.Failure("usage", "Use --timezone with notification-preferences initialize.")
+	}
 	if o.Revision != -1 && !isNotificationDeviceCommand(o) {
 		return o, ports.Failure("usage", "Use --revision with notification-devices remove.")
 	}

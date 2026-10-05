@@ -88,6 +88,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		textInput = prompt
 	}
 	runner := app.Runner{
+		NotificationPreferencesAPI: func(server, token string) (ports.NotificationPreferencesAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		NotificationDevicesAPI: func(server, token string) (ports.NotificationDevicesAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
@@ -171,6 +174,8 @@ const Help = `Stuff Stash CLI
   stuffstash inventories update --input FILE|-
   stuffstash tenants archive|restore|delete [--yes]
   stuffstash inventories archive|restore|delete [--yes]
+  stuffstash notification-preferences show
+  stuffstash notification-preferences initialize [--timezone ZONE | --input FILE|-]
   stuffstash notification-devices show INSTALLATION_ID
   stuffstash notification-devices remove DEVICE_ID --revision N [--yes]
   stuffstash notifications list [--unread-only --limit N --cursor CURSOR]
