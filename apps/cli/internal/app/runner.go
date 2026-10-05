@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	AuditAPI                   func(string, string) (ports.AuditAPI, error)
 	OperationsAPI              func(string, string) (ports.OperationsAPI, error)
 	SecretInput                ports.SecretInput
 	NotificationPreferencesAPI func(string, string) (ports.NotificationPreferencesAPI, error)
@@ -135,6 +136,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 
+	if isAuditCommand(o) {
+		return r.auditCommand(ctx, o, session.IDToken)
+	}
 	if isOperationCommand(o) {
 		return r.operationCommand(ctx, o, session.IDToken)
 	}
@@ -257,6 +261,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
+	}
+	if isAuditCommand(o) {
+		return validateAudit(o, requireScope)
 	}
 	if isOperationCommand(o) {
 		return validateOperations(o, requireScope)

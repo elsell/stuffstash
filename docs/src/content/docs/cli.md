@@ -527,3 +527,16 @@ stuffstash operations redo OPERATION_ID
 These commands require confirmation; scripts add `--yes`. Use an operation ID,
 not an asset ID. The server checks whether the change can still be reversed or
 reapplied. If the result is uncertain, inspect the affected asset before retrying.
+
+## Read audit history
+
+```sh
+stuffstash tenants audit
+stuffstash inventories audit --limit 20
+stuffstash assets audit ASSET_ID
+```
+
+Household history uses the selected household; inventory and asset history also
+use the selected inventory. Add `--json` for complete records and metadata.
+Household and inventory history accept the returned `--cursor` for another page.
+Asset history supports `--limit` but has no cursor in the current API.

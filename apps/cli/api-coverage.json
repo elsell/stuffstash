@@ -398,11 +398,11 @@
         "domain": "audit records",
         "contractSha256": "abf8716b0137e827abcc9059159f11242ae819b51a82a2405b1095c02f5122f5"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "tenants audit"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-conversation-evaluation-cases": {
       "contract": {
@@ -749,11 +749,11 @@
         "domain": "audit records",
         "contractSha256": "d7267f28ac605c3e344b8ce1a3b63c67132335b9036c8a3f9b52e82ea8bde7d1"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets audit"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkouts": {
       "contract": {
@@ -788,11 +788,11 @@
         "domain": "audit records",
         "contractSha256": "34ec09e580b56efb0a96e1883543abee3916cfebf3685737f71ca39a47e0afcf"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "inventories audit"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-checked-out-assets": {
       "contract": {

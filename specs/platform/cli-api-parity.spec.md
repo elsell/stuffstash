@@ -634,3 +634,16 @@ household, inventory and operation before shared confirmation; scripts require
 Return the complete asset response, including the next undoable operation ID.
 Do not automatically retry or accept unsupported idempotency keys. If the result
 is uncertain, direct the user to inspect the affected asset before retrying.
+
+### Audit reads
+
+Use `tenants audit`, `inventories audit`, and `assets audit ASSET_ID` for household,
+inventory and asset audit history. Household history needs only household scope;
+the other commands require both household and inventory. Reuse saved contexts
+and missing-scope selection. All accept --limit; only household and inventory
+history accept --cursor because the asset endpoint has no cursor parameter.
+Preserve every record field, including optional principal details, request and
+inventory IDs, metadata, timestamp, target and source; retain envelope metadata
+and pagination in JSON. Human output shows these fields in readable record
+blocks with sorted metadata and safely quoted server text. These reads do not
+perform compensating mutations.

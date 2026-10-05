@@ -90,6 +90,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		secretInput = prompt
 	}
 	runner := app.Runner{
+		AuditAPI: func(server, token string) (ports.AuditAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		OperationsAPI: func(server, token string) (ports.OperationsAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
@@ -180,6 +183,9 @@ const Help = `Stuff Stash CLI
   stuffstash inventories update --input FILE|-
   stuffstash tenants archive|restore|delete [--yes]
   stuffstash inventories archive|restore|delete [--yes]
+  stuffstash tenants audit [--limit N --cursor CURSOR]
+  stuffstash inventories audit [--limit N --cursor CURSOR]
+  stuffstash assets audit ASSET_ID [--limit N]
   stuffstash operations undo|redo OPERATION_ID [--yes]
   stuffstash notification-preferences update [--input FILE|-]
   stuffstash notification-preferences override TYPE_ID [--input FILE|-]
