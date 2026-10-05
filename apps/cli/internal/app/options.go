@@ -171,6 +171,10 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		flags.Visit(func(f *flag.Flag) {
 			switch f.Name {
 			case "server", "tenant", "inventory", "context", "credential-file", "allow-loopback-http", "json", "no-input", "request-id", "color", "help":
+			case "input", "yes":
+				if !isEvaluationCancellation(o) {
+					unsupported = f.Name
+				}
 			case "limit", "cursor":
 				if len(o.Command) < 3 || o.Command[2] != "list" {
 					unsupported = f.Name
@@ -180,7 +184,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 			}
 		})
 		if unsupported != "" {
-			return o, ports.Failure("usage", "Evaluation inspection does not accept --"+unsupported+" for this command.")
+			return o, ports.Failure("usage", "Evaluation commands do not accept --"+unsupported+" for this command.")
 		}
 	}
 	if len(o.Command) > 1 && o.Command[0] == "labels" && (o.Command[1] == "show" || o.Command[1] == "assign") {

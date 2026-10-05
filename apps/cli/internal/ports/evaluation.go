@@ -157,7 +157,13 @@ type EvaluationRunVerdict struct {
 	Passed   bool                   `json:"passed"`
 }
 
+type EvaluationCancellation struct {
+	ExpectedVersion int64   `json:"expectedVersion"`
+	Schema          *string `json:"$schema,omitempty"`
+}
+
 type EvaluationAPI interface {
+	CancelEvaluationRun(context.Context, string, string, EvaluationCancellation) (Result[EvaluationRun], error)
 	EvaluationCases(context.Context, string, Page) (Result[[]EvaluationCaseHead], error)
 	EvaluationCase(context.Context, string, string) (Result[EvaluationCaseRevision], error)
 	EvaluationRevisions(context.Context, string, string, Page) (Result[[]EvaluationCaseRevision], error)

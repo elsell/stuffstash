@@ -16,8 +16,11 @@ func validateEvaluation(o Options, scope bool) error {
 			valid = o.Command[2] == "list" && len(o.Command) == 4 && o.Command[3] != "" || o.Command[2] == "show" && len(o.Command) == 5 && o.Command[3] != "" && o.Command[4] != ""
 		}
 	}
+	if isEvaluationCancellation(o) && len(o.Command) == 4 && o.Command[3] != "" {
+		valid = true
+	}
 	if !valid {
-		return ports.Failure("usage", "Use evaluation cases|runs list or show ID; evaluation revisions list CASE_ID or show CASE_ID REVISION_ID.")
+		return ports.Failure("usage", "Use evaluation cases|runs list or show ID, evaluation runs cancel RUN_ID, or evaluation revisions list CASE_ID or show CASE_ID REVISION_ID.")
 	}
 	if scope && o.Scope.Tenant == "" {
 		return ports.Failure("usage", "Supply --tenant, or choose a saved household context.")
@@ -31,6 +34,9 @@ func (r Runner) evaluationCommand(ctx context.Context, o Options, token string) 
 	api, err := r.EvaluationAPI(o.Server, token)
 	if err != nil {
 		return err
+	}
+	if isEvaluationCancellation(o) {
+		return r.cancelEvaluationRun(ctx, o, api)
 	}
 	var result any
 	switch o.Command[1] {

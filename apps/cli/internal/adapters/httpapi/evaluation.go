@@ -40,3 +40,7 @@ func (c *Client) EvaluationRuns(ctx context.Context, tenant string, p ports.Page
 func (c *Client) EvaluationRun(ctx context.Context, tenant, id string) (ports.Result[ports.EvaluationRun], error) {
 	return readEvaluation[ports.EvaluationRun](c.sdk.GetTenantsByTenantIdConversationEvaluationRunsByRunId(ctx, tenant, id, nil))
 }
+
+func (c *Client) CancelEvaluationRun(ctx context.Context, tenant, id string, input ports.EvaluationCancellation) (ports.Result[ports.EvaluationRun], error) {
+	return readEvaluation[ports.EvaluationRun](c.sdk.PostTenantsByTenantIdConversationEvaluationRunsByRunIdCancellation(ctx, tenant, id, nil, generated.EvaluationRunCancellationBody{ExpectedVersion: input.ExpectedVersion, Schema: input.Schema}))
+}
