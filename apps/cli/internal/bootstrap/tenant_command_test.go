@@ -21,6 +21,9 @@ import (
 
 func TestTenantListCommandAuthenticatedDiscoveryAndDenial(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-Request-ID") != "cli-test" {
+			t.Error("missing request correlation")
+		}
 		if r.URL.Path != "/me/tenants" || r.URL.Query().Get("limit") != "2" || r.URL.Query().Get("cursor") != "page-two" {
 			t.Errorf("unexpected request: %s", r.URL)
 		}
@@ -65,7 +68,7 @@ func TestTenantListCommandAuthenticatedDiscoveryAndDenial(t *testing.T) {
 			t.Fatal(err)
 		}
 		var out, diagnostic bytes.Buffer
-		code := Run(context.Background(), []string{"tenants", "list", "--json", "--no-input", "--limit", "2", "--cursor", "page-two"}, getenv, &out, &diagnostic)
+		code := Run(context.Background(), []string{"tenants", "list", "--json", "--no-input", "--limit", "2", "--cursor", "page-two", "--request-id", "cli-test"}, getenv, &out, &diagnostic)
 		if token == "denied" {
 			if code != 1 || out.Len() != 0 || !strings.Contains(diagnostic.String(), "forbidden") || strings.Contains(diagnostic.String(), "private backend") {
 				t.Fatalf("unsafe denial: %d %s %s", code, &out, &diagnostic)

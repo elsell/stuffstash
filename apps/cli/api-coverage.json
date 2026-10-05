@@ -271,10 +271,8 @@
       "commands": [
         "account show"
       ],
-      "status": "partial",
-      "gaps": [
-        "Request correlation headers and response metadata still need shared CLI support."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "get-me-tenants": {
       "contract": {
@@ -286,10 +284,8 @@
       "commands": [
         "tenants list"
       ],
-      "status": "partial",
-      "gaps": [
-        "Request correlation headers and response metadata still need shared CLI support."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "get-print-connector-pairings-by-pairing-id": {
       "contract": {
@@ -353,10 +349,8 @@
       "commands": [
         "tenants show"
       ],
-      "status": "partial",
-      "gaps": [
-        "Request correlation headers and response metadata still need shared CLI support."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-archive-jobs": {
       "contract": {
@@ -612,11 +606,11 @@
         "domain": "inventories",
         "contractSha256": "152324975af9a56fdf3351d5201098ba28469cf495289e271c3d621053b7e1f5"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "inventories list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id": {
       "contract": {
@@ -628,10 +622,8 @@
       "commands": [
         "inventories show"
       ],
-      "status": "partial",
-      "gaps": [
-        "Request correlation headers and response metadata still need shared CLI support."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-access-grants": {
       "contract": {
@@ -1230,7 +1222,7 @@
       ],
       "status": "partial",
       "gaps": [
-        "Guided missing-name input and shared request correlation/response metadata remain unfinished."
+        "Guided missing-name input remains unfinished."
       ]
     },
     "patch-tenants-by-tenant-id-archive": {
@@ -1336,7 +1328,7 @@
       ],
       "status": "partial",
       "gaps": [
-        "Guided missing-name input and shared request correlation/response metadata remain unfinished."
+        "Guided missing-name input remains unfinished."
       ]
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-cancel": {
@@ -1793,7 +1785,7 @@
       ],
       "status": "partial",
       "gaps": [
-        "Guided missing-name input and shared request correlation/response metadata remain unfinished."
+        "Guided missing-name input remains unfinished."
       ]
     },
     "post-tenants-by-tenant-id-archive-jobs": {
@@ -1964,7 +1956,7 @@
       ],
       "status": "partial",
       "gaps": [
-        "Guided missing-name input and shared request correlation/response metadata remain unfinished."
+        "Guided missing-name input remains unfinished."
       ]
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-access-grants": {

@@ -11,6 +11,7 @@ import (
 )
 
 type Options struct {
+	RequestID                                                             string
 	InputPath                                                             string
 	RequestBody                                                           []byte
 	Color                                                                 string
@@ -44,6 +45,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	o.Selection.Context = environment.Context
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
+	flags.StringVar(&o.RequestID, "request-id", "", "API request correlation ID")
 	flags.StringVar(&o.InputPath, "input", "", "JSON request file, or - for stdin")
 	flags.StringVar(&o.Color, "color", "auto", "color output: auto, always, or never")
 	flags.StringVar(&o.Selection.Context, "context", environment.Context, "saved context name")
@@ -138,8 +140,13 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	if o.Color != "auto" && o.Color != "always" && o.Color != "never" {
 		return o, ports.Failure("usage", "Use --color auto, --color always, or --color never.")
 	}
+	if strings.IndexFunc(o.RequestID, func(r rune) bool { return r < 32 || r > 126 }) >= 0 {
+		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
+	}
 	o.Command = positional
- if o.InputPath!="" && !isDirectoryWrite(o){return o,ports.Failure("usage","This command does not accept --input. Remove the option.")}
+	if o.InputPath != "" && !isDirectoryWrite(o) {
+		return o, ports.Failure("usage", "This command does not accept --input. Remove the option.")
+	}
 	if o.Page.Limit < 1 {
 		return o, ports.Failure("usage", "--limit must be positive")
 	}

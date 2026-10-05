@@ -11,21 +11,21 @@ func (c *Client) Principal(ctx context.Context) (ports.Result[ports.Principal], 
 	if err != nil {
 		return ports.Result[ports.Principal]{}, err
 	}
-	return ports.Result[ports.Principal]{Data: ports.Principal{ID: r.Data.Id, DisplayName: r.Data.DisplayName, Email: r.Data.Email}}, nil
+	return ports.Result[ports.Principal]{Schema: r.Schema, Meta: metadata(r.Meta), Data: ports.Principal{ID: r.Data.Id, DisplayName: r.Data.DisplayName, Email: r.Data.Email}}, nil
 }
 func (c *Client) Tenant(ctx context.Context, s ports.Scope) (ports.Result[ports.Tenant], error) {
 	r, err := read[generated.SuccessEnvelopeTenantResponse](c.sdk.GetTenantsByTenantId(ctx, s.Tenant, nil))
 	if err != nil {
 		return ports.Result[ports.Tenant]{}, err
 	}
-	return ports.Result[ports.Tenant]{Data: ports.Tenant{ID: r.Data.Id, Name: r.Data.Name, Lifecycle: r.Data.LifecycleState, Access: access(r.Data.Access)}}, nil
+	return ports.Result[ports.Tenant]{Schema: r.Schema, Meta: metadata(r.Meta), Data: ports.Tenant{ID: r.Data.Id, Name: r.Data.Name, Lifecycle: r.Data.LifecycleState, Access: access(r.Data.Access)}}, nil
 }
 func (c *Client) Inventory(ctx context.Context, s ports.Scope) (ports.Result[ports.Inventory], error) {
 	r, err := read[generated.SuccessEnvelopeInventoryResponse](c.sdk.GetTenantsByTenantIdInventoriesByInventoryId(ctx, s.Tenant, s.Inventory, nil))
 	if err != nil {
 		return ports.Result[ports.Inventory]{}, err
 	}
-	return ports.Result[ports.Inventory]{Data: inventory(r.Data)}, nil
+	return ports.Result[ports.Inventory]{Schema: r.Schema, Meta: metadata(r.Meta), Data: inventory(r.Data)}, nil
 }
 func access(v generated.AccessResponse) ports.Access {
 	return ports.Access{Relationship: v.Relationship, Permissions: v.Permissions.GetOrEmpty()}

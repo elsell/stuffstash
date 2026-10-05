@@ -11,7 +11,7 @@ type Page struct {
 	Cursor string
 }
 type Pagination struct {
-	Limit      int     `json:"limit"`
+	Limit      int64   `json:"limit"`
 	NextCursor *string `json:"nextCursor"`
 	HasMore    bool    `json:"hasMore"`
 }
@@ -30,7 +30,15 @@ type Asset struct {
 	Parent     string `json:"parentAssetId,omitempty"`
 	Lifecycle  string `json:"lifecycleState"`
 }
+type Metadata struct {
+	RequestID  *string     `json:"requestId,omitempty"`
+	TenantID   *string     `json:"tenantId,omitempty"`
+	Pagination *Pagination `json:"pagination,omitempty"`
+}
+
 type Result[T any] struct {
+	Schema     *string     `json:"$schema,omitempty"`
+	Meta       *Metadata   `json:"meta,omitempty"`
 	Data       T           `json:"data"`
 	Pagination *Pagination `json:"pagination,omitempty"`
 }

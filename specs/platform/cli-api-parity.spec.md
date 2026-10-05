@@ -280,3 +280,15 @@ not retry writes automatically. If a create loses its response, instruct the
 user to list resources before retrying; the result can be unknown. These creates and name updates are not destructive operations and
 do not require confirmation. Guided missing-name prompts remain part of the full
 interactive delivery; scripts must provide --name or --input.
+
+### Request correlation and response metadata
+
+Finite SDK-backed user commands accept `--request-id` for the API's
+`X-Request-ID` header. Reject control and non-ASCII characters before any request.
+The option does not change authentication and is not sent to the OIDC provider.
+Directory and inventory-list JSON responses retain the API `meta` object,
+including request ID, tenant ID, and pagination, plus optional `$schema`. Preserve
+null collections versus empty arrays and empty strings versus
+null cursors. Keep the existing top-level `pagination` field for compatibility;
+new metadata is additive. Header correlation is diagnostic, not an idempotency
+mechanism. Commands must never promise duplicate-write protection from it.

@@ -85,18 +85,30 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		picker = terminal.Picker{Input: os.Stdin, Output: terminalErrors, Color: options.Color == "always" || (options.Color == "auto" && getenv("NO_COLOR") == "")}
 	}
 	runner := app.Runner{
-		InputFiles:      inputfiles.Files{Stdin: os.Stdin, StdinTerminal: term.IsTerminal(int(os.Stdin.Fd()))},
-		DirectoryWriter: func(server, token string) (ports.DirectoryWriter, error) { return httpapi.New(server, token, client) },
-		DirectoryAPI:    func(server, token string) (ports.Directory, error) { return httpapi.New(server, token, client) },
-		Picker:          picker,
-		ScopeAPI:        func(server, token string) (ports.ScopeCatalog, error) { return httpapi.New(server, token, client) },
-		Contexts:        contextStore,
-		LabelFiles:      labelfiles.Files{},
-		LabelsAPI:       func(server, token string) (ports.LabelsAPI, error) { return httpapi.New(server, token, client) },
-		PrintingAPI:     func(server, token string) (ports.HumanPrintingAPI, error) { return httpapi.New(server, token, client) },
-		API:             func(server, token string) (ports.API, error) { return httpapi.New(server, token, client) },
-		Auth:            oidcauth.Adapter{HTTP: client, Clock: clock, Output: output, Browser: oidcauth.SystemBrowser{}, AllowLoopbackHTTP: options.AllowLoopbackHTTP},
-		Credentials:     store, Clock: clock, Output: output, Observer: presentation.SilentObserver{},
+		InputFiles: inputfiles.Files{Stdin: os.Stdin, StdinTerminal: term.IsTerminal(int(os.Stdin.Fd()))},
+		DirectoryWriter: func(server, token string) (ports.DirectoryWriter, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
+		DirectoryAPI: func(server, token string) (ports.Directory, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
+		Picker: picker,
+		ScopeAPI: func(server, token string) (ports.ScopeCatalog, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
+		Contexts:   contextStore,
+		LabelFiles: labelfiles.Files{},
+		LabelsAPI: func(server, token string) (ports.LabelsAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
+		PrintingAPI: func(server, token string) (ports.HumanPrintingAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
+		API: func(server, token string) (ports.API, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
+		Auth:        oidcauth.Adapter{HTTP: client, Clock: clock, Output: output, Browser: oidcauth.SystemBrowser{}, AllowLoopbackHTTP: options.AllowLoopbackHTTP},
+		Credentials: store, Clock: clock, Output: output, Observer: presentation.SilentObserver{},
 	}
 	return exit(output, runner.Run(ctx, options))
 }
@@ -171,7 +183,8 @@ Use --context NAME or STUFF_STASH_CLI_CONTEXT to choose a saved context.
 Saved resource scope is reused only for the same signed-in account.
 Render writes a new private file; existing paths are never overwritten.
 Standalone dimensions: --width-mm WIDTH --height-mm HEIGHT (exact catalog geometry).
-Finite commands accept --json. Mutations accept --idempotency-key.
+Finite commands accept --json and --request-id.
+Use --idempotency-key only for operations that support it.
 Headless credential storage: explicitly set STUFF_STASH_CLI_CREDENTIAL_FILE.
 Local printer discovery and catalog export do not need login.
 Connector secrets: use the OS store or explicitly set

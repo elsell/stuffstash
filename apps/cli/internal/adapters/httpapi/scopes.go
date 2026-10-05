@@ -11,9 +11,12 @@ func (c *Client) Tenants(ctx context.Context, p ports.Page) (ports.Result[[]port
 	if err != nil {
 		return ports.Result[[]ports.Tenant]{}, err
 	}
-	items := make([]ports.Tenant, 0, len(response.Data.GetOrEmpty()))
+	var items []ports.Tenant
+	if response.Data.GetOrEmpty() != nil {
+		items = make([]ports.Tenant, 0, len(response.Data.GetOrEmpty()))
+	}
 	for _, item := range response.Data.GetOrEmpty() {
 		items = append(items, ports.Tenant{ID: item.Id, Name: item.Name, Lifecycle: item.LifecycleState, Access: access(item.Access)})
 	}
-	return ports.Result[[]ports.Tenant]{Data: items, Pagination: page(response.Meta)}, nil
+	return ports.Result[[]ports.Tenant]{Data: items, Pagination: page(response.Meta), Schema: response.Schema, Meta: metadata(response.Meta)}, nil
 }

@@ -101,7 +101,9 @@ export STUFF_STASH_CLI_INVENTORY=YOUR_INVENTORY_ID
 ```
 
 Use `--parent root` to move an asset out of a container. Add `--json` for structured
-output. Lists include a continuation cursor when more results are available;
+output. Add `--request-id ID` to correlate API requests with server logs; this
+does not prevent duplicate writes. Directory JSON includes the API metadata
+and optional schema reference. Lists include a continuation cursor when more results are available;
 pass it with `--cursor`. Flags can also set `--server`, `--tenant`, and
 `--inventory` for one command.
 

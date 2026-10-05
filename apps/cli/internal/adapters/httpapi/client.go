@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi/generated"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
@@ -12,11 +13,24 @@ import (
 
 type Client struct{ sdk *generated.Client }
 
-func New(server, token string, httpClient *http.Client) (*Client, error) {
+type Options struct{ RequestID string }
+
+func New(server, token string, httpClient *http.Client, options ...Options) (*Client, error) {
+	requestID := ""
+	if len(options) > 0 {
+		requestID = options[0].RequestID
+	}
+	if strings.IndexFunc(requestID, func(r rune) bool { return r < 32 || r > 126 }) >= 0 {
+		return nil, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
+	}
+
 	// API credentials must never follow a server redirect to another origin.
 	safe := *httpClient
 	safe.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	sdk, err := generated.NewClient(server, generated.WithHTTPClient(&safe), generated.WithRequestEditorFn(func(_ context.Context, r *http.Request) error {
+		if requestID != "" {
+			r.Header.Set("X-Request-ID", requestID)
+		}
 		if token != "" {
 			r.Header.Set("Authorization", "Bearer "+token)
 		}
@@ -64,7 +78,11 @@ func page(meta generated.Meta) *ports.Pagination {
 		return nil
 	}
 	p := meta.Pagination
-	return &ports.Pagination{Limit: int(p.Limit), NextCursor: optionalCursor(p.NextCursor.GetOrEmpty()), HasMore: p.HasMore}
+	var cursor *string
+	if value, err := p.NextCursor.Get(); err == nil {
+		cursor = &value
+	}
+	return &ports.Pagination{Limit: p.Limit, NextCursor: cursor, HasMore: p.HasMore}
 }
 func asset(a generated.AssetResponse) ports.Asset {
 	p := ""
@@ -88,11 +106,14 @@ func (c *Client) Inventories(ctx context.Context, s ports.Scope, p ports.Page) (
 	if err != nil {
 		return ports.Result[[]ports.Inventory]{}, err
 	}
-	items := make([]ports.Inventory, 0)
+	var items []ports.Inventory
+	if r.Data.GetOrEmpty() != nil {
+		items = make([]ports.Inventory, 0, len(r.Data.GetOrEmpty()))
+	}
 	for _, v := range r.Data.GetOrEmpty() {
 		items = append(items, inventory(v))
 	}
-	return ports.Result[[]ports.Inventory]{Data: items, Pagination: page(r.Meta)}, nil
+	return ports.Result[[]ports.Inventory]{Data: items, Pagination: page(r.Meta), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }
 func (c *Client) Assets(ctx context.Context, s ports.Scope, p ports.Page) (ports.Result[[]ports.Asset], error) {
 	r, err := read[generated.SuccessEnvelopeListAssetResponse](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdAssets(ctx, s.Tenant, s.Inventory, &generated.GetTenantsByTenantIdInventoriesByInventoryIdAssetsParams{Limit: &p.Limit, Cursor: &p.Cursor}))
@@ -103,7 +124,7 @@ func (c *Client) Assets(ctx context.Context, s ports.Scope, p ports.Page) (ports
 	for _, v := range r.Data.GetOrEmpty() {
 		items = append(items, asset(v))
 	}
-	return ports.Result[[]ports.Asset]{Data: items, Pagination: page(r.Meta)}, nil
+	return ports.Result[[]ports.Asset]{Data: items, Pagination: page(r.Meta), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }
 func (c *Client) Asset(ctx context.Context, s ports.Scope, id string) (ports.Result[ports.Asset], error) {
 	return assetResult(read[generated.SuccessEnvelopeAssetResponse](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetId(ctx, s.Tenant, s.Inventory, id, nil)))
@@ -114,4 +135,8 @@ func optionalCursor(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+func metadata(meta generated.Meta) *ports.Metadata {
+	return &ports.Metadata{RequestID: meta.RequestId, TenantID: meta.TenantId, Pagination: page(meta)}
 }
