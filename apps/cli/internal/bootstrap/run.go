@@ -27,12 +27,17 @@ type systemClock struct{}
 
 func (systemClock) Now() time.Time { return time.Now() }
 func Run(ctx context.Context, args []string, getenv func(string) string, stdout, stderr io.Writer) int {
+	helpOptions, requested, helpErr := app.ParseHelp(args)
+	if requested {
+		output := presentation.Output{Stdout: stdout, Stderr: stderr}
+		if helpErr != nil {
+			return exit(output, helpErr)
+		}
+		return exit(output, writeHelp(stdout, helpOptions.Command))
+	}
 	options, err := app.Parse(args, getenv)
 	output := presentation.Output{Stdout: stdout, Stderr: stderr, JSON: options.JSON}
-	if err == nil && options.Help {
-		_, err = io.WriteString(stdout, Help)
-		return exit(output, err)
-	}
+
 	if err == nil && len(options.Command) == 1 && options.Command[0] == "version" {
 		return exit(output, output.Result(version.Current(supportsUSB(BuiltinPrinters(getenv), runtime.GOOS))))
 	}
@@ -201,127 +206,3 @@ func exit(output ports.Output, err error) int {
 	}
 	return 1
 }
-
-const Help = `Stuff Stash CLI
-
-  stuffstash login --server https://stash.example [--device-code]
-  stuffstash logout --server https://stash.example
-  stuffstash context list
-  stuffstash context current
-  stuffstash context use NAME
-  stuffstash context delete NAME
-  stuffstash tenants create --name NAME
-  stuffstash tenants update --name NAME
-  stuffstash inventories create --name NAME
-  stuffstash inventories update --input FILE|-
-  stuffstash tenants archive|restore|delete [--yes]
-  stuffstash inventories archive|restore|delete [--yes]
-  stuffstash tenants audit [--limit N --cursor CURSOR]
-  stuffstash inventories audit [--limit N --cursor CURSOR]
-  stuffstash assets audit ASSET_ID [--limit N]
-  stuffstash evaluation cases|runs list|show ID
-  stuffstash evaluation revisions list CASE_ID|show CASE_ID REVISION_ID
-  stuffstash workflows list [--limit N] [--cursor CURSOR]
-  stuffstash workflows show WORKFLOW_ID
-  stuffstash workflows revisions list WORKFLOW_ID [--limit N] [--cursor CURSOR]
-  stuffstash workflows revisions show WORKFLOW_ID REVISION_ID
-  stuffstash workflows selection show
-  stuffstash voice-provider show
-  stuffstash provider-profiles list|show PROFILE_ID
-  stuffstash provider-profiles enable|disable|archive|test PROFILE_ID [--yes]
-  stuffstash import-jobs cancel JOB_ID [--input FILE|-] [--yes]
-  stuffstash import-jobs list|show JOB_ID|delete JOB_ID [--yes]
-  stuffstash server show|auth-config
-  stuffstash invitations preview|accept ID [--input FILE|-] [--yes]
-  stuffstash invitations expiration ID [--input FILE|-] [--yes]
-  stuffstash invitations list [--status STATUS --limit N --cursor CURSOR]
-  stuffstash invitations show|cancel|delete ID [--yes]
-  stuffstash access-grants create [--input FILE|-] [--yes]
-  stuffstash access-grants list [--limit N --cursor CURSOR]
-  stuffstash access-grants show|remove PRINCIPAL_ID viewer|editor [--yes]
-  stuffstash assets activity ASSET_ID [--view changes|all --limit N --cursor CURSOR]
-  stuffstash operations undo|redo OPERATION_ID [--yes]
-  stuffstash notification-preferences update [--input FILE|-]
-  stuffstash notification-preferences override TYPE_ID [--input FILE|-]
-  stuffstash notification-preferences remove-override TYPE_ID --revision N [--yes]
-  stuffstash notification-preferences show
-  stuffstash notification-preferences initialize [--timezone ZONE | --input FILE|-]
-  stuffstash notification-devices register [--input FILE|-]
-  stuffstash notification-devices show INSTALLATION_ID
-  stuffstash notification-devices remove DEVICE_ID --revision N [--yes]
-  stuffstash notifications list [--unread-only --limit N --cursor CURSOR]
-  stuffstash notifications show|read|unread ID
-  stuffstash notifications unread-count|read-all [--cursor CURSOR]
-  stuffstash attachments list ASSET_ID [--limit N --cursor CURSOR]
-  stuffstash attachments show ASSET_ID ATTACHMENT_ID
-  stuffstash attachments complete-upload ASSET_ID UPLOAD_ID
-  stuffstash attachments archive|restore|delete ASSET_ID ATTACHMENT_ID [--yes]
-  stuffstash tags list [--limit N --cursor CURSOR]
-  stuffstash tags create --name NAME [--key KEY --tag-color HEX]
-  stuffstash tags update ID [--name NAME --tag-color HEX | --input FILE]
-  stuffstash tags delete ID [--yes]
-  stuffstash account show
-  stuffstash tenants show [--tenant ID]
-  stuffstash inventories show [--tenant ID --inventory ID]
-  stuffstash tenants list [--limit N --cursor CURSOR]
-  stuffstash inventories list --tenant ID
-  stuffstash assets list [--tenant ID --inventory ID --limit N --cursor CURSOR]
-                       [--lifecycle active|archived|all --sort id_asc|updated_desc]
-  stuffstash assets show ID
-  stuffstash assets create --kind item|container|location --title TITLE [--print-label]
-  stuffstash assets update ID --title TITLE
-  stuffstash assets create --input FILE|-
-  stuffstash assets update ID --input FILE|-
-  stuffstash assets move ID --parent ID|root
-  stuffstash assets archive ID [--yes]
-  stuffstash assets restore ID
-  stuffstash assets delete ID [--yes]
-  stuffstash assets expiration [--mode all|soon|expired --kind KIND --checkout-state STATE]
-    [--query TEXT --type-id ID --tag-id ID --location-id ID --from-date YYYY-MM-DD --through-date YYYY-MM-DD]
-    [--limit N --cursor CURSOR]
-  stuffstash assets checked-out [--limit N --cursor CURSOR]
-  stuffstash assets checkout ID [--details TEXT | --input FILE|-]
-  stuffstash assets return ID [--details TEXT | --input FILE|-]
-  stuffstash assets checkouts ID [--limit N --cursor CURSOR]
-  stuffstash assets return-details ASSET_ID CHECKOUT_ID --details TEXT | --input FILE|-
-  stuffstash version
-  stuffstash labels show ASSET_ID
-  stuffstash labels assign ASSET_ID [--yes]
-  stuffstash labels templates
-  stuffstash labels render ASSET_ID --format png|pdf --output PATH [--printer ID | --media-preset ID]
-  stuffstash labels resolve LABEL_URL
-  stuffstash labels print ASSET_ID [--printer ID --template ID --template-version N]
-  stuffstash print-settings show
-  stuffstash printers show PRINTER_ID
-  stuffstash printers profiles
-  stuffstash printers list
-  stuffstash printers configure PRINTER_ID --label-size PRESET_ID
-  stuffstash printers test PRINTER_ID
-  stuffstash print-jobs list [--printer ID]
-  stuffstash print-jobs show JOB_ID
-  stuffstash print-jobs resolve JOB_ID [--input FILE|-] [--yes]
-  stuffstash print-jobs cancel JOB_ID [--yes]
-  stuffstash print-jobs reprint JOB_ID [--printer ID]
-  stuffstash printers discover
-  stuffstash printers catalog [--json]
-  stuffstash connectors print list [--limit N --cursor CURSOR]
-  stuffstash connectors print show CONNECTOR_ID
-  stuffstash connectors print register --name NAME
-  stuffstash connectors print rotate --connector ID
-  stuffstash connectors print run --connector ID [--journal-dir PATH]
-
-Context: --server, --tenant, --inventory or STUFF_STASH_CLI_SERVER,
-STUFF_STASH_CLI_TENANT, STUFF_STASH_CLI_INVENTORY override the saved context.
-Use --context NAME or STUFF_STASH_CLI_CONTEXT to choose a saved context.
-Saved resource scope is reused only for the same signed-in account.
-Render writes a new private file; existing paths are never overwritten.
-Standalone dimensions: --width-mm WIDTH --height-mm HEIGHT (exact catalog geometry).
-Finite commands accept --json and --request-id.
-Use --idempotency-key only for operations that support it.
-Headless credential storage: explicitly set STUFF_STASH_CLI_CREDENTIAL_FILE.
-Local printer discovery and catalog export do not need login.
-Connector secrets: use the OS store or explicitly set
-STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE for headless hosts.
-Registration prints a browser approval URL and short code.
-The Linux USB worker consumes all assigned printers. Keep its journal directory persistent.
-`
