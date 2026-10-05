@@ -269,7 +269,11 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 			}
 			result, err = api.CreateAsset(ctx, o.Scope, ports.AssetInput{Kind: o.Kind, Title: o.Title, Parent: o.Parent, PrintLabel: &selection}, o.IdempotencyKey)
 		} else {
-			result, err = executePrinting(ctx, printingAPI, o)
+			if isPrintResolution(o) {
+				result, err = r.resolvePrint(ctx, o, printingAPI)
+			} else {
+				result, err = executePrinting(ctx, printingAPI, o)
+			}
 		}
 	} else {
 		result, err = execute(ctx, api, o)

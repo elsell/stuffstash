@@ -684,3 +684,10 @@ your normal sign-in and saved inventory context; they do not read connector secr
 cancelling the job. Scripts must add `--yes`. Cancellation uses the current job
 revision and does not retry conflicts. A label might already have printed;
 inspect the returned job before submitting another print.
+
+Use `stuffstash print-jobs resolve JOB_ID` to record what you observed after an
+uncertain print: printed, not printed, or unknown. This does not print again.
+The interactive command asks for an outcome and confirmation. For scripts, pass
+`--input FILE|- --yes` with `reportedOutcome` (`printed`, `not_printed`, or
+`unknown`), the current positive `revision`, and
+`acknowledgeUncertainty: true`. A stale revision fails without retrying.

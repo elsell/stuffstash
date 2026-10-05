@@ -72,6 +72,7 @@ type PrintSelectionSource interface {
 	RegisteredPrinter(context.Context, Scope, string) (RegisteredPrinter, error)
 }
 type HumanPrintingAPI interface {
+	ResolvePrint(context.Context, Scope, string, []byte) (Result[PrintJobSummary], error)
 	PrinterProfiles(context.Context, Scope) (Result[[]PrinterProfile], error)
 	Printer(context.Context, Scope, string) (Result[RegisteredPrinter], error)
 	PrinterMediaPresets(context.Context, Scope, string) ([]PrinterMediaPreset, error)

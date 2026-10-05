@@ -13,7 +13,7 @@ func isTagWrite(o Options) bool {
 	return isTagCommand(o) && len(o.Command) > 1 && (o.Command[1] == "create" || o.Command[1] == "update")
 }
 func acceptsBody(o Options) bool {
-	return isImportCancel(o) || isInvitationTokenCommand(o) || isInvitationExpiration(o) || isGrantCreate(o) || isDeviceRegistration(o) || isPreferenceWrite(o) || isDirectoryWrite(o) || isTagWrite(o) || isAssetWrite(o) || isCheckoutWrite(o)
+	return isPrintResolution(o) || isImportCancel(o) || isInvitationTokenCommand(o) || isInvitationExpiration(o) || isGrantCreate(o) || isDeviceRegistration(o) || isPreferenceWrite(o) || isDirectoryWrite(o) || isTagWrite(o) || isAssetWrite(o) || isCheckoutWrite(o)
 }
 func validateTags(o Options, requireScope bool) error {
 	if len(o.Command) < 2 {

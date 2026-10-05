@@ -282,6 +282,7 @@ const Help = `Stuff Stash CLI
   stuffstash printers test PRINTER_ID
   stuffstash print-jobs list [--printer ID]
   stuffstash print-jobs show JOB_ID
+  stuffstash print-jobs resolve JOB_ID [--input FILE|-] [--yes]
   stuffstash print-jobs cancel JOB_ID [--yes]
   stuffstash print-jobs reprint JOB_ID [--printer ID]
   stuffstash printers discover

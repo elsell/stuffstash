@@ -55,7 +55,7 @@ func validatePrintingCommandOptions(o Options, requireScope bool) error {
 		if n == 2 {
 			return nil
 		}
-	case "printers show", "printers test", "labels print", "print-jobs show", "print-jobs cancel", "print-jobs reprint":
+	case "print-jobs resolve", "printers show", "printers test", "labels print", "print-jobs show", "print-jobs cancel", "print-jobs reprint":
 		if n == 3 {
 			return nil
 		}

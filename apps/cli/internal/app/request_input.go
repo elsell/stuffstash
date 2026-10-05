@@ -35,6 +35,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody = body
 	} else {
+		if isPrintResolution(o) {
+			return r.preparePrintResolution(ctx, o)
+		}
 		if isImportCancel(o) {
 			return r.prepareImportCancel(ctx, o)
 		}
@@ -91,6 +94,10 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 	}
 	if isGrantCreate(o) {
 		_, err := decodeGrant(o.RequestBody)
+		return o, err
+	}
+	if isPrintResolution(o) {
+		_, err := decodePrintResolution(o.RequestBody, true)
 		return o, err
 	}
 	return o, validateAssetCreateKey(o)
