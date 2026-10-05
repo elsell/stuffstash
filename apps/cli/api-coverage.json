@@ -1913,11 +1913,11 @@
         "domain": "conversation workflows",
         "contractSha256": "35e192cd07a9962237fb9cdd15990dff26cb569b76611d0608bc88ebee22974a"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "workflows create"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-conversation-workflows-by-workflow-id-activation": {
       "contract": {
@@ -1926,11 +1926,11 @@
         "domain": "conversation workflows",
         "contractSha256": "722e5e43323dba449555917028181acb9194be6c07389f1cf8a62cd6c4612965"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "workflows activate"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions": {
       "contract": {
@@ -1939,11 +1939,11 @@
         "domain": "conversation workflows",
         "contractSha256": "1da3a13c13e2b37f2f838b519a7ae6026105be009f0794fbc89b27c34ae080aa"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "workflows revisions create"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-custom-asset-types": {
       "contract": {

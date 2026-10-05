@@ -759,6 +759,23 @@ confirm the displayed version. Scripts must supply `--input FILE --yes` with
 A conflict requires a new review of the run. The CLI does not retry cancellation
 or silently replace your version check.
 
+### Create and activate workflows
+
+Use `stuffstash workflows create --input FILE` to create a workflow, or
+`stuffstash workflows revisions create WORKFLOW_ID --input FILE` to add a revision.
+The JSON must contain `definition`; a new revision also requires the current
+`expectedRevision`. Use `--input -` to read JSON from standard input.
+
+To select an evaluated revision, run
+`stuffstash workflows activate WORKFLOW_ID --input FILE`. Supply `revisionId`,
+`runId` and `cases`, plus an expected selection when needed. The server checks the
+evaluation evidence before activation. These commands show the household and
+ask for confirmation; scripts must add `--yes`.
+
+Requests retain your exact values and concurrency checks. A conflict requires
+review of current state. If a reply is lost, inspect the workflow before trying
+again; the CLI does not retry writes automatically.
+
 ### Submit a reviewed print request
 
 `labels print ASSET_ID`, `printers test PRINTER_ID`, and
