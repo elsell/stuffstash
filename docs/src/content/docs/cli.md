@@ -603,3 +603,17 @@ invitation before retrying.
 `stuffstash server auth-config` shows the server's CLI login configuration.
 Neither command requires a login or inventory selection. Add `--json` for the
 complete API response, or `--server URL` to inspect another server.
+
+### Inspect import jobs
+
+```sh
+stuffstash import-jobs list
+stuffstash import-jobs show JOB_ID
+stuffstash import-jobs show JOB_ID --json
+stuffstash import-jobs delete JOB_ID
+```
+
+JSON includes the full preview, counts, messages, progress history and created
+resources. Delete removes a job from history; it does not remove imported assets.
+It asks for confirmation, or requires `--yes` in scripts. These commands do not
+poll or retry automatically.

@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	ImportJobsAPI              func(string, string) (ports.ImportJobsAPI, error)
 	ServerAPI                  func(string) (ports.ServerAPI, error)
 	InvitationsAPI             func(string, string) (ports.InvitationsAPI, error)
 	AccessGrantsAPI            func(string, string) (ports.AccessGrantsAPI, error)
@@ -142,6 +143,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 
+	if isImportJobCommand(o) {
+		return r.importJobCommand(ctx, o, session.IDToken)
+	}
 	if isInvitationCommand(o) {
 		return r.invitationCommand(ctx, o, session.IDToken)
 	}
@@ -276,6 +280,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
+	}
+	if isImportJobCommand(o) {
+		return validateImportJobs(o, requireScope)
 	}
 	if isInvitationCommand(o) {
 		return validateInvitations(o, requireScope)

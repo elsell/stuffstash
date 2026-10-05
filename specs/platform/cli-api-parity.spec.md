@@ -734,3 +734,15 @@ redirects. Preserve JSON schema and response metadata; human output shows all
 fields with quoted server text. These commands do not sign in or open an issuer.
 Reject mutation/input options. Critical verification covers operation without a
 credential file, no Authorization header, full response and safe server errors.
+
+### Import job history
+
+`import-jobs list` and `import-jobs show JOB_ID` read jobs in the selected
+inventory. Preserve the complete job model: actor, source, counts, preview,
+progress/history, messages, resources and timestamps. List retains the API's
+`data.jobs` shape. The endpoint is not paginated; reject cursors. Human lists
+show identity/status/progress; details show source, counts, messages and preview
+summaries, with --json retaining complete nested evidence.
+`import-jobs delete JOB_ID` confirms removal from history, without claiming to
+remove imported assets. No automatic polling or retries. Critical checks cover
+exact inventory scope, full nested/64-bit data, confirmation and denied access.

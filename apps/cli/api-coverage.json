@@ -151,11 +151,11 @@
         "domain": "imports",
         "contractSha256": "fd2b3b6e4e2eb4833bd202bf664744e07bc1f9b16cd6fa35c200d9d2f9f0c794"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "import-jobs delete"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices-by-device-id": {
       "contract": {
@@ -879,11 +879,11 @@
         "domain": "imports",
         "contractSha256": "93e62d4cd1f2a79e9e197430cf713051badaa5549be1145c49054911a958d694"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "import-jobs list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id": {
       "contract": {
@@ -892,11 +892,11 @@
         "domain": "imports",
         "contractSha256": "72bf66ad42525f69f234f960263ad9c5134be692e765e2bd2c0258cff4286402"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "import-jobs show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-label-templates": {
       "contract": {
