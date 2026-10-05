@@ -710,11 +710,11 @@
         "domain": "audit records",
         "contractSha256": "a3b5db09b2dea13abc2126b0a70371a7da5ea02d0472ed7b7dd773f6d6be8230"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets activity"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments": {
       "contract": {

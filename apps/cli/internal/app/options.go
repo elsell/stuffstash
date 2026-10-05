@@ -11,6 +11,7 @@ import (
 )
 
 type Options struct {
+	ActivityView                                                          ports.ActivityView
 	Timezone                                                              string
 	Revision                                                              int64
 	UnreadOnly                                                            bool
@@ -54,6 +55,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	expirationFlags(flags, &o)
+	flags.Func("view", "asset activity: changes or all", func(v string) error { o.ActivityView = ports.ActivityView(v); return nil })
 	flags.Func("details", "checkout or return notes", func(value string) error { o.Details = &value; return nil })
 	flags.Func("tag-color", "tag color as #RRGGBB, or an empty value", func(value string) error { o.TagColor = &value; return nil })
 	flags.Func("key", "stable key for a new tag", func(value string) error { o.TagKey = &value; return nil })
@@ -167,6 +169,9 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	}
 	if o.Revision != -1 && !isNotificationDeviceCommand(o) && !isPreferenceCommand(o) {
 		return o, ports.Failure("usage", "Use --revision with notification-devices remove.")
+	}
+	if o.ActivityView != "" && !isActivityCommand(o) {
+		return o, ports.Failure("usage", "Use --view with assets activity.")
 	}
 	if o.UnreadOnly && !isNotificationCommand(o) {
 		return o, ports.Failure("usage", "Use --unread-only with notifications list.")

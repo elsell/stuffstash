@@ -647,3 +647,15 @@ inventory IDs, metadata, timestamp, target and source; retain envelope metadata
 and pagination in JSON. Human output shows these fields in readable record
 blocks with sorted metadata and safely quoted server text. These reads do not
 perform compensating mutations.
+
+### Asset activity
+
+`assets activity ASSET_ID [--view changes|all --limit N --cursor CURSOR]`
+shows the asset timeline in the selected household and inventory. Omit --view
+to use the server default. Preserve every event field, changed value, optional
+principal and undo operation, technical metadata and pagination in JSON. Human
+output groups events by time and action, then shows changes and undo status.
+Reading activity never executes undo. Reject invalid views before authentication
+or network access; --view applies only to this command. Reuse scope selection
+and safe error handling. Critical verification covers scoped requests, denied
+cross-scope reads, pagination and the complete timeline response.

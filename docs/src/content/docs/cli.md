@@ -533,6 +533,7 @@ reapplied. If the result is uncertain, inspect the affected asset before retryin
 ```sh
 stuffstash tenants audit
 stuffstash inventories audit --limit 20
+stuffstash assets activity ASSET_ID --view changes
 stuffstash assets audit ASSET_ID
 ```
 
@@ -540,3 +541,7 @@ Household history uses the selected household; inventory and asset history also
 use the selected inventory. Add `--json` for complete records and metadata.
 Household and inventory history accept the returned `--cursor` for another page.
 Asset history supports `--limit` but has no cursor in the current API.
+
+Use `assets activity ASSET_ID --view all` to include technical events. Activity
+shows changed values and available undo operation IDs. It does not undo changes.
+Use `--cursor` with the returned cursor to read the next page.
