@@ -19,6 +19,10 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[ports.Attachment]:
+		return o.attachmentDetails(v.Data)
+	case ports.Result[[]ports.Attachment]:
+		return o.attachmentList(v)
 	case ports.Result[[]ports.Tag]:
 		for _, item := range v.Data {
 			if _, err := fmt.Fprintf(o.Stdout, "%s\t%s\t%s\t%s\n", strconv.Quote(item.ID), strconv.Quote(item.DisplayName), strconv.Quote(item.Key), strconv.Quote(item.Lifecycle)); err != nil {

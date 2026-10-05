@@ -490,3 +490,12 @@ scope IDs, plus response metadata and pagination. Delete requires HTTP 204.
 Archive and delete use the shared destructive confirmation policy. These
 metadata operations do not imply upload or download completion. Keep command
 coverage partial until dispatch, human output and confirmation are verified.
+
+Attachment command syntax is `attachments list ASSET_ID`, `attachments show
+ASSET_ID ATTACHMENT_ID`, and `attachments archive|restore|delete ASSET_ID
+ATTACHMENT_ID`. List accepts limit/cursor. Human lists show ID, name, media type,
+size and state; detail includes digest, creation time and ownership IDs. JSON
+retains the full envelope. Mutation notices identify server, household,
+inventory, asset and attachment. Archive/delete require confirmation; restore
+runs directly. Unsupported retry keys and unrelated write fields fail before
+network access. Successful deletion returns a scoped status result.

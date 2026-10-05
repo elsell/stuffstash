@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	AttachmentsAPI     func(string, string) (ports.AttachmentsAPI, error)
 	TagsAPI            func(string, string) (ports.TagsAPI, error)
 	DirectoryLifecycle func(string, string) (ports.DirectoryLifecycle, error)
 	TextInput          ports.TextInput
@@ -128,6 +129,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 
+	if isAttachmentCommand(o) {
+		return r.attachmentsCommand(ctx, o, session.IDToken)
+	}
 	if isTagCommand(o) {
 		return r.tagsCommand(ctx, o, session.IDToken)
 	}
@@ -235,6 +239,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
+	}
+	if isAttachmentCommand(o) {
+		return validateAttachments(o, requireScope)
 	}
 	if isTagCommand(o) {
 		return validateTags(o, requireScope)

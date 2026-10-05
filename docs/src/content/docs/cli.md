@@ -445,3 +445,19 @@ reads the updated setting from the server; its restricted credential cannot edit
 If another person changes the registration meanwhile, the command reports a
 conflict. Inspect the current printer before trying again. Updating stock never
 resizes labels already queued: jobs keep their original media requirements.
+
+## Manage attachments
+
+Use the saved inventory, or pass `--tenant` and `--inventory`:
+
+```sh
+stuffstash attachments list ASSET_ID
+stuffstash attachments show ASSET_ID ATTACHMENT_ID
+stuffstash attachments archive ASSET_ID ATTACHMENT_ID
+stuffstash attachments restore ASSET_ID ATTACHMENT_ID
+stuffstash attachments delete ASSET_ID ATTACHMENT_ID --yes
+```
+
+Archive and delete ask for confirmation. Scripts must pass `--yes`.
+Detail output includes the file size and SHA-256 digest. Add `--json` for the
+complete API result. List supports `--limit` and `--cursor`.
