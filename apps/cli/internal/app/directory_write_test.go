@@ -33,16 +33,26 @@ func TestDirectoryWritesDoNotPromiseUnsupportedIdempotency(t *testing.T) {
 	}
 }
 
-type namePrompt struct{calls int}
-func(p *namePrompt)ReadText(context.Context,string,int)(string,error){p.calls++;return "Garage",nil}
-func TestMissingNamePromptsOnlyInInteractiveMode(t *testing.T){
- prompt:=&namePrompt{}
- runner:=Runner{TextInput:prompt}
- options:=Options{Command:[]string{"inventories","create"}}
- result,err:=runner.prepareInput(context.Background(),options)
- if err!=nil || string(result.RequestBody)!=`{"name":"Garage"}` || prompt.calls!=1{t.Fatalf("prompt failed: %s %v",result.RequestBody,err)}
- for _,o:=range []Options{{Command:options.Command,JSON:true},{Command:options.Command,NoInput:true}}{
-  if _,err:=runner.prepareInput(context.Background(),o);err==nil{t.Fatal("script accepted missing name")}
- }
- if prompt.calls!=1{t.Fatal("script opened prompt")}
+type namePrompt struct{ calls int }
+
+func (p *namePrompt) ReadText(context.Context, string, int) (string, error) {
+	p.calls++
+	return "Garage", nil
+}
+func TestMissingNamePromptsOnlyInInteractiveMode(t *testing.T) {
+	prompt := &namePrompt{}
+	runner := Runner{TextInput: prompt}
+	options := Options{Command: []string{"inventories", "create"}}
+	result, err := runner.prepareInput(context.Background(), options)
+	if err != nil || string(result.RequestBody) != `{"name":"Garage"}` || prompt.calls != 1 {
+		t.Fatalf("prompt failed: %s %v", result.RequestBody, err)
+	}
+	for _, o := range []Options{{Command: options.Command, JSON: true}, {Command: options.Command, NoInput: true}} {
+		if _, err := runner.prepareInput(context.Background(), o); err == nil {
+			t.Fatal("script accepted missing name")
+		}
+	}
+	if prompt.calls != 1 {
+		t.Fatal("script opened prompt")
+	}
 }

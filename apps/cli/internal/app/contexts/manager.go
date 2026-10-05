@@ -95,14 +95,23 @@ func missingContext() error {
 
 // ClearResource drops only saved references invalidated by a confirmed delete.
 // An empty inventory identifies a deleted household and all its inventories.
-func(m Manager)ClearResource(ctx context.Context,server,principal,tenant,inventory string)error{
- if principal=="" || tenant==""{return nil}
- return m.Store.Update(ctx,func(config *Config)error{
-  for i:=range config.Contexts{
-   entry:=&config.Contexts[i]
-   if ServerKey(entry.Server)!=ServerKey(server) || entry.Principal!=principal || entry.Tenant!=tenant{continue}
-   if inventory==""{entry.Tenant="";entry.Inventory=""}else if entry.Inventory==inventory{entry.Inventory=""}
-  }
-  return nil
- })
+func (m Manager) ClearResource(ctx context.Context, server, principal, tenant, inventory string) error {
+	if principal == "" || tenant == "" {
+		return nil
+	}
+	return m.Store.Update(ctx, func(config *Config) error {
+		for i := range config.Contexts {
+			entry := &config.Contexts[i]
+			if ServerKey(entry.Server) != ServerKey(server) || entry.Principal != principal || entry.Tenant != tenant {
+				continue
+			}
+			if inventory == "" {
+				entry.Tenant = ""
+				entry.Inventory = ""
+			} else if entry.Inventory == inventory {
+				entry.Inventory = ""
+			}
+		}
+		return nil
+	})
 }
