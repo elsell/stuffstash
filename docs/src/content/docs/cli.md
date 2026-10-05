@@ -50,10 +50,76 @@ export STUFF_STASH_CLI_CREDENTIAL_FILE="$HOME/.config/stuffstash/session.json"
 The file must remain accessible only to your account. `./stuffstash logout`
 removes the locally stored session for the selected server.
 
+## Create and rename households or inventories
+
+```sh
+./stuffstash tenants create --name 'Home'
+./stuffstash inventories create --tenant HOUSEHOLD_ID --name 'Garage'
+./stuffstash inventories update --name 'Workshop'
+```
+
+Omit `--name` in an interactive terminal to enter the name in a prompt. Use
+arrow keys to edit and Ctrl-C to cancel. Scripts must supply a name or JSON.
+
+Use `--input request.json` instead of `--name` to send a JSON object, or pipe it
+with `--input -`. The limit is 1 MiB. The CLI prints the target scope to stderr
+before a write; `--json` keeps the result on stdout. New resources do not change
+your current context.
+
+These four create/update operations do not support idempotency keys. If a create
+response is lost, check `tenants list` or `inventories list` before retrying.
+
+## Archive, restore, or delete a household or inventory
+
+Use `tenants archive`, `tenants restore`, or `tenants delete` for the selected
+household. Use the equivalent `inventories` commands for the selected inventory.
+Each command shows its target before it runs. Archive and delete ask for
+confirmation with Cancel selected first. Scripts must supply `--yes`; restore
+does not need confirmation. Delete permanently removes the selected resource.
+After deletion, matching saved scope is cleared for your account.
+
+```sh
+./stuffstash inventories archive --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
+./stuffstash inventories restore --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
+```
+
+## Manage tags
+
+```sh
+./stuffstash tags list
+./stuffstash tags create --name 'Tools' --key tools --tag-color '#247BA0'
+./stuffstash tags update TAG_ID --name 'Hand tools'
+./stuffstash tags update TAG_ID --tag-color ''
+./stuffstash tags delete TAG_ID
+```
+
+Tags use the current household and inventory. Omit a required name to enter it
+interactively, or use `--input FILE` for JSON. A color-only update leaves the name
+unchanged; an empty color value clears the color. The stable key is set only when
+you create the tag. Delete asks for confirmation; scripts must add `--yes`.
+`--tag-color` sets the tag color, while `--color` controls terminal presentation.
+
 ## Work with assets
 
-Set the tenant and inventory IDs from your instance. Listing inventories requires
-a tenant; asset commands also require an inventory.
+Run `stuffstash account show` to check the signed-in account and
+`stuffstash tenants list` to see your households. A tenant is a household's
+security boundary; each household can contain multiple inventories. Use
+`tenants show` or `inventories show` to inspect the selected scope and your access.
+
+In an interactive terminal, commands ask you to select any missing household or
+inventory. Type to search, use the arrow keys, and press Enter. Escape cancels.
+Completed selections are saved for the server and signed-in account. Use
+`context list`, `context current`, and `context use NAME` to inspect or switch
+saved contexts. `context delete NAME` removes a saved context without deleting
+server data. Sign-out clears saved account scope.
+
+For scripts, use explicit scope or a saved context for the same signed-in account.
+`--json`, `--no-input`, and redirected streams never open a picker. Set
+`STUFF_STASH_CLI_CONFIG_FILE` to choose a private context file. Context files do
+not contain credentials. Picker color follows terminal support and `NO_COLOR`;
+`--color always` or `--color never` overrides automatic color selection.
+
+Listing inventories requires a tenant; asset commands also require an inventory:
 
 ```sh
 export STUFF_STASH_CLI_TENANT=YOUR_TENANT_ID
@@ -67,10 +133,67 @@ export STUFF_STASH_CLI_INVENTORY=YOUR_INVENTORY_ID
 ./stuffstash assets restore ASSET_ID
 ```
 
+Create or update an asset with a complete JSON request using `--input FILE` or
+`--input -` for stdin. This supports descriptions, tags, custom fields, expiration,
+and parent IDs. For example, `{"expiration":null,"tagIds":[]}` clears expiration
+and removes all tags with `assets update ID --input FILE`. Omitted fields stay
+unchanged. Do not combine JSON input with asset field flags or `--print-label`.
+Interactive creation asks for a missing title and kind. Scripts must provide
+these fields or a JSON request. Updates do not support `--idempotency-key`. Ordinary
+creation also does not support this key. If its response is lost, list assets
+before retrying to avoid a duplicate. Create-and-print supports the key: keep
+the key shown on stderr and reuse it with the unchanged request if needed.
+The CLI does not retry writes automatically.
+
+Archive and delete require confirmation. Add `--yes` in scripts after checking
+the target. `assets delete ID --yes` permanently deletes an asset; the server
+checks whether deletion is allowed. Restore needs no confirmation. None of
+these lifecycle commands supports `--idempotency-key`.
+
+List archived assets with `assets list --lifecycle archived`, or include both states
+with `--lifecycle all`. Use `--sort updated_desc` to put recently changed assets
+first; `id_asc` is also supported.
+
+`assets show` displays the location ID, tags, expiration, checkout, and custom
+fields. Its JSON output retains the complete asset response, including photo
+metadata, request metadata, and exact custom-field numbers.
+
 Use `--parent root` to move an asset out of a container. Add `--json` for structured
-output. Lists include a continuation cursor when more results are available;
+output. Add `--request-id ID` to correlate API requests with server logs; this
+does not prevent duplicate writes. Directory JSON includes the API metadata
+and optional schema reference. Lists include a continuation cursor when more results are available;
 pass it with `--cursor`. Flags can also set `--server`, `--tenant`, and
 `--inventory` for one command.
+
+### Check out and return assets
+
+```sh
+stuffstash assets checked-out --limit 20
+stuffstash assets checkout ASSET_ID --details 'Lent to Sam'
+stuffstash assets return ASSET_ID --details 'Returned with charger'
+stuffstash assets checkouts ASSET_ID --limit 20
+stuffstash assets return-details ASSET_ID CHECKOUT_ID --details ''
+```
+
+Checkout and return notes are optional. Use `--details ''` to clear returned
+checkout notes. The write commands also accept `--input FILE|-` with a JSON
+`details` field. Do not combine the two input methods. Use the history command
+before retrying a write whose result is unknown. These commands do not support
+retry keys. History includes pagination; pass `--cursor` for the next page.
+
+### Browse expiration dates
+
+```sh
+stuffstash assets expiration --mode expired
+stuffstash assets expiration --mode soon --location-id LOCATION_ID
+stuffstash assets expiration --from-date 2026-01-01 --through-date 2026-12-31 --tag-id TAG_ID
+```
+
+Omit `--mode` to include all expiration dates. Narrow results with `--kind`,
+`--checkout-state any|available|checked_out`, `--query`, or `--type-id`.
+Repeat `--tag-id` for multiple tags. Lists include counts, the inventory timezone,
+and item locations. Use `--limit` (1–100) and `--cursor` to page through results,
+or `--json` for complete items and metadata.
 
 ## Release operations
 
@@ -322,3 +445,237 @@ reads the updated setting from the server; its restricted credential cannot edit
 If another person changes the registration meanwhile, the command reports a
 conflict. Inspect the current printer before trying again. Updating stock never
 resizes labels already queued: jobs keep their original media requirements.
+
+## Manage attachments
+
+Use the saved inventory, or pass `--tenant` and `--inventory`:
+
+```sh
+stuffstash attachments list ASSET_ID
+stuffstash attachments show ASSET_ID ATTACHMENT_ID
+stuffstash attachments archive ASSET_ID ATTACHMENT_ID
+stuffstash attachments restore ASSET_ID ATTACHMENT_ID
+stuffstash attachments delete ASSET_ID ATTACHMENT_ID --yes
+```
+
+Archive and delete ask for confirmation. Scripts must pass `--yes`.
+Detail output includes the file size and SHA-256 digest. Add `--json` for the
+complete API result. List supports `--limit` and `--cursor`.
+
+If a direct upload has transferred its bytes but still needs completion, run
+`stuffstash attachments complete-upload ASSET_ID UPLOAD_ID`. Keep the upload ID
+private. This command does not resend the file. If completion returns an
+uncertain result, use `attachments list ASSET_ID` to check before retrying.
+
+## Review notifications
+
+```sh
+stuffstash notifications list --unread-only
+stuffstash notifications show NOTIFICATION_ID
+stuffstash notifications read NOTIFICATION_ID
+stuffstash notifications unread NOTIFICATION_ID
+stuffstash notifications unread-count
+stuffstash notifications read-all
+```
+
+Commands use your selected inventory. List supports `--limit` and `--cursor`.
+Unread count and read-all also accept a cursor. If read-all reports
+`Complete: false`, use the returned cursor to continue. Add `--json` to retain
+all notification fields and response metadata in scripts.
+
+Look up a push registration with
+`stuffstash notification-devices show INSTALLATION_ID`. To stop that registration,
+run `stuffstash notification-devices remove DEVICE_ID --revision N` using the
+returned device ID and revision. Removal asks for confirmation; scripts must
+add `--yes`. A revision conflict requires reviewing the current registration
+before retrying. The CLI does not replace your supplied revision automatically.
+
+Use `stuffstash notification-preferences show` to inspect notification defaults,
+type overrides, timezone, and revision. Initialize preferences with
+`stuffstash notification-preferences initialize --timezone America/New_York`.
+An interactive terminal can ask for the timezone when omitted. Scripts can also
+supply `--input FILE` or pipe a JSON object through `--input -`.
+
+Run `stuffstash notification-preferences update` in a terminal to edit current
+settings with keyboard choices. Use `override TYPE_ID` to edit a type-specific
+policy. Both preserve the revision loaded at the start and stop if it changes.
+For scripts, pass `--input FILE` with the complete API request, including its
+revision. Update requires `defaults`, `timezone`, and `pushEnabled`; override
+requires `settings`. Policies contain `enabled`, `upcoming`, `expired`, and
+`advanceDays`.
+
+To return a type to the default policy, use
+`stuffstash notification-preferences remove-override TYPE_ID --revision N`.
+Removal asks for confirmation; scripts add `--yes`.
+
+Register a push device with `stuffstash notification-devices register`. A terminal
+asks for the installation ID, push service, revision, and a hidden token. Use
+revision `0` for a first registration. For scripts, supply `--input FILE` or pipe
+JSON with `--input -`; the body contains `installationId`, `transport` (`apns` or
+`fcm`), `token`, and `revision`. Treat this input as secret. The CLI does not
+include the token in results or error messages.
+
+## Undo and redo
+
+Use the `undoableOperationId` returned by a mutation:
+
+```sh
+stuffstash operations undo OPERATION_ID
+stuffstash operations redo OPERATION_ID
+```
+
+These commands require confirmation; scripts add `--yes`. Use an operation ID,
+not an asset ID. The server checks whether the change can still be reversed or
+reapplied. If the result is uncertain, inspect the affected asset before retrying.
+
+## Read audit history
+
+```sh
+stuffstash tenants audit
+stuffstash inventories audit --limit 20
+stuffstash assets activity ASSET_ID --view changes
+stuffstash assets audit ASSET_ID
+```
+
+Household history uses the selected household; inventory and asset history also
+use the selected inventory. Add `--json` for complete records and metadata.
+Household and inventory history accept the returned `--cursor` for another page.
+Asset history supports `--limit` but has no cursor in the current API.
+
+Use `assets activity ASSET_ID --view all` to include technical events. Activity
+shows changed values and available undo operation IDs. It does not undo changes.
+Use `--cursor` with the returned cursor to read the next page.
+
+### Inspect inventory access
+
+```sh
+stuffstash access-grants list
+stuffstash access-grants show PRINCIPAL_ID editor
+stuffstash access-grants remove PRINCIPAL_ID editor
+```
+
+Removal asks for confirmation. In scripts, review the target and add `--yes`.
+It removes that relationship only; another grant can still provide access.
+
+Use `stuffstash access-grants create` to choose a principal ID and access level.
+For scripts, put `{"principalId":"USER_ID","relationship":"viewer"}` in a JSON
+file and run `stuffstash access-grants create --input grant.json --yes`.
+Use `editor` to allow changes. Check the displayed household and inventory
+before you confirm.
+
+### Manage invitations
+
+```sh
+stuffstash invitations list --status pending
+stuffstash invitations show INVITATION_ID
+stuffstash invitations cancel INVITATION_ID
+stuffstash invitations delete INVITATION_ID
+```
+
+Cancel stops a pending invitation. Delete removes its stored metadata.
+Both ask for confirmation; scripts require `--yes`. These actions do not remove
+an accepted user's access grant. Use `access-grants` to manage that access.
+
+Use `stuffstash invitations expiration INVITATION_ID` to change a pending
+invitation's deadline. Enter a timestamp with a timezone, such as
+`2030-01-01T12:00:00Z`. Scripts can supply a JSON file containing
+`{"expiresAt":"2030-01-01T12:00:00Z"}` with `--input FILE --yes`.
+
+### Accept an invitation
+
+Use the household, inventory and invitation IDs from the invitation. The inventory
+may not appear in your picker until you accept it.
+
+```sh
+stuffstash invitations preview INVITATION_ID --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
+stuffstash invitations accept INVITATION_ID --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
+```
+
+The terminal asks for the acceptance token without showing it. Acceptance shows
+the destination and role before confirmation. Scripts use `--input FILE --yes`,
+with `{"acceptanceToken":"TOKEN"}` in the file. Use `--input -` for JSON on stdin.
+Keep the token private. If the acceptance result is unknown, preview the same
+invitation before retrying.
+
+### Inspect your server
+
+`stuffstash server show` displays the instance ID and protocol version.
+`stuffstash server auth-config` shows the server's CLI login configuration.
+Neither command requires a login or inventory selection. Add `--json` for the
+complete API response, or `--server URL` to inspect another server.
+
+### Inspect import jobs
+
+```sh
+stuffstash import-jobs list
+stuffstash import-jobs show JOB_ID
+stuffstash import-jobs show JOB_ID --json
+stuffstash import-jobs delete JOB_ID
+```
+
+JSON includes the full preview, counts, messages, progress history and created
+resources. Delete removes a job from history; it does not remove imported assets.
+It asks for confirmation, or requires `--yes` in scripts. These commands do not
+poll or retry automatically.
+
+Use `stuffstash import-jobs cancel JOB_ID` to stop a job. Choose whether to keep
+or discard partial progress, then confirm. Scripts use `--input FILE --yes`
+with `{"mode":"keep_partial_progress"}` or
+`{"mode":"discard_partial_progress"}`. Discarding can remove imported records.
+Cancellation can continue in the background; use `import-jobs show JOB_ID` to
+inspect its current state.
+
+### Inspect model providers
+
+Use `stuffstash provider-profiles list` to see model providers in the selected
+household. Use `stuffstash provider-profiles show PROFILE_ID` to inspect a
+provider's configuration, credential status and last test time. These commands
+do not require an inventory and do not test or change the provider.
+
+Use `--json --no-input` for scripts. JSON includes all profile configuration
+and response metadata. Credential values are never returned.
+
+Use `provider-profiles enable PROFILE_ID`, `disable PROFILE_ID`, or
+`archive PROFILE_ID` to change a provider's state. Use
+`provider-profiles test PROFILE_ID` to contact the configured provider and
+record a test result. Each action asks for confirmation; scripts need `--yes`.
+
+Inspect the test's `status` and `message`: a completed request can report a
+failed provider test. The CLI does not retry these actions automatically. If a
+request is interrupted, read the profile before repeating it.
+
+### Investigate a print job
+
+Use `stuffstash print-jobs list` to find a job, then
+`stuffstash print-jobs show JOB_ID` to inspect its status, attempts and resolution.
+The detail view includes attempt timing and the number of completed copies.
+Inspect uncertain outcomes before printing again to avoid duplicate labels.
+Add `--json` to retain the full job and response metadata in a script.
+
+Use `stuffstash print-settings show` to inspect the selected inventory's default
+printer, print-on-create setting and label template options. An unset printer is
+shown as **Not set**. Use `--json` for the complete settings and revision.
+
+Use `stuffstash printers show PRINTER_ID` for a printer's readiness reason,
+last report time and complete media configuration. `printers list` gives a
+compact overview; both commands retain all printer fields with `--json`.
+
+Use `stuffstash labels templates` to see supported label options, defaults and
+font coverage. Use `stuffstash printers profiles` for the server's printer
+adapters, supported platforms and media presets. This differs from
+`printers catalog`, which inspects the local CLI catalog without login.
+Both server catalogs support `--json` for their complete configuration.
+
+`stuffstash labels resolve LABEL_URL` shows the label's full identity, canonical
+URL and inventory destination. It checks the instance against your configured
+server and does not send your credentials to the link's host.
+
+Use `stuffstash labels show ASSET_ID` to read an asset's existing label.
+Use `stuffstash labels assign ASSET_ID` to obtain its stable label identity
+without rendering or printing. Assignment asks for confirmation; scripts use
+`--yes`. Both commands use the selected household and inventory.
+
+Use `stuffstash connectors print list` or
+`stuffstash connectors print show CONNECTOR_ID` to inspect connector availability,
+assigned printers, heartbeat times and reported capabilities. These commands use
+your normal sign-in and saved inventory context; they do not read connector secrets.

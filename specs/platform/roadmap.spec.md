@@ -9,6 +9,15 @@ out of scope. The generated SDK is the transport foundation, not proof of
 complete command workflows. Full parity is not yet delivered. Existing native
 acceptance remains tracked separately and does not block this work.
 
+The draft CLI batch adds private account-bound contexts, searchable scope
+selection, directory lifecycle commands, tags, asset workflows, and attachment metadata/lifecycle commands through
+the generated SDK. Critical scope and authenticated-request tests, the CLI suite,
+and Windows context-file CI have passed. The operation inventory tracks 192
+contracts; 93 have their known workflow and field gaps closed. The remaining
+99 still need implementation or full contract verification. The scope-override
+persistence preference remains open before release. Search transport is implemented;
+search command scope defaults await user input.
+
 
 ## Labels, Printers, And CLI: Released — October 4, 2026
 

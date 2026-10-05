@@ -12,15 +12,22 @@ import (
 func isLabelCommand(o Options) bool {
 	return len(o.Command) >= 2 && o.Command[0] == "labels" && o.Command[1] != "print"
 }
-func validateLabelCommand(o Options) error {
+func validateLabelCommand(o Options) error { return validateLabelCommandOptions(o, true) }
+func validateLabelCommandOptions(o Options, requireScope bool) error {
 	if o.Command[1] == "resolve" && len(o.Command) == 3 {
 		if _, err := labels.Parse(o.Command[2]); err != nil {
 			return ports.Failure("usage", "invalid or unsupported label link")
 		}
 		return nil
 	}
-	if o.Scope.Tenant == "" || o.Scope.Inventory == "" {
+	if requireScope && (o.Scope.Tenant == "" || o.Scope.Inventory == "") {
 		return ports.Failure("usage", "label commands require --tenant and --inventory")
+	}
+	if (o.Command[1] == "show" || o.Command[1] == "assign") && len(o.Command) == 3 && o.Command[2] != "" {
+		if o.IdempotencyKey != "" || o.Page.Cursor != "" || o.Title != "" || o.Kind != "" || o.Parent != "" || o.ConnectorName != "" {
+			return ports.Failure("usage", "Label identity commands do not accept input fields or cursors. Remove those options.")
+		}
+		return nil
 	}
 	if o.Command[1] == "templates" && len(o.Command) == 2 {
 		return nil
@@ -42,6 +49,10 @@ func validateLabelCommand(o Options) error {
 }
 func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFiles, o Options) (any, error) {
 	switch o.Command[1] {
+	case "show":
+		return api.AssetLabel(ctx, o.Scope, o.Command[2])
+	case "assign":
+		return api.AssignLabel(ctx, o.Scope, o.Command[2])
 	case "templates":
 		return api.LabelTemplates(ctx, o.Scope)
 	case "resolve":

@@ -20,9 +20,12 @@ func (c *Client) LabelTemplates(ctx context.Context, s ports.Scope) (ports.Resul
 	if err != nil {
 		return ports.Result[[]ports.LabelTemplate]{}, err
 	}
-	result := ports.Result[[]ports.LabelTemplate]{Data: []ports.LabelTemplate{}}
+	result := ports.Result[[]ports.LabelTemplate]{Schema: r.Schema, Meta: metadata(r.Meta)}
+	if r.Data.GetOrEmpty() != nil {
+		result.Data = make([]ports.LabelTemplate, 0, len(r.Data.GetOrEmpty()))
+	}
 	for _, v := range r.Data.GetOrEmpty() {
-		result.Data = append(result.Data, ports.LabelTemplate{ID: v.Id, Version: uint32(v.Version), Name: v.Name, Purpose: v.Purpose, ShowReference: v.Defaults.ShowReference})
+		result.Data = append(result.Data, ports.LabelTemplate{Defaults: ports.LabelTemplateDefaults{ShowReference: v.Defaults.ShowReference}, Font: v.Font, GlyphCoverage: v.GlyphCoverage, MinimumQRModulePixels: v.MinimumQRModulePixels, Options: v.Options.GetOrEmpty(), ID: v.Id, Version: uint32(v.Version), Name: v.Name, Purpose: v.Purpose, ShowReference: v.Defaults.ShowReference})
 	}
 	return result, nil
 }
@@ -41,7 +44,7 @@ func (c *Client) ResolveLabel(ctx context.Context, ref labels.Reference) (ports.
 	if r.Data.InstanceId != ref.Instance || r.Data.LabelId != ref.Label {
 		return ports.Result[ports.ResolvedLabel]{}, ports.Failure("protocol", "label identity did not match")
 	}
-	return ports.Result[ports.ResolvedLabel]{Data: ports.ResolvedLabel{TenantID: r.Data.TenantId, InventoryID: r.Data.InventoryId, AssetID: r.Data.AssetId, Lifecycle: r.Data.LifecycleState}}, nil
+	return labelResult(r), nil
 }
 func (c *Client) LabelMedia(ctx context.Context, s ports.Scope, printer string) ([]printing.Media, error) {
 	if printer != "" {

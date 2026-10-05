@@ -40,8 +40,9 @@ func selectPrinter(ctx context.Context, api ports.PrintSelectionSource, o Option
 func isPrintingCommand(o Options) bool {
 	return o.PrintLabel || (len(o.Command) > 0 && (o.Command[0] == "labels" || o.Command[0] == "printers" || o.Command[0] == "print-jobs"))
 }
-func validatePrintingCommand(o Options) error {
-	if len(o.Command) < 2 || o.Scope.Tenant == "" || o.Scope.Inventory == "" {
+func validatePrintingCommand(o Options) error { return validatePrintingCommandOptions(o, true) }
+func validatePrintingCommandOptions(o Options, requireScope bool) error {
+	if len(o.Command) < 2 || requireScope && (o.Scope.Tenant == "" || o.Scope.Inventory == "") {
 		return ports.Failure("usage", "printing requires --tenant and --inventory")
 	}
 	n := len(o.Command)
@@ -50,11 +51,11 @@ func validatePrintingCommand(o Options) error {
 		if n == 3 && o.LabelSize != "" {
 			return nil
 		}
-	case "printers list", "print-jobs list":
+	case "printers profiles", "printers list", "print-jobs list":
 		if n == 2 {
 			return nil
 		}
-	case "printers test", "labels print", "print-jobs show", "print-jobs cancel", "print-jobs reprint":
+	case "printers show", "printers test", "labels print", "print-jobs show", "print-jobs cancel", "print-jobs reprint":
 		if n == 3 {
 			return nil
 		}
@@ -63,8 +64,12 @@ func validatePrintingCommand(o Options) error {
 }
 func executePrinting(ctx context.Context, api ports.HumanPrintingAPI, o Options) (any, error) {
 	switch o.Command[0] + " " + o.Command[1] {
+	case "printers show":
+		return api.Printer(ctx, o.Scope, o.Command[2])
 	case "printers configure":
 		return configurePrinter(ctx, api, o)
+	case "printers profiles":
+		return api.PrinterProfiles(ctx, o.Scope)
 	case "printers list":
 		return api.RegisteredPrinters(ctx, o.Scope, o.Page)
 	case "print-jobs list":

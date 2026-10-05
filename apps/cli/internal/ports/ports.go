@@ -11,35 +11,39 @@ type Page struct {
 	Cursor string
 }
 type Pagination struct {
-	Limit      int     `json:"limit"`
+	Limit      int64   `json:"limit"`
 	NextCursor *string `json:"nextCursor"`
 	HasMore    bool    `json:"hasMore"`
 }
 type Inventory struct {
+	TenantID  string `json:"tenantId"`
+	Access    Access `json:"access"`
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Lifecycle string `json:"lifecycleState"`
 }
-type Asset struct {
-	PrintJobID string `json:"printJobId,omitempty"`
-	ID         string `json:"id"`
-	Title      string `json:"title"`
-	Kind       string `json:"kind"`
-	Parent     string `json:"parentAssetId,omitempty"`
-	Lifecycle  string `json:"lifecycleState"`
+type Metadata struct {
+	RequestID  *string     `json:"requestId,omitempty"`
+	TenantID   *string     `json:"tenantId,omitempty"`
+	Pagination *Pagination `json:"pagination,omitempty"`
 }
+
 type Result[T any] struct {
+	Schema     *string     `json:"$schema,omitempty"`
+	Meta       *Metadata   `json:"meta,omitempty"`
 	Data       T           `json:"data"`
 	Pagination *Pagination `json:"pagination,omitempty"`
 }
 type AssetInput struct {
+	RequestBody         []byte
 	Kind, Title, Parent string
 	PrintLabel          *LabelPrintSelection
 }
 type AssetChange struct {
-	Title      *string
-	Parent     *string
-	MoveToRoot bool
+	RequestBody []byte
+	Title       *string
+	Parent      *string
+	MoveToRoot  bool
 }
 type AuthConfig struct {
 	Issuer, ClientID                 string
@@ -50,18 +54,24 @@ type AuthConfig struct {
 type Session struct {
 	Server       string    `json:"server"`
 	Issuer       string    `json:"issuer"`
+	Subject      string    `json:"subject,omitempty"`
 	ClientID     string    `json:"clientId"`
 	IDToken      string    `json:"idToken"`
 	RefreshToken string    `json:"refreshToken,omitempty"`
 	ExpiresAt    time.Time `json:"expiresAt"`
 }
 type API interface {
+	ExpirationAssets(context.Context, Scope, ExpirationQuery) (Result[ExpirationWorkspace], error)
+	CheckedOutAssets(context.Context, Scope, Page) (Result[[]CheckedOutAsset], error)
+	Checkouts(context.Context, Scope, string, Page) (Result[[]Checkout], error)
+	ChangeCheckout(context.Context, Scope, string, string, CheckoutAction, []byte) (Result[Checkout], error)
 	AuthConfig(context.Context) (AuthConfig, error)
 	Inventories(context.Context, Scope, Page) (Result[[]Inventory], error)
-	Assets(context.Context, Scope, Page) (Result[[]Asset], error)
+	Assets(context.Context, Scope, AssetQuery) (Result[[]Asset], error)
 	Asset(context.Context, Scope, string) (Result[Asset], error)
 	CreateAsset(context.Context, Scope, AssetInput, string) (Result[Asset], error)
 	UpdateAsset(context.Context, Scope, string, AssetChange, string) (Result[Asset], error)
+	DeleteAsset(context.Context, Scope, string) error
 	SetArchived(context.Context, Scope, string, bool, string) (Result[Asset], error)
 }
 type Credentials interface {

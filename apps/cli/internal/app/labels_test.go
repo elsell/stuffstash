@@ -89,3 +89,10 @@ func TestStandaloneLabelUsesCatalogGeometryAndIndependentTemplateDefaults(t *tes
 		t.Fatal("conflicting media selectors accepted")
 	}
 }
+
+func (*labelCatalogFake) AssetLabel(context.Context, ports.Scope, string) (ports.Result[ports.ResolvedLabel], error) {
+	return ports.Result[ports.ResolvedLabel]{}, ports.Failure("not_found", "Asset not found.")
+}
+func (*labelCatalogFake) AssignLabel(context.Context, ports.Scope, string) (ports.Result[ports.ResolvedLabel], error) {
+	return ports.Result[ports.ResolvedLabel]{}, ports.Failure("not_found", "Asset not found.")
+}

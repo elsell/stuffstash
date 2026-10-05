@@ -6,14 +6,25 @@ import (
 	"github.com/stuffstash/stuff-stash/cli/internal/domain/printing"
 )
 
+type LabelTemplateDefaults struct {
+	ShowReference bool `json:"show_reference"`
+}
 type LabelTemplate struct {
-	ID            string `json:"id"`
-	Version       uint32 `json:"version"`
-	Name          string `json:"name"`
-	Purpose       string `json:"purpose"`
-	ShowReference bool   `json:"showReference"`
+	Defaults              LabelTemplateDefaults `json:"defaults"`
+	Font                  string                `json:"font"`
+	GlyphCoverage         string                `json:"glyphCoverage"`
+	MinimumQRModulePixels int64                 `json:"minimumQRModulePixels"`
+	Options               []string              `json:"options"`
+	ID                    string                `json:"id"`
+	Version               uint32                `json:"version"`
+	Name                  string                `json:"name"`
+	Purpose               string                `json:"purpose"`
+	ShowReference         bool                  `json:"showReference"`
 }
 type ResolvedLabel struct {
+	InstanceID  string `json:"instanceId"`
+	LabelID     string `json:"labelId"`
+	URL         string `json:"url"`
 	TenantID    string `json:"tenantId"`
 	InventoryID string `json:"inventoryId"`
 	AssetID     string `json:"assetId"`
@@ -36,6 +47,8 @@ type LabelFileResult struct {
 	SHA256 string `json:"sha256"`
 }
 type LabelsAPI interface {
+	AssetLabel(context.Context, Scope, string) (Result[ResolvedLabel], error)
+	AssignLabel(context.Context, Scope, string) (Result[ResolvedLabel], error)
 	PrintDefaults(context.Context, Scope) (InventoryPrintDefaults, error)
 	LabelTemplates(context.Context, Scope) (Result[[]LabelTemplate], error)
 	LabelMedia(context.Context, Scope, string) ([]printing.Media, error)

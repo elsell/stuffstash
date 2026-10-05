@@ -71,11 +71,24 @@ resolve duplicate names.
 Accepted picker selections are remembered automatically. Explicit one-command
 flags and environment overrides do not silently replace saved defaults.
 `context list`, `context current`, `context use`, and `context delete` provide
-inspection, selection and removal. A server's remembered context must not leak
+inspection, selection and removal. Switching requires an existing context name.
+Deleting the current context clears the current selection; it must not select
+another context. Logout removes saved scope for every context on that server,
+but keeps context names and server addresses. Remembering a picker selection
+requires a verified principal and cannot overwrite a context bound to a different
+server or account. A server's remembered context must not leak
 one signed-in principal's resource names into another principal's picker.
+Store configuration at the OS user configuration directory under
+`stuffstash/contexts.json`; `STUFF_STASH_CLI_CONFIG_FILE` may override that path.
+Use a stable verified issuer/subject identity for account binding, not the raw
+token or a token hash that changes on refresh. Existing sessions without a stored
+verified subject must refresh or sign in before saved account scope is reused.
 Logout clears or invalidates principal-bound scope; unauthorized saved IDs require
 explicit reselection rather than silent fallback. Write versioned owner-only
 configuration atomically; reject unsafe files and avoid lost concurrent updates.
+Validate updates before replacing the saved file. Cancellation before the atomic
+rename must preserve the previous file; rename is the commit point. Lock waits
+must honor cancellation across separate CLI processes.
 
 Non-interactive commands may use saved context. If still incomplete, fail with
 an actionable message naming the missing flags/context command. Never select the
@@ -176,3 +189,736 @@ operation and input/output form works, contextual and script modes pass, helpful
 error review passes, binary growth is measured, and delivery is verified.
 
 Sources: [ASD-STE100 Issue 9](https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf).
+
+Verified identity binding: sessions retain the verified OIDC subject. Reject ID
+tokens with an empty subject. A refresh must retain the same issuer and subject;
+a changed identity requires a new sign-in and must not replace stored credentials.
+Legacy sessions without a subject can acquire it through a verified refresh.
+
+Explicit empty scope flags are usage errors, including an empty shell variable;
+they must never fall back to environment or saved scope. Deleting a local context
+only removes preferences and does not require destructive-resource confirmation.
+It never deletes credentials, inventories or server data.
+
+Windows context storage must use a private DACL for the current user (and the
+trusted Windows SYSTEM account, when present), not Unix permission bits.
+Create the dedicated context directory with private inherited access; reject
+existing directories or files with broader access instead of changing their ACLs.
+Validate ownership and permissions on opened handles. Use cancellable OS file
+locks and atomic replacement. Reuse the pinned x/sys package for these OS calls.
+
+Native Windows CI verifies private context ACLs and separate-process lock
+cancellation. Cross-compilation and Wine are supplementary evidence only.
+
+Windows file creation explicitly assigns the current user as owner and installs
+the private DACL atomically, including under elevated accounts. Creation stays
+relative to the opened directory handle and rejects reparse points.
+
+Scope picker implementation uses `golang.org/x/term` v0.38.0 for terminal
+detection, raw mode and restoration. It reuses the existing pinned x/sys
+dependency; no full-screen TUI framework is required. Prompts require terminal
+stdin, stdout and stderr and are disabled by JSON output or --no-input. Catalog
+queries use the generated SDK, include all authorized pages, and reject missing
+or repeated continuation cursors. IDs disambiguate duplicate display names.
+
+Only a completed scope picker flow persists the complete selected scope; explicit
+flags or environment overrides alone never replace saved defaults. Reuse an
+existing matching account/server context. If none exists, use the endpoint as
+its default name; append a stable account-key suffix only to avoid a name conflict.
+
+Picker rows reserve space for identifiers independently of display names. On
+Windows, enable virtual-terminal output for the prompt and restore the previous
+console mode when it ends.
+
+`apps/cli/api-coverage.json` records each OpenAPI operation, its contract
+fingerprint, named commands, implementation status and remaining gaps. The
+fingerprint includes referenced schemas so nested field changes cannot pass
+unnoticed. `scripts/check-cli-api-coverage.py` checks drift; --update records a
+new baseline without claiming implementation, and --require-complete rejects
+pending or partial entries. This inventory is traceability, not runtime proof.
+
+### Household discovery command
+
+`tenants list` lists the signed-in account's households without requiring or
+selecting a tenant or inventory. It supports `--limit` and `--cursor`, preserves
+access relationship and permissions in JSON, and displays ID, name, and lifecycle
+in terminal output. This command uses the same generated-SDK catalog adapter as
+the scope picker. An authorization denial must not expose server error details.
+
+### Account and selected-scope details
+
+`account show` returns the signed-in principal without requiring resource scope.
+`tenants show` returns the selected household and requires only tenant scope.
+`inventories show` returns the selected inventory and requires both scopes.
+Each accepts explicit scope options or saved scope; interactive selection asks
+only for the levels the command needs. JSON includes every resource field,
+including access permissions and inventory tenant ID. These read commands use a
+directory port implemented by the generated SDK adapter. Account-wide reads run
+before saved resource-scope resolution so unrelated context ambiguity cannot
+prevent account discovery.
+
+### Household and inventory writes
+
+`tenants create/update` and `inventories create/update` accept either `--name`
+or `--input FILE` (`--input -` reads stdin), never both. Create requires a name;
+update preserves an omitted name and accepts an empty JSON object. JSON input
+must be one object, at most 1 MiB, with no trailing value. The source adapter
+accepts regular files only; it rejects terminal stdin instead of waiting for
+manual JSON entry. Cancellation releases an idle stdin read. On Unix, open file
+paths without blocking before checking the handle, and make inherited stdin
+pollable through a private duplicate. JSON bytes reach generated SDK body methods unchanged, so
+future nullable fields retain their wire meaning. The API remains responsible
+for schema and domain validation. Input errors occur before sign-in or writes.
+The CLI must reject --input on commands that do not support a request body.
+
+Household creation needs no existing resource scope. Inventory creation needs
+only tenant scope. Updates use the selected tenant/inventory. Creating a resource
+does not silently change the current context. Before a scoped write, print the
+effective server and resource IDs to stderr. These four REST operations do not declare idempotency support. Reject
+--idempotency-key instead of suggesting it can prevent duplicate creation. Do
+not retry writes automatically. If a create loses its response, instruct the
+user to list resources before retrying; the result can be unknown. These creates and name updates are not destructive operations and
+do not require confirmation. Guided missing-name prompts remain part of the full
+interactive delivery; scripts must provide --name or --input.
+
+### Request correlation and response metadata
+
+Finite SDK-backed user commands accept `--request-id` for the API's
+`X-Request-ID` header. Reject control and non-ASCII characters before any request.
+The option does not change authentication and is not sent to the OIDC provider.
+Directory and inventory-list JSON responses retain the API `meta` object,
+including request ID, tenant ID, and pagination, plus optional `$schema`. Preserve
+null collections versus empty arrays and empty strings versus
+null cursors. Keep the existing top-level `pagination` field for compatibility;
+new metadata is additive. Header correlation is diagnostic, not an idempotency
+mechanism. Commands must never promise duplicate-write protection from it.
+
+### Guided directory names
+
+When a directory create/update command omits both --name and --input, a capable
+interactive terminal asks for the household or inventory name. Use the existing
+pinned terminal library for familiar cursor movement, deletion, and Unicode
+entry. Ctrl-C cancels without a request. Trim surrounding whitespace, reject an
+empty name or a name over the API's 120-character limit, and let the user correct
+it in the same prompt. JSON, --no-input, redirected streams, and unsupported
+terminals fail with actionable explicit-input guidance instead of prompting.
+The prompt completes before authentication or scope selection; no mutation occurs
+until input and target scope are ready. Prompt diagnostics use stderr only.
+
+### Directory lifecycle commands
+
+`tenants archive/restore/delete` operates on the selected household;
+`inventories archive/restore/delete` operates on the selected inventory. They
+send no JSON body and do not support idempotency keys. Print the exact server,
+household ID, and applicable inventory ID before any lifecycle mutation.
+
+Archive and delete require confirmation. Interactive confirmation is a keyboard
+choice with Cancel selected by default and an explicit action choice. Delete
+warns that it permanently removes the selected resource. `--yes` skips this
+prompt; JSON, --no-input, or redirected streams require --yes and never wait.
+Declining or canceling performs no lifecycle request. Restore needs no
+confirmation. Authorization denial leaves local contexts unchanged.
+
+A confirmed HTTP 204 delete returns a CLI result with status `deleted` and the
+selected resource IDs. Never decode 204 as JSON or claim failure because it has
+no body. Other successful lifecycle responses retain full resource metadata.
+Do not automatically retry uncertain mutations. After a confirmed delete, clear matching saved resource scope for the same
+server and verified account. Household deletion clears tenant and inventory;
+inventory deletion clears only the matching inventory. Preserve context names,
+other accounts, and other servers. If local cleanup fails after server success,
+return the successful delete result with an actionable stderr warning; never
+report the server delete as failed or retry it.
+
+### Tag commands
+
+`tags list` lists inventory tags with complete metadata and all tag fields. It
+accepts limit 0 for the API default, positive limits, and cursors. `tags create`
+accepts --name (display name), optional --key, and --tag-color; `tags update ID`
+accepts --name and --tag-color. The color flag is separate from terminal --color.
+An explicit empty --tag-color sends an empty string, not an omitted field. The
+stable key cannot be updated. Either write also accepts --input FILE or stdin,
+without mixing JSON input and field flags. A missing required name is prompted
+only in interactive mode, with the API's 80-character limit. Color-only updates
+do not ask for a name. JSON input retains omitted/null/empty distinctions.
+
+`tags delete ID` requires cancel-default confirmation or --yes and returns the
+API tag response, including its resulting lifecycle state. All commands require
+household and inventory scope. All mutations display their scope and target,
+use generated SDK methods, preserve API metadata, reject unsupported idempotency
+keys, and never retry automatically. Diagnostics do not leak response bodies.
+
+Command dispatch must fail closed: an unhandled command family must never fall
+through to another domain's execution path. The legacy asset executor accepts
+only asset commands and its explicitly supported inventory-list route. This
+check protects new command integrations from accidentally mutating assets.
+
+### Complete asset reads
+
+`assets list` accepts --lifecycle active|archived|all and --sort id_asc|updated_desc
+in addition to pagination. Omitted filters retain API defaults. Reject unknown
+values and use of these options outside asset lists. Asset list and detail JSON
+preserve every asset field: scope, description, timestamps, nullable expiration,
+expiration context, tags, custom fields/type, checkout state/principal, primary
+photo/thumbnails, parent, print job, and undoable operation. Preserve absent
+optional strings versus present empty strings and null versus empty tags.
+Arbitrary custom-field numbers must retain their JSON precision rather than
+passing through float64. JSON includes response schema and metadata.
+
+Human asset details show the title, identity/scope, kind, lifecycle, description,
+location parent, expiration and checkout state, assigned tags, and custom fields.
+List output remains compact. Generated SDK models remain confined to the HTTP
+adapter; project-owned response models cross the port.
+
+The HTTP adapter must bypass the generated nullable list decoder for asset
+lists because it resets JSON number handling. Embed the generated envelope and
+decode its data directly into generated asset models with `UseNumber`, preserving
+null versus empty lists without changing the SDK.
+
+### Complete asset write input
+
+`assets create` and `assets update ID` accept `--input FILE|-` for the complete
+API request object, preserving null, empty arrays, omitted fields, and exact
+custom-field numbers. The generated SDK's body methods send the validated object
+without a lossy decode/encode cycle. Do not combine input with asset field flags
+or `--print-label`. The existing create-and-print shortcut remains available.
+Interactive flag-based creation asks for a missing title (160 characters) and
+uses a keyboard picker for kind (item, container, location). Update asks for a
+missing title only when no JSON input is supplied. Scripts must supply the
+required fields or JSON input; they never prompt. Keep scope selection and
+server authorization unchanged. Asset updates do not declare idempotency support;
+reject explicit retry keys for updates and moves before authentication instead
+of claiming safe replay.
+
+### Asset creation recovery
+
+The create endpoint honors an idempotency key only when `printLabel` is present.
+The CLI rejects an explicit key for ordinary creation and does not generate one.
+For create-and-print, including JSON input, generate a missing key and display it
+before sending the request. On an uncertain response, direct the user to retry
+with the same key and unchanged request. For ordinary creates, direct the user
+to list assets before retrying. Never retry automatically. Preserve actionable
+authorization and validation failures instead of replacing them with uncertainty.
+
+### Asset lifecycle commands
+
+`assets delete ID` uses the generated DELETE operation and reports the deleted
+asset, household, and inventory IDs after a 204 response. Preserve the selected
+inventory. Archive and delete show the effective server/scope/asset and require
+the shared cancel-default confirmation or `--yes`. Restore needs no destructive
+confirmation. Reject retry keys for all three lifecycle operations because these
+contracts do not support them. Preserve full archive/restore response fields.
+
+### Checkout workflows
+
+Add `assets checkout ID`, `assets return ID`, `assets checkouts ID`, and
+`assets return-details ASSET_ID CHECKOUT_ID`. The three writes accept optional
+`--details TEXT` or `--input FILE|-`, preserving explicit empty details. Updating
+return details requires either option so an omitted value cannot silently clear
+notes. Checkout and return can omit details and send an empty object. History
+supports limit/cursor pagination. All commands use household/inventory scope,
+complete checkout models and metadata, and generated SDK operations. Writes show
+effective scope, reject unsupported retry keys, and never retry automatically.
+Uncertain write results instruct users to inspect checkout history. Preserve
+server authorization and validation failures. Human output presents checkout
+state, borrower, dates, details, and IDs; JSON preserves the complete response.
+
+Checkout writes reject unrelated name/title/kind/parent flags before login.
+Human checkout history includes checkout and return notes and return dates so
+users can inspect the outcome of an uncertain write without switching formats.
+
+### Inventory-wide checked-out assets
+
+`assets checked-out` lists the inventory's currently checked-out assets with
+limit/cursor pagination. Preserve each complete asset and current checkout,
+response metadata, schema reference, null/empty list distinctions, and exact
+custom-field numbers. Use the same number-preserving envelope override as asset
+lists. Human rows identify the asset and borrower with the checkout date.
+
+### Expiration browsing
+
+`assets expiration` exposes the complete expiration workspace: `--mode`
+(all/soon/expired), `--kind`, `--checkout-state`, `--query`, `--type-id`, repeated
+`--tag-id`, `--location-id`, `--from-date`, `--through-date`, limit and cursor.
+Omitted filters retain server defaults. Validate enums, ISO date values, date
+order, and a page size of 1–100 before requests. Reject expiration-only filters
+on unrelated commands. Keep query text and repeated tag IDs intact through the
+SDK. Preserve complete items, ancestor paths, counts, timezone, metadata, and
+exact custom-field numbers. Human output shows counts, timezone, expiration
+state/date, item titles, paths, and pagination. JSON retains the API shape.
+
+### Asset search transport
+
+The search adapter supports every GET /tenants/{tenantId}/search/assets filter:
+optional inventory scope, query, fuzzy/exact mode, repeated tag IDs, custom type,
+lifecycle, checkout state, limit, and cursor. It preserves full asset summaries,
+inventory names, match explanations, ancestor paths, metadata, exact custom-field
+numbers, and null/empty distinctions. Generated SDK methods remain the transport
+boundary. Search default scope and saved-default behavior after a one-time scope
+override remain pending user decisions; transport support does not imply a
+complete CLI search command.
+
+### Custom asset type transport
+
+Support all seven custom asset type operations at both household and inventory
+scope: list, show, create, update, archive, restore, and delete. The transport
+requires an explicit typed scope level and IDs; an unknown level or missing ID
+must fail before any request, never fall back to household scope. List supports
+lifecycle and pagination. Writes preserve the complete supplied JSON object;
+results retain every type field, optional inventory ID, metadata and schema.
+Delete succeeds only on the documented 204 response. Use generated SDK routes
+for every operation. CLI scope syntax remains a pending user decision; these
+transport operations alone do not count as completed CLI workflows.
+
+### Custom field definition transport
+
+Support list, show, create, update, archive, restore and delete for custom field
+definitions at both household and inventory scope. Reuse explicit definition
+scope validation; never infer or downgrade scope. List includes lifecycle and
+pagination. Keep complete JSON bodies, including empty option/target arrays,
+and retain every response field, optional inventory ID, null/empty arrays,
+metadata and schema. The server remains responsible for immutable keys/types
+and append-only option/target policies. Delete requires 204. CLI workflows stay
+incomplete until their scope syntax, inputs and confirmations are implemented.
+
+### Attachment metadata and lifecycle
+
+Provide inventory-scoped attachment list and detail reads, archive, restore and
+permanent deletion through the generated SDK. Each operation requires an asset
+ID; detail and lifecycle operations also require an attachment ID. Preserve all
+attachment fields, including the 64-bit size, digest, lifecycle, timestamps and
+scope IDs, plus response metadata and pagination. Delete requires HTTP 204.
+Archive and delete use the shared destructive confirmation policy. These
+metadata operations do not imply upload or download completion. Keep command
+coverage partial until dispatch, human output and confirmation are verified.
+
+Attachment command syntax is `attachments list ASSET_ID`, `attachments show
+ASSET_ID ATTACHMENT_ID`, and `attachments archive|restore|delete ASSET_ID
+ATTACHMENT_ID`. List accepts limit/cursor. Human lists show ID, name, media type,
+size and state; detail includes digest, creation time and ownership IDs. JSON
+retains the full envelope. Mutation notices identify server, household,
+inventory, asset and attachment. Archive/delete require confirmation; restore
+runs directly. Unsupported retry keys and unrelated write fields fail before
+network access. Successful deletion returns a scoped status result.
+
+### Attachment transfer boundary
+
+Content and thumbnail reads must use the generated SDK's raw HTTP response.
+The server sends binary bytes, not a JSON envelope. Return a closable stream,
+media type, content length and content disposition through a transfer port;
+never infer a local destination from server headers in the transport adapter.
+Only HTTP 200 is a successful full download. Denials and redirects close the
+body and return a safe error; API credentials must not follow redirects.
+Thumbnail variants are small, medium, large, or omitted for the server default.
+Reject unknown variants before network access. File destination policy is a
+pending user decision; transport coverage alone remains partial.
+
+Upload transport supports the JSON attachment-create operation, direct-upload
+initiation, and completion. Accept JSON readers so the adapter does not impose
+the text-input limit on encoded file content or duplicate large bodies. Preserve
+all direct-upload response fields: upload/attachment IDs, method, URL, headers,
+form fields and expiry, plus envelope metadata. These instructions are data,
+not permission for the authenticated API client to visit the storage URL.
+Never retry a create or completion automatically; an uncertain result must be
+resolved by the calling workflow. File upload guidance, storage transfer and
+recovery commands remain required before these operations count as complete.
+
+### Direct storage upload adapter
+
+A separate storage-transfer port streams a known-length file to the issued
+storage destination. Support multipart POST policies (all form fields before the
+file) and raw PUT. Compute the request length without buffering the file. The
+caller owns the file reader. Use HTTPS; explicit local-development configuration
+may permit HTTP only to a literal loopback address or localhost. Reject userinfo,
+fragments, unsupported methods, credential headers, and conflicting framing
+headers before sending data. The storage client has no cookie jar, API request
+editor or automatic redirect following. Do not retry requests. Do not include
+signed URLs or storage response bodies in errors. A canceled transfer returns
+cancellation; short input and non-success responses must never trigger completion.
+The CLI workflow must verify success before calling the completion API.
+
+### Upload file source
+
+The file source opens a readable, non-empty regular file and returns an owned,
+closable reader, basename, byte length and detected media type. Detect the type
+from at most 512 bytes without consuming the upload stream. Support the API's
+JPEG, PNG, WebP and PDF types. Reject other types with an actionable error.
+Use the opened handle's metadata; never rely only on a pre-open path check.
+Unix opens must be nonblocking before regular-file validation to prevent FIFO
+replacement from hanging. Cancellation closes the owned handle. Do not buffer
+the entire file or expose the full local path as the attachment filename.
+
+`attachments complete-upload ASSET_ID UPLOAD_ID` calls the completion API for
+an existing direct upload in the effective inventory scope. It does not resend
+file bytes or automatically retry. Show the mutation scope, but do not print the
+signed upload token in notices or errors. Return the complete attachment result.
+For uncertain completion (network/protocol/unavailable/generic API failure),
+direct the user to inspect `attachments list ASSET_ID` before another attempt.
+Preserve authentication, authorization and validation errors. This recovery
+command is independent of the default upload-method decision.
+
+### Notification inbox
+
+Provide `notifications list [--unread-only]`, `show ID`, `unread-count`, `read ID`,
+`unread ID`, and `read-all` in the effective inventory. List uses pagination;
+list, unread-count and read-all preserve the API cursor. List limit is 1–100 and
+cursor is at most 128 characters. Keep all notification fields, nullable ancestor
+trails, optional read timestamps, response metadata and pagination. Read actions
+are reversible inbox-state changes and do not require destructive confirmation.
+Show their effective scope on stderr. Read-all must preserve the API's complete
+flag and pagination; do not claim the whole inbox was marked when complete is
+false. Do not automatically retry mutations. Human output must expose unread
+state, expiration, asset reference and location; quote untrusted text.
+
+### Notification settings and devices
+
+Support the complete preference and device contracts through generated SDK
+adapters. Preference updates replace defaults, timezone and push-enabled state
+and require the caller's revision; do not synthesize omitted booleans or silently
+retry revision conflicts. Preserve raw JSON for initialization, replacement,
+type override and device registration. Override removal and device removal must
+send the explicit 64-bit revision query value. Preserve preference policy fields,
+nullable override arrays, device state and revision, schema and metadata. Device
+tokens are write-only and must not be copied into results or diagnostics. Keep
+these operations partial until named commands, guided inputs and confirmations
+are implemented.
+
+Device lookup is `notification-devices show INSTALLATION_ID`; removal is
+`notification-devices remove DEVICE_ID --revision N`. These IDs are different
+and help must name them explicitly. Removal requires a positive revision and the
+shared confirmation policy; scripts pass `--yes`. A terminal may prompt for a
+missing revision, but must never fetch or substitute a newer one automatically.
+A conflict must instruct the user to review the current registration. Human
+output includes ID, installation ID, transport, revision and active state; JSON
+retains the response envelope. Registration remains a separate unfinished flow.
+
+`notification-preferences show` displays current defaults, timezone, push state,
+revision and all type overrides. `notification-preferences initialize --timezone
+ZONE` initializes preferences with an explicit timezone; a terminal prompts for
+it when omitted. Also accept `--input FILE|-` for the complete JSON request,
+mutually exclusive with --timezone. Never infer timezone from the workstation.
+The server validates supported timezone identifiers. Noninteractive calls with
+missing input fail without issuing the mutation. Both commands retain full
+JSON envelopes; initialization shows effective mutation scope on stderr.
+
+`notification-preferences update` replaces defaults, timezone and push state.
+`notification-preferences override TYPE_ID` replaces one type policy. Scripts
+must provide `--input FILE|-` containing every required field and revision.
+Interactive calls without input load current preferences once, retain that
+revision, and offer keyboard choices with the current boolean first. Timezone and
+advance days offer Keep current or Change; Change opens text input. Override editing starts from
+its current override, or defaults if no override exists. No implicit defaults
+may reset omitted fields. A conflict never fetches a newer revision and retries.
+`remove-override TYPE_ID --revision N` removes an override with confirmation;
+terminals may prompt for a missing positive revision. JSON bodies and revision
+flags are mutually exclusive. Show the target type and effective scope before
+mutation. Validation errors and cancellation issue no mutation.
+
+`notification-devices register --input FILE|-` accepts the full registration
+body without putting a token in command arguments. A terminal without input
+prompts for installation ID, APNs/FCM via keyboard selection, nonnegative
+revision (0 for initial registration), and token through a non-echoing secret
+input port. Never use the ordinary echoed text input for a token. Interactive
+tokens are limited to 4095 input characters; JSON input supports larger values within
+the shared input-file bound. Detect excess input before the terminal library can
+truncate it, and fail without submitting a partial token. Cancellation restores terminal state and sends no
+mutation. The result and errors contain no token. No automatic retry occurs;
+uncertain results direct the user to lookup by installation ID before retrying.
+
+### Undo and redo
+
+`operations undo OPERATION_ID` and `operations redo OPERATION_ID` call the
+inventory-scoped compensating-operation endpoints. These arguments are operation
+IDs returned by prior mutations, not asset IDs. Display the effective server,
+household, inventory and operation before shared confirmation; scripts require
+`--yes`. The server determines whether the operation can be undone or redone.
+Return the complete asset response, including the next undoable operation ID.
+Do not automatically retry or accept unsupported idempotency keys. If the result
+is uncertain, direct the user to inspect the affected asset before retrying.
+
+### Audit reads
+
+Use `tenants audit`, `inventories audit`, and `assets audit ASSET_ID` for household,
+inventory and asset audit history. Household history needs only household scope;
+the other commands require both household and inventory. Reuse saved contexts
+and missing-scope selection. All accept --limit; only household and inventory
+history accept --cursor because the asset endpoint has no cursor parameter.
+Preserve every record field, including optional principal details, request and
+inventory IDs, metadata, timestamp, target and source; retain envelope metadata
+and pagination in JSON. Human output shows these fields in readable record
+blocks with sorted metadata and safely quoted server text. These reads do not
+perform compensating mutations.
+
+### Asset activity
+
+`assets activity ASSET_ID [--view changes|all --limit N --cursor CURSOR]`
+shows the asset timeline in the selected household and inventory. Omit --view
+to use the server default. Preserve every event field, changed value, optional
+principal and undo operation, technical metadata and pagination in JSON. Human
+output groups events by time and action, then shows changes and undo status.
+Reading activity never executes undo. Reject invalid views before authentication
+or network access; --view applies only to this command. Reuse scope selection
+and safe error handling. Critical verification covers scoped requests, denied
+cross-scope reads, pagination and the complete timeline response.
+
+### Access grant inspection and removal
+
+Use `access-grants list [--limit N --cursor CURSOR]` and
+`access-grants show PRINCIPAL_ID viewer|editor` in the selected inventory.
+Preserve grant identity (household, inventory, principal and relationship),
+response metadata and list pagination. Human output uses a compact grant table
+or grant details. `access-grants remove PRINCIPAL_ID viewer|editor` removes only
+that explicit relationship. Display the server, household, inventory, principal
+and relationship before confirmation; scripts require --yes. Never describe
+removal as revoking all effective access: another relationship may still apply.
+Do not retry a removal automatically. Reject invalid roles, arguments and
+unsupported mutation options before network access. Critical tests cover
+confirmation, exact targets, scope denials and complete read output.
+
+`access-grants create --input FILE|-` accepts the API grant object with
+principalId and relationship (viewer or editor). Without input, a terminal
+prompts for principal ID and offers a keyboard role picker, viewer first.
+Validate both fields before authentication and scope resolution. Preserve the
+input object for the generated SDK. Before mutation, show the exact principal,
+role and scope and require confirmation (or --yes). On an uncertain result,
+direct the user to inspect that grant before retrying; never retry automatically.
+Critical tests cover missing confirmation, exact request, denial and invalid role.
+
+### Invitation management
+
+`invitations list [--status pending|accepted|cancelled|expired|revoked|all]`
+accepts pagination; omitted status uses the API default. `invitations show ID`
+shows all invitation fields, including expiration, inviter and accepted principal.
+Both reuse the selected household and inventory. JSON preserves envelope and
+pagination. Human output presents compact list rows and full detail fields.
+`invitations cancel ID` and `invitations delete ID` name and confirm the scoped
+target, with --yes required in scripts. They call the corresponding API action
+once, require a successful no-content response, and do not claim that an accepted
+user's access was removed. Invalid status values and unsupported options fail
+before network access. Critical checks cover full fields, pagination, exact
+mutation, confirmation and cross-scope denials.
+
+`invitations expiration ID --input FILE|-` updates expiresAt using an RFC3339
+ timestamp with an explicit timezone. Without input, terminals prompt for that
+ timestamp; scripts must provide JSON. Validate the timestamp before authentication.
+Show the scope, invitation and requested timestamp, then require confirmation
+(or --yes). Preserve the supplied JSON in the SDK request, and all invitation
+fields in the response. On an uncertain response, direct users to inspect the
+invitation before retrying. The server decides whether the expiration is allowed.
+
+### Invitation preview and acceptance
+
+`invitations preview ID` and `invitations accept ID` take the invitation's
+household and inventory scope and an acceptanceToken object through --input
+FILE|-; terminals without input use hidden token entry. Never accept the token
+as a command-line argument or print it in diagnostics. A nonempty token is
+required before authentication. Explicit scope from the invitation works before
+the recipient has access to the inventory; saved/interactive scope mechanics
+remain available for already visible inventories.
+Preview returns every preview field without granting access. Accept first reads
+the preview, displays its inventory name/ID, role, status and expiry plus the
+explicit server/household/invitation, and then requires confirmation or --yes.
+The server remains authoritative for token, email and expiration checks. Return
+the complete invitation and grant acceptance envelope. Do not retry acceptance
+automatically; after an uncertain response instruct the user to preview again.
+Critical tests cover scoped token requests, confirmation, safe errors, and no
+secret in output or diagnostics. JSON acceptance emits only the acceptance result;
+preview context for confirmation goes to stderr.
+
+### Public server discovery
+
+`server show` returns instance identity and protocol version. `server auth-config`
+returns the complete CLI authentication metadata, including issuer, client ID,
+scopes, login methods and loopback redirect policy. Both use the configured server
+without loading credentials, refreshing sessions, selecting scope or following
+redirects. Preserve JSON schema and response metadata; human output shows all
+fields with quoted server text. These commands do not sign in or open an issuer.
+Reject mutation/input options. Critical verification covers operation without a
+credential file, no Authorization header, full response and safe server errors.
+
+### Import job history
+
+`import-jobs list` and `import-jobs show JOB_ID` read jobs in the selected
+inventory. Preserve the complete job model: actor, source, counts, preview,
+progress/history, messages, resources and timestamps. List retains the API's
+`data.jobs` shape. The endpoint is not paginated; reject cursors. Human lists
+show identity/status/progress; details show source, counts, messages and preview
+summaries, with --json retaining complete nested evidence.
+`import-jobs delete JOB_ID` confirms removal from history, without claiming to
+remove imported assets. No automatic polling or retries. Critical checks cover
+exact inventory scope, full nested/64-bit data, confirmation and denied access.
+
+`import-jobs cancel JOB_ID --input FILE|-` accepts mode
+`keep_partial_progress` or `discard_partial_progress`. Without JSON input,
+terminals offer an explicit keyboard choice (keep first); scripts must supply
+mode. Validate mode before authentication. Confirm the selected mode and exact
+server/household/inventory/job before submitting. Preserve the returned job state
+without assuming cancellation has finished. Discard warns that partial imported
+records can be removed. After an uncertain result, tell the user to inspect the
+job before retrying; do not retry or poll. Critical checks cover both modes,
+invalid mode, confirmation, scope denial and returned state.
+
+Import preview and start transports pass the complete source JSON to their
+respective generated SDK endpoints. Preserve sourceType, baseUrl, username,
+password, fileName, contentBase64, includeImages, allowPrivateNetwork and
+allowInsecureTLS without adding permissive defaults or retrying requests. The
+CLI itself never connects to the supplied import source. Both endpoints return
+the complete mapped job envelope. Server error bodies must not expose source
+credentials. CLI source-input interaction is pending user design confirmation;
+transport implementation alone is partial API coverage.
+
+### Archive job transport
+
+Archive job adapters preserve household scope and an optional inventory filter
+on list, detail, preview, retry and deletion. List passes limit and the opaque
+API `after` value without interpreting it. Retain every archive job/preview field,
+key remapping, timestamp, nullable inventory reference, schema and metadata.
+Retry performs exactly one request; deletion requires no-content success. No
+archive bytes are downloaded or unpacked by these metadata operations. The
+command-level default inventory filter is a pending user design choice; these
+adapters alone count as partial coverage. Critical transport tests verify exact
+scope/filter/routes, cross-household denial, 64-bit preview counts, nullable
+fields, retry single submission and deletion status.
+
+Archive creation forwards the complete JSON body (inventoryId, photos and
+otherFiles) and caller-supplied idempotency key to the generated SDK. Restore
+approval forwards the exact new inventory name, household/job identity and
+optional inventory filter. Neither adapter changes defaults, silently changes
+the destination, repeats the mutation or follows redirects. Both preserve the
+complete archive job response. Command preparation must supply explicit inputs
+and confirmation before using these transports; transport-only coverage is partial.
+
+Archive transfer ports stream uploads as application/zip through the generated
+SDK and return owned download streams with content length/type/disposition.
+The upload caller owns its input stream; the transport must not close or buffer
+it, unpack ZIP entries, or provide replayable request bodies. Forward the exact
+household and retry key. Downloads preserve optional inventory scope, reject
+partial/redirect/error responses, and require callers to close successful bodies.
+Use a shared binary-content transport contract for attachments and archives.
+No server filename is interpreted as a local path by these adapters. Critical
+checks cover byte integrity, scope, headers, streaming before EOF, denial and
+redirect safety. Destination and input-file UX remain separate pending decisions.
+
+### Shared API recovery messages
+
+Shared transport errors retain existing machine categories and exit behavior,
+but tell users what to do next. Authentication errors name `stuffstash login`;
+permission errors direct users to an inventory owner; missing resources direct
+users to check the ID and selected household/inventory. Conflict guidance requires
+inspection of current state before another change, rather than an automatic retry.
+Network, unavailable, malformed-response and unknown server errors must not imply
+that a mutation failed to apply. Their recovery guidance requires checking current
+state before repeating a change. Rate limiting gives wait guidance with the same
+existing `api` category. No error includes raw server bodies, credentials or URLs
+from transport exceptions. Critical tests verify categories, actionable recovery
+and private-body suppression at real SDK HTTP boundaries.
+
+### Provider profile inspection
+
+`provider-profiles list` and `provider-profiles show PROFILE_ID` use the
+selected household without requiring an inventory. Both use the generated SDK.
+JSON preserves every documented profile field, arbitrary configuration values
+without numeric precision loss, and response metadata. Human lists show identity,
+capability, provider, model and state; detail output includes all configuration
+and credential status fields. Credentials remain write-only; undeclared response
+fields must not become output. Neither command probes or changes the provider.
+Reject unsupported cursors and mutation input before authentication. Critical
+checks exercise real CLI/SDK scope, full output, numeric precision, denial and
+private response suppression.
+
+### Provider lifecycle and connection checks
+
+`provider-profiles enable|disable|archive|test PROFILE_ID` use household scope.
+Show the server, household and profile ID before confirmation; scripts require
+`--yes`. Connection tests also require confirmation because they contact the
+configured provider and record a test result. Explain this effect before acting.
+All four operations call the generated SDK once and never retry automatically.
+Lifecycle output preserves the full updated profile; test output preserves status,
+message, provider, capability, profile ID and timestamp plus response metadata.
+A completed test request does not imply a successful provider test: show its status
+as returned. Critical command tests cover confirmation, scope, denials, exact
+routes, full results and uncertain response handling.
+
+### Provider configuration write transport
+
+Provider creation, partial update and credential replacement use generated SDK
+routes behind a CLI port. Pass validated JSON without re-encoding, preserving
+optional false values, empty strings, arbitrary runtime options, capability
+metadata and exact numbers. All calls carry only the selected household and
+profile ID where required; no inventory is required. Return the complete safe
+profile contract through the existing mapper and suppress raw error bodies.
+Do not log credentials or retry writes automatically. Critical transport tests
+cover exact input and route, authorization and household denial, full safe
+response fields and no retries. Interactive configuration design remains pending;
+transport completion alone does not close these operation gaps.
+
+### Complete print-job inspection
+
+Print-job list and detail JSON preserve the full API job, attempt, resolution
+and response metadata contracts. This includes requester, kind, media fingerprint,
+updated time, all attempt timestamps and manual resolution evidence. Human lists
+remain compact with quoted values; a single-job result provides readable detail
+and attempt history. The shared job mapper also preserves these fields for
+queue, cancel, test and reprint responses. Critical tests exercise the CLI/SDK
+boundary for full evidence, inventory isolation, pagination and safe output.
+
+### Print settings inspection
+
+`print-settings show` uses the selected household and inventory and returns all
+saved print defaults: nullable default printer, print-on-create, template ID,
+version and options, and revision. Preserve both schema values and response
+metadata in JSON. Human output names an unset default explicitly. This read must
+not select a printer or modify settings. Critical checks cover null and configured
+defaults, complete output, exact revision and cross-scope denial.
+
+### Complete printer inspection
+
+`printers show PRINTER_ID` and `printers list` preserve the full API printer:
+media geometry, margins, raster dimensions, DPI, rotation, color and cut settings,
+readiness reason and report time, revision and identity. JSON retains response
+metadata and null versus empty lists. Keep legacy flattened media name/preset
+fields for existing CLI consumers. Human detail groups printer status and media
+configuration; list values must be terminal-safe. Shared configuration results
+also retain the complete response. Critical checks cover full field mapping,
+scope denial and pagination through real commands.
+
+### Printing catalogs
+
+`labels templates` preserves every template field, including defaults, options,
+font, glyph coverage and minimum QR module pixels. Retain the legacy flattened
+show-reference field for compatibility. `printers profiles` lists the server's
+adapter profiles with supported platforms, transport, physical verification and
+complete media presets. Both use inventory scope and preserve null collections,
+schema and metadata. Human output presents relevant selection and compatibility
+information with safe quoting. These server catalogs are distinct from the local
+`printers catalog` command. Critical checks cover scope, full fields and nullable
+collections through the real CLI/SDK boundary.
+
+### Complete label resolution
+
+`labels resolve LABEL_URL` returns instance ID, label ID and canonical URL in
+addition to asset, household, inventory and lifecycle. Preserve schema and
+response metadata. Resolve against the configured authenticated server, never
+the link's host, and reject mismatched server or returned label identities.
+No selected inventory is required. Human output quotes all server-controlled
+values and displays the full resolved identity. Critical tests cover full CLI
+output and the existing foreign-instance and authorization checks.
+
+### Asset label identity commands
+
+`labels show ASSET_ID` reads an existing label in the selected inventory.
+`labels assign ASSET_ID` provisions the stable label identity through the API
+without rendering or printing. Assignment displays server, household, inventory
+and asset, then requires confirmation (`--yes` in scripts). Both return the
+complete label and envelope. Do not automatically retry assignment. Reject
+unrelated input and cursor fields. Critical checks cover confirmation, scope,
+exact methods, safe errors and complete results.
+
+### Print connector inspection
+
+`connectors print list` and `connectors print show CONNECTOR_ID` use the human
+session and saved inventory context, unlike connector registration and worker
+commands. Preserve all status, assignment, generation, heartbeat and capability
+report fields, including nullable arrays and response metadata. List supports
+limit/cursor; detail provides complete report information. Do not disclose
+connector credentials. Critical tests cover human authentication, scope, paging,
+complete nested reports and shared-context routing.

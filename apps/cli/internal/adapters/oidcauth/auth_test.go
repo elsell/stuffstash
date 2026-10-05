@@ -28,9 +28,13 @@ func (*captureOutput) Result(any) error        { return nil }
 func (*captureOutput) Error(string, string)    {}
 func TestDeviceLoginValidatesIdentityAndNeverLeaksSecrets(t *testing.T) {
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-	for _, scenario := range []string{"success", "wrong-audience", "missing-id-token", "denied", "expired", "bad-signature"} {
+	for _, scenario := range []string{"success", "wrong-audience", "missing-id-token", "denied", "expired", "bad-signature", "missing-subject"} {
 		t.Run(scenario, func(t *testing.T) {
 			var server *httptest.Server
+			subject := "user"
+			if scenario == "missing-subject" {
+				subject = ""
+			}
 			server = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				switch r.URL.Path {
@@ -54,7 +58,7 @@ func TestDeviceLoginValidatesIdentityAndNeverLeaksSecrets(t *testing.T) {
 					if scenario == "expired" {
 						expiry = time.Now().Add(-time.Hour)
 					}
-					claims, _ := json.Marshal(map[string]any{"iss": server.URL, "sub": "user", "aud": audience, "exp": expiry.Unix(), "iat": time.Now().Unix()})
+					claims, _ := json.Marshal(map[string]any{"iss": server.URL, "sub": subject, "aud": audience, "exp": expiry.Unix(), "iat": time.Now().Unix()})
 					encoded := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"RS256","kid":"test"}`)) + "." + base64.RawURLEncoding.EncodeToString(claims)
 					digest := sha256.Sum256([]byte(encoded))
 					signature, _ := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA256, digest[:])
@@ -76,8 +80,22 @@ func TestDeviceLoginValidatesIdentityAndNeverLeaksSecrets(t *testing.T) {
 			adapter := Adapter{HTTP: server.Client(), Clock: testClock{}, Output: output}
 			result, err := adapter.Login(context.Background(), "https://api.example", ports.AuthConfig{Issuer: server.URL, ClientID: "cli", Scopes: []string{"openid"}, LoginMethods: []string{"device_code"}}, true)
 			if scenario == "success" {
-				if err != nil || result.IDToken == "" || result.RefreshToken == "" {
+				if err != nil || result.IDToken == "" || result.RefreshToken == "" || result.Subject != "user" || result.Issuer != server.URL {
 					t.Fatalf("login failed: %v", err)
+				}
+				refreshed, refreshErr := adapter.Refresh(context.Background(), result)
+				if refreshErr != nil || refreshed.Subject != result.Subject {
+					t.Fatalf("valid refresh: %+v %v", refreshed, refreshErr)
+				}
+				legacy := result
+				legacy.Subject = ""
+				upgraded, upgradeErr := adapter.Refresh(context.Background(), legacy)
+				if upgradeErr != nil || upgraded.Subject != result.Subject {
+					t.Fatalf("legacy refresh did not bind verified identity: %v", upgradeErr)
+				}
+				subject = "different-user"
+				if _, refreshErr := adapter.Refresh(context.Background(), upgraded); refreshErr == nil {
+					t.Fatal("refresh accepted a different account")
 				}
 			} else if err == nil {
 				t.Fatal("accepted invalid authentication")
