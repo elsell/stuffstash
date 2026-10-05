@@ -720,3 +720,9 @@ or run evaluations.
 Prefix each command with `stuffstash`. Lists support `--limit` and `--cursor`.
 Use `--json --no-input` for complete configuration, evidence and response
 metadata in scripts.
+
+To stop an evaluation, run `stuffstash evaluation runs cancel RUN_ID` and
+confirm the displayed version. Scripts must supply `--input FILE --yes` with
+`{"expectedVersion":3}`, using the version from `evaluation runs show RUN_ID`.
+A conflict requires a new review of the run. The CLI does not retry cancellation
+or silently replace your version check.

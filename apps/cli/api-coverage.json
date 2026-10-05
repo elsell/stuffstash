@@ -1903,11 +1903,11 @@
         "domain": "conversation evaluation runs",
         "contractSha256": "c634aba312dbc7b7ec75dad9d74f0e5d6cbcd141cffdaae5576a7ea3db9fc757"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "evaluation runs cancel"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-conversation-workflows": {
       "contract": {
