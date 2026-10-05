@@ -12,7 +12,11 @@ acceptance remains tracked separately and does not block this work.
 The draft CLI batch adds private account-bound contexts, searchable scope
 selection, directory lifecycle commands, tags, asset workflows, and attachment metadata/lifecycle commands through
 the generated SDK. Critical scope and authenticated-request tests, the CLI suite,
-and Windows context-file CI have passed. The operation inventory tracks 192
+and Windows context-file CI have passed. Native Windows run
+[37346221820](https://github.com/elsell/stuffstash/actions/runs/37346221820)
+also passed application, local help, input/output and terminal contracts plus
+a CLI build. Authenticated Windows keyring/bootstrap and real console interaction
+remain unverified. The operation inventory tracks 192
 contracts; 108 have their known workflow and field gaps closed. The remaining
 84 still need implementation or full contract verification. The scope-override
 persistence preference remains open before release. Search transport is implemented;
