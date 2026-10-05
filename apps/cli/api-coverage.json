@@ -2515,11 +2515,11 @@
         "domain": "provider profiles",
         "contractSha256": "63adce2491614f17a19b85a23297b7a7b4f5368acd84279eec2f2273812ce64c"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "voice-provider update"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "upload-archive-restore": {
       "contract": {

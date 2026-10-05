@@ -854,3 +854,17 @@ It requires `generation`, `pairingId` and `userCode` in JSON, or asks for those
 values privately where appropriate. Review the fingerprint and replacement
 warning before confirmation. Scripts add `--yes`. The CLI never substitutes a
 new generation after a conflict or retries approval automatically.
+
+### Choose household voice providers
+
+`stuffstash voice-provider update` offers keyboard choices for each capability:
+keep the current explicit profile, use automatic selection, or choose an existing
+compatible profile. Review all three choices before confirming. This does not
+create provider profiles or start a voice session.
+
+Scripts use `--input FILE|- --yes`. Supported fields are
+`languageInferenceProfileId`, `speechToTextProfileId` and `textToSpeechProfileId`.
+This API replaces all three selections: omitted, null or empty IDs reset that
+capability to automatic selection. They do not disable voice. The command shows
+each resulting choice before writing. There is no revision check on this API;
+concurrent edits can replace one another. The CLI never retries the update.
