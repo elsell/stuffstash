@@ -1166,9 +1166,9 @@
         "contractSha256": "d5c305330e1bf0da3765921577cd4f6722b1c2d38564b88cc954cbaca6775e8f"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Binary streaming SDK transport implemented with redirect refusal. CLI destination choice, safe file output and named workflow remain."
       ]
     },
     "list-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-thumbnail": {
@@ -1179,9 +1179,9 @@
         "contractSha256": "0b0a81bd542146c725208265c83aeba7a861998751cfd558798707d080a2d939"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Binary streaming SDK transport implemented with redirect refusal. CLI destination choice, safe file output and named workflow remain."
       ]
     },
     "list-tenants-by-tenant-id-inventories-by-inventory-id-export": {

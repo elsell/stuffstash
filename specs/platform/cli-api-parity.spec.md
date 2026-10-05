@@ -499,3 +499,15 @@ retains the full envelope. Mutation notices identify server, household,
 inventory, asset and attachment. Archive/delete require confirmation; restore
 runs directly. Unsupported retry keys and unrelated write fields fail before
 network access. Successful deletion returns a scoped status result.
+
+### Attachment transfer boundary
+
+Content and thumbnail reads must use the generated SDK's raw HTTP response.
+The server sends binary bytes, not a JSON envelope. Return a closable stream,
+media type, content length and content disposition through a transfer port;
+never infer a local destination from server headers in the transport adapter.
+Only HTTP 200 is a successful full download. Denials and redirects close the
+body and return a safe error; API credentials must not follow redirects.
+Thumbnail variants are small, medium, large, or omitted for the server default.
+Reject unknown variants before network access. File destination policy is a
+pending user decision; transport coverage alone remains partial.
