@@ -2126,10 +2126,8 @@
       "commands": [
         "labels render"
       ],
-      "status": "partial",
-      "gaps": [
-        "Existing SDK render-and-download workflow saves verified PNG/PDF output. Complete structured request/schema and full render response inspection remain; template version currently narrows through int32."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-print-jobs": {
       "contract": {

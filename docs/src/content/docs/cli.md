@@ -868,3 +868,16 @@ This API replaces all three selections: omitted, null or empty IDs reset that
 capability to automatic selection. They do not disable voice. The command shows
 each resulting choice before writing. There is no revision check on this API;
 concurrent edits can replace one another. The CLI never retries the update.
+
+### Render a complete JSON selection
+
+`stuffstash labels render ASSET_ID --input selection.json --output label.png`
+uses the complete `media`, `template` and `format` from your JSON. It does not
+look up or replace your selection with saved defaults. Do not combine `--input`
+with media, template or format flags. Use the label API's snake_case field names,
+such as `width_micrometers` and `show_reference`; command help lists the fields.
+
+Add `--json` to include the complete render response under `render`, alongside
+the saved path, format and checksum. This includes fingerprints, expiry and
+response metadata. PNG/PDF validation, scoped downloads and private file
+publication still apply. Existing files are never overwritten.
