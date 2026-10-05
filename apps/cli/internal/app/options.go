@@ -157,6 +157,10 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		flags.Visit(func(f *flag.Flag) {
 			switch f.Name {
 			case "server", "tenant", "inventory", "context", "json", "no-input", "request-id", "color", "help", "allow-loopback-http", "credential-file":
+			case "input", "yes":
+				if !isWorkflowWrite(o) {
+					unsupported = f.Name
+				}
 			case "limit", "cursor":
 				if !workflowList(o) {
 					unsupported = f.Name

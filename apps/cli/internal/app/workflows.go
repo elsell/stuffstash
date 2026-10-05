@@ -12,9 +12,9 @@ func workflowList(o Options) bool {
 }
 func validateWorkflows(o Options, scope bool) error {
 	c := o.Command
-	valid := workflowList(o) || len(c) == 3 && (c[1] == "show" && c[2] != "" || c[1] == "selection" && c[2] == "show") || len(c) == 5 && c[1] == "revisions" && c[2] == "show" && c[3] != "" && c[4] != ""
+	valid := isWorkflowWrite(o) || workflowList(o) || len(c) == 3 && (c[1] == "show" && c[2] != "" || c[1] == "selection" && c[2] == "show") || len(c) == 5 && c[1] == "revisions" && c[2] == "show" && c[3] != "" && c[4] != ""
 	if !valid || len(c) == 4 && c[3] == "" {
-		return ports.Failure("usage", "Use workflows list, show WORKFLOW_ID, revisions list WORKFLOW_ID, revisions show WORKFLOW_ID REVISION_ID, or selection show.")
+		return ports.Failure("usage", "Use workflows list, show WORKFLOW_ID, revisions list WORKFLOW_ID, revisions show WORKFLOW_ID REVISION_ID, selection show, create --input FILE, revisions create WORKFLOW_ID --input FILE, or activate WORKFLOW_ID --input FILE.")
 	}
 	if scope && o.Scope.Tenant == "" {
 		return ports.Failure("usage", "Supply --tenant, or choose a saved household context.")
@@ -28,6 +28,9 @@ func (r Runner) workflowCommand(ctx context.Context, o Options, token string) er
 	api, err := r.WorkflowsAPI(o.Server, token)
 	if err != nil {
 		return err
+	}
+	if isWorkflowWrite(o) {
+		return r.writeWorkflow(ctx, o, api)
 	}
 	var result any
 	switch o.Command[1] {

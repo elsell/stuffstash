@@ -45,6 +45,9 @@ type WorkflowSelection struct {
 }
 
 type WorkflowsAPI interface {
+	CreateWorkflow(context.Context, string, []byte) (Result[WorkflowRevision], error)
+	CreateWorkflowRevision(context.Context, string, string, []byte) (Result[WorkflowRevision], error)
+	ActivateWorkflow(context.Context, string, string, []byte) (Result[WorkflowRevision], error)
 	Workflows(context.Context, string, Page) (Result[[]WorkflowHead], error)
 	Workflow(context.Context, string, string) (Result[WorkflowRevision], error)
 	WorkflowRevisions(context.Context, string, string, Page) (Result[[]WorkflowRevision], error)

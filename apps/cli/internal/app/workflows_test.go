@@ -10,7 +10,7 @@ import (
 
 func TestWorkflowPickerNeedsOnlyHousehold(t *testing.T) {
 	runner := Runner{Contexts: contextfile.Store{Path: filepath.Join(t.TempDir(), "config", "contexts.json")}, Picker: firstScopeChoice{}, ScopeAPI: func(string, string) (ports.ScopeCatalog, error) { return scopeCatalog{}, nil }}
-	for _, command := range [][]string{{"workflows", "list"}, {"workflows", "show", "id"}, {"workflows", "revisions", "list", "id"}, {"workflows", "revisions", "show", "id", "rev"}, {"workflows", "selection", "show"}} {
+	for _, command := range [][]string{{"workflows", "create"}, {"workflows", "revisions", "create", "wf"}, {"workflows", "activate", "wf"}, {"workflows", "list"}, {"workflows", "show", "id"}, {"workflows", "revisions", "list", "id"}, {"workflows", "revisions", "show", "id", "rev"}, {"workflows", "selection", "show"}} {
 		selected, err := runner.chooseMissingScope(context.Background(), Options{Server: "https://stash.example", Command: command}, ports.Session{Server: "https://stash.example", Issuer: "https://id.example", Subject: "owner"})
 		if err != nil || selected.Scope.Tenant != "home" || selected.Scope.Inventory != "" {
 			t.Fatalf("household picker for %v: %+v %v", command, selected.Scope, err)

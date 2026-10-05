@@ -33,6 +33,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody = body
 	} else {
+		if isWorkflowWrite(o) {
+			return prepareWorkflowInput(o)
+		}
 		if isPrintSubmission(o) {
 			return o, nil
 		}
@@ -84,6 +87,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 			return o, ports.Failure("usage", "Supply --name NAME or --input FILE for this command.")
 		}
 		o.RequestBody, _ = json.Marshal(map[string]string{"name": o.ConnectorName})
+	}
+	if isWorkflowWrite(o) {
+		return prepareWorkflowInput(o)
 	}
 	if isPrintSubmission(o) {
 		_, err := decodePrintSubmission(o)
