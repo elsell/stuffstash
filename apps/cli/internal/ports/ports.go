@@ -50,6 +50,7 @@ type AuthConfig struct {
 type Session struct {
 	Server       string    `json:"server"`
 	Issuer       string    `json:"issuer"`
+	Subject      string    `json:"subject,omitempty"`
 	ClientID     string    `json:"clientId"`
 	IDToken      string    `json:"idToken"`
 	RefreshToken string    `json:"refreshToken,omitempty"`

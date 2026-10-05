@@ -71,11 +71,24 @@ resolve duplicate names.
 Accepted picker selections are remembered automatically. Explicit one-command
 flags and environment overrides do not silently replace saved defaults.
 `context list`, `context current`, `context use`, and `context delete` provide
-inspection, selection and removal. A server's remembered context must not leak
+inspection, selection and removal. Switching requires an existing context name.
+Deleting the current context clears the current selection; it must not select
+another context. Logout removes saved scope for every context on that server,
+but keeps context names and server addresses. Remembering a picker selection
+requires a verified principal and cannot overwrite a context bound to a different
+server or account. A server's remembered context must not leak
 one signed-in principal's resource names into another principal's picker.
+Store configuration at the OS user configuration directory under
+`stuffstash/contexts.json`; `STUFF_STASH_CLI_CONFIG_FILE` may override that path.
+Use a stable verified issuer/subject identity for account binding, not the raw
+token or a token hash that changes on refresh. Existing sessions without a stored
+verified subject must refresh or sign in before saved account scope is reused.
 Logout clears or invalidates principal-bound scope; unauthorized saved IDs require
 explicit reselection rather than silent fallback. Write versioned owner-only
 configuration atomically; reject unsafe files and avoid lost concurrent updates.
+Validate updates before replacing the saved file. Cancellation before the atomic
+rename must preserve the previous file; rename is the commit point. Lock waits
+must honor cancellation across separate CLI processes.
 
 Non-interactive commands may use saved context. If still incomplete, fail with
 an actionable message naming the missing flags/context command. Never select the
@@ -176,3 +189,23 @@ operation and input/output form works, contextual and script modes pass, helpful
 error review passes, binary growth is measured, and delivery is verified.
 
 Sources: [ASD-STE100 Issue 9](https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf).
+
+Verified identity binding: sessions retain the verified OIDC subject. Reject ID
+tokens with an empty subject. A refresh must retain the same issuer and subject;
+a changed identity requires a new sign-in and must not replace stored credentials.
+Legacy sessions without a subject can acquire it through a verified refresh.
+
+Explicit empty scope flags are usage errors, including an empty shell variable;
+they must never fall back to environment or saved scope. Deleting a local context
+only removes preferences and does not require destructive-resource confirmation.
+It never deletes credentials, inventories or server data.
+
+Windows context storage must use a private DACL for the current user (and the
+trusted Windows SYSTEM account, when present), not Unix permission bits.
+Create the dedicated context directory with private inherited access; reject
+existing directories or files with broader access instead of changing their ACLs.
+Validate ownership and permissions on opened handles. Use cancellable OS file
+locks and atomic replacement. Reuse the pinned x/sys package for these OS calls.
+
+Native Windows CI verifies private context ACLs and separate-process lock
+cancellation. Cross-compilation and Wine are supplementary evidence only.

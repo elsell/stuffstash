@@ -6,10 +6,12 @@ import (
 	"encoding/hex"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/cli/internal/app/contexts"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 )
 
 type Runner struct {
+	Contexts    contexts.Store
 	LabelsAPI   func(string, string) (ports.LabelsAPI, error)
 	LabelFiles  ports.LabelFiles
 	PrintingAPI func(string, string) (ports.HumanPrintingAPI, error)
@@ -24,6 +26,9 @@ type Runner struct {
 func (r Runner) Run(ctx context.Context, o Options) error {
 	if len(o.Command) == 0 {
 		return ports.Failure("usage", "a command is required; use --help")
+	}
+	if o.Command[0] == "context" {
+		return r.contextCommand(ctx, o.Command)
 	}
 	switch o.Command[0] {
 	case "login":

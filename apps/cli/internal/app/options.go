@@ -6,10 +6,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/stuffstash/stuff-stash/cli/internal/app/contexts"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 )
 
 type Options struct {
+	Selection                                                             contexts.Selection
+	NoInput                                                               bool
 	Format, OutputPath, MediaPreset                                       string
 	WidthMM, HeightMM                                                     float64
 	PrinterID, TemplateID, LabelSize                                      string
@@ -34,8 +37,12 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		}
 		o.AllowLoopbackHTTP = v
 	}
+	environment := contexts.Selection{Context: getenv("STUFF_STASH_CLI_CONTEXT"), Server: o.Server, Tenant: o.Scope.Tenant, Inventory: o.Scope.Inventory}
+	o.Selection.Context = environment.Context
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
+	flags.StringVar(&o.Selection.Context, "context", environment.Context, "saved context name")
+	flags.BoolVar(&o.NoInput, "no-input", false, "do not ask for input")
 	flags.StringVar(&o.Format, "format", "png", "label file format: png or pdf")
 	flags.StringVar(&o.OutputPath, "output", "", "new private label file path")
 	flags.StringVar(&o.MediaPreset, "media-preset", "", "authorized media preset ID")
@@ -94,11 +101,32 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	if err := flags.Parse(flagArgs); err != nil {
 		return o, ports.Failure("usage", "invalid command option")
 	}
+	explicit := contexts.Selection{}
+	var emptyScopeFlag string
 	flags.Visit(func(f *flag.Flag) {
+		if (f.Name == "server" || f.Name == "tenant" || f.Name == "inventory" || f.Name == "context") && f.Value.String() == "" {
+			emptyScopeFlag = f.Name
+		}
+		switch f.Name {
+		case "context":
+			explicit.Context = o.Selection.Context
+		case "server":
+			explicit.Server = o.Server
+		case "tenant":
+			explicit.Tenant = o.Scope.Tenant
+		case "inventory":
+			explicit.Inventory = o.Scope.Inventory
+		}
 		if f.Name == "show-reference" {
 			o.ShowReferenceSet = true
 		}
 	})
+	if emptyScopeFlag != "" {
+		return o, ports.Failure("usage", "The --"+emptyScopeFlag+" value is empty. Supply a value or remove the option.")
+	}
+	o.Selection = contexts.Overlay(environment, explicit)
+	o.Server = o.Selection.Server
+	o.Scope = ports.Scope{Tenant: o.Selection.Tenant, Inventory: o.Selection.Inventory}
 	if o.Copies < 1 || o.TemplateVersion > uint(^uint32(0)) {
 		return o, ports.Failure("usage", "invalid copies or template version")
 	}

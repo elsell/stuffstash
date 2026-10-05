@@ -5,9 +5,12 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/cli/internal/adapters/contextfile"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/labelfiles"
@@ -33,6 +36,21 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 	}
 	if err == nil && len(options.Command) == 2 && options.Command[0] == "printers" && (options.Command[1] == "catalog" || options.Command[1] == "discover") {
 		return exit(output, printerCommand(ctx, options.Command[1], getenv, output))
+	}
+	if err != nil {
+		return exit(output, err)
+	}
+	if len(options.Command) > 0 && options.Command[0] == "context" {
+		configPath := getenv("STUFF_STASH_CLI_CONFIG_FILE")
+		if configPath == "" {
+			directory, pathErr := os.UserConfigDir()
+			if pathErr != nil {
+				return exit(output, ports.Failure("configuration", "Cannot find the configuration directory. Set STUFF_STASH_CLI_CONFIG_FILE to a private file path."))
+			}
+			configPath = filepath.Join(directory, "stuffstash", "contexts.json")
+		}
+		contextStore := contextfile.Store{Path: configPath}
+		return exit(output, (app.Runner{Contexts: contextStore, Output: output}).Run(ctx, options))
 	}
 	if err == nil {
 		err = oidcauth.ValidateURL(options.Server, options.AllowLoopbackHTTP)
@@ -67,6 +85,10 @@ func exit(output ports.Output, err error) int {
 	if err == nil {
 		return 0
 	}
+	if errors.Is(err, context.Canceled) {
+		output.Error("canceled", "The command was canceled. No further actions will run.")
+		return 130
+	}
 	category, message := "configuration", err.Error()
 	var typed *ports.Error
 	if errors.As(err, &typed) {
@@ -86,6 +108,10 @@ const Help = `Stuff Stash CLI
 
   stuffstash login --server https://stash.example [--device-code]
   stuffstash logout --server https://stash.example
+  stuffstash context list
+  stuffstash context current
+  stuffstash context use NAME
+  stuffstash context delete NAME
   stuffstash inventories list --tenant ID
   stuffstash assets list --tenant ID --inventory ID [--limit N --cursor CURSOR]
   stuffstash assets show ID
