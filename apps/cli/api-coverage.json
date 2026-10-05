@@ -2232,11 +2232,11 @@
         "domain": "printing",
         "contractSha256": "ea11f16d40f8f16f96bb7f4a06a75ebe329f991d1191b9f16ae5d35475b4d4b9"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "print-jobs cancel"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id-reprints": {
       "contract": {

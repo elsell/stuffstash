@@ -679,3 +679,8 @@ Use `stuffstash connectors print list` or
 `stuffstash connectors print show CONNECTOR_ID` to inspect connector availability,
 assigned printers, heartbeat times and reported capabilities. These commands use
 your normal sign-in and saved inventory context; they do not read connector secrets.
+
+`stuffstash print-jobs cancel JOB_ID` asks for confirmation before reading and
+cancelling the job. Scripts must add `--yes`. Cancellation uses the current job
+revision and does not retry conflicts. A label might already have printed;
+inspect the returned job before submitting another print.

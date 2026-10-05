@@ -214,6 +214,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 			return err
 		}
 	}
+	if err := r.confirmPrintCancellation(ctx, o); err != nil {
+		return err
+	}
 	if err := r.confirmAssetLifecycle(ctx, o); err != nil {
 		return err
 	}
