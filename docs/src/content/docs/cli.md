@@ -809,3 +809,20 @@ Keep the printed request key and the exact request. If a reply is lost, inspect
 the print job before repeating anything. Reuse `--idempotency-key` with the same
 request for a retry; a new key can print another label. The CLI does not retry
 a submission automatically.
+
+### Manage printer configuration
+
+`printers create` accepts `--input FILE|-` or `--name`, `--adapter`, `--label-size`
+and `--preset-version`. A terminal can ask for missing fields. Supply an explicit
+`--idempotency-key`; retain it with the unchanged request if a reply is lost.
+
+Use `printers update PRINTER_ID`, `connectors print update CONNECTOR_ID`, or
+`print-settings update` with `--input FILE|-` for configuration changes. Printer
+and settings updates require the current `revision`; connector updates require
+`generation`. Inspect the resource first and retain those exact values. Command
+help lists supported fields. False, null and omitted fields remain distinct.
+
+These commands show the selected household, inventory and effect before asking
+for confirmation. Scripts add `--yes`. Connector changes can revoke access or
+change printer bindings; print settings can change automatic label printing.
+The CLI does not retry updates or replace a stale revision automatically.

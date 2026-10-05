@@ -1538,11 +1538,11 @@
         "domain": "printing",
         "contractSha256": "6a6d1a7a6b5072ad324e46f2cc76f662fce92173833fa8f0c4ac6468fce4d25d"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "connectors print update"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id": {
       "contract": {
@@ -1551,11 +1551,11 @@
         "domain": "printing",
         "contractSha256": "4aff0b7e8c75f7428fb808aba7f8c079f0edd34a99439d9c831075d98caa0b08"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "printers update"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-restore": {
       "contract": {
@@ -2303,11 +2303,11 @@
         "domain": "printing",
         "contractSha256": "9622a2ab9382dcbf9ff8aa7b1f3a777d9376ae801d58751988adb1d3126e960d"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "printers create"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id-test-jobs": {
       "contract": {
@@ -2485,11 +2485,11 @@
         "domain": "printing",
         "contractSha256": "66c0cd10d9b54bd444efd5cc4d07b6a323921dc4c5a40074925e722809e18bb6"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "print-settings update"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "put-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-credential": {
       "contract": {
