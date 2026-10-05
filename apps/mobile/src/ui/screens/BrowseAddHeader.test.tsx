@@ -15,11 +15,12 @@ it('installs Add in the navigation slot and removes it when permission is lost',
     expect(h.byLabel('Add an asset')).toBeUndefined();
   } finally { await h.unmount(); }
 });
-it('keeps a Browse title and clears the old leading inventory control', async () => {
+it('keeps the Browse route title without overriding the leading view menu', async () => {
   const h = new MobileRenderHarness();
   try {
     await h.render(<BrowseAddHeader canAdd onAdd={() => {}} />);
-    expect(navigationOptions().at(-1)).toMatchObject({ title: 'Browse', headerLeft: undefined });
+    expect(navigationOptions().at(-1)).toMatchObject({ title: 'Browse' });
+    expect(navigationOptions().at(-1)).not.toHaveProperty('headerLeft');
   } finally { await h.unmount(); }
 });
 

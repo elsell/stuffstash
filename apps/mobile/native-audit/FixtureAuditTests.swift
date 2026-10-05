@@ -2897,9 +2897,7 @@ final class FixtureAuditTests: XCTestCase {
 
   func testMapRootContextAndAncestorReturn() {
     guard openFixtureURL("audit-browse-journey") else { return }
-    let control = app.segmentedControls.firstMatch
-    XCTAssertTrue(control.waitForExistence(timeout: 10))
-    control.buttons["Map"].tap()
+    selectBrowseView("Map", from: "List")
     let root = app.buttons["Open location Main Inventory"].firstMatch
     XCTAssertTrue(app.staticTexts["Main Inventory"].firstMatch.waitForExistence(timeout: 10))
     XCTAssertFalse(root.exists)
@@ -2986,28 +2984,76 @@ final class FixtureAuditTests: XCTestCase {
     capture("browse-adaptive-grid")
   }
 
+  // Native UIAction.state supplies the selected checkmark; do not substitute a
+  // fixture-only selection flag for the actual menu's accessibility state.
+  private func browseViewMenu(_ surface: String) -> XCUIElement {
+    app.navigationBars.buttons["Browse view: \(surface)"].firstMatch
+  }
+
+  private func selectBrowseView(_ next: String, from current: String) {
+    let control = browseViewMenu(current)
+    XCTAssertTrue(control.waitForExistence(timeout: 10)); XCTAssertTrue(control.isHittable)
+    control.tap()
+    let list = app.buttons["List"].firstMatch
+    let map = app.buttons["Map"].firstMatch
+    XCTAssertTrue(list.waitForExistence(timeout: 5)); XCTAssertTrue(map.waitForExistence(timeout: 5))
+    XCTAssertTrue(list.isHittable); XCTAssertTrue(map.isHittable)
+    XCTAssertEqual(list.isSelected, current == "List")
+    XCTAssertEqual(map.isSelected, current == "Map")
+    capture("browse-view-menu-selected-\(current.lowercased())")
+    (next == "List" ? list : map).tap()
+    XCTAssertTrue(browseViewMenu(next).waitForExistence(timeout: 5))
+  }
+
+  func testBrowseHeaderDarkAppearance() {
+    openSettingsControls()
+    let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose appearance")).firstMatch
+    XCTAssertTrue(choice.isHittable)
+    choice.tap()
+    app.buttons["Dark"].tap()
+    XCTAssertTrue(app.staticTexts["Appearance value: dark"].waitForExistence(timeout: 5))
+    app.buttons["Back to audit menu"].tap()
+    testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll()
+  }
+
   func testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll() {
     guard openFixtureURL("audit-browse-journey?dense=true") else { return }
-    let control = app.segmentedControls.firstMatch
-    XCTAssertTrue(control.waitForExistence(timeout: 10))
-    let list = control.buttons["List"]
-    let map = control.buttons["Map"]
-    XCTAssertTrue(list.isSelected)
-    let initialFrame = control.frame
-    func verifyAnchor() {
-      XCTAssertTrue(list.isHittable)
-      XCTAssertTrue(map.isHittable)
-      XCTAssertEqual(app.segmentedControls.count, 1)
+    XCTAssertTrue(browseViewMenu("List").waitForExistence(timeout: 10))
+    let initialFrame = browseViewMenu("List").frame
+    func verifyAnchor(_ surface: String) {
+      let control = browseViewMenu(surface)
+      XCTAssertTrue(control.isHittable)
+      XCTAssertEqual(app.navigationBars.buttons.matching(identifier: "Browse view: \(surface)").count, 1)
+      XCTAssertEqual(app.segmentedControls.count, 0)
       XCTAssertEqual(control.frame.minX, initialFrame.minX, accuracy: 1)
       XCTAssertEqual(control.frame.minY, initialFrame.minY, accuracy: 1)
-      XCTAssertEqual(control.frame.width, initialFrame.width, accuracy: 1)
-      XCTAssertTrue(app.buttons["Add an asset"].firstMatch.isHittable)
-      XCTAssertTrue(app.buttons["Search"].firstMatch.isHittable)
+      XCTAssertGreaterThan(control.frame.width, 0)
+      XCTAssertGreaterThan(control.frame.height, 0)
+      XCTAssertTrue(app.frame.contains(control.frame))
+      let labels = ["Add an asset", "Scan label", "Search"] + (surface == "List" ? ["Filters"] : [])
+      var controls = [control]
+      for label in labels {
+        let action = app.navigationBars.buttons[label].firstMatch
+        XCTAssertTrue(action.isHittable, label)
+        XCTAssertTrue(app.frame.contains(action.frame), label)
+        XCTAssertGreaterThan(action.frame.width, 0, label)
+        XCTAssertGreaterThan(action.frame.height, 0, label)
+        XCTAssertLessThanOrEqual(control.frame.maxX, action.frame.minX, "View menu must remain leading: \(label)")
+        controls.append(action)
+      }
+      for index in controls.indices {
+        for other in controls.indices where other > index {
+          let overlap = controls[index].frame.intersection(controls[other].frame)
+          XCTAssertTrue(overlap.isNull || overlap.isEmpty,
+            "Native header controls overlap: \(controls[index].label), \(controls[other].label)")
+        }
+      }
+      if surface == "Map" { XCTAssertFalse(app.buttons["Filters"].exists) }
     }
     let listItem = app.buttons["Open asset Camping tent"].firstMatch
     XCTAssertTrue(listItem.waitForExistence(timeout: 10))
     let listItemY = listItem.frame.minY
-    verifyAnchor()
+    verifyAnchor("List")
     capture("browse-journey-list-top")
     // Start in the card gutter so this scroll cannot activate a card command.
     let firstCard = app.otherElements["asset-card-journey-0"].firstMatch
@@ -3017,22 +3063,19 @@ final class FixtureAuditTests: XCTestCase {
     let start = origin.withOffset(CGVector(dx: gutterX, dy: app.frame.height * 0.7))
     let end = origin.withOffset(CGVector(dx: gutterX, dy: app.frame.height * 0.3))
     start.press(forDuration: 0.05, thenDragTo: end)
-    XCTAssertTrue(control.exists, "Scrolling must remain on Browse")
+    XCTAssertTrue(browseViewMenu("List").exists, "Scrolling must remain on Browse")
     XCTAssertTrue(!listItem.exists || listItem.frame.minY < listItemY - 40, "The list must actually scroll")
-    verifyAnchor()
+    verifyAnchor("List")
     capture("browse-journey-list-scrolled")
-    map.tap()
-    XCTAssertTrue(map.isSelected)
+    selectBrowseView("Map", from: "List")
     let overview = app.staticTexts["36 active assets · 2 root items"].firstMatch
     XCTAssertTrue(overview.waitForExistence(timeout: 10))
-    XCTAssertFalse(app.buttons["Filters"].exists)
-    verifyAnchor()
+    verifyAnchor("Map")
     capture("browse-journey-map")
-    list.tap()
-    XCTAssertTrue(list.isSelected)
+    selectBrowseView("List", from: "Map")
     XCTAssertTrue(app.buttons["Filters"].firstMatch.waitForExistence(timeout: 10))
     XCTAssertFalse(overview.exists)
-    verifyAnchor()
+    verifyAnchor("List")
     capture("browse-journey-list-return")
   }
 
@@ -3291,7 +3334,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["What changed"].waitForExistence(timeout: 10))
     captureSettledAccessory("voice-navigation-detail-settled")
     tab("Browse").tap()
-    XCTAssertTrue(app.segmentedControls.firstMatch.buttons["List"].waitForExistence(timeout: 10))
+    XCTAssertTrue(browseViewMenu("List").waitForExistence(timeout: 10))
     tab("Home").tap()
     XCTAssertTrue(app.navigationBars["History detail"].waitForExistence(timeout: 10))
     captureSettledAccessory("voice-navigation-detail-tab-return")
@@ -3334,7 +3377,7 @@ final class FixtureAuditTests: XCTestCase {
     verifyFooterClearsPersistentChrome(app.buttons["Load older activity"].firstMatch)
     capture("history-pagination-footer")
     tab("Browse").tap()
-    XCTAssertTrue(app.segmentedControls.firstMatch.buttons["List"].waitForExistence(timeout: 10))
+    XCTAssertTrue(browseViewMenu("List").waitForExistence(timeout: 10))
     tab("Home").tap()
     XCTAssertTrue(title.waitForExistence(timeout: 10))
     capture("history-list-tab-return")
@@ -3381,9 +3424,7 @@ final class FixtureAuditTests: XCTestCase {
 
   func testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs() {
     guard openFixtureURL("(tabs)/(search)/search?surface=map&query=Kitchen&checkoutState=available") else { return }
-    let control = app.segmentedControls.firstMatch
-    XCTAssertTrue(control.waitForExistence(timeout: 10))
-    XCTAssertTrue(control.buttons["Map"].isSelected)
+    XCTAssertTrue(browseViewMenu("Map").waitForExistence(timeout: 10))
     tab("Home").tap()
     let recent = app.buttons["View all recently changed assets"].firstMatch
     XCTAssertTrue(recent.waitForExistence(timeout: 10)); recent.tap()
@@ -3392,7 +3433,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(first.waitForExistence(timeout: 10))
     XCTAssertTrue(second.exists)
     XCTAssertTrue(tab("Browse").isSelected)
-    XCTAssertTrue(control.buttons["List"].isSelected)
+    XCTAssertTrue(browseViewMenu("List").waitForExistence(timeout: 10))
     capture("home-recent-browse-list")
     first.tap()
     let title = app.staticTexts["Camping item 01"].firstMatch

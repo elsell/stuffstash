@@ -20,6 +20,6 @@ export function BrowseAddHeader({ canAdd, onAdd, onFilters, filterCount = 0, onS
     tintColor: filterCount > 0 ? palette.action : palette.text,
     badgeCount: filterCount, onPress: onFilters });
   const actions = useNativeHeaderActionOptions(commands);
-  const options = useMemo(() => ({ title: t('browse.title'), headerLeft: undefined, ...actions }), [actions]);
+  const options = useMemo(() => ({ title: t('browse.title'), ...actions }), [actions]);
   return <Stack.Screen options={options} />;
 }

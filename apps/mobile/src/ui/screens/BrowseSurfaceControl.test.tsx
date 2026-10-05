@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
-import { lightPalette } from '../theme/tokens';
 import { BrowseSurfaceControl } from './BrowseSurfaceControl';
 
 describe('BrowseSurfaceControl', () => {
@@ -18,24 +17,20 @@ describe('BrowseSurfaceControl', () => {
     await harness.unmount();
   });
 
-  it('maps the durable Browse surface state through the shared native segmented control', async () => {
+  it('shows the current Browse view and selects a view in place with a native menu', async () => {
     const changes: string[] = [];
     await harness.render(
       <BrowseSurfaceControl
-        palette={lightPalette}
         selectedSurface="map"
         onChangeSurface={(surface) => changes.push(surface)}
       />
     );
 
-    const control = harness.byType('NativeSegmentedControl');
-    expect(control?.props).toMatchObject({
-      enabled: true,
-      selectedIndex: 1,
-      values: ['List', 'Map']
-    });
-
-    await harness.change(control, 'List');
+    expect(harness.byLabel('Browse view: Map')).toBeDefined();
+    await harness.press(harness.byLabel('Browse view: Map'));
+    const items = harness.all().filter(node => node.props.accessibilityRole === 'menuitem');
+    expect(items.map(item => item.props.accessibilityState.selected)).toEqual([false, true]);
+    await harness.press(items[0]);
     expect(changes).toEqual(['list']);
   });
 });
