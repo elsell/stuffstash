@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	InvitationsAPI             func(string, string) (ports.InvitationsAPI, error)
 	AccessGrantsAPI            func(string, string) (ports.AccessGrantsAPI, error)
 	ActivityAPI                func(string, string) (ports.ActivityAPI, error)
 	AuditAPI                   func(string, string) (ports.AuditAPI, error)
@@ -138,6 +139,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 
+	if isInvitationCommand(o) {
+		return r.invitationCommand(ctx, o, session.IDToken)
+	}
 	if isAccessGrantCommand(o) {
 		return r.accessGrantCommand(ctx, o, session.IDToken)
 	}
@@ -269,6 +273,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
+	}
+	if isInvitationCommand(o) {
+		return validateInvitations(o, requireScope)
 	}
 	if isAccessGrantCommand(o) {
 		return validateAccessGrants(o, requireScope)

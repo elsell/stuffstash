@@ -19,6 +19,10 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[ports.Invitation]:
+		return o.invitation(v.Data)
+	case ports.Result[[]ports.Invitation]:
+		return o.invitations(v)
 	case ports.Result[ports.AccessGrant]:
 		return o.accessGrant(v.Data)
 	case ports.Result[[]ports.AccessGrant]:

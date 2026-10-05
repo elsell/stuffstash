@@ -682,3 +682,17 @@ input object for the generated SDK. Before mutation, show the exact principal,
 role and scope and require confirmation (or --yes). On an uncertain result,
 direct the user to inspect that grant before retrying; never retry automatically.
 Critical tests cover missing confirmation, exact request, denial and invalid role.
+
+### Invitation management
+
+`invitations list [--status pending|accepted|cancelled|expired|revoked|all]`
+accepts pagination; omitted status uses the API default. `invitations show ID`
+shows all invitation fields, including expiration, inviter and accepted principal.
+Both reuse the selected household and inventory. JSON preserves envelope and
+pagination. Human output presents compact list rows and full detail fields.
+`invitations cancel ID` and `invitations delete ID` name and confirm the scoped
+target, with --yes required in scripts. They call the corresponding API action
+once, require a successful no-content response, and do not claim that an accepted
+user's access was removed. Invalid status values and unsupported options fail
+before network access. Critical checks cover full fields, pagination, exact
+mutation, confirmation and cross-scope denials.

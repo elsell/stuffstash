@@ -86,11 +86,11 @@
         "domain": "inventory access",
         "contractSha256": "fe8c4b1eb12d3757e90bac56e72034905da3f00185e18aeadbef0ba4e1695320"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "invitations delete"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id": {
       "contract": {
@@ -658,11 +658,11 @@
         "domain": "inventory access",
         "contractSha256": "b664d6807aecae14399d8e25146a6115d2731de7901a20b4b33cd54ac81fdba4"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "invitations list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id": {
       "contract": {
@@ -671,11 +671,11 @@
         "domain": "inventory access",
         "contractSha256": "eccfb8620a529da2ca893292b2cd64ec289afa3d137b7e43964220c0bf8351dc"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "invitations show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-assets": {
       "contract": {
@@ -1334,11 +1334,11 @@
         "domain": "inventory access",
         "contractSha256": "78a3bc6ef50521a64c72bf0f7df8cda2b02b98ec9c44be0ee9bb0cd2537faa3c"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "invitations cancel"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-expiration": {
       "contract": {

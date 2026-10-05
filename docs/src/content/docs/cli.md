@@ -562,3 +562,16 @@ For scripts, put `{"principalId":"USER_ID","relationship":"viewer"}` in a JSON
 file and run `stuffstash access-grants create --input grant.json --yes`.
 Use `editor` to allow changes. Check the displayed household and inventory
 before you confirm.
+
+### Manage invitations
+
+```sh
+stuffstash invitations list --status pending
+stuffstash invitations show INVITATION_ID
+stuffstash invitations cancel INVITATION_ID
+stuffstash invitations delete INVITATION_ID
+```
+
+Cancel stops a pending invitation. Delete removes its stored metadata.
+Both ask for confirmation; scripts require `--yes`. These actions do not remove
+an accepted user's access grant. Use `access-grants` to manage that access.
