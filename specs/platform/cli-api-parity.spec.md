@@ -696,3 +696,11 @@ once, require a successful no-content response, and do not claim that an accepte
 user's access was removed. Invalid status values and unsupported options fail
 before network access. Critical checks cover full fields, pagination, exact
 mutation, confirmation and cross-scope denials.
+
+`invitations expiration ID --input FILE|-` updates expiresAt using an RFC3339
+ timestamp with an explicit timezone. Without input, terminals prompt for that
+ timestamp; scripts must provide JSON. Validate the timestamp before authentication.
+Show the scope, invitation and requested timestamp, then require confirmation
+(or --yes). Preserve the supplied JSON in the SDK request, and all invitation
+fields in the response. On an uncertain response, direct users to inspect the
+invitation before retrying. The server decides whether the expiration is allowed.

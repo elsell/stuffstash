@@ -35,6 +35,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody = body
 	} else {
+		if isInvitationExpiration(o) {
+			return r.prepareInvitationExpiration(ctx, o)
+		}
 		if isGrantCreate(o) {
 			return r.prepareGrantInput(ctx, o)
 		}
@@ -68,6 +71,10 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 			return o, ports.Failure("usage", "Supply --name NAME or --input FILE for this command.")
 		}
 		o.RequestBody, _ = json.Marshal(map[string]string{"name": o.ConnectorName})
+	}
+	if isInvitationExpiration(o) {
+		_, err := invitationExpiration(o.RequestBody)
+		return o, err
 	}
 	if isGrantCreate(o) {
 		_, err := decodeGrant(o.RequestBody)

@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"bytes"
 	"context"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi/generated"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
@@ -44,4 +45,12 @@ func (c *Client) ChangeInvitation(ctx context.Context, s ports.Scope, id string,
 	default:
 		return ports.Failure("usage", "Choose cancel or delete for the invitation.")
 	}
+}
+
+func (c *Client) UpdateInvitationExpiration(ctx context.Context, s ports.Scope, id string, body []byte) (ports.Result[ports.Invitation], error) {
+	r, err := read[generated.SuccessEnvelopeInvitationResponse](c.sdk.PatchTenantsByTenantIdInventoriesByInventoryIdAccessInvitationsByInvitationIdExpirationWithBody(ctx, s.Tenant, s.Inventory, id, nil, "application/json", bytes.NewReader(body)))
+	if err != nil {
+		return ports.Result[ports.Invitation]{}, err
+	}
+	return ports.Result[ports.Invitation]{Data: invitation(r.Data), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }

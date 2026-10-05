@@ -195,6 +195,7 @@ const Help = `Stuff Stash CLI
   stuffstash tenants audit [--limit N --cursor CURSOR]
   stuffstash inventories audit [--limit N --cursor CURSOR]
   stuffstash assets audit ASSET_ID [--limit N]
+  stuffstash invitations expiration ID [--input FILE|-] [--yes]
   stuffstash invitations list [--status STATUS --limit N --cursor CURSOR]
   stuffstash invitations show|cancel|delete ID [--yes]
   stuffstash access-grants create [--input FILE|-] [--yes]

@@ -575,3 +575,8 @@ stuffstash invitations delete INVITATION_ID
 Cancel stops a pending invitation. Delete removes its stored metadata.
 Both ask for confirmation; scripts require `--yes`. These actions do not remove
 an accepted user's access grant. Use `access-grants` to manage that access.
+
+Use `stuffstash invitations expiration INVITATION_ID` to change a pending
+invitation's deadline. Enter a timestamp with a timezone, such as
+`2030-01-01T12:00:00Z`. Scripts can supply a JSON file containing
+`{"expiresAt":"2030-01-01T12:00:00Z"}` with `--input FILE --yes`.

@@ -22,6 +22,7 @@ const (
 )
 
 type InvitationsAPI interface {
+	UpdateInvitationExpiration(context.Context, Scope, string, []byte) (Result[Invitation], error)
 	Invitations(context.Context, Scope, Page, string) (Result[[]Invitation], error)
 	Invitation(context.Context, Scope, string) (Result[Invitation], error)
 	ChangeInvitation(context.Context, Scope, string, InvitationAction) error

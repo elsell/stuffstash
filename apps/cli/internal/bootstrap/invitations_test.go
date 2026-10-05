@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 	"io"
@@ -19,6 +20,7 @@ func TestInvitationMutationsRespectScopeAndConfirmation(t *testing.T) {
 	for _, action := range []string{"cancel", "delete"} {
 		t.Run(action, func(t *testing.T) {
 			calls := 0
+			expiration := false
 			reading := false
 			listing := false
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -27,6 +29,10 @@ func TestInvitationMutationsRespectScopeAndConfirmation(t *testing.T) {
 				method := "DELETE"
 				if action == "cancel" && !reading {
 					path += "/cancel"
+					method = "PATCH"
+				}
+				if expiration {
+					path = "/tenants/home/inventories/garage/access-invitations/invite/expiration"
 					method = "PATCH"
 				}
 				if reading {
@@ -42,7 +48,13 @@ func TestInvitationMutationsRespectScopeAndConfirmation(t *testing.T) {
 				if r.Method != method {
 					t.Error("wrong method")
 				}
-				if reading {
+				if expiration {
+					var body map[string]string
+					if json.NewDecoder(r.Body).Decode(&body) != nil || body["expiresAt"] != "2030-01-01T00:00:00Z" {
+						t.Error("wrong expiration")
+					}
+				}
+				if reading || expiration {
 					data := `{"id":"invite","tenantId":"home","inventoryId":"garage","email":"guest@example.test","relationship":"viewer","status":"accepted","isExpired":false,"expiresAt":"2030-01-01T00:00:00Z","inviterPrincipalId":"owner","acceptedPrincipalId":"guest"}`
 					if listing {
 						if r.URL.Query().Get("status") != "all" || r.URL.Query().Get("cursor") != "next" || r.URL.Query().Get("limit") != "2" {
@@ -93,6 +105,30 @@ func TestInvitationMutationsRespectScopeAndConfirmation(t *testing.T) {
 					t.Fatal("scope boundary bypassed")
 				}
 			}
+			expiration = true
+			input := filepath.Join(dir, "expiration.json")
+			os.WriteFile(input, []byte(`{"expiresAt":"2030-01-01T00:00:00Z"}`), 0600)
+			update := append([]string{"invitations", "expiration", "invite", "--input", input}, scope...)
+			beforeUpdate := calls
+			if code := Run(context.Background(), update, getenv, &out, &diagnostic); code != 2 || calls != beforeUpdate {
+				t.Fatal("unconfirmed expiration reached API")
+			}
+			update = append(update, "--yes")
+			if code := Run(context.Background(), update, getenv, &out, &diagnostic); code != 0 || calls != beforeUpdate+1 {
+				t.Fatalf("expiration: %d %s", code, &diagnostic)
+			}
+			for _, override := range [][]string{{"--tenant", "other"}, {"--inventory", "other"}} {
+				if code := Run(context.Background(), append(update, override...), getenv, &out, &diagnostic); code == 0 {
+					t.Fatal("expiration scope bypass")
+				}
+			}
+			os.WriteFile(input, []byte(`{"expiresAt":"tomorrow"}`), 0600)
+			beforeUpdate = calls
+			if code := Run(context.Background(), update, getenv, &out, &diagnostic); code != 2 || calls != beforeUpdate {
+				t.Fatal("invalid timestamp reached API")
+			}
+			expiration = false
+
 			reading = true
 			for _, mode := range []string{"show", "list"} {
 				listing = mode == "list"
