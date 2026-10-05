@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"strconv"
 	"time"
 
 	"github.com/stuffstash/stuff-stash/cli/internal/app/contexts"
@@ -139,6 +140,11 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	if isDirectoryCommand(o) {
 		return r.directoryCommand(ctx, o, session.IDToken)
 	}
+	if isAssetWrite(o) {
+		if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory)); err != nil {
+			return err
+		}
+	}
 	api, err := r.API(o.Server, session.IDToken)
 	if err != nil {
 		return err
@@ -200,6 +206,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 func validateCommand(o Options) error      { return validateCommandOptions(o, true) }
 func validateCommandShape(o Options) error { return validateCommandOptions(o, false) }
 func validateCommandOptions(o Options, requireScope bool) error {
+	if len(o.Command) > 1 && o.Command[0] == "assets" && (o.Command[1] == "update" || o.Command[1] == "move") && o.IdempotencyKey != "" {
+		return ports.Failure("usage", "Asset updates do not support retry keys. Remove --idempotency-key.")
+	}
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
 	}
@@ -239,7 +248,7 @@ func validateCommandOptions(o Options, requireScope bool) error {
 			return nil
 		}
 	case "create":
-		if len(o.Command) == 2 && o.Title != "" && o.Kind != "" {
+		if len(o.Command) == 2 && (!requireScope || len(o.RequestBody) > 0 || (o.Title != "" && o.Kind != "")) {
 			return nil
 		}
 	case "show", "archive", "restore":
@@ -247,7 +256,7 @@ func validateCommandOptions(o Options, requireScope bool) error {
 			return nil
 		}
 	case "update":
-		if len(o.Command) == 3 && o.Title != "" {
+		if len(o.Command) == 3 && (!requireScope || len(o.RequestBody) > 0 || o.Title != "") {
 			return nil
 		}
 	case "move":
@@ -285,15 +294,15 @@ func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 	}
 	switch action {
 	case "create":
-		return api.CreateAsset(ctx, o.Scope, ports.AssetInput{Kind: o.Kind, Title: o.Title, Parent: o.Parent}, key)
+		return api.CreateAsset(ctx, o.Scope, ports.AssetInput{Kind: o.Kind, Title: o.Title, Parent: o.Parent, RequestBody: o.RequestBody}, key)
 	case "update":
-		return api.UpdateAsset(ctx, o.Scope, id, ports.AssetChange{Title: &o.Title}, key)
+		return api.UpdateAsset(ctx, o.Scope, id, ports.AssetChange{Title: &o.Title, RequestBody: o.RequestBody}, "")
 	case "move":
 		change := ports.AssetChange{Parent: &o.Parent}
 		if o.Parent == "root" {
 			change = ports.AssetChange{MoveToRoot: true}
 		}
-		return api.UpdateAsset(ctx, o.Scope, id, change, key)
+		return api.UpdateAsset(ctx, o.Scope, id, change, "")
 	case "archive", "restore":
 		return api.SetArchived(ctx, o.Scope, id, action == "archive", key)
 	}

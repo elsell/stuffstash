@@ -373,3 +373,18 @@ The HTTP adapter must bypass the generated nullable list decoder for asset
 lists because it resets JSON number handling. Embed the generated envelope and
 decode its data directly into generated asset models with `UseNumber`, preserving
 null versus empty lists without changing the SDK.
+
+### Complete asset write input
+
+`assets create` and `assets update ID` accept `--input FILE|-` for the complete
+API request object, preserving null, empty arrays, omitted fields, and exact
+custom-field numbers. The generated SDK's body methods send the validated object
+without a lossy decode/encode cycle. Do not combine input with asset field flags
+or `--print-label`. The existing create-and-print shortcut remains available.
+Interactive flag-based creation asks for a missing title (160 characters) and
+uses a keyboard picker for kind (item, container, location). Update asks for a
+missing title only when no JSON input is supplied. Scripts must supply the
+required fields or JSON input; they never prompt. Keep scope selection and
+server authorization unchanged. Asset updates do not declare idempotency support;
+reject explicit retry keys for updates and moves before authentication instead
+of claiming safe replay.

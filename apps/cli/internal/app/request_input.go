@@ -15,15 +15,15 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 	if !write {
 		return o, nil
 	}
-	if o.IdempotencyKey != "" {
+	if o.IdempotencyKey != "" && !(isAssetWrite(o) && o.Command[1] == "create") {
 		return o, ports.Failure("usage", "This API operation does not support --idempotency-key. Remove the option.")
 	}
-	if o.InputPath != "" && (o.ConnectorName != "" || o.TagColor != nil || o.TagKey != nil) {
+	if o.InputPath != "" && (o.ConnectorName != "" || o.TagColor != nil || o.TagKey != nil || o.Title != "" || o.Kind != "" || o.Parent != "" || o.PrintLabel) {
 		return o, ports.Failure("usage", "Use either field options or --input. Do not combine them.")
 	}
 	if o.InputPath != "" {
 		if r.InputFiles == nil {
-			return o, ports.Failure("configuration", "Input files are not available. Use --name instead.")
+			return o, ports.Failure("configuration", "Input files are not available. Use field options instead.")
 		}
 		body, err := r.InputFiles.Read(ctx, o.InputPath)
 		if err != nil {
@@ -35,6 +35,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody = body
 	} else {
+		if isAssetWrite(o) {
+			return r.prepareAssetInput(ctx, o)
+		}
 		if isTagWrite(o) {
 			return r.prepareTagInput(ctx, o)
 		}

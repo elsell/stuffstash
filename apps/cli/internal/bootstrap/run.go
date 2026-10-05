@@ -173,6 +173,8 @@ const Help = `Stuff Stash CLI
   stuffstash assets show ID
   stuffstash assets create --kind item|container|location --title TITLE [--print-label]
   stuffstash assets update ID --title TITLE
+  stuffstash assets create --input FILE|-
+  stuffstash assets update ID --input FILE|-
   stuffstash assets move ID --parent ID|root
   stuffstash assets archive ID
   stuffstash assets restore ID

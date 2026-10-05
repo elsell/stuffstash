@@ -35,13 +35,15 @@ type Result[T any] struct {
 	Pagination *Pagination `json:"pagination,omitempty"`
 }
 type AssetInput struct {
+	RequestBody         []byte
 	Kind, Title, Parent string
 	PrintLabel          *LabelPrintSelection
 }
 type AssetChange struct {
-	Title      *string
-	Parent     *string
-	MoveToRoot bool
+	RequestBody []byte
+	Title       *string
+	Parent      *string
+	MoveToRoot  bool
 }
 type AuthConfig struct {
 	Issuer, ClientID                 string

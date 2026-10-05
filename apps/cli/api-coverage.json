@@ -1373,11 +1373,12 @@
         "domain": "assets",
         "contractSha256": "ba117330a02f0feab7289cb3d1a848ea4221b1fc9a6a1a51779850c3f8938c4b"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets update",
+        "assets move"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-archive": {
       "contract": {
@@ -2010,10 +2011,12 @@
         "domain": "assets",
         "contractSha256": "f016d640a73b1460816a32481970092f1cf4ebc13ac5d791c5568f2b49ff3810"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "assets create"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete unknown-outcome recovery and expose the request key where the server supports safe replay."
       ]
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments": {
