@@ -139,7 +139,11 @@ and parent IDs. For example, `{"expiration":null,"tagIds":[]}` clears expiration
 and removes all tags with `assets update ID --input FILE`. Omitted fields stay
 unchanged. Do not combine JSON input with asset field flags or `--print-label`.
 Interactive creation asks for a missing title and kind. Scripts must provide
-these fields or a JSON request. Updates do not support `--idempotency-key`.
+these fields or a JSON request. Updates do not support `--idempotency-key`. Ordinary
+creation also does not support this key. If its response is lost, list assets
+before retrying to avoid a duplicate. Create-and-print supports the key: keep
+the key shown on stderr and reuse it with the unchanged request if needed.
+The CLI does not retry writes automatically.
 
 List archived assets with `assets list --lifecycle archived`, or include both states
 with `--lifecycle all`. Use `--sort updated_desc` to put recently changed assets

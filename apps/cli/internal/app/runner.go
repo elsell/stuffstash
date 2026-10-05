@@ -145,6 +145,18 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 			return err
 		}
 	}
+	if isAssetWrite(o) && o.Command[1] == "create" && assetPrintRequested(o) && !o.PrintLabel {
+		if o.IdempotencyKey == "" {
+			var value [16]byte
+			if _, err := rand.Read(value[:]); err != nil {
+				return err
+			}
+			o.IdempotencyKey = hex.EncodeToString(value[:])
+		}
+		if err := r.Output.Notice("Print request key: " + strconv.Quote(o.IdempotencyKey) + "; keep this key and the unchanged request for a retry."); err != nil {
+			return err
+		}
+	}
 	api, err := r.API(o.Server, session.IDToken)
 	if err != nil {
 		return err
@@ -192,6 +204,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		result, err = execute(ctx, api, o)
 	}
 	if err != nil {
+		if isAssetWrite(o) && o.Command[1] == "create" {
+			return assetCreateFailure(o, err)
+		}
 		return err
 	}
 	if isLabelCommand(o) {
@@ -285,13 +300,6 @@ func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 		return api.Asset(ctx, o.Scope, id)
 	}
 	key := o.IdempotencyKey
-	if key == "" {
-		var bytes [16]byte
-		if _, err := rand.Read(bytes[:]); err != nil {
-			return nil, err
-		}
-		key = hex.EncodeToString(bytes[:])
-	}
 	switch action {
 	case "create":
 		return api.CreateAsset(ctx, o.Scope, ports.AssetInput{Kind: o.Kind, Title: o.Title, Parent: o.Parent, RequestBody: o.RequestBody}, key)

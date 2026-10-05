@@ -2014,10 +2014,8 @@
       "commands": [
         "assets create"
       ],
-      "status": "partial",
-      "gaps": [
-        "Complete unknown-outcome recovery and expose the request key where the server supports safe replay."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments": {
       "contract": {

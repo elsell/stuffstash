@@ -57,5 +57,5 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody, _ = json.Marshal(map[string]string{"name": o.ConnectorName})
 	}
-	return o, nil
+	return o, validateAssetCreateKey(o)
 }

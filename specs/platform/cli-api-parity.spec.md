@@ -388,3 +388,13 @@ required fields or JSON input; they never prompt. Keep scope selection and
 server authorization unchanged. Asset updates do not declare idempotency support;
 reject explicit retry keys for updates and moves before authentication instead
 of claiming safe replay.
+
+### Asset creation recovery
+
+The create endpoint honors an idempotency key only when `printLabel` is present.
+The CLI rejects an explicit key for ordinary creation and does not generate one.
+For create-and-print, including JSON input, generate a missing key and display it
+before sending the request. On an uncertain response, direct the user to retry
+with the same key and unchanged request. For ordinary creates, direct the user
+to list assets before retrying. Never retry automatically. Preserve actionable
+authorization and validation failures instead of replacing them with uncertainty.

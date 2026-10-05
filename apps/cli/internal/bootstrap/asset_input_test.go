@@ -19,17 +19,30 @@ func TestAssetJSONCommandsRouteCompleteInput(t *testing.T) {
 	for _, test := range []struct {
 		command      []string
 		method, path string
+		print        bool
 	}{
-		{[]string{"assets", "create"}, "POST", "/tenants/home/inventories/garage/assets"},
-		{[]string{"assets", "update", "asset"}, "PATCH", "/tenants/home/inventories/garage/assets/asset"},
+		{[]string{"assets", "create"}, "POST", "/tenants/home/inventories/garage/assets", false},
+		{[]string{"assets", "create"}, "POST", "/tenants/home/inventories/garage/assets", true},
+		{[]string{"assets", "update", "asset"}, "PATCH", "/tenants/home/inventories/garage/assets/asset", false},
 	} {
 		t.Run(test.path+test.method, func(t *testing.T) {
 			count := 0
+			requestBody := `{"title":"Garage","kind":"container","customFields":{"serial":9007199254740993}}`
+			if test.print {
+				requestBody = `{"title":"Garage","kind":"container","printLabel":{"printerId":"printer"}}`
+			}
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				count++
 				body, _ := io.ReadAll(r.Body)
-				if r.Method != test.method || r.URL.Path != test.path || string(body) != `{"title":"Garage","kind":"container","customFields":{"serial":9007199254740993}}` || r.Header.Get("Authorization") != "Bearer owner" {
+				if r.Method != test.method || r.URL.Path != test.path || string(body) != requestBody || r.Header.Get("Authorization") != "Bearer owner" {
 					t.Errorf("wrong request %s %s %s", r.Method, r.URL.Path, body)
+				}
+				if (r.Header.Get("Idempotency-Key") != "") != test.print {
+					t.Error("wrong retry key behavior")
+				}
+				if count == 2 {
+					io.WriteString(w, "invalid JSON")
+					return
 				}
 				w.Header().Set("Content-Type", "application/json")
 				io.WriteString(w, `{"data":{"id":"asset","title":"Garage","tags":[],"expiration":null},"meta":{}}`)
@@ -55,7 +68,7 @@ func TestAssetJSONCommandsRouteCompleteInput(t *testing.T) {
 				return ""
 			}
 			inputPath := filepath.Join(dir, "request.json")
-			if err := os.WriteFile(inputPath, []byte(`{"title":"Garage","kind":"container","customFields":{"serial":9007199254740993}}`), 0600); err != nil {
+			if err := os.WriteFile(inputPath, []byte(requestBody), 0600); err != nil {
 				t.Fatal(err)
 			}
 			var out, diagnostic bytes.Buffer
@@ -63,6 +76,21 @@ func TestAssetJSONCommandsRouteCompleteInput(t *testing.T) {
 			code := Run(context.Background(), args, getenv, &out, &diagnostic)
 			if code != 0 || count != 1 || !strings.Contains(out.String(), `"title":"Garage"`) || !strings.Contains(diagnostic.String(), "Server:") {
 				t.Fatalf("write failed %d count=%d %s %s", code, count, &out, &diagnostic)
+			}
+			if test.method == "POST" {
+				out.Reset()
+				diagnostic.Reset()
+				code = Run(context.Background(), args, getenv, &out, &diagnostic)
+				want := "Run assets list"
+				if test.print {
+					want = "same request key"
+				}
+				if code == 0 || count != 2 || !strings.Contains(diagnostic.String(), want) {
+					t.Fatalf("unsafe recovery: %d count=%d %s", code, count, &diagnostic)
+				}
+				if test.print && !strings.Contains(diagnostic.String(), "Print request key:") {
+					t.Fatal("retry key not visible")
+				}
 			}
 		})
 	}

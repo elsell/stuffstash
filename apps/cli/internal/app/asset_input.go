@@ -34,5 +34,5 @@ func (r Runner) prepareAssetInput(ctx context.Context, o Options) (Options, erro
 			return o, ports.Failure("usage", "Use --kind item, container, or location.")
 		}
 	}
-	return o, nil
+	return o, validateAssetCreateKey(o)
 }
