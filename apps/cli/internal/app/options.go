@@ -11,6 +11,7 @@ import (
 )
 
 type Options struct {
+	Color                                                                 string
 	Selection                                                             contexts.Selection
 	NoInput                                                               bool
 	Format, OutputPath, MediaPreset                                       string
@@ -41,6 +42,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	o.Selection.Context = environment.Context
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
+	flags.StringVar(&o.Color, "color", "auto", "color output: auto, always, or never")
 	flags.StringVar(&o.Selection.Context, "context", environment.Context, "saved context name")
 	flags.BoolVar(&o.NoInput, "no-input", false, "do not ask for input")
 	flags.StringVar(&o.Format, "format", "png", "label file format: png or pdf")
@@ -129,6 +131,9 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	o.Scope = ports.Scope{Tenant: o.Selection.Tenant, Inventory: o.Selection.Inventory}
 	if o.Copies < 1 || o.TemplateVersion > uint(^uint32(0)) {
 		return o, ports.Failure("usage", "invalid copies or template version")
+	}
+	if o.Color != "auto" && o.Color != "always" && o.Color != "never" {
+		return o, ports.Failure("usage", "Use --color auto, --color always, or --color never.")
 	}
 	o.Command = positional
 	if o.Page.Limit < 1 {

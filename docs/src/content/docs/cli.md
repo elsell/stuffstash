@@ -52,8 +52,25 @@ removes the locally stored session for the selected server.
 
 ## Work with assets
 
-Set the tenant and inventory IDs from your instance. Listing inventories requires
-a tenant; asset commands also require an inventory.
+Run `stuffstash account show` to check the signed-in account and
+`stuffstash tenants list` to see your households. A tenant is a household's
+security boundary; each household can contain multiple inventories. Use
+`tenants show` or `inventories show` to inspect the selected scope and your access.
+
+In an interactive terminal, commands ask you to select any missing household or
+inventory. Type to search, use the arrow keys, and press Enter. Escape cancels.
+Completed selections are saved for the server and signed-in account. Use
+`context list`, `context current`, and `context use NAME` to inspect or switch
+saved contexts. `context delete NAME` removes a saved context without deleting
+server data. Sign-out clears saved account scope.
+
+For scripts, use explicit scope or a saved context for the same signed-in account.
+`--json`, `--no-input`, and redirected streams never open a picker. Set
+`STUFF_STASH_CLI_CONFIG_FILE` to choose a private context file. Context files do
+not contain credentials. Picker color follows terminal support and `NO_COLOR`;
+`--color always` or `--color never` overrides automatic color selection.
+
+Listing inventories requires a tenant; asset commands also require an inventory:
 
 ```sh
 export STUFF_STASH_CLI_TENANT=YOUR_TENANT_ID

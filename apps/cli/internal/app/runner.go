@@ -11,16 +11,19 @@ import (
 )
 
 type Runner struct {
-	Contexts    contexts.Store
-	LabelsAPI   func(string, string) (ports.LabelsAPI, error)
-	LabelFiles  ports.LabelFiles
-	PrintingAPI func(string, string) (ports.HumanPrintingAPI, error)
-	API         func(string, string) (ports.API, error)
-	Auth        ports.Auth
-	Credentials ports.Credentials
-	Output      ports.Output
-	Clock       ports.Clock
-	Observer    ports.Observer
+	DirectoryAPI func(string, string) (ports.Directory, error)
+	Picker       ports.Selector
+	ScopeAPI     func(string, string) (ports.ScopeCatalog, error)
+	Contexts     contexts.Store
+	LabelsAPI    func(string, string) (ports.LabelsAPI, error)
+	LabelFiles   ports.LabelFiles
+	PrintingAPI  func(string, string) (ports.HumanPrintingAPI, error)
+	API          func(string, string) (ports.API, error)
+	Auth         ports.Auth
+	Credentials  ports.Credentials
+	Output       ports.Output
+	Clock        ports.Clock
+	Observer     ports.Observer
 }
 
 func (r Runner) Run(ctx context.Context, o Options) error {
@@ -83,6 +86,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 			return err
 		}
 	}
+	if isAccountCommand(o) {
+		return r.directoryCommand(ctx, o, session.IDToken)
+	}
 	if r.Contexts != nil {
 		config, configErr := r.Contexts.Load(ctx)
 		if configErr != nil {
@@ -98,8 +104,16 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		}
 		o.Scope = resolved.Scope
 	}
+	o, err = r.chooseMissingScope(ctx, o, session)
+	if err != nil {
+		return err
+	}
 	if err := validateCommand(o); err != nil {
 		return err
+	}
+
+	if isDirectoryCommand(o) {
+		return r.directoryCommand(ctx, o, session.IDToken)
 	}
 	api, err := r.API(o.Server, session.IDToken)
 	if err != nil {
@@ -170,6 +184,12 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if !o.PrintLabel && isPrintingCommand(o) {
 		return validatePrintingCommandOptions(o, requireScope)
+	}
+	if isDirectoryCommand(o) {
+		if requireScope && missingResourceScope(o) {
+			return ports.Failure("usage", "Supply the required scope with --tenant and, for inventory commands, --inventory.")
+		}
+		return nil
 	}
 	if len(o.Command) < 2 {
 		return ports.Failure("usage", "expected inventories list or assets <action>")
@@ -248,4 +268,8 @@ func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 		return api.SetArchived(ctx, o.Scope, id, action == "archive", key)
 	}
 	return nil, ports.Failure("usage", "unknown action")
+}
+
+func isTenantList(o Options) bool {
+	return len(o.Command) == 2 && o.Command[0] == "tenants" && o.Command[1] == "list"
 }

@@ -90,7 +90,7 @@ func (c *Client) Inventories(ctx context.Context, s ports.Scope, p ports.Page) (
 	}
 	items := make([]ports.Inventory, 0)
 	for _, v := range r.Data.GetOrEmpty() {
-		items = append(items, ports.Inventory{ID: v.Id, Name: v.Name, Lifecycle: v.LifecycleState})
+		items = append(items, inventory(v))
 	}
 	return ports.Result[[]ports.Inventory]{Data: items, Pagination: page(r.Meta)}, nil
 }

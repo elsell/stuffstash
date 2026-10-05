@@ -19,6 +19,26 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[ports.Principal]:
+		fields := [][2]string{{"ID", v.Data.ID}}
+		if v.Data.DisplayName != nil {
+			fields = append(fields, [2]string{"Name", *v.Data.DisplayName})
+		}
+		if v.Data.Email != nil {
+			fields = append(fields, [2]string{"Email", *v.Data.Email})
+		}
+		return o.details(fields)
+	case ports.Result[ports.Tenant]:
+		return o.details([][2]string{{"Household", v.Data.Name}, {"ID", v.Data.ID}, {"State", v.Data.Lifecycle}, {"Access", v.Data.Access.Relationship}})
+	case ports.Result[ports.Inventory]:
+		return o.details([][2]string{{"Inventory", v.Data.Name}, {"ID", v.Data.ID}, {"Household ID", v.Data.TenantID}, {"State", v.Data.Lifecycle}, {"Access", v.Data.Access.Relationship}})
+	case ports.Result[[]ports.Tenant]:
+		for _, item := range v.Data {
+			if _, err := fmt.Fprintf(o.Stdout, "%s\t%s\t%s\n", strconv.Quote(item.ID), strconv.Quote(item.Name), strconv.Quote(item.Lifecycle)); err != nil {
+				return err
+			}
+		}
+		return o.pagination(v.Pagination)
 	case ports.Result[[]ports.Inventory]:
 		for _, item := range v.Data {
 			if _, err := fmt.Fprintf(o.Stdout, "%s\t%s\t%s\n", item.ID, strconv.Quote(item.Name), item.Lifecycle); err != nil {
@@ -103,3 +123,12 @@ func (o Output) Error(category, message string) {
 type SilentObserver struct{}
 
 func (SilentObserver) Event(context.Context, string) {}
+
+func (o Output) details(fields [][2]string) error {
+	for _, field := range fields {
+		if _, err := fmt.Fprintf(o.Stdout, "%-13s %s\n", field[0]+":", strconv.Quote(field[1])); err != nil {
+			return err
+		}
+	}
+	return nil
+}

@@ -16,6 +16,8 @@ type Pagination struct {
 	HasMore    bool    `json:"hasMore"`
 }
 type Inventory struct {
+	TenantID  string `json:"tenantId"`
+	Access    Access `json:"access"`
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Lifecycle string `json:"lifecycleState"`
