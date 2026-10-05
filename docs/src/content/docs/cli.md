@@ -18,6 +18,27 @@ go build -buildvcs=false -o ./stuffstash ./apps/cli/cmd/stuffstash
 ./stuffstash version
 ```
 
+## Help and shell completion
+
+Use `stuffstash --help` for command groups, or `stuffstash assets create --help`
+for the options, scope, confirmation behavior and examples for one command.
+Help does not require sign-in.
+
+With `stuffstash` on your `PATH`, enable completion for the current Bash session:
+
+```sh
+stuffstash completion bash > stuffstash.bash
+source ./stuffstash.bash
+```
+
+For Zsh, use `completion zsh` and source the generated file after `compinit`.
+For Fish, save `completion fish` output as
+`~/.config/fish/completions/stuffstash.fish`. To keep Bash or Zsh completion,
+source the saved file from your shell startup file.
+
+Completion suggests commands and relevant options. It does not look up inventory
+values, read credentials, or contact the server.
+
 ## Sign in
 
 Your administrator must configure a public CLI client with your OIDC provider
@@ -39,13 +60,15 @@ use device-code sign-in if your provider and administrator enable it:
 Open the displayed verification address on your phone or another computer, enter
 the code, and approve sign-in. The CLI waits for approval.
 
-Credentials use your operating system's keyring. On a headless machine without a
+Credentials use your operating system's keyring. On a Unix headless machine without a
 keyring, explicitly choose a private credential file before signing in:
 
 ```sh
 mkdir -m 700 -p "$HOME/.config/stuffstash"
 export STUFF_STASH_CLI_CREDENTIAL_FILE="$HOME/.config/stuffstash/session.json"
 ```
+
+Windows uses Credential Manager and does not support credential files.
 
 The file must remain accessible only to your account. `./stuffstash logout`
 removes the locally stored session for the selected server.

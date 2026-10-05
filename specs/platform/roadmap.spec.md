@@ -15,8 +15,12 @@ the generated SDK. Critical scope and authenticated-request tests, the CLI suite
 and Windows context-file CI have passed. Native Windows run
 [37346221820](https://github.com/elsell/stuffstash/actions/runs/37346221820)
 also passed application, local help, input/output and terminal contracts plus
-a CLI build. Authenticated Windows keyring/bootstrap and real console interaction
-remain unverified. The operation inventory tracks 192
+a CLI build. Native Windows run
+[37347873869](https://github.com/elsell/stuffstash/actions/runs/37347873869)
+also verified the real Credential Manager boundary and server isolation.
+Authenticated Windows bootstrap and real console interaction remain unverified.
+Command-specific help and Bash/Zsh/Fish completion now share reviewed metadata;
+native completion checks passed without adding project dependencies. The operation inventory tracks 192
 contracts; 111 have their known workflow and field gaps closed. The remaining
 81 still need implementation or full contract verification. The scope-override
 persistence preference remains open before release. Search transport is implemented;
