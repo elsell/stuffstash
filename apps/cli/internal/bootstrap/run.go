@@ -174,6 +174,9 @@ const Help = `Stuff Stash CLI
   stuffstash inventories update --input FILE|-
   stuffstash tenants archive|restore|delete [--yes]
   stuffstash inventories archive|restore|delete [--yes]
+  stuffstash notification-preferences update [--input FILE|-]
+  stuffstash notification-preferences override TYPE_ID [--input FILE|-]
+  stuffstash notification-preferences remove-override TYPE_ID --revision N [--yes]
   stuffstash notification-preferences show
   stuffstash notification-preferences initialize [--timezone ZONE | --input FILE|-]
   stuffstash notification-devices show INSTALLATION_ID

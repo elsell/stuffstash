@@ -162,10 +162,10 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
-	if o.Timezone != "" && !isPreferenceWrite(o) {
+	if o.Timezone != "" && !(isPreferenceCommand(o) && len(o.Command) > 1 && o.Command[1] == "initialize") {
 		return o, ports.Failure("usage", "Use --timezone with notification-preferences initialize.")
 	}
-	if o.Revision != -1 && !isNotificationDeviceCommand(o) {
+	if o.Revision != -1 && !isNotificationDeviceCommand(o) && !isPreferenceCommand(o) {
 		return o, ports.Failure("usage", "Use --revision with notification-devices remove.")
 	}
 	if o.UnreadOnly && !isNotificationCommand(o) {

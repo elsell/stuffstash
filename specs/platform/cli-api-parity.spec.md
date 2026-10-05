@@ -599,3 +599,16 @@ mutually exclusive with --timezone. Never infer timezone from the workstation.
 The server validates supported timezone identifiers. Noninteractive calls with
 missing input fail without issuing the mutation. Both commands retain full
 JSON envelopes; initialization shows effective mutation scope on stderr.
+
+`notification-preferences update` replaces defaults, timezone and push state.
+`notification-preferences override TYPE_ID` replaces one type policy. Scripts
+must provide `--input FILE|-` containing every required field and revision.
+Interactive calls without input load current preferences once, retain that
+revision, and offer keyboard choices with the current boolean first. Timezone and
+advance days offer Keep current or Change; Change opens text input. Override editing starts from
+its current override, or defaults if no override exists. No implicit defaults
+may reset omitted fields. A conflict never fetches a newer revision and retries.
+`remove-override TYPE_ID --revision N` removes an override with confirmation;
+terminals may prompt for a missing positive revision. JSON bodies and revision
+flags are mutually exclusive. Show the target type and effective scope before
+mutation. Validation errors and cancellation issue no mutation.

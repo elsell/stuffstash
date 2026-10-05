@@ -177,11 +177,11 @@
         "domain": "notifications",
         "contractSha256": "0225cfa30a37c49a071e94616595827462b83f0ae224548339b1b9e015e25aba"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
-      ]
+      "commands": [
+        "notification-preferences remove-override"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id-read": {
       "contract": {
@@ -2401,11 +2401,11 @@
         "domain": "notifications",
         "contractSha256": "1aae91d8e7869f16ada8c07d0d16f68093fe497f5701b87f77630ab85eac2eae"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
-      ]
+      "commands": [
+        "notification-preferences update"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "put-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-types-by-custom-asset-type-id": {
       "contract": {
@@ -2414,11 +2414,11 @@
         "domain": "notifications",
         "contractSha256": "db8d0fa968075fe7bcfc5b08c9edd3419f6dd475eb3e4ddfe1b75d98112ccef5"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
-      ]
+      "commands": [
+        "notification-preferences override"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id-read": {
       "contract": {

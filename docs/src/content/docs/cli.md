@@ -495,3 +495,15 @@ type overrides, timezone, and revision. Initialize preferences with
 `stuffstash notification-preferences initialize --timezone America/New_York`.
 An interactive terminal can ask for the timezone when omitted. Scripts can also
 supply `--input FILE` or pipe a JSON object through `--input -`.
+
+Run `stuffstash notification-preferences update` in a terminal to edit current
+settings with keyboard choices. Use `override TYPE_ID` to edit a type-specific
+policy. Both preserve the revision loaded at the start and stop if it changes.
+For scripts, pass `--input FILE` with the complete API request, including its
+revision. Update requires `defaults`, `timezone`, and `pushEnabled`; override
+requires `settings`. Policies contain `enabled`, `upcoming`, `expired`, and
+`advanceDays`.
+
+To return a type to the default policy, use
+`stuffstash notification-preferences remove-override TYPE_ID --revision N`.
+Removal asks for confirmation; scripts add `--yes`.
