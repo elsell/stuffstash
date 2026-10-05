@@ -90,6 +90,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		secretInput = prompt
 	}
 	runner := app.Runner{
+		OperationsAPI: func(server, token string) (ports.OperationsAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		SecretInput: secretInput,
 		NotificationPreferencesAPI: func(server, token string) (ports.NotificationPreferencesAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
@@ -177,6 +180,7 @@ const Help = `Stuff Stash CLI
   stuffstash inventories update --input FILE|-
   stuffstash tenants archive|restore|delete [--yes]
   stuffstash inventories archive|restore|delete [--yes]
+  stuffstash operations undo|redo OPERATION_ID [--yes]
   stuffstash notification-preferences update [--input FILE|-]
   stuffstash notification-preferences override TYPE_ID [--input FILE|-]
   stuffstash notification-preferences remove-override TYPE_ID --revision N [--yes]

@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	OperationsAPI              func(string, string) (ports.OperationsAPI, error)
 	SecretInput                ports.SecretInput
 	NotificationPreferencesAPI func(string, string) (ports.NotificationPreferencesAPI, error)
 	NotificationDevicesAPI     func(string, string) (ports.NotificationDevicesAPI, error)
@@ -134,6 +135,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 
+	if isOperationCommand(o) {
+		return r.operationCommand(ctx, o, session.IDToken)
+	}
 	if isPreferenceCommand(o) {
 		return r.preferencesCommand(ctx, o, session.IDToken)
 	}
@@ -253,6 +257,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
+	}
+	if isOperationCommand(o) {
+		return validateOperations(o, requireScope)
 	}
 	if isPreferenceCommand(o) {
 		return validatePreferences(o, requireScope)

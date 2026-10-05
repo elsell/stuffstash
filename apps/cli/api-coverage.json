@@ -2310,11 +2310,11 @@
         "domain": "undoable-operations",
         "contractSha256": "3fba832625f8b8333acceb2a26e780bf421d5b25547cfe952af207e6ea431eb8"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "operations redo"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-undoable-operations-by-operation-id-undo": {
       "contract": {
@@ -2323,11 +2323,11 @@
         "domain": "undoable-operations",
         "contractSha256": "9a403b78bf1b673ad53624a4556e9443fad926b69677d7311baabca0eeb246df"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "operations undo"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-provider-profiles": {
       "contract": {

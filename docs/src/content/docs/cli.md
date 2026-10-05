@@ -514,3 +514,16 @@ revision `0` for a first registration. For scripts, supply `--input FILE` or pip
 JSON with `--input -`; the body contains `installationId`, `transport` (`apns` or
 `fcm`), `token`, and `revision`. Treat this input as secret. The CLI does not
 include the token in results or error messages.
+
+## Undo and redo
+
+Use the `undoableOperationId` returned by a mutation:
+
+```sh
+stuffstash operations undo OPERATION_ID
+stuffstash operations redo OPERATION_ID
+```
+
+These commands require confirmation; scripts add `--yes`. Use an operation ID,
+not an asset ID. The server checks whether the change can still be reversed or
+reapplied. If the result is uncertain, inspect the affected asset before retrying.

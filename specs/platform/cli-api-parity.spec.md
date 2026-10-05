@@ -623,3 +623,14 @@ the shared input-file bound. Detect excess input before the terminal library can
 truncate it, and fail without submitting a partial token. Cancellation restores terminal state and sends no
 mutation. The result and errors contain no token. No automatic retry occurs;
 uncertain results direct the user to lookup by installation ID before retrying.
+
+### Undo and redo
+
+`operations undo OPERATION_ID` and `operations redo OPERATION_ID` call the
+inventory-scoped compensating-operation endpoints. These arguments are operation
+IDs returned by prior mutations, not asset IDs. Display the effective server,
+household, inventory and operation before shared confirmation; scripts require
+`--yes`. The server determines whether the operation can be undone or redone.
+Return the complete asset response, including the next undoable operation ID.
+Do not automatically retry or accept unsupported idempotency keys. If the result
+is uncertain, direct the user to inspect the affected asset before retrying.
