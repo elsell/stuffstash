@@ -546,3 +546,12 @@ Use the opened handle's metadata; never rely only on a pre-open path check.
 Unix opens must be nonblocking before regular-file validation to prevent FIFO
 replacement from hanging. Cancellation closes the owned handle. Do not buffer
 the entire file or expose the full local path as the attachment filename.
+
+`attachments complete-upload ASSET_ID UPLOAD_ID` calls the completion API for
+an existing direct upload in the effective inventory scope. It does not resend
+file bytes or automatically retry. Show the mutation scope, but do not print the
+signed upload token in notices or errors. Return the complete attachment result.
+For uncertain completion (network/protocol/unavailable/generic API failure),
+direct the user to inspect `attachments list ASSET_ID` before another attempt.
+Preserve authentication, authorization and validation errors. This recovery
+command is independent of the default upload-method decision.

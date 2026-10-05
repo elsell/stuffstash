@@ -461,3 +461,8 @@ stuffstash attachments delete ASSET_ID ATTACHMENT_ID --yes
 Archive and delete ask for confirmation. Scripts must pass `--yes`.
 Detail output includes the file size and SHA-256 digest. Add `--json` for the
 complete API result. List supports `--limit` and `--cursor`.
+
+If a direct upload has transferred its bytes but still needs completion, run
+`stuffstash attachments complete-upload ASSET_ID UPLOAD_ID`. Keep the upload ID
+private. This command does not resend the file. If completion returns an
+uncertain result, use `attachments list ASSET_ID` to check before retrying.

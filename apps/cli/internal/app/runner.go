@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	AttachmentUploads  func(string, string) (ports.AttachmentUploads, error)
 	AttachmentsAPI     func(string, string) (ports.AttachmentsAPI, error)
 	TagsAPI            func(string, string) (ports.TagsAPI, error)
 	DirectoryLifecycle func(string, string) (ports.DirectoryLifecycle, error)

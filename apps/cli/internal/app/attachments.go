@@ -14,12 +14,12 @@ func validateAttachments(o Options, requireScope bool) error {
 	}
 	if len(o.Command) == 4 && o.Command[2] != "" && o.Command[3] != "" {
 		switch o.Command[1] {
-		case "show", "archive", "restore", "delete":
+		case "show", "archive", "restore", "delete", "complete-upload":
 			valid = true
 		}
 	}
 	if !valid {
-		return ports.Failure("usage", "Use attachments list ASSET_ID or attachments show, archive, restore, or delete ASSET_ID ATTACHMENT_ID.")
+		return ports.Failure("usage", "Use attachments list ASSET_ID; show, archive, restore, or delete ASSET_ID ATTACHMENT_ID; or complete-upload ASSET_ID UPLOAD_ID.")
 	}
 	if o.IdempotencyKey != "" {
 		return ports.Failure("usage", "Attachment commands do not support retry keys. Remove --idempotency-key.")
@@ -33,6 +33,9 @@ func validateAttachments(o Options, requireScope bool) error {
 	return nil
 }
 func (r Runner) attachmentsCommand(ctx context.Context, o Options, token string) error {
+	if o.Command[1] == "complete-upload" {
+		return r.completeAttachmentUpload(ctx, o, token)
+	}
 	if r.AttachmentsAPI == nil {
 		return ports.Failure("configuration", "Attachment commands are not available. Update the CLI and try again.")
 	}

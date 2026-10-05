@@ -88,6 +88,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		textInput = prompt
 	}
 	runner := app.Runner{
+		AttachmentUploads: func(server, token string) (ports.AttachmentUploads, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		AttachmentsAPI: func(server, token string) (ports.AttachmentsAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
@@ -164,6 +167,7 @@ const Help = `Stuff Stash CLI
   stuffstash inventories archive|restore|delete [--yes]
   stuffstash attachments list ASSET_ID [--limit N --cursor CURSOR]
   stuffstash attachments show ASSET_ID ATTACHMENT_ID
+  stuffstash attachments complete-upload ASSET_ID UPLOAD_ID
   stuffstash attachments archive|restore|delete ASSET_ID ATTACHMENT_ID [--yes]
   stuffstash tags list [--limit N --cursor CURSOR]
   stuffstash tags create --name NAME [--key KEY --tag-color HEX]

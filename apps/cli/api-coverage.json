@@ -2050,11 +2050,11 @@
         "domain": "attachments",
         "contractSha256": "489946baf81a139de8157e068cbead75af3cc72c2669d862aa3248e7789022c1"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "SDK create/direct-upload initiation/completion transport implemented. File inputs, storage transfer, recovery and named CLI workflows remain."
-      ]
+      "commands": [
+        "attachments complete-upload"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkout": {
       "contract": {
