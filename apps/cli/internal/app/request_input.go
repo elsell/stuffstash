@@ -1,7 +1,6 @@
 package app
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
@@ -29,9 +28,8 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		if err != nil {
 			return o, err
 		}
-		trimmed := bytes.TrimSpace(body)
-		if len(trimmed) == 0 || trimmed[0] != '{' || !json.Valid(trimmed) {
-			return o, ports.Failure("input", "The input must contain one JSON object. Correct the JSON and try again.")
+		if err := validateJSONObject(body); err != nil {
+			return o, err
 		}
 		o.RequestBody = body
 	} else {
