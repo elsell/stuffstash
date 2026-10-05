@@ -266,7 +266,7 @@ func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 	}
 	action := o.Command[1]
 	if action == "list" {
-		return api.Assets(ctx, o.Scope, o.Page)
+		return api.Assets(ctx, o.Scope, ports.AssetQuery{Page: o.Page, Lifecycle: o.Lifecycle, Sort: o.Sort})
 	}
 	id := ""
 	if len(o.Command) > 2 {

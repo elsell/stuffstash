@@ -11,6 +11,7 @@ import (
 )
 
 type Options struct {
+	Lifecycle, Sort                                                       string
 	TagColor, TagKey                                                      *string
 	Yes                                                                   bool
 	RequestID                                                             string
@@ -49,6 +50,8 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	flags.SetOutput(io.Discard)
 	flags.Func("tag-color", "tag color as #RRGGBB, or an empty value", func(value string) error { o.TagColor = &value; return nil })
 	flags.Func("key", "stable key for a new tag", func(value string) error { o.TagKey = &value; return nil })
+	flags.StringVar(&o.Lifecycle, "lifecycle", "", "asset lifecycle: active, archived, or all")
+	flags.StringVar(&o.Sort, "sort", "", "asset sort: id_asc or updated_desc")
 	flags.StringVar(&o.RequestID, "request-id", "", "API request correlation ID")
 	flags.StringVar(&o.InputPath, "input", "", "JSON request file, or - for stdin")
 	flags.StringVar(&o.Color, "color", "auto", "color output: auto, always, or never")
@@ -149,6 +152,18 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if o.Lifecycle != "" || o.Sort != "" {
+		if len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "list" {
+			return o, ports.Failure("usage", "Use --lifecycle and --sort only with assets list.")
+		}
+		if o.Lifecycle != "" && o.Lifecycle != "active" && o.Lifecycle != "archived" && o.Lifecycle != "all" {
+			return o, ports.Failure("usage", "Use --lifecycle active, archived, or all.")
+		}
+		if o.Sort != "" && o.Sort != "id_asc" && o.Sort != "updated_desc" {
+			return o, ports.Failure("usage", "Use --sort id_asc or updated_desc.")
+		}
+	}
+
 	if (o.TagColor != nil || o.TagKey != nil) && !isTagCommand(o) {
 		return o, ports.Failure("usage", "Use --tag-color and --key only with tag commands.")
 	}

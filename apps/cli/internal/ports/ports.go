@@ -22,14 +22,6 @@ type Inventory struct {
 	Name      string `json:"name"`
 	Lifecycle string `json:"lifecycleState"`
 }
-type Asset struct {
-	PrintJobID string `json:"printJobId,omitempty"`
-	ID         string `json:"id"`
-	Title      string `json:"title"`
-	Kind       string `json:"kind"`
-	Parent     string `json:"parentAssetId,omitempty"`
-	Lifecycle  string `json:"lifecycleState"`
-}
 type Metadata struct {
 	RequestID  *string     `json:"requestId,omitempty"`
 	TenantID   *string     `json:"tenantId,omitempty"`
@@ -69,7 +61,7 @@ type Session struct {
 type API interface {
 	AuthConfig(context.Context) (AuthConfig, error)
 	Inventories(context.Context, Scope, Page) (Result[[]Inventory], error)
-	Assets(context.Context, Scope, Page) (Result[[]Asset], error)
+	Assets(context.Context, Scope, AssetQuery) (Result[[]Asset], error)
 	Asset(context.Context, Scope, string) (Result[Asset], error)
 	CreateAsset(context.Context, Scope, AssetInput, string) (Result[Asset], error)
 	UpdateAsset(context.Context, Scope, string, AssetChange, string) (Result[Asset], error)

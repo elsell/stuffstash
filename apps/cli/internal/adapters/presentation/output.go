@@ -99,7 +99,7 @@ func (o Output) Result(value any) error {
 		_, err := fmt.Fprintf(o.Stdout, "Saved %s (%s), sha256=%s\n", strconv.Quote(v.Path), v.Format, v.SHA256)
 		return err
 	case ports.Result[ports.Asset]:
-		return o.asset(v.Data)
+		return o.assetDetails(v.Data)
 	default:
 		encoder := json.NewEncoder(o.Stdout)
 		encoder.SetIndent("", "  ")
@@ -111,9 +111,9 @@ func (o Output) printJob(j ports.PrintJobSummary) error {
 	return err
 }
 func (o Output) asset(a ports.Asset) error {
-	_, err := fmt.Fprintf(o.Stdout, "%s\t%s\t%s\t%s\n", a.ID, a.Kind, strconv.Quote(a.Title), a.Lifecycle)
-	if err == nil && a.PrintJobID != "" {
-		_, err = fmt.Fprintf(o.Stdout, "Label job: %s\n", a.PrintJobID)
+	_, err := fmt.Fprintf(o.Stdout, "%s\t%s\t%s\t%s\n", strconv.Quote(a.ID), strconv.Quote(a.Kind), strconv.Quote(a.Title), strconv.Quote(a.Lifecycle))
+	if err == nil && a.PrintJobID != nil {
+		_, err = fmt.Fprintf(o.Stdout, "Label job: %s\n", strconv.Quote(*a.PrintJobID))
 	}
 	return err
 }

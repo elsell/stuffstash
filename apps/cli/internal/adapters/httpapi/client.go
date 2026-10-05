@@ -65,7 +65,9 @@ func read[T any](response *http.Response, err error) (T, error) {
 		}
 		return zero, ports.Failure(category, message)
 	}
-	if err := json.NewDecoder(io.LimitReader(response.Body, 16<<20)).Decode(&zero); err != nil {
+	decoder := json.NewDecoder(io.LimitReader(response.Body, 16<<20))
+	decoder.UseNumber()
+	if err := decoder.Decode(&zero); err != nil {
 		return zero, ports.Failure("protocol", "invalid Stuff Stash response")
 	}
 	return zero, nil
@@ -84,22 +86,11 @@ func page(meta generated.Meta) *ports.Pagination {
 	}
 	return &ports.Pagination{Limit: p.Limit, NextCursor: cursor, HasMore: p.HasMore}
 }
-func asset(a generated.AssetResponse) ports.Asset {
-	p := ""
-	if a.ParentAssetId != nil {
-		p = *a.ParentAssetId
-	}
-	printJobID := ""
-	if a.PrintJobId != nil {
-		printJobID = *a.PrintJobId
-	}
-	return ports.Asset{PrintJobID: printJobID, ID: a.Id, Title: a.Title, Kind: a.Kind, Parent: p, Lifecycle: a.LifecycleState}
-}
 func assetResult(r generated.SuccessEnvelopeAssetResponse, err error) (ports.Result[ports.Asset], error) {
 	if err != nil {
 		return ports.Result[ports.Asset]{}, err
 	}
-	return ports.Result[ports.Asset]{Data: asset(r.Data)}, nil
+	return ports.Result[ports.Asset]{Data: asset(r.Data), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }
 func (c *Client) Inventories(ctx context.Context, s ports.Scope, p ports.Page) (ports.Result[[]ports.Inventory], error) {
 	r, err := read[generated.SuccessEnvelopeListInventoryResponse](c.sdk.GetTenantsByTenantIdInventories(ctx, s.Tenant, &generated.GetTenantsByTenantIdInventoriesParams{Limit: &p.Limit, Cursor: &p.Cursor}))
@@ -115,13 +106,16 @@ func (c *Client) Inventories(ctx context.Context, s ports.Scope, p ports.Page) (
 	}
 	return ports.Result[[]ports.Inventory]{Data: items, Pagination: page(r.Meta), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }
-func (c *Client) Assets(ctx context.Context, s ports.Scope, p ports.Page) (ports.Result[[]ports.Asset], error) {
-	r, err := read[generated.SuccessEnvelopeListAssetResponse](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdAssets(ctx, s.Tenant, s.Inventory, &generated.GetTenantsByTenantIdInventoriesByInventoryIdAssetsParams{Limit: &p.Limit, Cursor: &p.Cursor}))
+func (c *Client) Assets(ctx context.Context, s ports.Scope, query ports.AssetQuery) (ports.Result[[]ports.Asset], error) {
+	r, err := read[assetListResponse](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdAssets(ctx, s.Tenant, s.Inventory, assetQuery(query)))
 	if err != nil {
 		return ports.Result[[]ports.Asset]{}, err
 	}
-	items := make([]ports.Asset, 0)
-	for _, v := range r.Data.GetOrEmpty() {
+	var items []ports.Asset
+	if r.Data != nil {
+		items = make([]ports.Asset, 0, len(r.Data))
+	}
+	for _, v := range r.Data {
 		items = append(items, asset(v))
 	}
 	return ports.Result[[]ports.Asset]{Data: items, Pagination: page(r.Meta), Schema: r.Schema, Meta: metadata(r.Meta)}, nil

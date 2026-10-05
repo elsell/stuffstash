@@ -684,11 +684,11 @@
         "domain": "assets",
         "contractSha256": "dca73be97313ef75c02c132923fe12449980da13bfda76321f83a023f5c8df97"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id": {
       "contract": {
@@ -697,11 +697,11 @@
         "domain": "assets",
         "contractSha256": "2292d1e42506476aa0825ddde0769b558273938ac12ea2ff35fafbd37c50396e"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-activity": {
       "contract": {

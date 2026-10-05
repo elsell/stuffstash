@@ -168,7 +168,8 @@ const Help = `Stuff Stash CLI
   stuffstash inventories show [--tenant ID --inventory ID]
   stuffstash tenants list [--limit N --cursor CURSOR]
   stuffstash inventories list --tenant ID
-  stuffstash assets list --tenant ID --inventory ID [--limit N --cursor CURSOR]
+  stuffstash assets list [--tenant ID --inventory ID --limit N --cursor CURSOR]
+                       [--lifecycle active|archived|all --sort id_asc|updated_desc]
   stuffstash assets show ID
   stuffstash assets create --kind item|container|location --title TITLE [--print-label]
   stuffstash assets update ID --title TITLE

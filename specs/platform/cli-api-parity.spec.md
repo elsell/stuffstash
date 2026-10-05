@@ -351,3 +351,25 @@ Command dispatch must fail closed: an unhandled command family must never fall
 through to another domain's execution path. The legacy asset executor accepts
 only asset commands and its explicitly supported inventory-list route. This
 check protects new command integrations from accidentally mutating assets.
+
+### Complete asset reads
+
+`assets list` accepts --lifecycle active|archived|all and --sort id_asc|updated_desc
+in addition to pagination. Omitted filters retain API defaults. Reject unknown
+values and use of these options outside asset lists. Asset list and detail JSON
+preserve every asset field: scope, description, timestamps, nullable expiration,
+expiration context, tags, custom fields/type, checkout state/principal, primary
+photo/thumbnails, parent, print job, and undoable operation. Preserve absent
+optional strings versus present empty strings and null versus empty tags.
+Arbitrary custom-field numbers must retain their JSON precision rather than
+passing through float64. JSON includes response schema and metadata.
+
+Human asset details show the title, identity/scope, kind, lifecycle, description,
+location parent, expiration and checkout state, assigned tags, and custom fields.
+List output remains compact. Generated SDK models remain confined to the HTTP
+adapter; project-owned response models cross the port.
+
+The HTTP adapter must bypass the generated nullable list decoder for asset
+lists because it resets JSON number handling. Embed the generated envelope and
+decode its data directly into generated asset models with `UseNumber`, preserving
+null versus empty lists without changing the SDK.

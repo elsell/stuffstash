@@ -133,6 +133,14 @@ export STUFF_STASH_CLI_INVENTORY=YOUR_INVENTORY_ID
 ./stuffstash assets restore ASSET_ID
 ```
 
+List archived assets with `assets list --lifecycle archived`, or include both states
+with `--lifecycle all`. Use `--sort updated_desc` to put recently changed assets
+first; `id_asc` is also supported.
+
+`assets show` displays the location ID, tags, expiration, checkout, and custom
+fields. Its JSON output retains the complete asset response, including photo
+metadata, request metadata, and exact custom-field numbers.
+
 Use `--parent root` to move an asset out of a container. Add `--json` for structured
 output. Add `--request-id ID` to correlate API requests with server logs; this
 does not prevent duplicate writes. Directory JSON includes the API metadata
