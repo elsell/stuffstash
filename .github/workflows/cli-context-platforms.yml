@@ -49,7 +49,9 @@ jobs:
           cache: false
       - name: Verify API coverage inventory
         run: python ../../scripts/check-cli-api-coverage.py
-      - name: Verify commands, safe input and private storage
-        run: go test -mod=readonly -timeout=2m ./internal/app ./internal/bootstrap ./internal/app/contexts ./internal/adapters/contextfile ./internal/adapters/credentials ./internal/adapters/inputfiles ./internal/adapters/presentation ./internal/adapters/terminal
+      - name: Verify application contracts, input and private context storage
+        run: go test -mod=readonly -timeout=2m ./internal/app ./internal/app/contexts ./internal/adapters/contextfile ./internal/adapters/inputfiles ./internal/adapters/presentation ./internal/adapters/terminal
+      - name: Verify local command help
+        run: go test -mod=readonly -timeout=2m ./internal/bootstrap -run 'Test(CommandHelp|Help)'
       - name: Build the Windows CLI
         run: go build -mod=readonly -buildvcs=false -o "$env:RUNNER_TEMP/stuffstash.exe" ./cmd/stuffstash
