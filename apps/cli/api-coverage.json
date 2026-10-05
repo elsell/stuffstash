@@ -22,9 +22,9 @@
         "contractSha256": "8419e2885fe6f79116f3d9e370ca77874c72a41b33c0267fb1f4352411ab9370"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK metadata transport implemented, including optional inventory filters and full job/preview fields. CLI default filter decision, commands, confirmation and presentation remain."
       ]
     },
     "delete-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id": {
@@ -360,9 +360,9 @@
         "contractSha256": "53263251442535cdfba4cb5d3aeef43b21b496054b0b15037fd37d4f49e69aca"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK metadata transport implemented, including optional inventory filters and full job/preview fields. CLI default filter decision, commands, confirmation and presentation remain."
       ]
     },
     "get-tenants-by-tenant-id-archive-jobs-by-job-id": {
@@ -373,9 +373,9 @@
         "contractSha256": "4f03b5babac162d6fc051d47259ce631f30e5a8cd1a6f7f1aea11363bae06147"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK metadata transport implemented, including optional inventory filters and full job/preview fields. CLI default filter decision, commands, confirmation and presentation remain."
       ]
     },
     "get-tenants-by-tenant-id-archive-jobs-by-job-id-preview": {
@@ -386,9 +386,9 @@
         "contractSha256": "4cc140544623c7345862e08a7b82fe7fc55778d601bb823835bfb7d8bd5fb244"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK metadata transport implemented, including optional inventory filters and full job/preview fields. CLI default filter decision, commands, confirmation and presentation remain."
       ]
     },
     "get-tenants-by-tenant-id-audit-records": {
@@ -1817,9 +1817,9 @@
         "contractSha256": "4eb9deefa15bdf065deb0a41b21266490688cf698de847a18501e2880fb5c3ab"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK metadata transport implemented, including optional inventory filters and full job/preview fields. CLI default filter decision, commands, confirmation and presentation remain."
       ]
     },
     "post-tenants-by-tenant-id-conversation-evaluation-cases": {

@@ -765,3 +765,16 @@ CLI itself never connects to the supplied import source. Both endpoints return
 the complete mapped job envelope. Server error bodies must not expose source
 credentials. CLI source-input interaction is pending user design confirmation;
 transport implementation alone is partial API coverage.
+
+### Archive job transport
+
+Archive job adapters preserve household scope and an optional inventory filter
+on list, detail, preview, retry and deletion. List passes limit and the opaque
+API `after` value without interpreting it. Retain every archive job/preview field,
+key remapping, timestamp, nullable inventory reference, schema and metadata.
+Retry performs exactly one request; deletion requires no-content success. No
+archive bytes are downloaded or unpacked by these metadata operations. The
+command-level default inventory filter is a pending user design choice; these
+adapters alone count as partial coverage. Critical transport tests verify exact
+scope/filter/routes, cross-household denial, 64-bit preview counts, nullable
+fields, retry single submission and deletion status.
