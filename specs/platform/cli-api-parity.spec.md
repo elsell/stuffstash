@@ -213,3 +213,46 @@ cancellation. Cross-compilation and Wine are supplementary evidence only.
 Windows file creation explicitly assigns the current user as owner and installs
 the private DACL atomically, including under elevated accounts. Creation stays
 relative to the opened directory handle and rejects reparse points.
+
+Scope picker implementation uses `golang.org/x/term` v0.38.0 for terminal
+detection, raw mode and restoration. It reuses the existing pinned x/sys
+dependency; no full-screen TUI framework is required. Prompts require terminal
+stdin, stdout and stderr and are disabled by JSON output or --no-input. Catalog
+queries use the generated SDK, include all authorized pages, and reject missing
+or repeated continuation cursors. IDs disambiguate duplicate display names.
+
+Only a completed scope picker flow persists the complete selected scope; explicit
+flags or environment overrides alone never replace saved defaults. Reuse an
+existing matching account/server context. If none exists, use the endpoint as
+its default name; append a stable account-key suffix only to avoid a name conflict.
+
+Picker rows reserve space for identifiers independently of display names. On
+Windows, enable virtual-terminal output for the prompt and restore the previous
+console mode when it ends.
+
+`apps/cli/api-coverage.json` records each OpenAPI operation, its contract
+fingerprint, named commands, implementation status and remaining gaps. The
+fingerprint includes referenced schemas so nested field changes cannot pass
+unnoticed. `scripts/check-cli-api-coverage.py` checks drift; --update records a
+new baseline without claiming implementation, and --require-complete rejects
+pending or partial entries. This inventory is traceability, not runtime proof.
+
+### Household discovery command
+
+`tenants list` lists the signed-in account's households without requiring or
+selecting a tenant or inventory. It supports `--limit` and `--cursor`, preserves
+access relationship and permissions in JSON, and displays ID, name, and lifecycle
+in terminal output. This command uses the same generated-SDK catalog adapter as
+the scope picker. An authorization denial must not expose server error details.
+
+### Account and selected-scope details
+
+`account show` returns the signed-in principal without requiring resource scope.
+`tenants show` returns the selected household and requires only tenant scope.
+`inventories show` returns the selected inventory and requires both scopes.
+Each accepts explicit scope options or saved scope; interactive selection asks
+only for the levels the command needs. JSON includes every resource field,
+including access permissions and inventory tenant ID. These read commands use a
+directory port implemented by the generated SDK adapter. Account-wide reads run
+before saved resource-scope resolution so unrelated context ambiguity cannot
+prevent account discovery.
