@@ -19,6 +19,10 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[ports.ServerInfo]:
+		return o.details([][2]string{{"Instance ID", v.Data.InstanceID}, {"Protocol version", strconv.FormatInt(v.Data.ProtocolVersion, 10)}})
+	case ports.Result[ports.ServerAuthConfig]:
+		return o.serverAuthConfig(v.Data)
 	case ports.Result[ports.InvitationPreview]:
 		return o.invitationPreview(v.Data)
 	case ports.Result[ports.InvitationAcceptance]:

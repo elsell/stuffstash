@@ -723,3 +723,14 @@ automatically; after an uncertain response instruct the user to preview again.
 Critical tests cover scoped token requests, confirmation, safe errors, and no
 secret in output or diagnostics. JSON acceptance emits only the acceptance result;
 preview context for confirmation goes to stderr.
+
+### Public server discovery
+
+`server show` returns instance identity and protocol version. `server auth-config`
+returns the complete CLI authentication metadata, including issuer, client ID,
+scopes, login methods and loopback redirect policy. Both use the configured server
+without loading credentials, refreshing sessions, selecting scope or following
+redirects. Preserve JSON schema and response metadata; human output shows all
+fields with quoted server text. These commands do not sign in or open an issuer.
+Reject mutation/input options. Critical verification covers operation without a
+credential file, no Authorization header, full response and safe server errors.

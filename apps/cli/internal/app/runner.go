@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	ServerAPI                  func(string) (ports.ServerAPI, error)
 	InvitationsAPI             func(string, string) (ports.InvitationsAPI, error)
 	AccessGrantsAPI            func(string, string) (ports.AccessGrantsAPI, error)
 	ActivityAPI                func(string, string) (ports.ActivityAPI, error)
@@ -54,6 +55,8 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return r.contextCommand(ctx, o.Command)
 	}
 	switch o.Command[0] {
+	case "server":
+		return r.serverCommand(ctx, o)
 	case "login":
 		if len(o.Command) != 1 {
 			return ports.Failure("usage", "login takes no positional arguments")

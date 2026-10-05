@@ -90,6 +90,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		secretInput = prompt
 	}
 	runner := app.Runner{
+		ServerAPI: func(server string) (ports.ServerAPI, error) {
+			return httpapi.New(server, "", client, httpapi.Options{RequestID: options.RequestID})
+		},
 		InvitationsAPI: func(server, token string) (ports.InvitationsAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
@@ -195,6 +198,7 @@ const Help = `Stuff Stash CLI
   stuffstash tenants audit [--limit N --cursor CURSOR]
   stuffstash inventories audit [--limit N --cursor CURSOR]
   stuffstash assets audit ASSET_ID [--limit N]
+  stuffstash server show|auth-config
   stuffstash invitations preview|accept ID [--input FILE|-] [--yes]
   stuffstash invitations expiration ID [--input FILE|-] [--yes]
   stuffstash invitations list [--status STATUS --limit N --cursor CURSOR]

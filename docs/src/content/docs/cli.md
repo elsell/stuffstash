@@ -596,3 +596,10 @@ the destination and role before confirmation. Scripts use `--input FILE --yes`,
 with `{"acceptanceToken":"TOKEN"}` in the file. Use `--input -` for JSON on stdin.
 Keep the token private. If the acceptance result is unknown, preview the same
 invitation before retrying.
+
+### Inspect your server
+
+`stuffstash server show` displays the instance ID and protocol version.
+`stuffstash server auth-config` shows the server's CLI login configuration.
+Neither command requires a login or inventory selection. Add `--json` for the
+complete API response, or `--server URL` to inspect another server.

@@ -229,11 +229,11 @@
         "domain": "identity",
         "contractSha256": "47172ca351c0e25c37cb12d0ce09e9368aea96e9c5a026199945e3da567fe772"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "server auth-config"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-instance": {
       "contract": {
@@ -242,11 +242,11 @@
         "domain": "labels",
         "contractSha256": "231e734dbc9f439ee270289725cac12d3af9d19849a896c2389d2ffd80197b77"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "server show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-labels-v1-by-instance-id-by-label-id": {
       "contract": {
