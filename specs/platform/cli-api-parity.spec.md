@@ -555,3 +555,16 @@ For uncertain completion (network/protocol/unavailable/generic API failure),
 direct the user to inspect `attachments list ASSET_ID` before another attempt.
 Preserve authentication, authorization and validation errors. This recovery
 command is independent of the default upload-method decision.
+
+### Notification inbox
+
+Provide `notifications list [--unread-only]`, `show ID`, `unread-count`, `read ID`,
+`unread ID`, and `read-all` in the effective inventory. List uses pagination;
+list, unread-count and read-all preserve the API cursor. List limit is 1–100 and
+cursor is at most 128 characters. Keep all notification fields, nullable ancestor
+trails, optional read timestamps, response metadata and pagination. Read actions
+are reversible inbox-state changes and do not require destructive confirmation.
+Show their effective scope on stderr. Read-all must preserve the API's complete
+flag and pagination; do not claim the whole inbox was marked when complete is
+false. Do not automatically retry mutations. Human output must expose unread
+state, expiration, asset reference and location; quote untrusted text.

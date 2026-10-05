@@ -88,6 +88,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		textInput = prompt
 	}
 	runner := app.Runner{
+		NotificationsAPI: func(server, token string) (ports.NotificationsAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		AttachmentUploads: func(server, token string) (ports.AttachmentUploads, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
@@ -165,6 +168,9 @@ const Help = `Stuff Stash CLI
   stuffstash inventories update --input FILE|-
   stuffstash tenants archive|restore|delete [--yes]
   stuffstash inventories archive|restore|delete [--yes]
+  stuffstash notifications list [--unread-only --limit N --cursor CURSOR]
+  stuffstash notifications show|read|unread ID
+  stuffstash notifications unread-count|read-all [--cursor CURSOR]
   stuffstash attachments list ASSET_ID [--limit N --cursor CURSOR]
   stuffstash attachments show ASSET_ID ATTACHMENT_ID
   stuffstash attachments complete-upload ASSET_ID UPLOAD_ID

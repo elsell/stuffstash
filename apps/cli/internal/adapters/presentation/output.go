@@ -19,6 +19,23 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[[]ports.Notification]:
+		return o.notificationList(v)
+	case ports.Result[ports.Notification]:
+		return o.notificationDetails(v.Data)
+	case ports.Result[ports.NotificationRead]:
+		return o.details([][2]string{{"ID", v.Data.ID}, {"Read", strconv.FormatBool(v.Data.Read)}})
+	case ports.Result[ports.NotificationCount]:
+		if err := o.details([][2]string{{"Unread", strconv.FormatInt(v.Data.Count, 10)}}); err != nil {
+			return err
+		}
+		return o.pagination(v.Pagination)
+	case ports.Result[ports.NotificationReadAll]:
+		if err := o.details([][2]string{{"Complete", strconv.FormatBool(v.Data.Complete)}}); err != nil {
+			return err
+		}
+		return o.pagination(v.Pagination)
+
 	case ports.Result[ports.Attachment]:
 		return o.attachmentDetails(v.Data)
 	case ports.Result[[]ports.Attachment]:

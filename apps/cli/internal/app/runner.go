@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	NotificationsAPI   func(string, string) (ports.NotificationsAPI, error)
 	AttachmentUploads  func(string, string) (ports.AttachmentUploads, error)
 	AttachmentsAPI     func(string, string) (ports.AttachmentsAPI, error)
 	TagsAPI            func(string, string) (ports.TagsAPI, error)
@@ -130,6 +131,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 
+	if isNotificationCommand(o) {
+		return r.notificationsCommand(ctx, o, session.IDToken)
+	}
 	if isAttachmentCommand(o) {
 		return r.attachmentsCommand(ctx, o, session.IDToken)
 	}
@@ -240,6 +244,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
+	}
+	if isNotificationCommand(o) {
+		return validateNotifications(o, requireScope)
 	}
 	if isAttachmentCommand(o) {
 		return validateAttachments(o, requireScope)

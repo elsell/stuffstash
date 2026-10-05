@@ -466,3 +466,19 @@ If a direct upload has transferred its bytes but still needs completion, run
 `stuffstash attachments complete-upload ASSET_ID UPLOAD_ID`. Keep the upload ID
 private. This command does not resend the file. If completion returns an
 uncertain result, use `attachments list ASSET_ID` to check before retrying.
+
+## Review notifications
+
+```sh
+stuffstash notifications list --unread-only
+stuffstash notifications show NOTIFICATION_ID
+stuffstash notifications read NOTIFICATION_ID
+stuffstash notifications unread NOTIFICATION_ID
+stuffstash notifications unread-count
+stuffstash notifications read-all
+```
+
+Commands use your selected inventory. List supports `--limit` and `--cursor`.
+Unread count and read-all also accept a cursor. If read-all reports
+`Complete: false`, use the returned cursor to continue. Add `--json` to retain
+all notification fields and response metadata in scripts.

@@ -190,11 +190,11 @@
         "domain": "notifications",
         "contractSha256": "23158b4faa2399cbf1027839885d7eb8661863cadb0f43a9282b66b02e48377d"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "notifications unread"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-tags-by-tag-id": {
       "contract": {
@@ -944,11 +944,11 @@
         "domain": "notifications",
         "contractSha256": "0672417874ea92e2d483b3d9100094c3e74af185e6a73122b723135730c12bc9"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "notifications list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id": {
       "contract": {
@@ -957,11 +957,11 @@
         "domain": "notifications",
         "contractSha256": "8ee4fcd150c4c3f5694bf3f7eb5cf3c8b58bcd2dc23d665567f11fefa54ba17b"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "notifications show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-notifications-unread-count": {
       "contract": {
@@ -970,11 +970,11 @@
         "domain": "notifications",
         "contractSha256": "40033e25b1f6e7dcdb18ad2076a2ab50185bc0437c741ed6bddfe197913bd3ca"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "notifications unread-count"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors": {
       "contract": {
@@ -2427,11 +2427,11 @@
         "domain": "notifications",
         "contractSha256": "75e1ac25fd9bd92cbe342cd913cadc849e58fd67c9f3986ed2e969dbdc23aca2"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "notifications read"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-read-all": {
       "contract": {
@@ -2440,11 +2440,11 @@
         "domain": "notifications",
         "contractSha256": "a9f0860b21465b4c1fedfd2282af5e72e34f39451070f7d46c02c6f437d8d660"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "notifications read-all"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "put-tenants-by-tenant-id-inventories-by-inventory-id-print-settings": {
       "contract": {
