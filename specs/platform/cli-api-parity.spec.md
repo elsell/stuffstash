@@ -456,3 +456,15 @@ numbers, and null/empty distinctions. Generated SDK methods remain the transport
 boundary. Search default scope and saved-default behavior after a one-time scope
 override remain pending user decisions; transport support does not imply a
 complete CLI search command.
+
+### Custom asset type transport
+
+Support all seven custom asset type operations at both household and inventory
+scope: list, show, create, update, archive, restore, and delete. The transport
+requires an explicit typed scope level and IDs; an unknown level or missing ID
+must fail before any request, never fall back to household scope. List supports
+lifecycle and pagination. Writes preserve the complete supplied JSON object;
+results retain every type field, optional inventory ID, metadata and schema.
+Delete succeeds only on the documented 204 response. Use generated SDK routes
+for every operation. CLI scope syntax remains a pending user decision; these
+transport operations alone do not count as completed CLI workflows.
