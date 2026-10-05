@@ -90,6 +90,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		secretInput = prompt
 	}
 	runner := app.Runner{
+		ProviderProfilesAPI: func(server, token string) (ports.ProviderProfilesAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		ImportJobsAPI: func(server, token string) (ports.ImportJobsAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
@@ -201,6 +204,7 @@ const Help = `Stuff Stash CLI
   stuffstash tenants audit [--limit N --cursor CURSOR]
   stuffstash inventories audit [--limit N --cursor CURSOR]
   stuffstash assets audit ASSET_ID [--limit N]
+  stuffstash provider-profiles list|show PROFILE_ID
   stuffstash import-jobs cancel JOB_ID [--input FILE|-] [--yes]
   stuffstash import-jobs list|show JOB_ID|delete JOB_ID [--yes]
   stuffstash server show|auth-config

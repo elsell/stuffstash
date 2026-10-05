@@ -624,3 +624,13 @@ with `{"mode":"keep_partial_progress"}` or
 `{"mode":"discard_partial_progress"}`. Discarding can remove imported records.
 Cancellation can continue in the background; use `import-jobs show JOB_ID` to
 inspect its current state.
+
+### Inspect model providers
+
+Use `stuffstash provider-profiles list` to see model providers in the selected
+household. Use `stuffstash provider-profiles show PROFILE_ID` to inspect a
+provider's configuration, credential status and last test time. These commands
+do not require an inventory and do not test or change the provider.
+
+Use `--json --no-input` for scripts. JSON includes all profile configuration
+and response metadata. Credential values are never returned.

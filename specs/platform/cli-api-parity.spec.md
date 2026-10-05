@@ -811,3 +811,16 @@ state before repeating a change. Rate limiting gives wait guidance with the same
 existing `api` category. No error includes raw server bodies, credentials or URLs
 from transport exceptions. Critical tests verify categories, actionable recovery
 and private-body suppression at real SDK HTTP boundaries.
+
+### Provider profile inspection
+
+`provider-profiles list` and `provider-profiles show PROFILE_ID` use the
+selected household without requiring an inventory. Both use the generated SDK.
+JSON preserves every documented profile field, arbitrary configuration values
+without numeric precision loss, and response metadata. Human lists show identity,
+capability, provider, model and state; detail output includes all configuration
+and credential status fields. Credentials remain write-only; undeclared response
+fields must not become output. Neither command probes or changes the provider.
+Reject unsupported cursors and mutation input before authentication. Critical
+checks exercise real CLI/SDK scope, full output, numeric precision, denial and
+private response suppression.

@@ -166,6 +166,17 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if isProviderProfileCommand(o) {
+		unsupported := ""
+		flags.Visit(func(f *flag.Flag) {
+			if f.Name == "limit" {
+				unsupported = f.Name
+			}
+		})
+		if unsupported != "" {
+			return o, ports.Failure("usage", "Provider profile reads do not support --limit. Remove the option.")
+		}
+	}
 	if o.Timezone != "" && !(isPreferenceCommand(o) && len(o.Command) > 1 && o.Command[1] == "initialize") {
 		return o, ports.Failure("usage", "Use --timezone with notification-preferences initialize.")
 	}

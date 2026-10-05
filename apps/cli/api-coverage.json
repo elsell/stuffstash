@@ -1100,11 +1100,11 @@
         "domain": "provider profiles",
         "contractSha256": "58d0890ff2ea8e52bdf4286bc5f7ac78ef51a9490ffe6d5842e1470e37a9f3a3"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "provider-profiles list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-provider-profiles-by-provider-profile-id": {
       "contract": {
@@ -1113,11 +1113,11 @@
         "domain": "provider profiles",
         "contractSha256": "f33f68f86ea6597e6ec75b270aafe7347b8a854848d7f4a84223f45efe034577"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "provider-profiles show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-search-assets": {
       "contract": {
