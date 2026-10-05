@@ -29,3 +29,7 @@ func (o Output) invitations(r ports.Result[[]ports.Invitation]) error {
 	}
 	return o.pagination(r.Pagination)
 }
+
+func (o Output) invitationPreview(v ports.InvitationPreview) error {
+	return o.details([][2]string{{"Inventory", v.InventoryName}, {"Inventory ID", v.InventoryID}, {"Role", string(v.Relationship)}, {"Status", v.Status}, {"Expires", v.ExpiresAt}, {"Expired", strconv.FormatBool(v.IsExpired)}})
+}

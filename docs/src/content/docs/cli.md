@@ -580,3 +580,19 @@ Use `stuffstash invitations expiration INVITATION_ID` to change a pending
 invitation's deadline. Enter a timestamp with a timezone, such as
 `2030-01-01T12:00:00Z`. Scripts can supply a JSON file containing
 `{"expiresAt":"2030-01-01T12:00:00Z"}` with `--input FILE --yes`.
+
+### Accept an invitation
+
+Use the household, inventory and invitation IDs from the invitation. The inventory
+may not appear in your picker until you accept it.
+
+```sh
+stuffstash invitations preview INVITATION_ID --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
+stuffstash invitations accept INVITATION_ID --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
+```
+
+The terminal asks for the acceptance token without showing it. Acceptance shows
+the destination and role before confirmation. Scripts use `--input FILE --yes`,
+with `{"acceptanceToken":"TOKEN"}` in the file. Use `--input -` for JSON on stdin.
+Keep the token private. If the acceptance result is unknown, preview the same
+invitation before retrying.

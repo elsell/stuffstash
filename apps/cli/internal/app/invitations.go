@@ -9,11 +9,11 @@ import (
 func isInvitationCommand(o Options) bool { return len(o.Command) > 0 && o.Command[0] == "invitations" }
 func validateInvitations(o Options, scope bool) error {
 	valid := len(o.Command) == 2 && o.Command[1] == "list"
-	if len(o.Command) == 3 && o.Command[2] != "" && (o.Command[1] == "expiration" || o.Command[1] == "show" || o.Command[1] == "cancel" || o.Command[1] == "delete") {
+	if len(o.Command) == 3 && o.Command[2] != "" && (o.Command[1] == "preview" || o.Command[1] == "accept" || o.Command[1] == "expiration" || o.Command[1] == "show" || o.Command[1] == "cancel" || o.Command[1] == "delete") {
 		valid = true
 	}
 	if !valid {
-		return ports.Failure("usage", "Use invitations list, show ID, expiration ID, cancel ID, or delete ID.")
+		return ports.Failure("usage", "Use invitations list, show ID, preview ID, accept ID, expiration ID, cancel ID, or delete ID.")
 	}
 	if o.InvitationStatus != "" {
 		switch o.InvitationStatus {
@@ -40,6 +40,8 @@ func (r Runner) invitationCommand(ctx context.Context, o Options, token string) 
 	}
 	var result any
 	switch o.Command[1] {
+	case "preview", "accept":
+		return r.invitationTokenCommand(ctx, o, api)
 	case "expiration":
 		return r.updateInvitationExpiration(ctx, o, api)
 	case "list":

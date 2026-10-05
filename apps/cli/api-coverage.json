@@ -1985,11 +1985,11 @@
         "domain": "inventory access",
         "contractSha256": "8722508a39e692729174ba895c9770fec00384e909545ef96b7cf51d00f870f9"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "invitations accept"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-preview": {
       "contract": {
@@ -1998,11 +1998,11 @@
         "domain": "inventory access",
         "contractSha256": "35a5a32c1b1e85d30cfe288cc3efce49c18ec4c38ef1146545fc685a5582befd"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "invitations preview"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-assets": {
       "contract": {

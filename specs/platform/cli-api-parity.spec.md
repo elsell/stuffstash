@@ -704,3 +704,22 @@ Show the scope, invitation and requested timestamp, then require confirmation
 (or --yes). Preserve the supplied JSON in the SDK request, and all invitation
 fields in the response. On an uncertain response, direct users to inspect the
 invitation before retrying. The server decides whether the expiration is allowed.
+
+### Invitation preview and acceptance
+
+`invitations preview ID` and `invitations accept ID` take the invitation's
+household and inventory scope and an acceptanceToken object through --input
+FILE|-; terminals without input use hidden token entry. Never accept the token
+as a command-line argument or print it in diagnostics. A nonempty token is
+required before authentication. Explicit scope from the invitation works before
+the recipient has access to the inventory; saved/interactive scope mechanics
+remain available for already visible inventories.
+Preview returns every preview field without granting access. Accept first reads
+the preview, displays its inventory name/ID, role, status and expiry plus the
+explicit server/household/invitation, and then requires confirmation or --yes.
+The server remains authoritative for token, email and expiration checks. Return
+the complete invitation and grant acceptance envelope. Do not retry acceptance
+automatically; after an uncertain response instruct the user to preview again.
+Critical tests cover scoped token requests, confirmation, safe errors, and no
+secret in output or diagnostics. JSON acceptance emits only the acceptance result;
+preview context for confirmation goes to stderr.
