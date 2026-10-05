@@ -1127,9 +1127,9 @@
         "contractSha256": "ece2bf536a2cec4b87a640e5e225d385711c1fdddfb975a7c5a2306299dd7ab1"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Transport and response mapping implemented. CLI command, human output, and scope-default decision remain."
       ]
     },
     "get-tenants-by-tenant-id-voice-provider-configuration": {

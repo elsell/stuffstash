@@ -15,7 +15,8 @@ the generated SDK. Critical scope and authenticated-request tests, the CLI suite
 and Windows context-file CI have passed. The operation inventory tracks 192
 contracts; 32 have their known workflow and field gaps closed. The remaining
 160 still need implementation or full contract verification. The scope-override
-persistence preference remains open before release.
+persistence preference remains open before release. Search transport is implemented;
+search command scope defaults await user input.
 
 
 ## Labels, Printers, And CLI: Released — October 4, 2026

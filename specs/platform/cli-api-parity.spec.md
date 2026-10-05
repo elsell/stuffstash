@@ -445,3 +445,14 @@ on unrelated commands. Keep query text and repeated tag IDs intact through the
 SDK. Preserve complete items, ancestor paths, counts, timezone, metadata, and
 exact custom-field numbers. Human output shows counts, timezone, expiration
 state/date, item titles, paths, and pagination. JSON retains the API shape.
+
+### Asset search transport
+
+The search adapter supports every GET /tenants/{tenantId}/search/assets filter:
+optional inventory scope, query, fuzzy/exact mode, repeated tag IDs, custom type,
+lifecycle, checkout state, limit, and cursor. It preserves full asset summaries,
+inventory names, match explanations, ancestor paths, metadata, exact custom-field
+numbers, and null/empty distinctions. Generated SDK methods remain the transport
+boundary. Search default scope and saved-default behavior after a one-time scope
+override remain pending user decisions; transport support does not imply a
+complete CLI search command.
