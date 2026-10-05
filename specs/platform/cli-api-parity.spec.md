@@ -511,3 +511,13 @@ body and return a safe error; API credentials must not follow redirects.
 Thumbnail variants are small, medium, large, or omitted for the server default.
 Reject unknown variants before network access. File destination policy is a
 pending user decision; transport coverage alone remains partial.
+
+Upload transport supports the JSON attachment-create operation, direct-upload
+initiation, and completion. Accept JSON readers so the adapter does not impose
+the text-input limit on encoded file content or duplicate large bodies. Preserve
+all direct-upload response fields: upload/attachment IDs, method, URL, headers,
+form fields and expiry, plus envelope metadata. These instructions are data,
+not permission for the authenticated API client to visit the storage URL.
+Never retry a create or completion automatically; an uncertain result must be
+resolved by the calling workflow. File upload guidance, storage transfer and
+recovery commands remain required before these operations count as complete.
