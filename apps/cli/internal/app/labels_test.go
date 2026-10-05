@@ -45,8 +45,8 @@ func (f *labelFilesFake) Publish(_ context.Context, path string, content []byte)
 }
 
 func TestStandaloneLabelUsesCatalogGeometryAndIndependentTemplateDefaults(t *testing.T) {
-	media := printing.Media{PresetID: "brother-ql800-29x90", Version: 1, WidthMicrometers: 29000, HeightMicrometers: 89800, RasterWidth: 306, RasterHeight: 991}
-	fake := &labelCatalogFake{defaults: ports.InventoryPrintDefaults{PrinterID: "garage", TemplateID: "qr-title", TemplateVersion: 1, ShowReference: true}, media: []printing.Media{media}}
+	media := printing.Media{PresetID: "brother-ql800-29x90", Version: ^uint32(0), WidthMicrometers: 29000, HeightMicrometers: 89800, RasterWidth: 306, RasterHeight: 991}
+	fake := &labelCatalogFake{defaults: ports.InventoryPrintDefaults{PrinterID: "garage", TemplateID: "qr-title", TemplateVersion: ^uint32(0), ShowReference: true}, media: []printing.Media{media}}
 	files := &labelFilesFake{files: map[string]string{}}
 	options := Options{Command: []string{"labels", "render", "tool"}, Scope: ports.Scope{Tenant: "home", Inventory: "garage"}, Format: "png", OutputPath: "label.png"}
 	if err := validateCommand(options); err != nil {

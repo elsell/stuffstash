@@ -101,6 +101,9 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if err := labelRenderFlags(o, flags); err != nil {
+		return o, err
+	}
 	if err := pairingApprovalFlags(flags, o); err != nil {
 		return o, err
 	}

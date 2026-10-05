@@ -31,20 +31,35 @@ type ResolvedLabel struct {
 	Lifecycle   string `json:"lifecycleState"`
 }
 type LabelRenderSelection struct {
+	RequestBody     []byte
 	TemplateID      string
 	TemplateVersion uint32
 	ShowReference   bool
 	Media           printing.Media
 	Format          string
 }
+type LabelRenderMetadata struct {
+	ID                   string `json:"id"`
+	SelectionFingerprint string `json:"selectionFingerprint"`
+	MediaFingerprint     string `json:"mediaFingerprint"`
+	ContentType          string `json:"contentType"`
+	SHA256               string `json:"sha256"`
+	ContentPath          string `json:"contentPath"`
+	ExpiresAt            string `json:"expiresAt"`
+	WidthPixels          int64  `json:"widthPixels"`
+	HeightPixels         int64  `json:"heightPixels"`
+	DisplayRotation      int64  `json:"displayRotation"`
+}
 type LabelArtifact struct {
+	Render         Result[LabelRenderMetadata]
 	Content        []byte
 	Format, SHA256 string
 }
 type LabelFileResult struct {
-	Path   string `json:"path"`
-	Format string `json:"format"`
-	SHA256 string `json:"sha256"`
+	Render Result[LabelRenderMetadata] `json:"render"`
+	Path   string                      `json:"path"`
+	Format string                      `json:"format"`
+	SHA256 string                      `json:"sha256"`
 }
 type LabelsAPI interface {
 	AssetLabel(context.Context, Scope, string) (Result[ResolvedLabel], error)

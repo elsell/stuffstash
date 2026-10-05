@@ -35,9 +35,6 @@ func validateLabelCommandOptions(o Options, requireScope bool) error {
 	if o.Command[1] != "render" || len(o.Command) != 3 || o.OutputPath == "" || o.OutputPath == "-" || (o.Format != "png" && o.Format != "pdf") {
 		return ports.Failure("usage", "use labels render ASSET --format png|pdf --output PATH")
 	}
-	if o.TemplateVersion > math.MaxInt32 {
-		return ports.Failure("usage", "template version exceeds the API limit")
-	}
 	dimensions := o.WidthMM != 0 || o.HeightMM != 0
 	if dimensions && (o.WidthMM <= 0 || o.HeightMM <= 0 || math.IsNaN(o.WidthMM) || math.IsNaN(o.HeightMM) || math.IsInf(o.WidthMM, 0) || math.IsInf(o.HeightMM, 0)) {
 		return ports.Failure("usage", "label dimensions must both be positive finite millimeters")
@@ -61,6 +58,9 @@ func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFi
 			return nil, ports.Failure("usage", "invalid label link")
 		}
 		return api.ResolveLabel(ctx, ref)
+	}
+	if o.InputPath != "" {
+		return publishRenderedLabel(ctx, api, files, o, ports.LabelRenderSelection{RequestBody: o.RequestBody, Format: o.Format})
 	}
 	defaults, err := api.PrintDefaults(ctx, o.Scope)
 	if err != nil {
@@ -106,6 +106,9 @@ func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFi
 		return nil, ports.Failure("usage", "media selection is unsupported or ambiguous; choose an authorized catalog preset")
 	}
 	selection.Media = selected[0]
+	return publishRenderedLabel(ctx, api, files, o, selection)
+}
+func publishRenderedLabel(ctx context.Context, api ports.LabelsAPI, files ports.LabelFiles, o Options, selection ports.LabelRenderSelection) (any, error) {
 	artifact, err := api.RenderLabel(ctx, o.Scope, o.Command[2], selection)
 	if err != nil {
 		return nil, err
@@ -116,5 +119,5 @@ func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFi
 	if err = files.Publish(ctx, o.OutputPath, artifact.Content); err != nil {
 		return nil, err
 	}
-	return ports.LabelFileResult{Path: o.OutputPath, Format: artifact.Format, SHA256: artifact.SHA256}, nil
+	return ports.LabelFileResult{Path: o.OutputPath, Format: artifact.Format, SHA256: artifact.SHA256, Render: artifact.Render}, nil
 }
