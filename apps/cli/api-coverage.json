@@ -801,11 +801,11 @@
         "domain": "assets",
         "contractSha256": "9acf07f2d4c140138abbe5e9c8b716fbe29100b8456201be4d34e67e82b5c727"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets checked-out"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types": {
       "contract": {

@@ -24,3 +24,8 @@ type Checkout struct {
 	UpdatedAt               string  `json:"updatedAt"`
 	UndoableOperationID     *string `json:"undoableOperationId,omitempty"`
 }
+
+type CheckedOutAsset struct {
+	Asset    Asset           `json:"asset"`
+	Checkout CurrentCheckout `json:"checkout"`
+}

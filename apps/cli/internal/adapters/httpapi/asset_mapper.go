@@ -28,11 +28,8 @@ func asset(a generated.AssetResponse) ports.Asset {
 		}
 	}
 	if a.CurrentCheckout != nil {
-		v := a.CurrentCheckout
-		result.CurrentCheckout = &ports.CurrentCheckout{ID: v.Id, State: v.State, CheckedOutAt: v.CheckedOutAt, CheckedOutByPrincipalID: v.CheckedOutByPrincipalId}
-		if v.CheckedOutByPrincipal != nil {
-			result.CurrentCheckout.CheckedOutByPrincipal = &ports.Principal{ID: v.CheckedOutByPrincipal.Id, Email: v.CheckedOutByPrincipal.Email}
-		}
+		v := currentCheckout(*a.CurrentCheckout)
+		result.CurrentCheckout = &v
 	}
 	if a.PrimaryPhoto != nil {
 		v := a.PrimaryPhoto

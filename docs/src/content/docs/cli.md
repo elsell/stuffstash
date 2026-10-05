@@ -168,6 +168,7 @@ pass it with `--cursor`. Flags can also set `--server`, `--tenant`, and
 ### Check out and return assets
 
 ```sh
+stuffstash assets checked-out --limit 20
 stuffstash assets checkout ASSET_ID --details 'Lent to Sam'
 stuffstash assets return ASSET_ID --details 'Returned with charger'
 stuffstash assets checkouts ASSET_ID --limit 20

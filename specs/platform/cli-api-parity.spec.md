@@ -425,3 +425,11 @@ state, borrower, dates, details, and IDs; JSON preserves the complete response.
 Checkout writes reject unrelated name/title/kind/parent flags before login.
 Human checkout history includes checkout and return notes and return dates so
 users can inspect the outcome of an uncertain write without switching formats.
+
+### Inventory-wide checked-out assets
+
+`assets checked-out` lists the inventory's currently checked-out assets with
+limit/cursor pagination. Preserve each complete asset and current checkout,
+response metadata, schema reference, null/empty list distinctions, and exact
+custom-field numbers. Use the same number-preserving envelope override as asset
+lists. Human rows identify the asset and borrower with the checkout date.
