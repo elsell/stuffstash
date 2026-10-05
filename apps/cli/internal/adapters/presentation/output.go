@@ -180,8 +180,7 @@ func (o Output) Result(value any) error {
 	case ports.Result[[]ports.PrinterProfile]:
 		return o.printerProfiles(v.Data)
 	case ports.Result[ports.ResolvedLabel]:
-		_, err := fmt.Fprintf(o.Stdout, "%s\ttenant=%s\tinventory=%s\t%s\n", v.Data.AssetID, v.Data.TenantID, v.Data.InventoryID, v.Data.Lifecycle)
-		return err
+		return o.details([][2]string{{"Asset", v.Data.AssetID}, {"Household", v.Data.TenantID}, {"Inventory", v.Data.InventoryID}, {"Lifecycle", v.Data.Lifecycle}, {"Instance", v.Data.InstanceID}, {"Label", v.Data.LabelID}, {"URL", v.Data.URL}})
 	case ports.LabelFileResult:
 		_, err := fmt.Fprintf(o.Stdout, "Saved %s (%s), sha256=%s\n", strconv.Quote(v.Path), v.Format, v.SHA256)
 		return err

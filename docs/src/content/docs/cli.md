@@ -665,3 +665,7 @@ font coverage. Use `stuffstash printers profiles` for the server's printer
 adapters, supported platforms and media presets. This differs from
 `printers catalog`, which inspects the local CLI catalog without login.
 Both server catalogs support `--json` for their complete configuration.
+
+`stuffstash labels resolve LABEL_URL` shows the label's full identity, canonical
+URL and inventory destination. It checks the instance against your configured
+server and does not send your credentials to the link's host.

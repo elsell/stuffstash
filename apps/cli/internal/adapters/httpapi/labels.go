@@ -44,7 +44,7 @@ func (c *Client) ResolveLabel(ctx context.Context, ref labels.Reference) (ports.
 	if r.Data.InstanceId != ref.Instance || r.Data.LabelId != ref.Label {
 		return ports.Result[ports.ResolvedLabel]{}, ports.Failure("protocol", "label identity did not match")
 	}
-	return ports.Result[ports.ResolvedLabel]{Data: ports.ResolvedLabel{TenantID: r.Data.TenantId, InventoryID: r.Data.InventoryId, AssetID: r.Data.AssetId, Lifecycle: r.Data.LifecycleState}}, nil
+	return ports.Result[ports.ResolvedLabel]{Schema: r.Schema, Meta: metadata(r.Meta), Data: ports.ResolvedLabel{InstanceID: r.Data.InstanceId, LabelID: r.Data.LabelId, URL: r.Data.Url, TenantID: r.Data.TenantId, InventoryID: r.Data.InventoryId, AssetID: r.Data.AssetId, Lifecycle: r.Data.LifecycleState}}, nil
 }
 func (c *Client) LabelMedia(ctx context.Context, s ports.Scope, printer string) ([]printing.Media, error) {
 	if printer != "" {

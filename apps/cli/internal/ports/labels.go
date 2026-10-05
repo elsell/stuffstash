@@ -22,6 +22,9 @@ type LabelTemplate struct {
 	ShowReference         bool                  `json:"showReference"`
 }
 type ResolvedLabel struct {
+	InstanceID  string `json:"instanceId"`
+	LabelID     string `json:"labelId"`
+	URL         string `json:"url"`
 	TenantID    string `json:"tenantId"`
 	InventoryID string `json:"inventoryId"`
 	AssetID     string `json:"assetId"`

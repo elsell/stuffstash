@@ -255,11 +255,11 @@
         "domain": "labels",
         "contractSha256": "44d4a1ccd571521b26f19459187eea993d06a51f4bd1264ab860a3e094f4ea6c"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "labels resolve"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-me": {
       "contract": {

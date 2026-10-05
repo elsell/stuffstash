@@ -892,3 +892,13 @@ schema and metadata. Human output presents relevant selection and compatibility
 information with safe quoting. These server catalogs are distinct from the local
 `printers catalog` command. Critical checks cover scope, full fields and nullable
 collections through the real CLI/SDK boundary.
+
+### Complete label resolution
+
+`labels resolve LABEL_URL` returns instance ID, label ID and canonical URL in
+addition to asset, household, inventory and lifecycle. Preserve schema and
+response metadata. Resolve against the configured authenticated server, never
+the link's host, and reject mismatched server or returned label identities.
+No selected inventory is required. Human output quotes all server-controlled
+values and displays the full resolved identity. Critical tests cover full CLI
+output and the existing foreign-instance and authorization checks.
