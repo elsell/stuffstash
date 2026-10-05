@@ -151,7 +151,15 @@ and parent IDs. For example, <code dir="auto">{"expiration":null,"tagIds":[]}</c
 and removes all tags with <code dir="auto">assets update ID --input FILE</code>. Omitted fields stay
 unchanged. Do not combine JSON input with asset field flags or <code dir="auto">--print-label</code>.
 Interactive creation asks for a missing title and kind. Scripts must provide
-these fields or a JSON request. Updates do not support <code dir="auto">--idempotency-key</code>.</p>
+these fields or a JSON request. Updates do not support <code dir="auto">--idempotency-key</code>. Ordinary
+creation also does not support this key. If its response is lost, list assets
+before retrying to avoid a duplicate. Create-and-print supports the key: keep
+the key shown on stderr and reuse it with the unchanged request if needed.
+The CLI does not retry writes automatically.</p>
+<p>Archive and delete require confirmation. Add <code dir="auto">--yes</code> in scripts after checking
+the target. <code dir="auto">assets delete ID --yes</code> permanently deletes an asset; the server
+checks whether deletion is allowed. Restore needs no confirmation. None of
+these lifecycle commands supports <code dir="auto">--idempotency-key</code>.</p>
 <p>List archived assets with <code dir="auto">assets list --lifecycle archived</code>, or include both states
 with <code dir="auto">--lifecycle all</code>. Use <code dir="auto">--sort updated_desc</code> to put recently changed assets
 first; <code dir="auto">id_asc</code> is also supported.</p>
