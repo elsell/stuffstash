@@ -837,3 +837,16 @@ message, provider, capability, profile ID and timestamp plus response metadata.
 A completed test request does not imply a successful provider test: show its status
 as returned. Critical command tests cover confirmation, scope, denials, exact
 routes, full results and uncertain response handling.
+
+### Provider configuration write transport
+
+Provider creation, partial update and credential replacement use generated SDK
+routes behind a CLI port. Pass validated JSON without re-encoding, preserving
+optional false values, empty strings, arbitrary runtime options, capability
+metadata and exact numbers. All calls carry only the selected household and
+profile ID where required; no inventory is required. Return the complete safe
+profile contract through the existing mapper and suppress raw error bodies.
+Do not log credentials or retry writes automatically. Critical transport tests
+cover exact input and route, authorization and household denial, full safe
+response fields and no retries. Interactive configuration design remains pending;
+transport completion alone does not close these operation gaps.
