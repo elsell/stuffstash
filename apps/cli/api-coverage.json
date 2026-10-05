@@ -294,10 +294,13 @@
         "domain": "printing",
         "contractSha256": "9a61327da3716970fc4838bc6f899ca15c8be7a123bc8d1383da951ac83206cf"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print register",
+        "connectors print rotate"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Authenticated pairing polling exists; response ID, expiry and envelope are reduced to state. Complete inspection remains."
       ]
     },
     "get-print-consumer-attempts": {
@@ -307,10 +310,12 @@
         "domain": "printing",
         "contractSha256": "9c8835edeba4bedd42f32c7a2e4e7c5c61fffa648661f28bb2898cf5113a699a"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Worker pages unsettled attempts with operational filters. Full filter control and attempt inspection, including timestamps/reasons/media/fingerprint, remain."
       ]
     },
     "get-print-consumer-attempts-by-attempt-id": {
@@ -320,10 +325,12 @@
         "domain": "printing",
         "contractSha256": "750717689dcb4062f27e4ea4d049406c981cb8a4cf2ad54505e03e2b2cba1dd1"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Journal recovery reads attempts but reduces timestamps, reasons, retryability, media/fingerprint and other fields. Complete inspection remains."
       ]
     },
     "get-print-consumer-printers": {
@@ -333,10 +340,12 @@
         "domain": "printing",
         "contractSha256": "2f80cd532e022cb1c2ca774b2f5818c107c254d3811b8589cf5caec7993ec877"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Worker retains physical bindings, generation, adapter, media, retirement and fingerprint. Full name/readiness/revision/report fields and envelope inspection remain."
       ]
     },
     "get-tenants-by-tenant-id": {
@@ -1152,10 +1161,12 @@
         "domain": "printing",
         "contractSha256": "1435034e45a88f77819deeb238123b906ac89e368592913528994023e221117e"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Authenticated bounded artifact download and verification exist in the worker. General file-output parity remains; proof and artifact verification must stay enforced."
       ]
     },
     "list-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-content": {
@@ -1621,10 +1632,13 @@
         "domain": "printing",
         "contractSha256": "6ae0e8fc9986727b47137c18d25f6152bacc1b789ab5db1235a92b477a7835c5"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print register",
+        "connectors print rotate"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Registration and rotation send name, public key, rotation and discovered device candidates. Complete request/output parity remains to be reconciled without exposing secrets."
       ]
     },
     "post-print-connector-pairings-by-pairing-id-approval": {
@@ -1637,7 +1651,7 @@
       "commands": [],
       "status": "pending",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Existing registration hands off to a browser. CLI-native user-code review and scoped candidate/printer binding approval are not implemented."
       ]
     },
     "post-print-connector-pairings-by-pairing-id-credential": {
@@ -1647,10 +1661,13 @@
         "domain": "printing",
         "contractSha256": "e8c8f03192cae140697f87bdc22ade755446333c706d16c325e5b118a335b5e9"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print register",
+        "connectors print rotate"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Signed exchange, private persistence and activation exist. The activation deadline is discarded and must be handled; secrets must remain private."
       ]
     },
     "post-print-connector-pairings-by-pairing-id-review": {
@@ -1663,7 +1680,7 @@
       "commands": [],
       "status": "pending",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Existing registration hands off to a browser. CLI-native user-code review and scoped candidate/printer binding approval are not implemented."
       ]
     },
     "post-print-consumer-attempts-by-attempt-id-idle-confirmation": {
@@ -1673,10 +1690,12 @@
         "domain": "printing",
         "contractSha256": "7ad4d8ef6d4f097603e2fb3df6a19f760cf89e298ec7963acd847d24df727b72"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Worker confirms physical idle during recovery. Full parity remains to be reconciled with physical safety; no manual idle assertion bypass."
       ]
     },
     "post-print-consumer-attempts-by-attempt-id-reconciliation": {
@@ -1686,10 +1705,12 @@
         "domain": "printing",
         "contractSha256": "6fe78379f76152e4d47b90d9d69cbc455d23176287073b52b08c98ab3c7e5f33"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Worker reconciles durable journal evidence. Full parity remains to be reconciled with safe recovery; no manual evidence bypass."
       ]
     },
     "post-print-consumer-claims": {
@@ -1699,10 +1720,12 @@
         "domain": "printing",
         "contractSha256": "029d881e9395b70a8595eb202b0ae2ce48ab3119851d6d498fde73358eb13807"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Worker generates attempt, session and proof and retains execution/media/artifact inputs. Complete safe response inspection remains."
       ]
     },
     "post-print-consumer-claims-by-attempt-id-outcome": {
@@ -1712,10 +1735,12 @@
         "domain": "printing",
         "contractSha256": "df8cde9d3d2eb508270284fa62dea76d9c3c317fd9420b3d20e4a718c52ed76f"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Worker settles with physical evidence and scoped proofs. Complete safe response inspection remains; no manual settlement bypass."
       ]
     },
     "post-print-consumer-claims-by-attempt-id-renewal": {
@@ -1725,10 +1750,12 @@
         "domain": "printing",
         "contractSha256": "1ec0c6415a3fdc367971240770a5ca05fc180e1ffd7ad7dc52b90e22375b1f75"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Worker renews leases using scoped proofs. Response handling is operational rather than complete inspection; preserve existing recovery safeguards."
       ]
     },
     "post-print-consumer-claims-by-attempt-id-start": {
@@ -1738,10 +1765,12 @@
         "domain": "printing",
         "contractSha256": "26be63e5fa84ab04dfb785e53f6c8481c1511b39eb51c5b20123562fdb38fb7d"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Worker acknowledges start before physical output and records durable intent. Response is reduced to recovery state; complete safe contract exposure remains."
       ]
     },
     "post-print-consumer-heartbeat": {
@@ -1751,10 +1780,14 @@
         "domain": "printing",
         "contractSha256": "02e287a0486e8e017320014b2cae06b3cf444014578199b32ecd6c84cc7a6694"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print register",
+        "connectors print rotate",
+        "connectors print run"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Registration activation and worker heartbeat send session plus full capabilities/software report. Connector response is discarded; complete safe inspection remains."
       ]
     },
     "post-print-consumer-printer-reports": {
@@ -1764,10 +1797,12 @@
         "domain": "printing",
         "contractSha256": "92d555a2a36b9750979b432e20e422c2cde6a3c4d4b5862ff463cbc9eccde7e9"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Worker sends physical readiness/reason reports. Existing workflow must be reconciled with complete request/response acceptance before marking parity complete."
       ]
     },
     "post-tenants": {

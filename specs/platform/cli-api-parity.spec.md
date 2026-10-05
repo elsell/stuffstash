@@ -922,3 +922,20 @@ report fields, including nullable arrays and response metadata. List supports
 limit/cursor; detail provides complete report information. Do not disclose
 connector credentials. Critical tests cover human authentication, scope, paging,
 complete nested reports and shared-context routing.
+
+### Existing connector workflow coverage
+
+The pairing and consumer operations already used by `connectors print register`,
+`rotate`, and `run` must be recorded as partial workflow coverage, rather than
+unimplemented operations. This does not relax complete-contract acceptance.
+Pairing review and approval remain separate CLI gaps. Pairing polling drops
+response metadata, and credential exchange does not yet retain the activation
+deadline. Consumer execution preserves its safety inputs but reduces some
+responses to worker state; full inspection and request-field coverage remain
+subject to the parity requirements above.
+
+Preserve machine credentials, signed proofs, durable intent, and physical evidence
+in their existing workflows. Do not expose an unsafe manual claim/start/settle
+shortcut merely to add a command mapping. Existing workflow/security tests remain
+the evidence for the implemented portion; remaining fields and user workflows
+must be verified before changing a partial entry to implemented.
