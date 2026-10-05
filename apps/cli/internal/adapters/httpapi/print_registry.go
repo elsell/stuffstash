@@ -2,28 +2,35 @@ package httpapi
 
 import (
 	"context"
-	"github.com/oapi-codegen/nullable"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi/generated"
 	"github.com/stuffstash/stuff-stash/cli/internal/domain/printing"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
+	"math"
 )
 
 func (c *Client) Heartbeat(ctx context.Context, session string, report *printing.ConnectorReport) error {
-	_, err := read[generated.SuccessEnvelopeConnector](c.sdk.PostPrintConsumerHeartbeat(ctx, nil, generated.HeartbeatInputBody{SessionId: session, Report: connectorReport(report)}))
+	value, err := connectorReport(report)
+	if err != nil {
+		return err
+	}
+	body, err := workerRequest(workerHeartbeat{SessionID: session, Report: value})
+	if err != nil {
+		return err
+	}
+	_, err = read[ports.Result[ports.PrintConnector]](c.sdk.PostPrintConsumerHeartbeatWithBody(ctx, nil, "application/json", body))
 	return consumerError(err)
 }
 func (c *Client) Printers(ctx context.Context) ([]printing.RegisteredPrinter, error) {
-	result, err := read[generated.SuccessEnvelopeListConsumerPrinter](c.sdk.GetPrintConsumerPrinters(ctx, nil))
+	result, err := c.ConsumerPrinters(ctx)
 	if err != nil {
 		return nil, consumerError(err)
 	}
-	printers := make([]printing.RegisteredPrinter, 0, len(result.Data.GetOrEmpty()))
-	for _, value := range result.Data.GetOrEmpty() {
-		if value.BindingGeneration <= 0 || value.Printer.Id == "" || value.DeviceId == "" {
+	printers := make([]printing.RegisteredPrinter, 0, len(result.Data))
+	for _, value := range result.Data {
+		if value.BindingGeneration <= 0 || value.Printer.ID == "" || value.DeviceID == "" {
 			return nil, ports.Failure("protocol", "invalid registered printer response")
 		}
-		media := value.Printer.Media
-		printers = append(printers, printing.RegisteredPrinter{ID: value.Printer.Id, AdapterID: value.Printer.AdapterId, DeviceID: value.DeviceId, MediaFingerprint: value.Printer.MediaFingerprint, BindingGeneration: uint64(value.BindingGeneration), Retired: value.Printer.Retired, Media: printing.Media{PresetID: media.PresetId, Version: uint32(media.Version), WidthMicrometers: int(media.WidthMicrometers), HeightMicrometers: int(media.HeightMicrometers), Margins: printing.Margins{Left: int(media.MarginsMicrometers.Left), Right: int(media.MarginsMicrometers.Right), Top: int(media.MarginsMicrometers.Top), Bottom: int(media.MarginsMicrometers.Bottom)}, ResolutionDPI: int(media.ResolutionDpi), RasterWidth: int(media.RasterWidth), RasterHeight: int(media.RasterHeight), Orientation: media.Orientation, ColorMode: media.ColorMode, CutPolicy: media.CutPolicy, DisplayRotation: int(media.DisplayRotation)}})
+		printers = append(printers, printing.RegisteredPrinter{ID: value.Printer.ID, AdapterID: value.Printer.AdapterID, DeviceID: value.DeviceID, MediaFingerprint: value.Printer.MediaFingerprint, BindingGeneration: value.BindingGeneration, Retired: value.Printer.Retired, Media: consumerMedia(value.Printer.Media.ConsumerMedia)})
 	}
 	return printers, nil
 }
@@ -58,21 +65,24 @@ func (c *Client) Report(ctx context.Context, id string, readiness printing.Readi
 	return consumerError(err)
 }
 
-func connectorReport(report *printing.ConnectorReport) *generated.ConnectorReport {
+func connectorReport(report *printing.ConnectorReport) (*ports.PrintConnectorReport, error) {
 	if report == nil {
-		return nil
+		return nil, nil
 	}
-	adapters := []generated.ConnectorAdapterCapability{}
+	adapters := []ports.PrintConnectorAdapter{}
 	for _, a := range report.Adapters {
-		versions := []int32{}
-		media := []generated.ConnectorMediaCapability{}
+		versions := []uint32{}
+		media := []ports.PrintConnectorMedia{}
 		for _, v := range a.ContractVersions {
-			versions = append(versions, int32(v))
+			if v < 0 || uint64(v) > math.MaxUint32 {
+				return nil, ports.Failure("configuration", "Print adapter contract version exceeds the uint32 range.")
+			}
+			versions = append(versions, uint32(v))
 		}
 		for _, m := range a.Media {
-			media = append(media, generated.ConnectorMediaCapability{Id: m.PresetID, Version: int32(m.Version)})
+			media = append(media, ports.PrintConnectorMedia{ID: m.PresetID, Version: m.Version})
 		}
-		adapters = append(adapters, generated.ConnectorAdapterCapability{Id: a.ID, Formats: nullable.NewNullableWithValue(a.Formats), CompletionEvidence: a.CompletionEvidence, Wake: a.Wake, ContractVersions: nullable.NewNullableWithValue(versions), Media: nullable.NewNullableWithValue(media)})
+		adapters = append(adapters, ports.PrintConnectorAdapter{ID: a.ID, Formats: a.Formats, CompletionEvidence: a.CompletionEvidence, Wake: a.Wake, ContractVersions: versions, Media: media})
 	}
-	return &generated.ConnectorReport{Version: report.Version, Commit: report.Commit, Platform: report.Platform, Architecture: report.Architecture, Adapters: nullable.NewNullableWithValue(adapters)}
+	return &ports.PrintConnectorReport{Version: report.Version, Commit: report.Commit, Platform: report.Platform, Architecture: report.Architecture, Adapters: adapters}, nil
 }

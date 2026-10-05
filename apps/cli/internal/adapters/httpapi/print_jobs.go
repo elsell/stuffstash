@@ -6,6 +6,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"strconv"
 
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi/generated"
 	"github.com/stuffstash/stuff-stash/cli/internal/domain/printing"
@@ -25,43 +26,55 @@ func consumerError(err error) error {
 	return err
 }
 func (c *Client) Claim(ctx context.Context, printerID string, control printing.AttemptControl) (*printing.Claim, error) {
-	result, err := read[generated.SuccessEnvelopePrintConsumerAttempt](c.sdk.PostPrintConsumerClaims(ctx, nil, generated.PrintClaimRequest{PrinterId: printerID, AttemptId: control.AttemptID, SessionId: control.SessionID, ClaimToken: control.ClaimToken}))
+	result, err := read[ports.Result[workerAttempt]](c.sdk.PostPrintConsumerClaims(ctx, nil, generated.PrintClaimRequest{PrinterId: printerID, AttemptId: control.AttemptID, SessionId: control.SessionID, ClaimToken: control.ClaimToken}))
 	if err != nil {
 		return nil, consumerError(err)
 	}
 	value := result.Data
-	if value.AttemptId == "" && value.JobId == "" {
+	if value.AttemptID == "" && value.JobID == "" {
 		return nil, nil
 	}
 	if value.Artifact == nil || value.Media == nil || !value.LeaseValid || value.Status != "claimed" || value.Revision <= 0 {
 		return nil, ports.Failure("protocol", "invalid claimed print job")
 	}
 	artifact := value.Artifact
-	control.AttemptID = value.AttemptId
-	control.SessionID = value.SessionId
-	control.Revision = uint64(value.Revision)
-	return &printing.Claim{Control: control, JobID: value.JobId, PrinterID: value.PrinterId, ContractVersion: int(value.ProtocolVersion), LeaseExpiresAt: value.LeaseExpiresAt, Media: consumerMedia(*value.Media), Copies: int(value.Copies), Artifact: printing.Artifact{SHA256: artifact.Sha256, ContentType: artifact.ContentType, ByteLength: artifact.ByteLength, Width: int(artifact.WidthPixels), Height: int(artifact.HeightPixels)}}, nil
+	control.AttemptID = value.AttemptID
+	control.SessionID = value.SessionID
+	control.Revision = value.Revision
+	return &printing.Claim{Control: control, JobID: value.JobID, PrinterID: value.PrinterID, ContractVersion: int(value.ProtocolVersion), LeaseExpiresAt: value.LeaseExpiresAt, Media: consumerMedia(*value.Media), Copies: int(value.Copies), Artifact: printing.Artifact{SHA256: artifact.SHA256, ContentType: artifact.ContentType, ByteLength: artifact.ByteLength, Width: int(artifact.WidthPixels), Height: int(artifact.HeightPixels)}}, nil
 }
 func (c *Client) Start(ctx context.Context, control printing.AttemptControl) (printing.AttemptStatus, error) {
-	result, err := read[generated.SuccessEnvelopePrintConsumerAttempt](c.sdk.PostPrintConsumerClaimsByAttemptIdStart(ctx, control.AttemptID, nil, proof(control)))
+	body, err := workerRequest(proof(control))
+	if err != nil {
+		return printing.AttemptStatus{}, err
+	}
+	result, err := read[ports.Result[workerAttempt]](c.sdk.PostPrintConsumerClaimsByAttemptIdStartWithBody(ctx, control.AttemptID, nil, "application/json", body))
 	if err != nil {
 		return printing.AttemptStatus{}, consumerError(err)
 	}
 	return attemptStatus(result.Data)
 }
 func (c *Client) Renew(ctx context.Context, control printing.AttemptControl) (printing.AttemptStatus, error) {
-	result, err := read[generated.SuccessEnvelopePrintConsumerAttempt](c.sdk.PostPrintConsumerClaimsByAttemptIdRenewal(ctx, control.AttemptID, nil, proof(control)))
+	body, err := workerRequest(proof(control))
+	if err != nil {
+		return printing.AttemptStatus{}, err
+	}
+	result, err := read[ports.Result[workerAttempt]](c.sdk.PostPrintConsumerClaimsByAttemptIdRenewalWithBody(ctx, control.AttemptID, nil, "application/json", body))
 	if err != nil {
 		return printing.AttemptStatus{}, consumerError(err)
 	}
 	return attemptStatus(result.Data)
 }
 func (c *Client) Outcome(ctx context.Context, control printing.AttemptControl, evidence printing.Evidence) error {
-	_, err := read[generated.SuccessEnvelopePrintConsumerAttempt](c.sdk.PostPrintConsumerClaimsByAttemptIdOutcome(ctx, control.AttemptID, nil, generated.PrintOutcomeRequest{SessionId: control.SessionID, ClaimToken: control.ClaimToken, Revision: int64(control.Revision), Outcome: outcome(evidence)}))
+	body, err := workerRequest(workerOutcome{workerProof: proof(control), Outcome: outcome(evidence)})
+	if err != nil {
+		return err
+	}
+	_, err = read[ports.Result[workerAttempt]](c.sdk.PostPrintConsumerClaimsByAttemptIdOutcomeWithBody(ctx, control.AttemptID, nil, "application/json", body))
 	return consumerError(err)
 }
 func (c *Client) Attempt(ctx context.Context, id string) (printing.AttemptStatus, error) {
-	result, err := read[generated.SuccessEnvelopePrintConsumerAttempt](c.sdk.GetPrintConsumerAttemptsByAttemptId(ctx, id, nil))
+	result, err := read[ports.Result[workerAttempt]](c.sdk.GetPrintConsumerAttemptsByAttemptId(ctx, id, nil))
 	var failure *ports.Error
 	if errors.As(err, &failure) && failure.Category == "not_found" {
 		return printing.AttemptStatus{}, ports.ErrAttemptNotFound
@@ -72,7 +85,11 @@ func (c *Client) Attempt(ctx context.Context, id string) (printing.AttemptStatus
 	return attemptStatus(result.Data)
 }
 func (c *Client) Reconcile(ctx context.Context, id string, revision uint64, evidence printing.Evidence) error {
-	_, err := read[generated.SuccessEnvelopePrintConsumerAttempt](c.sdk.PostPrintConsumerAttemptsByAttemptIdReconciliation(ctx, id, nil, generated.PrintReconciliation{Revision: int64(revision), Outcome: outcome(evidence)}))
+	body, err := workerRequest(workerReconciliation{Revision: revision, Outcome: outcome(evidence)})
+	if err != nil {
+		return err
+	}
+	_, err = read[ports.Result[workerAttempt]](c.sdk.PostPrintConsumerAttemptsByAttemptIdReconciliationWithBody(ctx, id, nil, "application/json", body))
 	return consumerError(err)
 }
 func (c *Client) Unsettled(ctx context.Context, printerID string) ([]printing.AttemptStatus, error) {
@@ -82,12 +99,12 @@ func (c *Client) Unsettled(ctx context.Context, printerID string) ([]printing.At
 	status := generated.GetPrintConsumerAttemptsParamsStatus("unsettled")
 	seen := map[string]bool{}
 	for {
-		response, err := read[generated.SuccessEnvelopeListPrintConsumerAttempt](c.sdk.GetPrintConsumerAttempts(ctx, &generated.GetPrintConsumerAttemptsParams{PrinterId: &printerID, Status: &status, Limit: &limit, Cursor: &cursor}))
+		response, err := read[ports.Result[[]workerAttempt]](c.sdk.GetPrintConsumerAttempts(ctx, &generated.GetPrintConsumerAttemptsParams{PrinterId: &printerID, Status: &status, Limit: &limit, Cursor: &cursor}))
 		if err != nil {
 			return nil, consumerError(err)
 		}
-		for _, value := range response.Data.GetOrEmpty() {
-			if value.PrinterId != printerID {
+		for _, value := range response.Data {
+			if value.PrinterID != printerID {
 				return nil, ports.Failure("protocol", "unexpected printer in recovery response")
 			}
 			attempt, err := attemptStatus(value)
@@ -96,7 +113,10 @@ func (c *Client) Unsettled(ctx context.Context, printerID string) ([]printing.At
 			}
 			result = append(result, attempt)
 		}
-		pagination := page(response.Meta)
+		var pagination *ports.Pagination
+		if response.Meta != nil {
+			pagination = response.Meta.Pagination
+		}
 		if pagination == nil || !pagination.HasMore {
 			return result, nil
 		}
@@ -111,12 +131,16 @@ func (c *Client) Artifact(ctx context.Context, control printing.AttemptControl, 
 	if maximum <= 0 || maximum >= 1<<30 {
 		return nil, "", ports.Failure("configuration", "invalid print artifact byte limit")
 	}
-	response, err := c.sdk.ListPrintConsumerClaimsByAttemptIdContent(ctx, control.AttemptID, &generated.ListPrintConsumerClaimsByAttemptIdContentParams{XPrintSessionID: control.SessionID, XPrintClaimToken: control.ClaimToken, XPrintRevision: int64(control.Revision)})
+	response, err := c.sdk.ListPrintConsumerClaimsByAttemptIdContent(ctx, control.AttemptID, &generated.ListPrintConsumerClaimsByAttemptIdContentParams{XPrintSessionID: control.SessionID, XPrintClaimToken: control.ClaimToken, XPrintRevision: 0}, func(_ context.Context, request *http.Request) error {
+		// The generated header parameter is signed; overwrite it before transport.
+		request.Header.Set("X-Print-Revision", strconv.FormatUint(control.Revision, 10))
+		return nil
+	})
 	if err != nil {
 		return nil, "", ports.Failure("network", "could not fetch print artifact")
 	}
 	if response.StatusCode != http.StatusOK {
-		_, err = read[generated.SuccessEnvelopePrintConsumerAttempt](response, nil)
+		_, err = read[ports.Result[workerAttempt]](response, nil)
 		if err == nil {
 			err = ports.Failure("protocol", "unexpected print artifact status")
 		}
@@ -135,6 +159,10 @@ func (c *Client) Artifact(ctx context.Context, control printing.AttemptControl, 
 }
 
 func (c *Client) ConfirmIdle(ctx context.Context, id string, revision uint64) error {
-	_, err := read[generated.SuccessEnvelopePrintConsumerAttempt](c.sdk.PostPrintConsumerAttemptsByAttemptIdIdleConfirmation(ctx, id, nil, generated.PrintJobRevision{Revision: int64(revision)}))
+	body, err := workerRequest(workerRevision{Revision: revision})
+	if err != nil {
+		return err
+	}
+	_, err = read[ports.Result[workerAttempt]](c.sdk.PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithBody(ctx, id, nil, "application/json", body))
 	return consumerError(err)
 }
