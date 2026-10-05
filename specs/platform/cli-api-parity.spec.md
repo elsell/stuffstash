@@ -869,3 +869,14 @@ version and options, and revision. Preserve both schema values and response
 metadata in JSON. Human output names an unset default explicitly. This read must
 not select a printer or modify settings. Critical checks cover null and configured
 defaults, complete output, exact revision and cross-scope denial.
+
+### Complete printer inspection
+
+`printers show PRINTER_ID` and `printers list` preserve the full API printer:
+media geometry, margins, raster dimensions, DPI, rotation, color and cut settings,
+readiness reason and report time, revision and identity. JSON retains response
+metadata and null versus empty lists. Keep legacy flattened media name/preset
+fields for existing CLI consumers. Human detail groups printer status and media
+configuration; list values must be terminal-safe. Shared configuration results
+also retain the complete response. Critical checks cover full field mapping,
+scope denial and pagination through real commands.

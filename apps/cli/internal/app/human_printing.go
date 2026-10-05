@@ -55,7 +55,7 @@ func validatePrintingCommandOptions(o Options, requireScope bool) error {
 		if n == 2 {
 			return nil
 		}
-	case "printers test", "labels print", "print-jobs show", "print-jobs cancel", "print-jobs reprint":
+	case "printers show", "printers test", "labels print", "print-jobs show", "print-jobs cancel", "print-jobs reprint":
 		if n == 3 {
 			return nil
 		}
@@ -64,6 +64,8 @@ func validatePrintingCommandOptions(o Options, requireScope bool) error {
 }
 func executePrinting(ctx context.Context, api ports.HumanPrintingAPI, o Options) (any, error) {
 	switch o.Command[0] + " " + o.Command[1] {
+	case "printers show":
+		return api.Printer(ctx, o.Scope, o.Command[2])
 	case "printers configure":
 		return configurePrinter(ctx, api, o)
 	case "printers list":

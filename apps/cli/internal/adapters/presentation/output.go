@@ -167,11 +167,10 @@ func (o Output) Result(value any) error {
 		}
 		return o.pagination(v.Pagination)
 	case ports.Result[ports.RegisteredPrinter]:
-		_, err := fmt.Fprintf(o.Stdout, "%s\t%s\tmedia=%s\trevision=%d\n", v.Data.ID, strconv.Quote(v.Data.Name), v.Data.MediaPreset, v.Data.Revision)
-		return err
+		return o.registeredPrinter(v.Data)
 	case ports.Result[[]ports.RegisteredPrinter]:
 		for _, p := range v.Data {
-			if _, err := fmt.Fprintf(o.Stdout, "%s\t%s\t%s\t%s\n", p.ID, strconv.Quote(p.Name), p.Readiness, strconv.Quote(p.MediaName)); err != nil {
+			if _, err := fmt.Fprintf(o.Stdout, "%s\t%s\t%s\t%s\n", strconv.Quote(p.ID), strconv.Quote(p.Name), strconv.Quote(p.Readiness), strconv.Quote(p.MediaName)); err != nil {
 				return err
 			}
 		}

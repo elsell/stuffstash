@@ -655,3 +655,7 @@ Add `--json` to retain the full job and response metadata in a script.
 Use `stuffstash print-settings show` to inspect the selected inventory's default
 printer, print-on-create setting and label template options. An unset printer is
 shown as **Not set**. Use `--json` for the complete settings and revision.
+
+Use `stuffstash printers show PRINTER_ID` for a printer's readiness reason,
+last report time and complete media configuration. `printers list` gives a
+compact overview; both commands retain all printer fields with `--json`.

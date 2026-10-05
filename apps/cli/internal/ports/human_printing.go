@@ -21,15 +21,18 @@ type PrinterMediaPreset struct {
 	Version uint32
 }
 type RegisteredPrinter struct {
-	AdapterID        string `json:"adapterId"`
-	Revision         uint64 `json:"revision"`
-	MediaName        string `json:"mediaName"`
-	MediaPreset      string `json:"mediaPreset"`
-	ID               string `json:"id"`
-	Name             string `json:"name"`
-	Readiness        string `json:"readiness"`
-	MediaFingerprint string `json:"mediaFingerprint"`
-	Retired          bool   `json:"retired"`
+	Media            PrinterMedia `json:"media"`
+	ReadinessReason  *string      `json:"readinessReason,omitempty"`
+	ReportedAt       *time.Time   `json:"reportedAt,omitempty"`
+	AdapterID        string       `json:"adapterId"`
+	Revision         uint64       `json:"revision"`
+	MediaName        string       `json:"mediaName"`
+	MediaPreset      string       `json:"mediaPreset"`
+	ID               string       `json:"id"`
+	Name             string       `json:"name"`
+	Readiness        string       `json:"readiness"`
+	MediaFingerprint string       `json:"mediaFingerprint"`
+	Retired          bool         `json:"retired"`
 }
 type PrintJobResolution struct {
 	ReportedOutcome string    `json:"reportedOutcome"`
@@ -69,6 +72,7 @@ type PrintSelectionSource interface {
 	RegisteredPrinter(context.Context, Scope, string) (RegisteredPrinter, error)
 }
 type HumanPrintingAPI interface {
+	Printer(context.Context, Scope, string) (Result[RegisteredPrinter], error)
 	PrinterMediaPresets(context.Context, Scope, string) ([]PrinterMediaPreset, error)
 	ConfigurePrinterMedia(context.Context, Scope, string, uint64, PrinterMediaPreset) (Result[RegisteredPrinter], error)
 	PrintSelectionSource
