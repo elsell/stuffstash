@@ -165,9 +165,9 @@
         "contractSha256": "84a562f89a52bd1d882596fb848345f10a83bcd210a81d2e10f5e53c34b93a27"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
       ]
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-types-by-custom-asset-type-id": {
@@ -178,9 +178,9 @@
         "contractSha256": "0225cfa30a37c49a071e94616595827462b83f0ae224548339b1b9e015e25aba"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
       ]
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id-read": {
@@ -919,9 +919,9 @@
         "contractSha256": "db4c0cbc2042b77c88fb07c0922e90d44a0d03cfd448e87e53ce720366767034"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
       ]
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences": {
@@ -932,9 +932,9 @@
         "contractSha256": "878b43f9743199ef808c40f9b6a6937f7b386af16fd032973e9cc10f54b3f639"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
       ]
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-notifications": {
@@ -2194,9 +2194,9 @@
         "contractSha256": "028c366e8b6e6b6f9ff925ac6768385d000ea4902253407ae122b7264cb462e5"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
       ]
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-initialize": {
@@ -2207,9 +2207,9 @@
         "contractSha256": "845b37435e47dc6db6e5e7b9e80b0282bdc8b1ec9fc80bbef95d88dde436e3e8"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
       ]
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id-credential-rotation": {
@@ -2402,9 +2402,9 @@
         "contractSha256": "1aae91d8e7869f16ada8c07d0d16f68093fe497f5701b87f77630ab85eac2eae"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
       ]
     },
     "put-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-types-by-custom-asset-type-id": {
@@ -2415,9 +2415,9 @@
         "contractSha256": "db8d0fa968075fe7bcfc5b08c9edd3419f6dd475eb3e4ddfe1b75d98112ccef5"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
       ]
     },
     "put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id-read": {

@@ -568,3 +568,16 @@ Show their effective scope on stderr. Read-all must preserve the API's complete
 flag and pagination; do not claim the whole inbox was marked when complete is
 false. Do not automatically retry mutations. Human output must expose unread
 state, expiration, asset reference and location; quote untrusted text.
+
+### Notification settings and devices
+
+Support the complete preference and device contracts through generated SDK
+adapters. Preference updates replace defaults, timezone and push-enabled state
+and require the caller's revision; do not synthesize omitted booleans or silently
+retry revision conflicts. Preserve raw JSON for initialization, replacement,
+type override and device registration. Override removal and device removal must
+send the explicit 64-bit revision query value. Preserve preference policy fields,
+nullable override arrays, device state and revision, schema and metadata. Device
+tokens are write-only and must not be copied into results or diagnostics. Keep
+these operations partial until named commands, guided inputs and confirmations
+are implemented.
