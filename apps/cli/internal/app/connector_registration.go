@@ -71,14 +71,23 @@ func (r ConnectorRegistrar) pair(ctx context.Context, server, name string, candi
 				}
 				return err
 			}
-			if registration.Server != server || registration.ConnectorID == "" || registration.TenantID == "" || registration.InventoryID == "" || registration.Credential == "" || !registration.ExpiresAt.After(r.Clock.Now()) {
+			if registration.Server != server || registration.ConnectorID == "" || registration.TenantID == "" || registration.InventoryID == "" || registration.Credential == "" || registration.ActivationDeadline.IsZero() || !registration.ExpiresAt.After(r.Clock.Now()) {
 				return ports.Failure("protocol", "invalid connector registration")
 			}
 			if target != nil && (registration.Server != target.Server || registration.TenantID != target.TenantID || registration.InventoryID != target.InventoryID || registration.ConnectorID != target.ConnectorID) {
 				return ports.Failure("protocol", "rotation approval belongs to a different connector; existing credential preserved")
 			}
+			if !registration.ActivationDeadline.After(r.Clock.Now()) {
+				if target != nil {
+					return ports.Failure("pairing", fmt.Sprintf("The activation deadline passed. The stored credential was not changed. Run connectors print rotate --connector %q again.", target.ConnectorID))
+				}
+				return ports.Failure("pairing", "The activation deadline passed. No credential was saved. Run connectors print register again.")
+			}
 			if err := r.Credentials.Save(ctx, registration); err != nil {
 				return err
+			}
+			if !registration.ActivationDeadline.After(r.Clock.Now()) {
+				return ports.Failure("activation", fmt.Sprintf("The registration was saved, but the activation deadline passed. Run connectors print rotate --connector %q to pair again.", registration.ConnectorID))
 			}
 			if err := r.API.Activate(ctx, registration, challenge.ID); err != nil {
 				return ports.Failure("activation", "registration saved; run connectors print run --connector "+registration.ConnectorID+" to retry activation")

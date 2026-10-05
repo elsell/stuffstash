@@ -18,6 +18,7 @@ import (
 type pairingServer struct {
 	public                     ed25519.PublicKey
 	approved, consumed, active bool
+	activationDeadline         time.Time
 }
 
 func (s *pairingServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +64,7 @@ func (s *pairingServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		s.consumed = true
-		respond(map[string]any{"connectorId": "connector", "credential": "machine-secret", "tenantId": "tenant", "inventoryId": "inventory", "expiresAt": time.Now().Add(time.Hour), "activationDeadline": time.Now().Add(time.Minute)})
+		respond(map[string]any{"connectorId": "connector", "credential": "machine-secret", "tenantId": "tenant", "inventoryId": "inventory", "expiresAt": time.Now().Add(time.Hour), "activationDeadline": s.activationDeadline})
 	case "/print-consumer/heartbeat":
 		if !s.consumed || r.Header.Get("Authorization") != "Bearer machine-secret" {
 			http.Error(w, "denied", 401)
@@ -77,7 +78,7 @@ func (s *pairingServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 func TestGeneratedPairingClientPreservesKeyAndMachineCredentialBoundary(t *testing.T) {
 	ctx := context.Background()
-	state := &pairingServer{}
+	state := &pairingServer{activationDeadline: time.Date(2030, 1, 2, 3, 4, 5, 678, time.UTC)}
 	server := httptest.NewTLSServer(state)
 	defer server.Close()
 	api, err := NewPairing(server.URL, server.Client())
@@ -103,6 +104,9 @@ func TestGeneratedPairingClientPreservesKeyAndMachineCredentialBoundary(t *testi
 	registration, err := api.Exchange(ctx, challenge, key.Sign(challenge.ID, challenge.PollToken))
 	if err != nil {
 		t.Fatal(err)
+	}
+	if !registration.ActivationDeadline.Equal(state.activationDeadline) {
+		t.Fatalf("activation deadline lost: %v", registration.ActivationDeadline)
 	}
 	if _, err := api.Exchange(ctx, challenge, key.Sign(challenge.ID, challenge.PollToken)); err == nil {
 		t.Fatal("consumed proof exchanged again")

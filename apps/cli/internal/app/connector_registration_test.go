@@ -21,6 +21,8 @@ type pairingFixture struct {
 	approved, consumed, active bool
 	saved                      *ports.ConnectorRegistration
 	storageFull                bool
+	activationDeadline         *time.Time
+	saveDelay                  time.Duration
 }
 
 func (f *pairingFixture) Now() time.Time { return f.now }
@@ -47,7 +49,11 @@ func (f *pairingFixture) Exchange(_ context.Context, c ports.PairingChallenge, s
 		return ports.ConnectorRegistration{}, errors.New("denied")
 	}
 	f.consumed = true
-	return ports.ConnectorRegistration{Server: "https://stash.example", TenantID: "t", InventoryID: "i", ConnectorID: "connector", Credential: "machine-secret", ExpiresAt: f.now.Add(time.Hour)}, nil
+	deadline := f.now.Add(time.Minute)
+	if f.activationDeadline != nil {
+		deadline = *f.activationDeadline
+	}
+	return ports.ConnectorRegistration{Server: "https://stash.example", TenantID: "t", InventoryID: "i", ConnectorID: "connector", Credential: "machine-secret", ExpiresAt: f.now.Add(time.Hour), ActivationDeadline: deadline}, nil
 }
 func (f *pairingFixture) Activate(_ context.Context, r ports.ConnectorRegistration, _ string) error {
 	if f.saved == nil || f.saved.Credential != r.Credential {
@@ -61,6 +67,7 @@ func (f *pairingFixture) Save(_ context.Context, r ports.ConnectorRegistration) 
 		return errors.New("storage full")
 	}
 	f.saved = &r
+	f.now = f.now.Add(f.saveDelay)
 	return nil
 }
 func (f *pairingFixture) Load(context.Context, string, string) (ports.ConnectorRegistration, error) {

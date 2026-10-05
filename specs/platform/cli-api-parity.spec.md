@@ -929,8 +929,10 @@ The pairing and consumer operations already used by `connectors print register`,
 `rotate`, and `run` must be recorded as partial workflow coverage, rather than
 unimplemented operations. This does not relax complete-contract acceptance.
 Pairing review and approval remain separate CLI gaps. Pairing polling drops
-response metadata, and credential exchange does not yet retain the activation
-deadline. Consumer execution preserves its safety inputs but reduces some
+response metadata. Credential exchange retains the activation deadline and
+checks it before and after private persistence, as specified in
+`cli-pairing-deadline.spec.md`; its remaining response/inspection parity is still
+partial. Consumer execution preserves its safety inputs but reduces some
 responses to worker state; full inspection and request-field coverage remain
 subject to the parity requirements above.
 

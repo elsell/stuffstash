@@ -45,7 +45,7 @@ func (p *Pairing) Exchange(ctx context.Context, c ports.PairingChallenge, signat
 		return ports.ConnectorRegistration{}, err
 	}
 	v := response.Data
-	return ports.ConnectorRegistration{Server: p.server, TenantID: v.TenantId, InventoryID: v.InventoryId, ConnectorID: v.ConnectorId, Credential: v.Credential, ExpiresAt: v.ExpiresAt}, nil
+	return ports.ConnectorRegistration{Server: p.server, TenantID: v.TenantId, InventoryID: v.InventoryId, ConnectorID: v.ConnectorId, Credential: v.Credential, ExpiresAt: v.ExpiresAt, ActivationDeadline: v.ActivationDeadline}, nil
 }
 func (p *Pairing) Activate(ctx context.Context, r ports.ConnectorRegistration, session string) error {
 	client, err := New(p.server, r.Credential, p.http)
