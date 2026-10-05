@@ -644,6 +644,11 @@ Inspect the test's `status` and `message`: a completed request can report a
 failed provider test. The CLI does not retry these actions automatically. If a
 request is interrupted, read the profile before repeating it.
 
+Use `stuffstash voice-provider show` to inspect the household's voice provider
+configuration and selected profiles. It does not start a voice session or change
+settings. Use `--json` for all configuration fields and response metadata;
+credential values are not returned.
+
 ### Investigate a print job
 
 Use `stuffstash print-jobs list` to find a job, then

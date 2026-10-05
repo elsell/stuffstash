@@ -1148,11 +1148,11 @@
         "domain": "provider profiles",
         "contractSha256": "b1f2ed37237ec9e362fa0eb45661fa175e3f50fdf0dac61068cc43b4454ab697"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "voice-provider show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "list-print-consumer-claims-by-attempt-id-content": {
       "contract": {
