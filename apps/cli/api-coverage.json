@@ -1667,7 +1667,7 @@
       ],
       "status": "partial",
       "gaps": [
-        "Signed exchange, private persistence and activation exist. The activation deadline is discarded and must be handled; secrets must remain private."
+        "Signed exchange, private persistence and strict activation deadline checks exist. Full safe response-envelope inspection remains; credentials and proofs must remain private."
       ]
     },
     "post-print-connector-pairings-by-pairing-id-review": {
