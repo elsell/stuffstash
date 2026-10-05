@@ -2154,11 +2154,11 @@
         "domain": "imports",
         "contractSha256": "c812a8c585eb11e43767ca143fd7c98494eaf168e72c8ae06d82886a1a85388e"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "import-jobs cancel"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id-start": {
       "contract": {

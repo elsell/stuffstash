@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"bytes"
 	"context"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi/generated"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
@@ -29,4 +30,12 @@ func (c *Client) ImportJob(ctx context.Context, s ports.Scope, id string) (ports
 }
 func (c *Client) DeleteImportJob(ctx context.Context, s ports.Scope, id string) error {
 	return noContent(c.sdk.DeleteTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobId(ctx, s.Tenant, s.Inventory, id, nil))
+}
+
+func (c *Client) CancelImportJob(ctx context.Context, s ports.Scope, id string, body []byte) (ports.Result[ports.ImportJob], error) {
+	r, err := read[generated.SuccessEnvelopeImportJobResponse](c.sdk.PostTenantsByTenantIdInventoriesByInventoryIdImportsJobsByJobIdCancelWithBody(ctx, s.Tenant, s.Inventory, id, nil, "application/json", bytes.NewReader(body)))
+	if err != nil {
+		return ports.Result[ports.ImportJob]{}, err
+	}
+	return ports.Result[ports.ImportJob]{Data: mapImportJob(r.Data), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }

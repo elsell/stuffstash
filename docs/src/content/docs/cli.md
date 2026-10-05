@@ -617,3 +617,10 @@ JSON includes the full preview, counts, messages, progress history and created
 resources. Delete removes a job from history; it does not remove imported assets.
 It asks for confirmation, or requires `--yes` in scripts. These commands do not
 poll or retry automatically.
+
+Use `stuffstash import-jobs cancel JOB_ID` to stop a job. Choose whether to keep
+or discard partial progress, then confirm. Scripts use `--input FILE --yes`
+with `{"mode":"keep_partial_progress"}` or
+`{"mode":"discard_partial_progress"}`. Discarding can remove imported records.
+Cancellation can continue in the background; use `import-jobs show JOB_ID` to
+inspect its current state.

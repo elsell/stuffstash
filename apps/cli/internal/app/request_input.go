@@ -35,6 +35,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody = body
 	} else {
+		if isImportCancel(o) {
+			return r.prepareImportCancel(ctx, o)
+		}
 		if isInvitationTokenCommand(o) {
 			return r.prepareInvitationToken(ctx, o)
 		}
@@ -74,6 +77,10 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 			return o, ports.Failure("usage", "Supply --name NAME or --input FILE for this command.")
 		}
 		o.RequestBody, _ = json.Marshal(map[string]string{"name": o.ConnectorName})
+	}
+	if isImportCancel(o) {
+		_, err := importCancellationMode(o.RequestBody)
+		return o, err
 	}
 	if isInvitationTokenCommand(o) {
 		return o, validateInvitationToken(o.RequestBody)

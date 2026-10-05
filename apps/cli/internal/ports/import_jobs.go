@@ -133,7 +133,15 @@ type ImportJobList struct {
 	Jobs []ImportJob `json:"jobs"`
 }
 type ImportJobsAPI interface {
+	CancelImportJob(context.Context, Scope, string, []byte) (Result[ImportJob], error)
 	ImportJobs(context.Context, Scope) (Result[ImportJobList], error)
 	ImportJob(context.Context, Scope, string) (Result[ImportJob], error)
 	DeleteImportJob(context.Context, Scope, string) error
 }
+
+type ImportCancellationMode string
+
+const (
+	KeepImportProgress    ImportCancellationMode = "keep_partial_progress"
+	DiscardImportProgress ImportCancellationMode = "discard_partial_progress"
+)

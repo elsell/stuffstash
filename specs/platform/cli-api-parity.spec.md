@@ -746,3 +746,13 @@ summaries, with --json retaining complete nested evidence.
 `import-jobs delete JOB_ID` confirms removal from history, without claiming to
 remove imported assets. No automatic polling or retries. Critical checks cover
 exact inventory scope, full nested/64-bit data, confirmation and denied access.
+
+`import-jobs cancel JOB_ID --input FILE|-` accepts mode
+`keep_partial_progress` or `discard_partial_progress`. Without JSON input,
+terminals offer an explicit keyboard choice (keep first); scripts must supply
+mode. Validate mode before authentication. Confirm the selected mode and exact
+server/household/inventory/job before submitting. Preserve the returned job state
+without assuming cancellation has finished. Discard warns that partial imported
+records can be removed. After an uncertain result, tell the user to inspect the
+job before retrying; do not retry or poll. Critical checks cover both modes,
+invalid mode, confirmation, scope denial and returned state.

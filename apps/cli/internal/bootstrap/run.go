@@ -201,6 +201,7 @@ const Help = `Stuff Stash CLI
   stuffstash tenants audit [--limit N --cursor CURSOR]
   stuffstash inventories audit [--limit N --cursor CURSOR]
   stuffstash assets audit ASSET_ID [--limit N]
+  stuffstash import-jobs cancel JOB_ID [--input FILE|-] [--yes]
   stuffstash import-jobs list|show JOB_ID|delete JOB_ID [--yes]
   stuffstash server show|auth-config
   stuffstash invitations preview|accept ID [--input FILE|-] [--yes]
