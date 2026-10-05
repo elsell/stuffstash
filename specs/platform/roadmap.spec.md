@@ -24,8 +24,8 @@ verified authenticated bootstrap through Credential Manager and the HTTP boundar
 Browser sign-in and real console interaction remain unverified.
 Command-specific help and Bash/Zsh/Fish completion now share reviewed metadata;
 native completion checks passed without adding project dependencies. The operation inventory tracks 192
-contracts; 117 have their known workflow and field gaps closed. The remaining
-75 still need implementation or full contract verification. The scope-override
+contracts; 120 have their known workflow and field gaps closed. The remaining
+72 still need implementation or full contract verification. The scope-override
 persistence preference remains open before release. Search transport is implemented;
 search command scope defaults await user input.
 

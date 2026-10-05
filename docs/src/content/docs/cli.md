@@ -759,6 +759,21 @@ confirm the displayed version. Scripts must supply `--input FILE --yes` with
 A conflict requires a new review of the run. The CLI does not retry cancellation
 or silently replace your version check.
 
+### Create evaluation cases and queue runs
+
+Use `stuffstash evaluation cases create --input FILE` with a `definition` that
+contains `title`, `utterance` and `expectations`. Optional fixture `assets` describe
+the inventory used by the case. To revise a case, use
+`stuffstash evaluation revisions create CASE_ID --input FILE` and include its
+current `expectedRevision`. Command help lists the supported expectation fields.
+
+`stuffstash evaluation runs create --input FILE` queues a background text-only
+evaluation. Supply `workflowId`, `revisionId` and one to 100 case/revision pairs in
+`cases`. This can make provider calls; it does not activate the workflow. Review
+the displayed household and target before confirming. Scripts must add `--yes`;
+`--input -` reads standard input. Use `evaluation runs show RUN_ID` for results.
+The CLI preserves your versions and does not retry writes automatically.
+
 ### Create and activate workflows
 
 Use `stuffstash workflows create --input FILE` to create a workflow, or
