@@ -2168,9 +2168,9 @@
         "contractSha256": "edb79cd945bacb15757e3ad5e76e1abaa4ec47a2b7b700c64b10c7fd03c81de5"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK source transport and full job response mapping implemented. CLI source input design, guided/file input, scope notice, start confirmation and recovery remain."
       ]
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-preview": {
@@ -2181,9 +2181,9 @@
         "contractSha256": "a927852011e9be148f17980a241dd6394e65cf0de8224dd126053edb52be09f0"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK source transport and full job response mapping implemented. CLI source input design, guided/file input, scope notice, start confirmation and recovery remain."
       ]
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices": {

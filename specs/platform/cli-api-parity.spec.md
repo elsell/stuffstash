@@ -756,3 +756,12 @@ without assuming cancellation has finished. Discard warns that partial imported
 records can be removed. After an uncertain result, tell the user to inspect the
 job before retrying; do not retry or poll. Critical checks cover both modes,
 invalid mode, confirmation, scope denial and returned state.
+
+Import preview and start transports pass the complete source JSON to their
+respective generated SDK endpoints. Preserve sourceType, baseUrl, username,
+password, fileName, contentBase64, includeImages, allowPrivateNetwork and
+allowInsecureTLS without adding permissive defaults or retrying requests. The
+CLI itself never connects to the supplied import source. Both endpoints return
+the complete mapped job envelope. Server error bodies must not expose source
+credentials. CLI source-input interaction is pending user design confirmation;
+transport implementation alone is partial API coverage.
