@@ -1225,10 +1225,12 @@
         "domain": "tenants",
         "contractSha256": "0dbc90b227fc0358e4e5056f8b7adb71770aecdaa1dba0d8afee4a105e66ebe1"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "tenants update"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Guided missing-name input and shared request correlation/response metadata remain unfinished."
       ]
     },
     "patch-tenants-by-tenant-id-archive": {
@@ -1329,10 +1331,12 @@
         "domain": "inventories",
         "contractSha256": "2e41c5dcf11d35cd81e5a9dc737fd340797692abf0cd7a046d35102a5d45e942"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "inventories update"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Guided missing-name input and shared request correlation/response metadata remain unfinished."
       ]
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-cancel": {
@@ -1784,10 +1788,12 @@
         "domain": "tenants",
         "contractSha256": "2295764bd7c137e349e2392f72e913964870b7e8b27c251290112153a98295aa"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "tenants create"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Guided missing-name input and shared request correlation/response metadata remain unfinished."
       ]
     },
     "post-tenants-by-tenant-id-archive-jobs": {
@@ -1953,10 +1959,12 @@
         "domain": "inventories",
         "contractSha256": "4610ad166922d7d805e993a8a72b2e71306804495a6e09ebb72e23a6f3c24824"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "inventories create"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Guided missing-name input and shared request correlation/response metadata remain unfinished."
       ]
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-access-grants": {

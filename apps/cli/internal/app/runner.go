@@ -11,22 +11,27 @@ import (
 )
 
 type Runner struct {
-	DirectoryAPI func(string, string) (ports.Directory, error)
-	Picker       ports.Selector
-	ScopeAPI     func(string, string) (ports.ScopeCatalog, error)
-	Contexts     contexts.Store
-	LabelsAPI    func(string, string) (ports.LabelsAPI, error)
-	LabelFiles   ports.LabelFiles
-	PrintingAPI  func(string, string) (ports.HumanPrintingAPI, error)
-	API          func(string, string) (ports.API, error)
-	Auth         ports.Auth
-	Credentials  ports.Credentials
-	Output       ports.Output
-	Clock        ports.Clock
-	Observer     ports.Observer
+	InputFiles      ports.InputFiles
+	DirectoryWriter func(string, string) (ports.DirectoryWriter, error)
+	DirectoryAPI    func(string, string) (ports.Directory, error)
+	Picker          ports.Selector
+	ScopeAPI        func(string, string) (ports.ScopeCatalog, error)
+	Contexts        contexts.Store
+	LabelsAPI       func(string, string) (ports.LabelsAPI, error)
+	LabelFiles      ports.LabelFiles
+	PrintingAPI     func(string, string) (ports.HumanPrintingAPI, error)
+	API             func(string, string) (ports.API, error)
+	Auth            ports.Auth
+	Credentials     ports.Credentials
+	Output          ports.Output
+	Clock           ports.Clock
+	Observer        ports.Observer
 }
 
 func (r Runner) Run(ctx context.Context, o Options) error {
+	if o.InputPath != "" && !isDirectoryWrite(o) {
+		return ports.Failure("usage", "This command does not accept --input. Remove the option.")
+	}
 	if len(o.Command) == 0 {
 		return ports.Failure("usage", "a command is required; use --help")
 	}
@@ -73,6 +78,10 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	if err := validateCommandShape(o); err != nil {
 		return err
 	}
+	o, err := r.prepareInput(ctx, o)
+	if err != nil {
+		return err
+	}
 	session, err := r.Credentials.Load(ctx, o.Server)
 	if err != nil {
 		return err
@@ -85,6 +94,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		if err = r.Credentials.Save(ctx, session); err != nil {
 			return err
 		}
+	}
+	if isTenantCreate(o) {
+		return r.writeDirectory(ctx, o, session.IDToken)
 	}
 	if isAccountCommand(o) {
 		return r.directoryCommand(ctx, o, session.IDToken)
@@ -112,6 +124,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 
+	if isDirectoryWrite(o) {
+		return r.writeDirectory(ctx, o, session.IDToken)
+	}
 	if isDirectoryCommand(o) {
 		return r.directoryCommand(ctx, o, session.IDToken)
 	}
@@ -185,7 +200,7 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	if !o.PrintLabel && isPrintingCommand(o) {
 		return validatePrintingCommandOptions(o, requireScope)
 	}
-	if isDirectoryCommand(o) {
+	if isDirectoryCommand(o) || isDirectoryWrite(o) {
 		if requireScope && missingResourceScope(o) {
 			return ports.Failure("usage", "Supply the required scope with --tenant and, for inventory commands, --inventory.")
 		}

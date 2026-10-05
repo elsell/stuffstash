@@ -11,6 +11,8 @@ import (
 )
 
 type Options struct {
+	InputPath                                                             string
+	RequestBody                                                           []byte
 	Color                                                                 string
 	Selection                                                             contexts.Selection
 	NoInput                                                               bool
@@ -42,6 +44,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	o.Selection.Context = environment.Context
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
+	flags.StringVar(&o.InputPath, "input", "", "JSON request file, or - for stdin")
 	flags.StringVar(&o.Color, "color", "auto", "color output: auto, always, or never")
 	flags.StringVar(&o.Selection.Context, "context", environment.Context, "saved context name")
 	flags.BoolVar(&o.NoInput, "no-input", false, "do not ask for input")
@@ -58,7 +61,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	flags.BoolVar(&o.PrintLabel, "print-label", false, "create a label job with the new asset")
 	flags.BoolVar(&o.ShowReference, "show-reference", false, "show label reference")
 	flags.StringVar(&o.ConnectorID, "connector", o.ConnectorID, "registered connector ID")
-	flags.StringVar(&o.ConnectorName, "name", "", "connector name")
+	flags.StringVar(&o.ConnectorName, "name", "", "household, inventory, or connector name")
 	flags.StringVar(&o.JournalDirectory, "journal-dir", o.JournalDirectory, "persistent print recovery directory")
 	flags.StringVar(&o.Server, "server", o.Server, "Stuff Stash API URL")
 	flags.StringVar(&o.Scope.Tenant, "tenant", o.Scope.Tenant, "tenant ID")
@@ -136,6 +139,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "Use --color auto, --color always, or --color never.")
 	}
 	o.Command = positional
+ if o.InputPath!="" && !isDirectoryWrite(o){return o,ports.Failure("usage","This command does not accept --input. Remove the option.")}
 	if o.Page.Limit < 1 {
 		return o, ports.Failure("usage", "--limit must be positive")
 	}

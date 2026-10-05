@@ -11,6 +11,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi"
+	"github.com/stuffstash/stuff-stash/cli/internal/adapters/inputfiles"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/labelfiles"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/oidcauth"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/presentation"
@@ -19,6 +20,7 @@ import (
 	"github.com/stuffstash/stuff-stash/cli/internal/app/contexts"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 	"github.com/stuffstash/stuff-stash/cli/internal/version"
+	"golang.org/x/term"
 )
 
 type systemClock struct{}
@@ -83,16 +85,18 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		picker = terminal.Picker{Input: os.Stdin, Output: terminalErrors, Color: options.Color == "always" || (options.Color == "auto" && getenv("NO_COLOR") == "")}
 	}
 	runner := app.Runner{
-		DirectoryAPI: func(server, token string) (ports.Directory, error) { return httpapi.New(server, token, client) },
-		Picker:       picker,
-		ScopeAPI:     func(server, token string) (ports.ScopeCatalog, error) { return httpapi.New(server, token, client) },
-		Contexts:     contextStore,
-		LabelFiles:   labelfiles.Files{},
-		LabelsAPI:    func(server, token string) (ports.LabelsAPI, error) { return httpapi.New(server, token, client) },
-		PrintingAPI:  func(server, token string) (ports.HumanPrintingAPI, error) { return httpapi.New(server, token, client) },
-		API:          func(server, token string) (ports.API, error) { return httpapi.New(server, token, client) },
-		Auth:         oidcauth.Adapter{HTTP: client, Clock: clock, Output: output, Browser: oidcauth.SystemBrowser{}, AllowLoopbackHTTP: options.AllowLoopbackHTTP},
-		Credentials:  store, Clock: clock, Output: output, Observer: presentation.SilentObserver{},
+		InputFiles:      inputfiles.Files{Stdin: os.Stdin, StdinTerminal: term.IsTerminal(int(os.Stdin.Fd()))},
+		DirectoryWriter: func(server, token string) (ports.DirectoryWriter, error) { return httpapi.New(server, token, client) },
+		DirectoryAPI:    func(server, token string) (ports.Directory, error) { return httpapi.New(server, token, client) },
+		Picker:          picker,
+		ScopeAPI:        func(server, token string) (ports.ScopeCatalog, error) { return httpapi.New(server, token, client) },
+		Contexts:        contextStore,
+		LabelFiles:      labelfiles.Files{},
+		LabelsAPI:       func(server, token string) (ports.LabelsAPI, error) { return httpapi.New(server, token, client) },
+		PrintingAPI:     func(server, token string) (ports.HumanPrintingAPI, error) { return httpapi.New(server, token, client) },
+		API:             func(server, token string) (ports.API, error) { return httpapi.New(server, token, client) },
+		Auth:            oidcauth.Adapter{HTTP: client, Clock: clock, Output: output, Browser: oidcauth.SystemBrowser{}, AllowLoopbackHTTP: options.AllowLoopbackHTTP},
+		Credentials:     store, Clock: clock, Output: output, Observer: presentation.SilentObserver{},
 	}
 	return exit(output, runner.Run(ctx, options))
 }
@@ -127,6 +131,10 @@ const Help = `Stuff Stash CLI
   stuffstash context current
   stuffstash context use NAME
   stuffstash context delete NAME
+  stuffstash tenants create --name NAME
+  stuffstash tenants update --name NAME
+  stuffstash inventories create --name NAME
+  stuffstash inventories update --input FILE|-
   stuffstash account show
   stuffstash tenants show [--tenant ID]
   stuffstash inventories show [--tenant ID --inventory ID]

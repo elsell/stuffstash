@@ -50,6 +50,22 @@ export STUFF_STASH_CLI_CREDENTIAL_FILE="$HOME/.config/stuffstash/session.json"
 The file must remain accessible only to your account. `./stuffstash logout`
 removes the locally stored session for the selected server.
 
+## Create and rename households or inventories
+
+```sh
+./stuffstash tenants create --name 'Home'
+./stuffstash inventories create --tenant HOUSEHOLD_ID --name 'Garage'
+./stuffstash inventories update --name 'Workshop'
+```
+
+Use `--input request.json` instead of `--name` to send a JSON object, or pipe it
+with `--input -`. The limit is 1 MiB. The CLI prints the target scope to stderr
+before a write; `--json` keeps the result on stdout. New resources do not change
+your current context.
+
+These four create/update operations do not support idempotency keys. If a create
+response is lost, check `tenants list` or `inventories list` before retrying.
+
 ## Work with assets
 
 Run `stuffstash account show` to check the signed-in account and

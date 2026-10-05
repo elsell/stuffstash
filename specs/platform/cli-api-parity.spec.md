@@ -256,3 +256,27 @@ including access permissions and inventory tenant ID. These read commands use a
 directory port implemented by the generated SDK adapter. Account-wide reads run
 before saved resource-scope resolution so unrelated context ambiguity cannot
 prevent account discovery.
+
+### Household and inventory writes
+
+`tenants create/update` and `inventories create/update` accept either `--name`
+or `--input FILE` (`--input -` reads stdin), never both. Create requires a name;
+update preserves an omitted name and accepts an empty JSON object. JSON input
+must be one object, at most 1 MiB, with no trailing value. The source adapter
+accepts regular files only; it rejects terminal stdin instead of waiting for
+manual JSON entry. Cancellation releases an idle stdin read. On Unix, open file
+paths without blocking before checking the handle, and make inherited stdin
+pollable through a private duplicate. JSON bytes reach generated SDK body methods unchanged, so
+future nullable fields retain their wire meaning. The API remains responsible
+for schema and domain validation. Input errors occur before sign-in or writes.
+The CLI must reject --input on commands that do not support a request body.
+
+Household creation needs no existing resource scope. Inventory creation needs
+only tenant scope. Updates use the selected tenant/inventory. Creating a resource
+does not silently change the current context. Before a scoped write, print the
+effective server and resource IDs to stderr. These four REST operations do not declare idempotency support. Reject
+--idempotency-key instead of suggesting it can prevent duplicate creation. Do
+not retry writes automatically. If a create loses its response, instruct the
+user to list resources before retrying; the result can be unknown. These creates and name updates are not destructive operations and
+do not require confirmation. Guided missing-name prompts remain part of the full
+interactive delivery; scripts must provide --name or --input.
