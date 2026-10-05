@@ -786,3 +786,14 @@ optional inventory filter. Neither adapter changes defaults, silently changes
 the destination, repeats the mutation or follows redirects. Both preserve the
 complete archive job response. Command preparation must supply explicit inputs
 and confirmation before using these transports; transport-only coverage is partial.
+
+Archive transfer ports stream uploads as application/zip through the generated
+SDK and return owned download streams with content length/type/disposition.
+The upload caller owns its input stream; the transport must not close or buffer
+it, unpack ZIP entries, or provide replayable request bodies. Forward the exact
+household and retry key. Downloads preserve optional inventory scope, reject
+partial/redirect/error responses, and require callers to close successful bodies.
+Use a shared binary-content transport contract for attachments and archives.
+No server filename is interpreted as a local path by these adapters. Critical
+checks cover byte integrity, scope, headers, streaming before EOF, denial and
+redirect safety. Destination and input-file UX remain separate pending decisions.

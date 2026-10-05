@@ -217,9 +217,9 @@
         "contractSha256": "c13d3634dc0403dfe6402543b60c0ac0b4f2d5d48c2c2a274cc6042fc00408fb"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Streaming SDK transport implemented with byte/scope/redirect checks; no local ZIP extraction. CLI file input/output, confirmation and recovery wiring remain pending design choices."
       ]
     },
     "get-cli-auth-config": {
@@ -2493,9 +2493,9 @@
         "contractSha256": "7982e1a88d9506d7a945c1364834dc4dfb6fd4f413a66b87c572741263a8079f"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Streaming SDK transport implemented with byte/scope/redirect checks; no local ZIP extraction. CLI file input/output, confirmation and recovery wiring remain pending design choices."
       ]
     }
   }
