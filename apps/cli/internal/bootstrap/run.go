@@ -80,14 +80,17 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 	clock := systemClock{}
 	var picker ports.Selector
 	var textInput ports.TextInput
+	var secretInput ports.SecretInput
 	terminalOutput, _ := stdout.(*os.File)
 	terminalErrors, _ := stderr.(*os.File)
 	if !options.NoInput && !options.JSON && getenv("TERM") != "dumb" && terminal.Available(os.Stdin, terminalOutput, terminalErrors) {
 		prompt := terminal.Picker{Input: os.Stdin, Output: terminalErrors, Color: options.Color == "always" || (options.Color == "auto" && getenv("NO_COLOR") == "")}
 		picker = prompt
 		textInput = prompt
+		secretInput = prompt
 	}
 	runner := app.Runner{
+		SecretInput: secretInput,
 		NotificationPreferencesAPI: func(server, token string) (ports.NotificationPreferencesAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
@@ -179,6 +182,7 @@ const Help = `Stuff Stash CLI
   stuffstash notification-preferences remove-override TYPE_ID --revision N [--yes]
   stuffstash notification-preferences show
   stuffstash notification-preferences initialize [--timezone ZONE | --input FILE|-]
+  stuffstash notification-devices register [--input FILE|-]
   stuffstash notification-devices show INSTALLATION_ID
   stuffstash notification-devices remove DEVICE_ID --revision N [--yes]
   stuffstash notifications list [--unread-only --limit N --cursor CURSOR]

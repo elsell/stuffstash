@@ -507,3 +507,10 @@ requires `settings`. Policies contain `enabled`, `upcoming`, `expired`, and
 To return a type to the default policy, use
 `stuffstash notification-preferences remove-override TYPE_ID --revision N`.
 Removal asks for confirmation; scripts add `--yes`.
+
+Register a push device with `stuffstash notification-devices register`. A terminal
+asks for the installation ID, push service, revision, and a hidden token. Use
+revision `0` for a first registration. For scripts, supply `--input FILE` or pipe
+JSON with `--input -`; the body contains `installationId`, `transport` (`apns` or
+`fcm`), `token`, and `revision`. Treat this input as secret. The CLI does not
+include the token in results or error messages.

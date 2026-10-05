@@ -35,10 +35,12 @@ func (p Picker) ReadText(ctx context.Context, title string, maximum int) (string
 }
 
 type textIO struct {
-	ctx     context.Context
-	reader  *bufio.Reader
-	writer  io.Writer
-	pending []byte
+	secretLimit int
+	secretRead  int
+	ctx         context.Context
+	reader      *bufio.Reader
+	writer      io.Writer
+	pending     []byte
 }
 
 func (t *textIO) Read(p []byte) (int, error) {
@@ -52,6 +54,12 @@ func (t *textIO) Read(p []byte) (int, error) {
 		}
 		if r == 3 {
 			return 0, context.Canceled
+		}
+		if t.secretLimit > 0 && r != '\r' && r != '\n' {
+			t.secretRead++
+			if t.secretRead > t.secretLimit {
+				return 0, ports.Failure("input", "Secret input is too long. Use --input FILE instead.")
+			}
 		}
 		t.pending = utf8.AppendRune(nil, r)
 	}

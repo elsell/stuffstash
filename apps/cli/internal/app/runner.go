@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	SecretInput                ports.SecretInput
 	NotificationPreferencesAPI func(string, string) (ports.NotificationPreferencesAPI, error)
 	NotificationDevicesAPI     func(string, string) (ports.NotificationDevicesAPI, error)
 	NotificationsAPI           func(string, string) (ports.NotificationsAPI, error)

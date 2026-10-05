@@ -612,3 +612,14 @@ may reset omitted fields. A conflict never fetches a newer revision and retries.
 terminals may prompt for a missing positive revision. JSON bodies and revision
 flags are mutually exclusive. Show the target type and effective scope before
 mutation. Validation errors and cancellation issue no mutation.
+
+`notification-devices register --input FILE|-` accepts the full registration
+body without putting a token in command arguments. A terminal without input
+prompts for installation ID, APNs/FCM via keyboard selection, nonnegative
+revision (0 for initial registration), and token through a non-echoing secret
+input port. Never use the ordinary echoed text input for a token. Interactive
+tokens are limited to 4095 input characters; JSON input supports larger values within
+the shared input-file bound. Detect excess input before the terminal library can
+truncate it, and fail without submitting a partial token. Cancellation restores terminal state and sends no
+mutation. The result and errors contain no token. No automatic retry occurs;
+uncertain results direct the user to lookup by installation ID before retrying.

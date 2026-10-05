@@ -35,6 +35,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody = body
 	} else {
+		if isDeviceRegistration(o) {
+			return r.prepareDeviceRegistration(ctx, o)
+		}
 		if isPreferenceWrite(o) {
 			return r.preparePreferenceInput(ctx, o)
 		}

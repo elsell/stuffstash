@@ -11,10 +11,10 @@ func isNotificationDeviceCommand(o Options) bool {
 	return len(o.Command) > 0 && o.Command[0] == "notification-devices"
 }
 func validateNotificationDevices(o Options, scope bool) error {
-	if len(o.Command) != 3 || o.Command[2] == "" || (o.Command[1] != "show" && o.Command[1] != "remove") {
-		return ports.Failure("usage", "Use notification-devices show INSTALLATION_ID or remove DEVICE_ID --revision N.")
+	if !(len(o.Command) == 2 && isDeviceRegistration(o)) && (len(o.Command) != 3 || o.Command[2] == "" || (o.Command[1] != "show" && o.Command[1] != "remove")) {
+		return ports.Failure("usage", "Use notification-devices register, show INSTALLATION_ID, or remove DEVICE_ID --revision N.")
 	}
-	if o.Command[1] == "show" && o.Revision != -1 {
+	if o.Command[1] != "remove" && o.Revision != -1 {
 		return ports.Failure("usage", "Use --revision with notification-devices remove.")
 	}
 	if o.Revision != -1 && o.Revision < 1 {
@@ -35,6 +35,9 @@ func (r Runner) notificationDevicesCommand(ctx context.Context, o Options, token
 	api, err := r.NotificationDevicesAPI(o.Server, token)
 	if err != nil {
 		return err
+	}
+	if isDeviceRegistration(o) {
+		return r.registerNotificationDevice(ctx, o, api)
 	}
 	if o.Command[1] == "show" {
 		result, err := api.NotificationDevice(ctx, o.Scope, o.Command[2])

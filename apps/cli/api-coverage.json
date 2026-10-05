@@ -2193,11 +2193,11 @@
         "domain": "notifications",
         "contractSha256": "028c366e8b6e6b6f9ff925ac6768385d000ea4902253407ae122b7264cb462e5"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
-      ]
+      "commands": [
+        "notification-devices register"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-initialize": {
       "contract": {
