@@ -18,12 +18,12 @@ func owned(info os.FileInfo) bool {
 func lock(ctx context.Context, root *os.Root, name string) (func(), error) {
 	f, err := root.OpenFile(name, os.O_CREATE|os.O_RDWR|unix.O_NOFOLLOW, 0600)
 	if err != nil {
-		return nil, configError()
+		return nil, configSaveError()
 	}
 	info, err := f.Stat()
 	if err != nil || !privateFile(info) || !secureFile(f) {
 		f.Close()
-		return nil, configError()
+		return nil, configSaveError()
 	}
 	for {
 		err = unix.Flock(int(f.Fd()), unix.LOCK_EX|unix.LOCK_NB)
@@ -32,7 +32,7 @@ func lock(ctx context.Context, root *os.Root, name string) (func(), error) {
 		}
 		if !errors.Is(err, unix.EWOULDBLOCK) {
 			f.Close()
-			return nil, configError()
+			return nil, configSaveError()
 		}
 		timer := time.NewTimer(25 * time.Millisecond)
 		select {

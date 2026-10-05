@@ -65,35 +65,35 @@ func prepareDirectory(path string) error {
 	// The leaf directory is created with private inherited access, never briefly
 	// exposed under a permissive parent ACL. Existing ACLs are never rewritten.
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-		return configError()
+		return configSaveError()
 	}
 	user, err := windows.GetCurrentProcessToken().GetTokenUser()
 	if err != nil {
-		return configError()
+		return configSaveError()
 	}
 	descriptor, err := windows.SecurityDescriptorFromString("O:" + user.User.Sid.String() + "D:P(A;OICI;FA;;;" + user.User.Sid.String() + ")")
 	if err != nil {
-		return configError()
+		return configSaveError()
 	}
 	name, err := windows.UTF16PtrFromString(path)
 	if err != nil {
-		return configError()
+		return configSaveError()
 	}
 	attributes := windows.SecurityAttributes{Length: uint32(unsafe.Sizeof(windows.SecurityAttributes{})), SecurityDescriptor: descriptor}
 	if err = windows.CreateDirectory(name, &attributes); err != nil && !errors.Is(err, windows.ERROR_ALREADY_EXISTS) {
-		return configError()
+		return configSaveError()
 	}
 	info, err := os.Lstat(path)
 	if err != nil || !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
-		return configError()
+		return configSaveError()
 	}
 	file, err := os.Open(path)
 	if err != nil {
-		return configError()
+		return configSaveError()
 	}
 	defer file.Close()
 	if !secureDirectory(file) {
-		return configError()
+		return configSaveError()
 	}
 	return nil
 }

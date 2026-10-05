@@ -4,8 +4,11 @@ package labelfiles
 
 import (
 	"context"
+	"errors"
+	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -16,8 +19,9 @@ func TestPublicationPreservesExistingFilesAndLeavesNoPartialOutput(t *testing.T)
 	if err := (Files{}).Publish(context.Background(), path, content); err != nil {
 		t.Fatal(err)
 	}
-	if err := (Files{}).Publish(context.Background(), path, []byte("replacement")); err == nil {
-		t.Fatal("overwrote existing file")
+	var failure *ports.Error
+	if err := (Files{}).Publish(context.Background(), path, []byte("replacement")); !errors.As(err, &failure) || failure.Category != "file" || !strings.Contains(failure.Message, "already exists") || !strings.Contains(failure.Message, "--output") {
+		t.Fatalf("existing output guidance: %v", err)
 	}
 	data, err := os.ReadFile(path)
 	if err != nil || string(data) != string(content) {

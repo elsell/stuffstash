@@ -37,7 +37,7 @@ func printConfig(options app.Options, getenv func(string) string) (printSettings
 			var err error
 			value, err = time.ParseDuration(raw)
 			if err != nil || value < 100*time.Millisecond || value > setting.maximum {
-				return c, ports.Failure("configuration", "invalid STUFF_STASH_CLI_PRINT_"+setting.name)
+				return c, ports.Failure("configuration", "STUFF_STASH_CLI_PRINT_"+setting.name+" is invalid. Use a duration from 100ms to "+setting.maximum.String()+", such as 1s.")
 			}
 		}
 		*setting.target = value

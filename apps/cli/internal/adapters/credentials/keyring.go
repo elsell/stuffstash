@@ -33,7 +33,7 @@ func (Keyring) Save(_ context.Context, s ports.Session) error {
 		return err
 	}
 	if keyring.Set(service, s.Server, string(value)) != nil {
-		return errors.New("could not save to OS credential store")
+		return errors.New("Cannot save your session to the system credential store. Unlock the store and run stuffstash login again. You can also set STUFF_STASH_CLI_CREDENTIAL_FILE to a private file path before login.")
 	}
 	return nil
 }

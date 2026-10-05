@@ -41,14 +41,14 @@ func ValidateURL(raw string, allowLoopback bool) error {
 }
 func (a Adapter) provider(ctx context.Context, issuer, clientID string) (context.Context, *oidc.Provider, oauth2.Config, error) {
 	if ValidateURL(issuer, a.AllowLoopbackHTTP) != nil || clientID == "" {
-		return ctx, nil, oauth2.Config{}, ports.Failure("configuration", "invalid OIDC issuer or client ID")
+		return ctx, nil, oauth2.Config{}, ports.Failure("configuration", "The sign-in provider configuration is invalid. Ask the server administrator to check the OIDC issuer URL and CLI client ID.")
 	}
 	safe := *a.HTTP
 	safe.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	ctx = oidc.ClientContext(ctx, &safe)
 	provider, err := oidc.NewProvider(ctx, issuer)
 	if err != nil {
-		return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "OIDC discovery failed")
+		return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "Cannot get the sign-in provider configuration. Check your connection and run stuffstash login again. If the error continues, contact the server administrator.")
 	}
 	var extra endpoints
 	if provider.Claims(&extra) != nil {

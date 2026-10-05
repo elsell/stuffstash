@@ -5,9 +5,11 @@ import (
 	"context"
 	"errors"
 	"github.com/stuffstash/stuff-stash/cli/internal/app/contexts"
+	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -184,5 +186,39 @@ func TestContextLockWaitAcrossProcessesHonorsCancellation(t *testing.T) {
 	}
 	if _, err := os.Stat(store.Path); !os.IsNotExist(err) {
 		t.Fatalf("published while another process held the lock: %v", err)
+	}
+}
+
+func TestContextFailuresIdentifyReadAndSaveOperations(t *testing.T) {
+	ctx := context.Background()
+	store := Store{Path: filepath.Join(t.TempDir(), "config", "contexts.json")}
+	if err := prepareDirectory(filepath.Dir(store.Path)); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(store.Path, []byte("invalid json"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	called := false
+	readErr := store.Update(ctx, func(*contexts.Config) error { called = true; return nil })
+	var failure *ports.Error
+	if called || !errors.As(readErr, &failure) || failure.Category != "configuration" || !strings.Contains(failure.Message, "read") {
+		t.Fatalf("read failure: called=%v error=%v", called, readErr)
+	}
+	if err := os.Remove(store.Path); err != nil {
+		t.Fatal(err)
+	}
+	// An existing directory at publication time makes rename fail without
+	// depending on Unix permissions or whether the test runs as root.
+	saveErr := store.Update(ctx, func(*contexts.Config) error { return os.Mkdir(store.Path, 0700) })
+	if !errors.As(saveErr, &failure) || failure.Category != "configuration" || !strings.Contains(failure.Message, "save") || strings.Contains(failure.Message, "read") {
+		t.Fatalf("save failure: %v", saveErr)
+	}
+	info, err := os.Stat(store.Path)
+	if err != nil || !info.IsDir() {
+		t.Fatalf("destination replaced: %v", err)
+	}
+	temporary, err := filepath.Glob(filepath.Join(filepath.Dir(store.Path), ".contexts-*.tmp"))
+	if err != nil || len(temporary) != 0 {
+		t.Fatalf("partial files: %v %v", temporary, err)
 	}
 }

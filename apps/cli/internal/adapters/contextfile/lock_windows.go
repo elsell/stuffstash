@@ -12,20 +12,20 @@ import (
 
 func lock(ctx context.Context, root *os.Root, name string) (func(), error) {
 	if info, err := root.Lstat(name); err == nil && !privateFile(info) {
-		return nil, configError()
+		return nil, configSaveError()
 	} else if err != nil && !os.IsNotExist(err) {
-		return nil, configError()
+		return nil, configSaveError()
 	}
 	file, err := newPrivateFile(root, name)
 	if errors.Is(err, windows.STATUS_OBJECT_NAME_COLLISION) {
 		file, err = root.OpenFile(name, os.O_RDWR, 0600)
 	}
 	if err != nil {
-		return nil, configError()
+		return nil, configSaveError()
 	}
 	if !secureFile(file) {
 		file.Close()
-		return nil, configError()
+		return nil, configSaveError()
 	}
 	overlapped := new(windows.Overlapped)
 	for {
@@ -39,7 +39,7 @@ func lock(ctx context.Context, root *os.Root, name string) (func(), error) {
 		}
 		if !errors.Is(err, windows.ERROR_LOCK_VIOLATION) {
 			file.Close()
-			return nil, configError()
+			return nil, configSaveError()
 		}
 		timer := time.NewTimer(25 * time.Millisecond)
 		select {

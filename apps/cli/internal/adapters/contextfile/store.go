@@ -19,6 +19,9 @@ type Store struct{ Path string }
 func configError() error {
 	return ports.Failure("configuration", "Cannot read the context file. Check its format and access permissions.")
 }
+func configSaveError() error {
+	return ports.Failure("configuration", "Cannot save the context file. Check directory permissions and available disk space.")
+}
 func (s Store) Load(ctx context.Context) (contexts.Config, error) {
 	if err := ctx.Err(); err != nil {
 		return contexts.Config{}, err
@@ -83,17 +86,17 @@ func (s Store) Update(ctx context.Context, change func(*contexts.Config) error) 
 	}
 	root, err := os.OpenRoot(dir)
 	if err != nil {
-		return configError()
+		return configSaveError()
 	}
 	defer root.Close()
 	directory, err := root.Open(".")
 	if err != nil {
-		return configError()
+		return configSaveError()
 	}
 	safe := secureDirectory(directory)
 	directory.Close()
 	if !safe {
-		return configError()
+		return configSaveError()
 	}
 	unlock, err := lock(ctx, root, filepath.Base(s.Path)+".lock")
 	if err != nil {
@@ -116,24 +119,24 @@ func (s Store) Update(ctx context.Context, change func(*contexts.Config) error) 
 	}
 	body, err := json.MarshalIndent(config, "", "  ")
 	if err != nil || len(body) > maxConfigBytes {
-		return configError()
+		return configSaveError()
 	}
 	if err = ctx.Err(); err != nil {
 		return err
 	}
 	var suffix [12]byte
 	if _, err = rand.Read(suffix[:]); err != nil {
-		return configError()
+		return configSaveError()
 	}
 	name := ".contexts-" + hex.EncodeToString(suffix[:]) + ".tmp"
 	file, err := newPrivateFile(root, name)
 	if err != nil {
-		return configError()
+		return configSaveError()
 	}
 	defer root.Remove(name)
 	if !secureFile(file) {
 		file.Close()
-		return configError()
+		return configSaveError()
 	}
 	_, err = file.Write(append(body, '\n'))
 	if err == nil {
@@ -141,13 +144,13 @@ func (s Store) Update(ctx context.Context, change func(*contexts.Config) error) 
 	}
 	closeErr := file.Close()
 	if err != nil || closeErr != nil {
-		return configError()
+		return configSaveError()
 	}
 	if err := ctx.Err(); err != nil {
 		return err
 	}
 	if err = root.Rename(name, filepath.Base(s.Path)); err != nil {
-		return configError()
+		return configSaveError()
 	}
 	return nil
 }
