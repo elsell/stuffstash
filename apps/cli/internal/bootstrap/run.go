@@ -99,6 +99,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		PrintSettingsAPI: func(server, token string) (ports.PrintSettingsAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
+		WorkflowsAPI: func(server, token string) (ports.WorkflowsAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		ProviderProfilesAPI: func(server, token string) (ports.ProviderProfilesAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
@@ -215,6 +218,11 @@ const Help = `Stuff Stash CLI
   stuffstash assets audit ASSET_ID [--limit N]
   stuffstash evaluation cases|runs list|show ID
   stuffstash evaluation revisions list CASE_ID|show CASE_ID REVISION_ID
+  stuffstash workflows list [--limit N] [--cursor CURSOR]
+  stuffstash workflows show WORKFLOW_ID
+  stuffstash workflows revisions list WORKFLOW_ID [--limit N] [--cursor CURSOR]
+  stuffstash workflows revisions show WORKFLOW_ID REVISION_ID
+  stuffstash workflows selection show
   stuffstash provider-profiles list|show PROFILE_ID
   stuffstash provider-profiles enable|disable|archive|test PROFILE_ID [--yes]
   stuffstash import-jobs cancel JOB_ID [--input FILE|-] [--yes]

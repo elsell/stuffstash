@@ -35,6 +35,14 @@ func (o Output) Result(value any) error {
 		}
 		return o.pagination(v.Pagination)
 
+	case ports.Result[[]ports.WorkflowHead]:
+		return o.workflows(v)
+	case ports.Result[[]ports.WorkflowRevision]:
+		return o.workflowRevisions(v)
+	case ports.Result[ports.WorkflowRevision]:
+		return o.workflowRevision(v.Data)
+	case ports.Result[*ports.WorkflowSelection]:
+		return o.workflowSelection(v.Data)
 	case ports.Result[ports.PrintConnector]:
 		return o.printConnector(v.Data)
 	case ports.Result[[]ports.PrintConnector]:

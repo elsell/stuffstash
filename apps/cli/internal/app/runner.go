@@ -13,6 +13,7 @@ import (
 
 type Runner struct {
 	EvaluationAPI              func(string, string) (ports.EvaluationAPI, error)
+	WorkflowsAPI               func(string, string) (ports.WorkflowsAPI, error)
 	ConnectorInspectionAPI     func(string, string) (ports.ConnectorInspectionAPI, error)
 	PrintSettingsAPI           func(string, string) (ports.PrintSettingsAPI, error)
 	ProviderProfilesAPI        func(string, string) (ports.ProviderProfilesAPI, error)
@@ -155,6 +156,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	}
 	if isEvaluationCommand(o) {
 		return r.evaluationCommand(ctx, o, session.IDToken)
+	}
+	if isWorkflowCommand(o) {
+		return r.workflowCommand(ctx, o, session.IDToken)
 	}
 	if isProviderProfileCommand(o) {
 		return r.providerProfileCommand(ctx, o, session.IDToken)
@@ -320,6 +324,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if isEvaluationCommand(o) {
 		return validateEvaluation(o, requireScope)
+	}
+	if isWorkflowCommand(o) {
+		return validateWorkflows(o, requireScope)
 	}
 	if isProviderProfileCommand(o) {
 		return validateProviderProfiles(o, requireScope)
