@@ -1,5 +1,15 @@
 # Roadmap Spec
 
+## Current focus — Full REST CLI parity, October 5, 2026
+
+Implement [the approved CLI parity contract](cli-api-parity.spec.md): all REST
+operations, remembered per-server contexts, keyboard-driven prompts, reliable
+scripting, STE errors, and minimal measured binary/dependency growth. Chat is
+out of scope. The generated SDK is the transport foundation, not proof of
+complete command workflows. Full parity is not yet delivered. Existing native
+acceptance remains tracked separately and does not block this work.
+
+
 ## Labels, Printers, And CLI: Released — October 4, 2026
 
 Design PR #337 is merged. The integrated implementation now includes registered
