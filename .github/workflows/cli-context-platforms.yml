@@ -1,4 +1,4 @@
-name: CLI context storage
+name: CLI platform contracts
 
 on:
   pull_request:
@@ -27,7 +27,7 @@ concurrency:
 
 jobs:
   windows-context:
-    name: Windows private context storage
+    name: Windows CLI contracts
     runs-on: windows-2025
     timeout-minutes: 10
     env:
@@ -49,7 +49,7 @@ jobs:
           cache: false
       - name: Verify API coverage inventory
         run: python ../../scripts/check-cli-api-coverage.py
-      - name: Verify private storage and process locks
-        run: go test -mod=readonly -timeout=2m ./internal/app/contexts ./internal/adapters/contextfile ./internal/adapters/terminal
+      - name: Verify commands, safe input and private storage
+        run: go test -mod=readonly -timeout=2m ./internal/app ./internal/bootstrap ./internal/app/contexts ./internal/adapters/contextfile ./internal/adapters/credentials ./internal/adapters/inputfiles ./internal/adapters/presentation ./internal/adapters/terminal
       - name: Build the Windows CLI
         run: go build -mod=readonly -buildvcs=false -o "$env:RUNNER_TEMP/stuffstash.exe" ./cmd/stuffstash
