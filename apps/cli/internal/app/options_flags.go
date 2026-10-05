@@ -11,7 +11,7 @@ func optionFlags(o *Options) *flag.FlagSet {
 	flags.SetOutput(io.Discard)
 	expirationFlags(flags, o)
 	printSubmissionFlags(flags, o)
-	flags.StringVar(&o.InvitationStatus, "status", "", "invitation status filter")
+	flags.StringVar(&o.InvitationStatus, "status", "", "invitation status or unsettled connector-attempt filter")
 	flags.Func("view", "asset activity: changes or all", func(v string) error { o.ActivityView = ports.ActivityView(v); return nil })
 	flags.Func("details", "checkout or return notes", func(value string) error { o.Details = &value; return nil })
 	flags.Func("tag-color", "tag color as #RRGGBB, or an empty value", func(value string) error { o.TagColor = &value; return nil })

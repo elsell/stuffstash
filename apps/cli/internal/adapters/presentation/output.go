@@ -19,6 +19,23 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[[]ports.ConsumerPrinter]:
+		for _, item := range v.Data {
+			if err := o.consumerPrinter(item); err != nil {
+				return err
+			}
+		}
+		return o.pagination(v.Pagination)
+	case ports.Result[[]ports.ConsumerAttempt]:
+		for _, item := range v.Data {
+			if err := o.consumerAttempt(&item); err != nil {
+				return err
+			}
+		}
+		return o.pagination(v.Pagination)
+	case ports.Result[*ports.ConsumerAttempt]:
+		return o.consumerAttempt(v.Data)
+
 	case ports.Result[*ports.VoiceProviderConfiguration]:
 		return o.voiceProvider(v.Data)
 	case ports.Result[[]ports.EvaluationCaseHead]:

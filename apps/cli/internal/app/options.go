@@ -100,6 +100,9 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if err := validateConsumerInspection(flags, o); err != nil {
+		return o, err
+	}
 	if err := validatePrintSubmissionFlags(flags, o); err != nil {
 		return o, err
 	}
@@ -183,7 +186,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	if o.Revision != -1 && !isNotificationDeviceCommand(o) && !isPreferenceCommand(o) {
 		return o, ports.Failure("usage", "Use --revision with notification-devices remove.")
 	}
-	if o.InvitationStatus != "" && !isInvitationCommand(o) {
+	if o.InvitationStatus != "" && !isInvitationCommand(o) && !IsConsumerInspection(o) {
 		return o, ports.Failure("usage", "Use --status with invitations list.")
 	}
 	if o.ActivityView != "" && !isActivityCommand(o) {

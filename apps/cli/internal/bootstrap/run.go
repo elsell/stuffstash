@@ -27,9 +27,9 @@ type systemClock struct{}
 
 func (systemClock) Now() time.Time { return time.Now() }
 func Run(ctx context.Context, args []string, getenv func(string) string, stdout, stderr io.Writer) int {
- if len(args)>0 && args[0]=="__complete" {
- return exit(presentation.Output{Stdout:stdout,Stderr:stderr},completionQuery(stdout,args))
- }
+	if len(args) > 0 && args[0] == "__complete" {
+		return exit(presentation.Output{Stdout: stdout, Stderr: stderr}, completionQuery(stdout, args))
+	}
 	helpOptions, requested, helpErr := app.ParseHelp(args)
 	if requested {
 		output := presentation.Output{Stdout: stdout, Stderr: stderr}
@@ -38,12 +38,14 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		}
 		return exit(output, writeHelp(stdout, helpOptions.Command))
 	}
- if len(helpOptions.Command)>0 && helpOptions.Command[0]=="completion" {
- options,err:=app.Parse(args,func(string)string{return ""})
- output:=presentation.Output{Stdout:stdout,Stderr:stderr}
- if err!=nil{return exit(output,err)}
- return exit(output,writeCompletion(stdout,options.Command))
- }
+	if len(helpOptions.Command) > 0 && helpOptions.Command[0] == "completion" {
+		options, err := app.Parse(args, func(string) string { return "" })
+		output := presentation.Output{Stdout: stdout, Stderr: stderr}
+		if err != nil {
+			return exit(output, err)
+		}
+		return exit(output, writeCompletion(stdout, options.Command))
+	}
 	options, err := app.Parse(args, getenv)
 	output := presentation.Output{Stdout: stdout, Stderr: stderr, JSON: options.JSON}
 
@@ -58,7 +60,7 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 	}
 	var contextStore contexts.Store
 	connector := len(options.Command) == 3 && options.Command[0] == "connectors" && options.Command[1] == "print" && (options.Command[2] == "register" || options.Command[2] == "rotate" || options.Command[2] == "run")
-	if !connector {
+	if !connector && !app.IsConsumerInspection(options) {
 		local := len(options.Command) > 0 && options.Command[0] == "context"
 		contextStore, err = configuredContexts(getenv, local || options.Server == "" || options.Selection.Context != "")
 		if err != nil {
@@ -80,6 +82,13 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		return exit(output, err)
 	}
 	options.Server = oidcauth.CanonicalServer(options.Server)
+	if app.IsConsumerInspection(options) {
+		inspector := app.ConsumerInspector{Credentials: connectorCredentialStore(options), Clock: systemClock{}, Output: output, Observer: presentation.SilentObserver{}, API: func(server, token string) (ports.ConsumerInspectionAPI, error) {
+			return httpapi.New(server, token, &http.Client{Timeout: 30 * time.Second}, httpapi.Options{RequestID: options.RequestID})
+		}}
+		return exit(output, inspector.Run(ctx, options))
+	}
+
 	if len(options.Command) == 3 && options.Command[0] == "connectors" && options.Command[1] == "print" && (options.Command[2] == "register" || options.Command[2] == "rotate") {
 		return exit(output, registerPrintConnector(ctx, options, getenv, output))
 	}

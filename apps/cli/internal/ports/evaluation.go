@@ -5,28 +5,8 @@ import (
 	"encoding/json"
 )
 
-// EvaluationOptional retains absent, null, and populated API fields. The false
-// key represents null; an empty map is omitted by encoding/json.
-type EvaluationOptional[T any] map[bool]T
-
-func (v *EvaluationOptional[T]) UnmarshalJSON(data []byte) error {
-	if string(data) == "null" {
-		*v = EvaluationOptional[T]{false: *new(T)}
-		return nil
-	}
-	var value T
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*v = EvaluationOptional[T]{true: value}
-	return nil
-}
-func (v EvaluationOptional[T]) MarshalJSON() ([]byte, error) {
-	if value, ok := v[true]; ok {
-		return json.Marshal(value)
-	}
-	return []byte("null"), nil
-}
+// EvaluationOptional is retained for existing evaluation models.
+type EvaluationOptional[T any] = Optional[T]
 
 type EvaluationCaseDefinition struct {
 	Assets       EvaluationOptional[[]EvaluationCaseFixtureAsset] `json:"assets,omitempty"`
