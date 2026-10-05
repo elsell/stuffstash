@@ -157,6 +157,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 			return err
 		}
 	}
+	if err := r.confirmAssetLifecycle(ctx, o); err != nil {
+		return err
+	}
 	api, err := r.API(o.Server, session.IDToken)
 	if err != nil {
 		return err
@@ -221,8 +224,8 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 func validateCommand(o Options) error      { return validateCommandOptions(o, true) }
 func validateCommandShape(o Options) error { return validateCommandOptions(o, false) }
 func validateCommandOptions(o Options, requireScope bool) error {
-	if len(o.Command) > 1 && o.Command[0] == "assets" && (o.Command[1] == "update" || o.Command[1] == "move") && o.IdempotencyKey != "" {
-		return ports.Failure("usage", "Asset updates do not support retry keys. Remove --idempotency-key.")
+	if len(o.Command) > 1 && o.Command[0] == "assets" && (o.Command[1] == "update" || o.Command[1] == "move" || isAssetLifecycle(o)) && o.IdempotencyKey != "" {
+		return ports.Failure("usage", "This asset action does not support retry keys. Remove --idempotency-key.")
 	}
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
@@ -266,7 +269,7 @@ func validateCommandOptions(o Options, requireScope bool) error {
 		if len(o.Command) == 2 && (!requireScope || len(o.RequestBody) > 0 || (o.Title != "" && o.Kind != "")) {
 			return nil
 		}
-	case "show", "archive", "restore":
+	case "show", "archive", "restore", "delete":
 		if len(o.Command) == 3 {
 			return nil
 		}
@@ -311,6 +314,11 @@ func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 			change = ports.AssetChange{MoveToRoot: true}
 		}
 		return api.UpdateAsset(ctx, o.Scope, id, change, "")
+	case "delete":
+		if err := api.DeleteAsset(ctx, o.Scope, id); err != nil {
+			return nil, err
+		}
+		return map[string]string{"status": "deleted", "assetId": id, "tenantId": o.Scope.Tenant, "inventoryId": o.Scope.Inventory}, nil
 	case "archive", "restore":
 		return api.SetArchived(ctx, o.Scope, id, action == "archive", key)
 	}

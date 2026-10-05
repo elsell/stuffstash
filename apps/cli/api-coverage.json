@@ -99,11 +99,11 @@
         "domain": "assets",
         "contractSha256": "6113671b9091d06e81a1c1c3718714a3418163f0fa3ee5f502e1e52411a28a94"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets delete"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id": {
       "contract": {
@@ -1387,11 +1387,11 @@
         "domain": "assets",
         "contractSha256": "058cd8d9fec7598ac2e721d73fc0009b938da1cc6f714699efb8977f704fd303"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets archive"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-archive": {
       "contract": {
@@ -1439,11 +1439,11 @@
         "domain": "assets",
         "contractSha256": "c87e510d389ebf0cc89406ad704a02312129652017611e6782c40c126f8c2959"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets restore"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id": {
       "contract": {

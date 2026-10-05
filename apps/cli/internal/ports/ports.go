@@ -67,6 +67,7 @@ type API interface {
 	Asset(context.Context, Scope, string) (Result[Asset], error)
 	CreateAsset(context.Context, Scope, AssetInput, string) (Result[Asset], error)
 	UpdateAsset(context.Context, Scope, string, AssetChange, string) (Result[Asset], error)
+	DeleteAsset(context.Context, Scope, string) error
 	SetArchived(context.Context, Scope, string, bool, string) (Result[Asset], error)
 }
 type Credentials interface {

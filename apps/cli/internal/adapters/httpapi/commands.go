@@ -37,8 +37,15 @@ func (c *Client) UpdateAsset(ctx context.Context, s ports.Scope, id string, in p
 	return assetResult(read[generated.SuccessEnvelopeAssetResponse](c.sdk.PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetId(ctx, s.Tenant, s.Inventory, id, nil, body)))
 }
 func (c *Client) SetArchived(ctx context.Context, s ports.Scope, id string, archived bool, idempotency string) (ports.Result[ports.Asset], error) {
-	if archived {
-		return assetResult(read[generated.SuccessEnvelopeAssetResponse](c.sdk.PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdArchive(ctx, s.Tenant, s.Inventory, id, nil, key(idempotency))))
+	if idempotency != "" {
+		return ports.Result[ports.Asset]{}, ports.Failure("usage", "Asset lifecycle commands do not support retry keys. Remove --idempotency-key.")
 	}
-	return assetResult(read[generated.SuccessEnvelopeAssetResponse](c.sdk.PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestore(ctx, s.Tenant, s.Inventory, id, nil, key(idempotency))))
+	if archived {
+		return assetResult(read[generated.SuccessEnvelopeAssetResponse](c.sdk.PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdArchive(ctx, s.Tenant, s.Inventory, id, nil)))
+	}
+	return assetResult(read[generated.SuccessEnvelopeAssetResponse](c.sdk.PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdRestore(ctx, s.Tenant, s.Inventory, id, nil)))
+}
+
+func (c *Client) DeleteAsset(ctx context.Context, s ports.Scope, id string) error {
+	return noContent(c.sdk.DeleteTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetId(ctx, s.Tenant, s.Inventory, id, nil))
 }

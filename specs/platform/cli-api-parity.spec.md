@@ -398,3 +398,12 @@ before sending the request. On an uncertain response, direct the user to retry
 with the same key and unchanged request. For ordinary creates, direct the user
 to list assets before retrying. Never retry automatically. Preserve actionable
 authorization and validation failures instead of replacing them with uncertainty.
+
+### Asset lifecycle commands
+
+`assets delete ID` uses the generated DELETE operation and reports the deleted
+asset, household, and inventory IDs after a 204 response. Preserve the selected
+inventory. Archive and delete show the effective server/scope/asset and require
+the shared cancel-default confirmation or `--yes`. Restore needs no destructive
+confirmation. Reject retry keys for all three lifecycle operations because these
+contracts do not support them. Preserve full archive/restore response fields.

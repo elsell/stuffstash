@@ -145,6 +145,11 @@ before retrying to avoid a duplicate. Create-and-print supports the key: keep
 the key shown on stderr and reuse it with the unchanged request if needed.
 The CLI does not retry writes automatically.
 
+Archive and delete require confirmation. Add `--yes` in scripts after checking
+the target. `assets delete ID --yes` permanently deletes an asset; the server
+checks whether deletion is allowed. Restore needs no confirmation. None of
+these lifecycle commands supports `--idempotency-key`.
+
 List archived assets with `assets list --lifecycle archived`, or include both states
 with `--lifecycle all`. Use `--sort updated_desc` to put recently changed assets
 first; `id_asc` is also supported.
