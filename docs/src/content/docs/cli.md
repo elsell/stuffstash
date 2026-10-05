@@ -826,3 +826,12 @@ These commands show the selected household, inventory and effect before asking
 for confirmation. Scripts add `--yes`. Connector changes can revoke access or
 change printer bindings; print settings can change automatic label printing.
 The CLI does not retry updates or replace a stale revision automatically.
+
+### Submit existing client measurements
+
+`stuffstash telemetry submit --input measurements.json --yes` records an explicit
+batch of one to 50 measurements from iOS, Android or web clients. Command help
+lists the required fields. This account-level command does not collect CLI usage
+automatically. Without `--yes`, a terminal asks for confirmation. Do not repeat an
+uncertain submission without checking server telemetry; the batch can be counted
+twice. Use `--json` for the accepted count and response metadata.

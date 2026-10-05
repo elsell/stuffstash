@@ -33,6 +33,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody = body
 	} else {
+		if isTelemetry(o) {
+			return prepareTelemetry(o)
+		}
 		if isEvaluationWrite(o) {
 			return prepareEvaluationWrite(o)
 		}
@@ -93,6 +96,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 			return o, ports.Failure("usage", "Supply --name NAME or --input FILE for this command.")
 		}
 		o.RequestBody, _ = json.Marshal(map[string]string{"name": o.ConnectorName})
+	}
+	if isTelemetry(o) {
+		return prepareTelemetry(o)
 	}
 	if isEvaluationWrite(o) {
 		return prepareEvaluationWrite(o)

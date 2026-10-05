@@ -143,6 +143,19 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 			return o, ports.Failure("usage", "Label identity commands do not accept --"+invalid+". Use labels render or labels print for that option.")
 		}
 	}
+	if isTelemetry(o) {
+		unsupported := ""
+		flags.Visit(func(f *flag.Flag) {
+			switch f.Name {
+			case "context", "server", "json", "no-input", "request-id", "color", "help", "allow-loopback-http", "credential-file", "input", "yes":
+			default:
+				unsupported = f.Name
+			}
+		})
+		if unsupported != "" {
+			return o, ports.Failure("usage", "Telemetry submission does not accept --"+unsupported+". Remove the option.")
+		}
+	}
 	if isVoiceProviderCommand(o) {
 		unsupported := ""
 		flags.Visit(func(f *flag.Flag) {

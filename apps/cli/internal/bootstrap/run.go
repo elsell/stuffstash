@@ -113,6 +113,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		secretInput = prompt
 	}
 	runner := app.Runner{
+		TelemetryAPI: func(server, token string) (ports.TelemetryAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		EvaluationAPI: func(server, token string) (ports.EvaluationAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},

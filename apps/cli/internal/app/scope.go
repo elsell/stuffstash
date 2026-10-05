@@ -3,7 +3,7 @@ package app
 // missingResourceScope identifies commands that could need a saved account's
 // resource selection. Server-wide label resolution needs no inventory scope.
 func missingResourceScope(o Options) bool {
-	if isAccountCommand(o) || isTenantCreate(o) {
+	if isTelemetry(o) || isAccountCommand(o) || isTenantCreate(o) {
 		return false
 	}
 	if len(o.Command) >= 2 && o.Command[0] == "labels" && o.Command[1] == "resolve" {

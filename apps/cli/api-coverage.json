@@ -1616,11 +1616,11 @@
         "domain": "telemetry",
         "contractSha256": "d3d580297631dc2a3effade2082329ff79e3b169fa06793d8bf2d05677890bde"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "telemetry submit"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-print-connector-pairings": {
       "contract": {

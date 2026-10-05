@@ -237,6 +237,8 @@ func (o Output) Result(value any) error {
 	case ports.LabelFileResult:
 		_, err := fmt.Fprintf(o.Stdout, "Saved %s (%s), sha256=%s\n", strconv.Quote(v.Path), v.Format, v.SHA256)
 		return err
+	case ports.Result[ports.TelemetryAccepted]:
+		return o.details([][2]string{{"Measurements accepted", strconv.Itoa(v.Data.Accepted)}})
 	case ports.Result[ports.Asset]:
 		return o.assetDetails(v.Data)
 	default:

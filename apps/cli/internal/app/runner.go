@@ -13,6 +13,7 @@ import (
 
 type Runner struct {
 	PrinterAdministrationAPI   func(string, string) (ports.PrinterAdministrationAPI, error)
+	TelemetryAPI               func(string, string) (ports.TelemetryAPI, error)
 	VoiceProviderAPI           func(string, string) (ports.VoiceProviderAPI, error)
 	EvaluationAPI              func(string, string) (ports.EvaluationAPI, error)
 	WorkflowsAPI               func(string, string) (ports.WorkflowsAPI, error)
@@ -120,6 +121,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		if err = r.Credentials.Save(ctx, session); err != nil {
 			return err
 		}
+	}
+	if isTelemetry(o) {
+		return r.telemetryCommand(ctx, o, session.IDToken)
 	}
 	if isTenantCreate(o) {
 		return r.writeDirectory(ctx, o, session.IDToken)
@@ -326,6 +330,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if isPrinterAdministration(o) {
 		return validatePrinterAdministration(o, requireScope)
+	}
+	if isTelemetry(o) {
+		return validateTelemetry(o)
 	}
 	if isConnectorInspection(o) {
 		return validateConnectorInspection(o, requireScope)
