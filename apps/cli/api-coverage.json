@@ -1212,10 +1212,12 @@
         "domain": "labels",
         "contractSha256": "663468fb7e85018d3cefa7affcc229116f968c0a6b3c3aad7a8e015561cd0287"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "labels render"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Existing render workflow downloads bounded validated content to private non-overwriting files. Independent render-ID download command awaits shared destination decision; full content contract verification remains."
       ]
     },
     "patch-tenants-by-tenant-id": {
@@ -1645,11 +1647,11 @@
         "domain": "printing",
         "contractSha256": "3a44e9a8834e3c4de3378d0270a45974e1aae6bd2af7993f3e5736760251f2a6"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Existing registration hands off to a browser. CLI-native user-code review and scoped candidate/printer binding approval are not implemented."
-      ]
+      "commands": [
+        "connectors print pairings approve"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-print-connector-pairings-by-pairing-id-credential": {
       "contract": {
@@ -1674,11 +1676,11 @@
         "domain": "printing",
         "contractSha256": "34b46fcef64dd6cadb8c76d9567d3f9c0eea07ecceff8a452e6118a983e4fd7d"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Existing registration hands off to a browser. CLI-native user-code review and scoped candidate/printer binding approval are not implemented."
-      ]
+      "commands": [
+        "connectors print pairings review"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-print-consumer-attempts-by-attempt-id-idle-confirmation": {
       "contract": {
@@ -2121,10 +2123,12 @@
         "domain": "labels",
         "contractSha256": "04be4eda3eb9c6d7f4a1b74c182abc60a3f9d581eb3b896e17822803c39e73b3"
       },
-      "commands": [],
-      "status": "pending",
+      "commands": [
+        "labels render"
+      ],
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Existing SDK render-and-download workflow saves verified PNG/PDF output. Complete structured request/schema and full render response inspection remain; template version currently narrows through int32."
       ]
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-print-jobs": {
@@ -2251,11 +2255,11 @@
         "domain": "printing",
         "contractSha256": "2b032209b2325af95975c281f8f241299eedec17365da25f1a7211c0bab18b73"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "connectors print rotations approve"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id-cancellation": {
       "contract": {

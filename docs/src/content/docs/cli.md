@@ -835,3 +835,22 @@ lists the required fields. This account-level command does not collect CLI usage
 automatically. Without `--yes`, a terminal asks for confirmation. Do not repeat an
 uncertain submission without checking server telemetry; the batch can be counted
 twice. Use `--json` for the accepted count and response metadata.
+
+### Approve a connector from the CLI
+
+On the administrator's computer, use `connectors print pairings review PAIRING_ID`
+to inspect the connector name, public-key fingerprint and discovered candidates.
+`connectors print pairings approve PAIRING_ID` asks for the short code privately,
+then lets you choose compatible printers with the keyboard. Review the household,
+inventory and bindings before confirmation. These commands use your normal sign-in.
+
+Scripts use `--input FILE|-` containing `userCode`, `tenantId` and `inventoryId`;
+approval also needs `bindings` with `candidateId` and `printerId` pairs, and
+`--yes`. Input scope must match the selected scope. The code never belongs in a
+command argument. Approval does not reserve scope or bypass server checks.
+
+Use `connectors print rotations approve CONNECTOR_ID` for a rotation pairing.
+It requires `generation`, `pairingId` and `userCode` in JSON, or asks for those
+values privately where appropriate. Review the fingerprint and replacement
+warning before confirmation. Scripts add `--yes`. The CLI never substitutes a
+new generation after a conflict or retries approval automatically.
