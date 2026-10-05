@@ -6,12 +6,20 @@ import (
 	"github.com/stuffstash/stuff-stash/cli/internal/domain/printing"
 )
 
+type LabelTemplateDefaults struct {
+	ShowReference bool `json:"show_reference"`
+}
 type LabelTemplate struct {
-	ID            string `json:"id"`
-	Version       uint32 `json:"version"`
-	Name          string `json:"name"`
-	Purpose       string `json:"purpose"`
-	ShowReference bool   `json:"showReference"`
+	Defaults              LabelTemplateDefaults `json:"defaults"`
+	Font                  string                `json:"font"`
+	GlyphCoverage         string                `json:"glyphCoverage"`
+	MinimumQRModulePixels int64                 `json:"minimumQRModulePixels"`
+	Options               []string              `json:"options"`
+	ID                    string                `json:"id"`
+	Version               uint32                `json:"version"`
+	Name                  string                `json:"name"`
+	Purpose               string                `json:"purpose"`
+	ShowReference         bool                  `json:"showReference"`
 }
 type ResolvedLabel struct {
 	TenantID    string `json:"tenantId"`

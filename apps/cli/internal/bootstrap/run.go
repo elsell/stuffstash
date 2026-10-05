@@ -271,6 +271,7 @@ const Help = `Stuff Stash CLI
   stuffstash labels print ASSET_ID [--printer ID --template ID --template-version N]
   stuffstash print-settings show
   stuffstash printers show PRINTER_ID
+  stuffstash printers profiles
   stuffstash printers list
   stuffstash printers configure PRINTER_ID --label-size PRESET_ID
   stuffstash printers test PRINTER_ID

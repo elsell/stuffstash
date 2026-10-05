@@ -659,3 +659,9 @@ shown as **Not set**. Use `--json` for the complete settings and revision.
 Use `stuffstash printers show PRINTER_ID` for a printer's readiness reason,
 last report time and complete media configuration. `printers list` gives a
 compact overview; both commands retain all printer fields with `--json`.
+
+Use `stuffstash labels templates` to see supported label options, defaults and
+font coverage. Use `stuffstash printers profiles` for the server's printer
+adapters, supported platforms and media presets. This differs from
+`printers catalog`, which inspects the local CLI catalog without login.
+Both server catalogs support `--json` for their complete configuration.

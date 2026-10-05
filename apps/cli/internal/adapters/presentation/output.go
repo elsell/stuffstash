@@ -176,12 +176,9 @@ func (o Output) Result(value any) error {
 		}
 		return o.pagination(v.Pagination)
 	case ports.Result[[]ports.LabelTemplate]:
-		for _, template := range v.Data {
-			if _, err := fmt.Fprintf(o.Stdout, "%s\tv%d\t%s\n", template.ID, template.Version, strconv.Quote(template.Name)); err != nil {
-				return err
-			}
-		}
-		return nil
+		return o.labelTemplates(v.Data)
+	case ports.Result[[]ports.PrinterProfile]:
+		return o.printerProfiles(v.Data)
 	case ports.Result[ports.ResolvedLabel]:
 		_, err := fmt.Fprintf(o.Stdout, "%s\ttenant=%s\tinventory=%s\t%s\n", v.Data.AssetID, v.Data.TenantID, v.Data.InventoryID, v.Data.Lifecycle)
 		return err

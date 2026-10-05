@@ -880,3 +880,15 @@ fields for existing CLI consumers. Human detail groups printer status and media
 configuration; list values must be terminal-safe. Shared configuration results
 also retain the complete response. Critical checks cover full field mapping,
 scope denial and pagination through real commands.
+
+### Printing catalogs
+
+`labels templates` preserves every template field, including defaults, options,
+font, glyph coverage and minimum QR module pixels. Retain the legacy flattened
+show-reference field for compatibility. `printers profiles` lists the server's
+adapter profiles with supported platforms, transport, physical verification and
+complete media presets. Both use inventory scope and preserve null collections,
+schema and metadata. Human output presents relevant selection and compatibility
+information with safe quoting. These server catalogs are distinct from the local
+`printers catalog` command. Critical checks cover scope, full fields and nullable
+collections through the real CLI/SDK boundary.
