@@ -778,3 +778,11 @@ command-level default inventory filter is a pending user design choice; these
 adapters alone count as partial coverage. Critical transport tests verify exact
 scope/filter/routes, cross-household denial, 64-bit preview counts, nullable
 fields, retry single submission and deletion status.
+
+Archive creation forwards the complete JSON body (inventoryId, photos and
+otherFiles) and caller-supplied idempotency key to the generated SDK. Restore
+approval forwards the exact new inventory name, household/job identity and
+optional inventory filter. Neither adapter changes defaults, silently changes
+the destination, repeats the mutation or follows redirects. Both preserve the
+complete archive job response. Command preparation must supply explicit inputs
+and confirmation before using these transports; transport-only coverage is partial.

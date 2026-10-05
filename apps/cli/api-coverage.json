@@ -1791,9 +1791,9 @@
         "contractSha256": "f284adf567adcee29fa7e04a6343bb98e304159341c3614d553f2428923b662a"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Scoped SDK transport preserves complete input, retry key where required and job response. CLI guided input, confirmation, scope policy and recovery remain."
       ]
     },
     "post-tenants-by-tenant-id-archive-jobs-by-job-id-approve": {
@@ -1804,9 +1804,9 @@
         "contractSha256": "9fbd3347d225e0c75c5fa9db65ce52ec0c73d514ce92a76aef87246e5c6d87cc"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Scoped SDK transport preserves complete input, retry key where required and job response. CLI guided input, confirmation, scope policy and recovery remain."
       ]
     },
     "post-tenants-by-tenant-id-archive-jobs-by-job-id-retry": {
