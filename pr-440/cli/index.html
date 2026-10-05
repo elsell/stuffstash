@@ -495,6 +495,13 @@ without rendering or printing. Assignment asks for confirmation; scripts use
 <code dir="auto">stuffstash connectors print show CONNECTOR_ID</code> to inspect connector availability,
 assigned printers, heartbeat times and reported capabilities. These commands use
 your normal sign-in and saved inventory context; they do not read connector secrets.</p>
+<p>On a registered connector computer, use <code dir="auto">stuffstash connectors print printers --connector CONNECTOR_ID</code> to inspect its printer bindings. Use
+<code dir="auto">stuffstash connectors print attempts list --connector CONNECTOR_ID</code> or
+<code dir="auto">stuffstash connectors print attempts show ATTEMPT_ID --connector CONNECTOR_ID</code>
+to inspect delivery attempts. These commands use the stored connector credential
+and its registered scope. They do not access printer hardware or change attempts.
+The list accepts <code dir="auto">--printer</code>, <code dir="auto">--status unsettled</code>, <code dir="auto">--limit</code> and <code dir="auto">--cursor</code>;
+<code dir="auto">--json</code> preserves the complete declared response and pagination metadata.</p>
 <p><code dir="auto">stuffstash print-jobs cancel JOB_ID</code> asks for confirmation before reading and
 cancelling the job. Scripts must add <code dir="auto">--yes</code>. Cancellation uses the current job
 revision and does not retry conflicts. A label might already have printed;
