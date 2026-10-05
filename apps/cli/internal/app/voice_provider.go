@@ -9,8 +9,8 @@ func isVoiceProviderCommand(o Options) bool {
 	return len(o.Command) > 0 && o.Command[0] == "voice-provider"
 }
 func validateVoiceProvider(o Options, scope bool) error {
-	if len(o.Command) != 2 || o.Command[1] != "show" {
-		return ports.Failure("usage", "Use voice-provider show to inspect household voice settings.")
+	if len(o.Command) != 2 || (o.Command[1] != "show" && o.Command[1] != "update") {
+		return ports.Failure("usage", "Use voice-provider show or update [--input FILE|-] for household voice selections.")
 	}
 	if scope && o.Scope.Tenant == "" {
 		return ports.Failure("usage", "Supply --tenant, or choose a saved household context.")
@@ -24,6 +24,9 @@ func (r Runner) voiceProviderCommand(ctx context.Context, o Options, token strin
 	api, err := r.VoiceProviderAPI(o.Server, token)
 	if err != nil {
 		return err
+	}
+	if isVoiceProviderUpdate(o) {
+		return r.updateVoiceProvider(ctx, o, token, api)
 	}
 	result, err := api.VoiceProviderConfiguration(ctx, o.Scope.Tenant)
 	if err != nil {

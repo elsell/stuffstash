@@ -37,5 +37,6 @@ type VoiceProviderConfiguration struct {
 	UpdatedAt  *string               `json:"updatedAt,omitempty"`
 }
 type VoiceProviderAPI interface {
+	UpdateVoiceProviderConfiguration(context.Context, string, []byte) (Result[*VoiceProviderConfiguration], error)
 	VoiceProviderConfiguration(context.Context, string) (Result[*VoiceProviderConfiguration], error)
 }

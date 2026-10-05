@@ -1,9 +1,11 @@
 package httpapi
 
 import (
+	"bytes"
 	"context"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi/generated"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
+	"net/http"
 )
 
 type voiceProviderEnvelope struct {
@@ -13,7 +15,13 @@ type voiceProviderEnvelope struct {
 }
 
 func (c *Client) VoiceProviderConfiguration(ctx context.Context, tenant string) (ports.Result[*ports.VoiceProviderConfiguration], error) {
-	r, err := read[voiceProviderEnvelope](c.sdk.GetTenantsByTenantIdVoiceProviderConfiguration(ctx, tenant, nil))
+	return voiceProviderResult(c.sdk.GetTenantsByTenantIdVoiceProviderConfiguration(ctx, tenant, nil))
+}
+func (c *Client) UpdateVoiceProviderConfiguration(ctx context.Context, tenant string, body []byte) (ports.Result[*ports.VoiceProviderConfiguration], error) {
+	return voiceProviderResult(c.sdk.PutTenantsByTenantIdVoiceProviderConfigurationWithBody(ctx, tenant, nil, "application/json", bytes.NewReader(body)))
+}
+func voiceProviderResult(response *http.Response, err error) (ports.Result[*ports.VoiceProviderConfiguration], error) {
+	r, err := read[voiceProviderEnvelope](response, err)
 	if err != nil {
 		return ports.Result[*ports.VoiceProviderConfiguration]{}, err
 	}

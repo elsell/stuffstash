@@ -164,12 +164,16 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		flags.Visit(func(f *flag.Flag) {
 			switch f.Name {
 			case "server", "tenant", "inventory", "context", "json", "no-input", "request-id", "color", "help", "allow-loopback-http", "credential-file":
+			case "input", "yes":
+				if !isVoiceProviderUpdate(o) {
+					unsupported = f.Name
+				}
 			default:
 				unsupported = f.Name
 			}
 		})
 		if unsupported != "" {
-			return o, ports.Failure("usage", "Voice provider inspection does not accept --"+unsupported+". Remove the option.")
+			return o, ports.Failure("usage", "This voice provider command does not accept --"+unsupported+". Remove the option.")
 		}
 	}
 	if isWorkflowCommand(o) {

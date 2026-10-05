@@ -42,6 +42,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		if isEvaluationWrite(o) {
 			return prepareEvaluationWrite(o)
 		}
+		if isVoiceProviderUpdate(o) {
+			return r.prepareVoiceProviderUpdate(o)
+		}
 		if isPrinterAdministration(o) {
 			return r.preparePrinterAdministration(ctx, o)
 		}
@@ -108,6 +111,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 	}
 	if isEvaluationWrite(o) {
 		return prepareEvaluationWrite(o)
+	}
+	if isVoiceProviderUpdate(o) {
+		return r.prepareVoiceProviderUpdate(o)
 	}
 	if isPrinterAdministration(o) {
 		return r.preparePrinterAdministration(ctx, o)
