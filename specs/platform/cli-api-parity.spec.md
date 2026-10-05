@@ -468,3 +468,14 @@ results retain every type field, optional inventory ID, metadata and schema.
 Delete succeeds only on the documented 204 response. Use generated SDK routes
 for every operation. CLI scope syntax remains a pending user decision; these
 transport operations alone do not count as completed CLI workflows.
+
+### Custom field definition transport
+
+Support list, show, create, update, archive, restore and delete for custom field
+definitions at both household and inventory scope. Reuse explicit definition
+scope validation; never infer or downgrade scope. List includes lifecycle and
+pagination. Keep complete JSON bodies, including empty option/target arrays,
+and retain every response field, optional inventory ID, null/empty arrays,
+metadata and schema. The server remains responsible for immutable keys/types
+and append-only option/target policies. Delete requires 204. CLI workflows stay
+incomplete until their scope syntax, inputs and confirmations are implemented.

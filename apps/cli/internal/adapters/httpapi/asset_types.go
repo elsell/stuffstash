@@ -7,15 +7,6 @@ import (
 	"net/http"
 )
 
-func validateDefinitionScope(s ports.DefinitionScope) error {
-	if s.Level != ports.HouseholdDefinition && s.Level != ports.InventoryDefinition {
-		return ports.Failure("usage", "Choose household or inventory scope.")
-	}
-	if s.Scope.Tenant == "" || s.Level == ports.InventoryDefinition && s.Scope.Inventory == "" {
-		return ports.Failure("usage", "Supply the household and, for inventory scope, the inventory ID.")
-	}
-	return nil
-}
 func assetType(v generated.AssetTypeResponse) ports.AssetType {
 	return ports.AssetType{ID: v.Id, TenantID: v.TenantId, InventoryID: v.InventoryId, Scope: v.Scope, Key: v.Key, DisplayName: v.DisplayName, Description: v.Description, ExpirationEnabled: v.ExpirationEnabled, Lifecycle: v.LifecycleState}
 }

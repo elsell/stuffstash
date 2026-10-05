@@ -48,9 +48,9 @@
         "contractSha256": "9a785541f7b49022274e81c9e15483713472a0772e2e30471d9e81295a544cf8"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id": {
@@ -139,9 +139,9 @@
         "contractSha256": "581f3a0e4516574ef0c9ba38034d117e67f43e629c1334c7ced254362b21ecee"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id": {
@@ -581,9 +581,9 @@
         "contractSha256": "7537de87a47121f9fb2acfccff70b4a9b9fa5a88db506f6f5b0f3c0ea43f9f6b"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "get-tenants-by-tenant-id-custom-field-definitions-by-definition-id": {
@@ -594,9 +594,9 @@
         "contractSha256": "e157f34d4d465fee0f7d93984deccfbbffb4b0aeda3ce227785a8e140412c685"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "get-tenants-by-tenant-id-inventories": {
@@ -841,9 +841,9 @@
         "contractSha256": "6d28b4d7592506b589b9792d13ac1664a91618b267bfeafba8ae9153e6ff0766"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id": {
@@ -854,9 +854,9 @@
         "contractSha256": "1c4e011a040df92d1d9db4781ffaa26854f3a0b3a8fe2136f6dd712ebb018da4"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-expiration-assets": {
@@ -1283,9 +1283,9 @@
         "contractSha256": "1e77599298b1adc8a2f496e04b8ee4eee7ecd5e33bf1794539982f82f17d25fa"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id-archive": {
@@ -1296,9 +1296,9 @@
         "contractSha256": "91da16aefc0d010367906ad1930e8ccbc3a67166dc508b40409caa37774e860d"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id-restore": {
@@ -1309,9 +1309,9 @@
         "contractSha256": "2e34c2676c0eacbf59e753f08dbc09f5680db840bf8f73c6482bc7e0b1f57ed8"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id": {
@@ -1492,9 +1492,9 @@
         "contractSha256": "5e960384c818b667551c984fe7d2762c2b8a608b515561fab53f8e738600f10c"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-archive": {
@@ -1505,9 +1505,9 @@
         "contractSha256": "78e93c132161572c30d22b3f642740cd14d5f16c8dec08251dc45868b716ef63"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-restore": {
@@ -1518,9 +1518,9 @@
         "contractSha256": "606c3607de30ac67eb55f12adb99f745b1dcd2d6dd07046b298e192b92d62318"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id": {
@@ -1934,9 +1934,9 @@
         "contractSha256": "7312f173d43ed8c45582853dc87ef78a7f7693a78e01dda8f7b52c9ad3059c8d"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "post-tenants-by-tenant-id-inventories": {
@@ -2142,9 +2142,9 @@
         "contractSha256": "f03fa3c42ed4a7b27c9aaf7c303256ac2b8255b3d9b525d183d626fc39945996"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
       ]
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id-cancel": {
