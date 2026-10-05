@@ -581,3 +581,12 @@ nullable override arrays, device state and revision, schema and metadata. Device
 tokens are write-only and must not be copied into results or diagnostics. Keep
 these operations partial until named commands, guided inputs and confirmations
 are implemented.
+
+Device lookup is `notification-devices show INSTALLATION_ID`; removal is
+`notification-devices remove DEVICE_ID --revision N`. These IDs are different
+and help must name them explicitly. Removal requires a positive revision and the
+shared confirmation policy; scripts pass `--yes`. A terminal may prompt for a
+missing revision, but must never fetch or substitute a newer one automatically.
+A conflict must instruct the user to review the current registration. Human
+output includes ID, installation ID, transport, revision and active state; JSON
+retains the response envelope. Registration remains a separate unfinished flow.

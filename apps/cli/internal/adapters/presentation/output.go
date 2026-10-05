@@ -19,6 +19,8 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[ports.NotificationDevice]:
+		return o.details([][2]string{{"Device ID", v.Data.ID}, {"Installation", v.Data.InstallationID}, {"Transport", v.Data.Transport}, {"Revision", strconv.FormatInt(v.Data.Revision, 10)}, {"Active", strconv.FormatBool(v.Data.Active)}})
 	case ports.Result[[]ports.Notification]:
 		return o.notificationList(v)
 	case ports.Result[ports.Notification]:

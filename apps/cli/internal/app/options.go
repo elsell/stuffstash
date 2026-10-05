@@ -11,6 +11,7 @@ import (
 )
 
 type Options struct {
+	Revision                                                              int64
 	UnreadOnly                                                            bool
 	Expiration                                                            ports.ExpirationQuery
 	Details                                                               *string
@@ -62,6 +63,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	flags.StringVar(&o.Color, "color", "auto", "color output: auto, always, or never")
 	flags.StringVar(&o.Selection.Context, "context", environment.Context, "saved context name")
 	flags.BoolVar(&o.Yes, "yes", false, "confirm the requested action without a prompt")
+	flags.Int64Var(&o.Revision, "revision", -1, "current resource revision")
 	flags.BoolVar(&o.UnreadOnly, "unread-only", false, "show unread notifications only")
 	flags.BoolVar(&o.NoInput, "no-input", false, "do not ask for input")
 	flags.StringVar(&o.Format, "format", "png", "label file format: png or pdf")
@@ -158,6 +160,9 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if o.Revision != -1 && !isNotificationDeviceCommand(o) {
+		return o, ports.Failure("usage", "Use --revision with notification-devices remove.")
+	}
 	if o.UnreadOnly && !isNotificationCommand(o) {
 		return o, ports.Failure("usage", "Use --unread-only with notifications list.")
 	}

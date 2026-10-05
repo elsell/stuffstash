@@ -482,3 +482,10 @@ Commands use your selected inventory. List supports `--limit` and `--cursor`.
 Unread count and read-all also accept a cursor. If read-all reports
 `Complete: false`, use the returned cursor to continue. Add `--json` to retain
 all notification fields and response metadata in scripts.
+
+Look up a push registration with
+`stuffstash notification-devices show INSTALLATION_ID`. To stop that registration,
+run `stuffstash notification-devices remove DEVICE_ID --revision N` using the
+returned device ID and revision. Removal asks for confirmation; scripts must
+add `--yes`. A revision conflict requires reviewing the current registration
+before retrying. The CLI does not replace your supplied revision automatically.

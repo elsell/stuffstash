@@ -164,11 +164,11 @@
         "domain": "notifications",
         "contractSha256": "84a562f89a52bd1d882596fb848345f10a83bcd210a81d2e10f5e53c34b93a27"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
-      ]
+      "commands": [
+        "notification-devices remove"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-types-by-custom-asset-type-id": {
       "contract": {
@@ -918,11 +918,11 @@
         "domain": "notifications",
         "contractSha256": "db4c0cbc2042b77c88fb07c0922e90d44a0d03cfd448e87e53ce720366767034"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport with exact revision/body preservation. Named commands, guided inputs, confirmation and presentation remain."
-      ]
+      "commands": [
+        "notification-devices show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences": {
       "contract": {

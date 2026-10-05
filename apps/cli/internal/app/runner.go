@@ -12,27 +12,28 @@ import (
 )
 
 type Runner struct {
-	NotificationsAPI   func(string, string) (ports.NotificationsAPI, error)
-	AttachmentUploads  func(string, string) (ports.AttachmentUploads, error)
-	AttachmentsAPI     func(string, string) (ports.AttachmentsAPI, error)
-	TagsAPI            func(string, string) (ports.TagsAPI, error)
-	DirectoryLifecycle func(string, string) (ports.DirectoryLifecycle, error)
-	TextInput          ports.TextInput
-	InputFiles         ports.InputFiles
-	DirectoryWriter    func(string, string) (ports.DirectoryWriter, error)
-	DirectoryAPI       func(string, string) (ports.Directory, error)
-	Picker             ports.Selector
-	ScopeAPI           func(string, string) (ports.ScopeCatalog, error)
-	Contexts           contexts.Store
-	LabelsAPI          func(string, string) (ports.LabelsAPI, error)
-	LabelFiles         ports.LabelFiles
-	PrintingAPI        func(string, string) (ports.HumanPrintingAPI, error)
-	API                func(string, string) (ports.API, error)
-	Auth               ports.Auth
-	Credentials        ports.Credentials
-	Output             ports.Output
-	Clock              ports.Clock
-	Observer           ports.Observer
+	NotificationDevicesAPI func(string, string) (ports.NotificationDevicesAPI, error)
+	NotificationsAPI       func(string, string) (ports.NotificationsAPI, error)
+	AttachmentUploads      func(string, string) (ports.AttachmentUploads, error)
+	AttachmentsAPI         func(string, string) (ports.AttachmentsAPI, error)
+	TagsAPI                func(string, string) (ports.TagsAPI, error)
+	DirectoryLifecycle     func(string, string) (ports.DirectoryLifecycle, error)
+	TextInput              ports.TextInput
+	InputFiles             ports.InputFiles
+	DirectoryWriter        func(string, string) (ports.DirectoryWriter, error)
+	DirectoryAPI           func(string, string) (ports.Directory, error)
+	Picker                 ports.Selector
+	ScopeAPI               func(string, string) (ports.ScopeCatalog, error)
+	Contexts               contexts.Store
+	LabelsAPI              func(string, string) (ports.LabelsAPI, error)
+	LabelFiles             ports.LabelFiles
+	PrintingAPI            func(string, string) (ports.HumanPrintingAPI, error)
+	API                    func(string, string) (ports.API, error)
+	Auth                   ports.Auth
+	Credentials            ports.Credentials
+	Output                 ports.Output
+	Clock                  ports.Clock
+	Observer               ports.Observer
 }
 
 func (r Runner) Run(ctx context.Context, o Options) error {
@@ -131,6 +132,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 
+	if isNotificationDeviceCommand(o) {
+		return r.notificationDevicesCommand(ctx, o, session.IDToken)
+	}
 	if isNotificationCommand(o) {
 		return r.notificationsCommand(ctx, o, session.IDToken)
 	}
@@ -244,6 +248,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
+	}
+	if isNotificationDeviceCommand(o) {
+		return validateNotificationDevices(o, requireScope)
 	}
 	if isNotificationCommand(o) {
 		return validateNotifications(o, requireScope)
