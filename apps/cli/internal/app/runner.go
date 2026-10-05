@@ -59,17 +59,22 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		if err := r.Credentials.Delete(ctx, o.Server); err != nil {
 			return err
 		}
+		if r.Contexts != nil {
+			if err := (contexts.Manager{Store: r.Contexts}).ClearServer(ctx, o.Server); err != nil {
+				return err
+			}
+		}
 		r.Observer.Event(ctx, "cli.logout.completed")
 		return r.Output.Result(map[string]string{"status": "signed out"})
 	}
-	if err := validateCommand(o); err != nil {
+	if err := validateCommandShape(o); err != nil {
 		return err
 	}
 	session, err := r.Credentials.Load(ctx, o.Server)
 	if err != nil {
 		return err
 	}
-	if !session.ExpiresAt.After(r.Clock.Now().Add(30 * time.Second)) {
+	if !session.ExpiresAt.After(r.Clock.Now().Add(30*time.Second)) || r.Contexts != nil && session.Subject == "" && missingResourceScope(o) {
 		session, err = r.Auth.Refresh(ctx, session)
 		if err != nil {
 			return err
@@ -77,6 +82,24 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		if err = r.Credentials.Save(ctx, session); err != nil {
 			return err
 		}
+	}
+	if r.Contexts != nil {
+		config, configErr := r.Contexts.Load(ctx)
+		if configErr != nil {
+			return configErr
+		}
+		request := o.Selection
+		request.Server = o.Server
+		request.Tenant = o.Scope.Tenant
+		request.Inventory = o.Scope.Inventory
+		resolved, resolveErr := contexts.Resolve(config, request, contexts.Principal(session))
+		if resolveErr != nil {
+			return resolveErr
+		}
+		o.Scope = resolved.Scope
+	}
+	if err := validateCommand(o); err != nil {
+		return err
 	}
 	api, err := r.API(o.Server, session.IDToken)
 	if err != nil {
@@ -136,20 +159,22 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	}
 	return r.Output.Result(result)
 }
-func validateCommand(o Options) error {
+func validateCommand(o Options) error      { return validateCommandOptions(o, true) }
+func validateCommandShape(o Options) error { return validateCommandOptions(o, false) }
+func validateCommandOptions(o Options, requireScope bool) error {
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
 	}
 	if isLabelCommand(o) {
-		return validateLabelCommand(o)
+		return validateLabelCommandOptions(o, requireScope)
 	}
 	if !o.PrintLabel && isPrintingCommand(o) {
-		return validatePrintingCommand(o)
+		return validatePrintingCommandOptions(o, requireScope)
 	}
 	if len(o.Command) < 2 {
 		return ports.Failure("usage", "expected inventories list or assets <action>")
 	}
-	if o.Scope.Tenant == "" {
+	if requireScope && o.Scope.Tenant == "" {
 		return ports.Failure("usage", "choose a tenant with --tenant or STUFF_STASH_CLI_TENANT")
 	}
 	if o.Command[0] == "inventories" && o.Command[1] == "list" && len(o.Command) == 2 {
@@ -158,7 +183,7 @@ func validateCommand(o Options) error {
 	if o.Command[0] != "assets" {
 		return ports.Failure("usage", "unknown command; use --help")
 	}
-	if o.Scope.Inventory == "" {
+	if requireScope && o.Scope.Inventory == "" {
 		return ports.Failure("usage", "choose an inventory with --inventory or STUFF_STASH_CLI_INVENTORY")
 	}
 	switch o.Command[1] {

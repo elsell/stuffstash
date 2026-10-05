@@ -126,7 +126,7 @@ func (s Store) Update(ctx context.Context, change func(*contexts.Config) error) 
 		return configError()
 	}
 	name := ".contexts-" + hex.EncodeToString(suffix[:]) + ".tmp"
-	file, err := root.OpenFile(name, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	file, err := newPrivateFile(root, name)
 	if err != nil {
 		return configError()
 	}

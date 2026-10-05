@@ -209,3 +209,7 @@ locks and atomic replacement. Reuse the pinned x/sys package for these OS calls.
 
 Native Windows CI verifies private context ACLs and separate-process lock
 cancellation. Cross-compilation and Wine are supplementary evidence only.
+
+Windows file creation explicitly assigns the current user as owner and installs
+the private DACL atomically, including under elevated accounts. Creation stays
+relative to the opened directory handle and rejects reparse points.

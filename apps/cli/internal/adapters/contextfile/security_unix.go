@@ -22,3 +22,7 @@ func prepareDirectory(path string) error {
 	}
 	return nil
 }
+
+func newPrivateFile(root *os.Root, name string) (*os.File, error) {
+	return root.OpenFile(name, os.O_CREATE|os.O_EXCL|os.O_RDWR, 0600)
+}

@@ -5,18 +5,16 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"runtime"
 	"time"
 
-	"github.com/stuffstash/stuff-stash/cli/internal/adapters/contextfile"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/labelfiles"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/oidcauth"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/presentation"
 	"github.com/stuffstash/stuff-stash/cli/internal/app"
+	"github.com/stuffstash/stuff-stash/cli/internal/app/contexts"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 	"github.com/stuffstash/stuff-stash/cli/internal/version"
 )
@@ -40,18 +38,23 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 	if err != nil {
 		return exit(output, err)
 	}
-	if len(options.Command) > 0 && options.Command[0] == "context" {
-		configPath := getenv("STUFF_STASH_CLI_CONFIG_FILE")
-		if configPath == "" {
-			directory, pathErr := os.UserConfigDir()
-			if pathErr != nil {
-				return exit(output, ports.Failure("configuration", "Cannot find the configuration directory. Set STUFF_STASH_CLI_CONFIG_FILE to a private file path."))
-			}
-			configPath = filepath.Join(directory, "stuffstash", "contexts.json")
+	var contextStore contexts.Store
+	connector := len(options.Command) > 0 && options.Command[0] == "connectors"
+	if !connector {
+		local := len(options.Command) > 0 && options.Command[0] == "context"
+		contextStore, err = configuredContexts(getenv, local || options.Server == "" || options.Selection.Context != "")
+		if err != nil {
+			return exit(output, err)
 		}
-		contextStore := contextfile.Store{Path: configPath}
-		return exit(output, (app.Runner{Contexts: contextStore, Output: output}).Run(ctx, options))
+		if local {
+			return exit(output, (app.Runner{Contexts: contextStore, Output: output}).Run(ctx, options))
+		}
+		options.Server, err = contextServer(ctx, contextStore, options)
+		if err != nil {
+			return exit(output, err)
+		}
 	}
+
 	if err == nil {
 		err = oidcauth.ValidateURL(options.Server, options.AllowLoopbackHTTP)
 	}
@@ -72,6 +75,7 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 	client := &http.Client{Timeout: 30 * time.Second}
 	clock := systemClock{}
 	runner := app.Runner{
+		Contexts:    contextStore,
 		LabelFiles:  labelfiles.Files{},
 		LabelsAPI:   func(server, token string) (ports.LabelsAPI, error) { return httpapi.New(server, token, client) },
 		PrintingAPI: func(server, token string) (ports.HumanPrintingAPI, error) { return httpapi.New(server, token, client) },
@@ -139,7 +143,9 @@ const Help = `Stuff Stash CLI
   stuffstash connectors print run --connector ID [--journal-dir PATH]
 
 Context: --server, --tenant, --inventory or STUFF_STASH_CLI_SERVER,
-STUFF_STASH_CLI_TENANT, STUFF_STASH_CLI_INVENTORY. No implicit inventory selection.
+STUFF_STASH_CLI_TENANT, STUFF_STASH_CLI_INVENTORY override the saved context.
+Use --context NAME or STUFF_STASH_CLI_CONTEXT to choose a saved context.
+Saved resource scope is reused only for the same signed-in account.
 Render writes a new private file; existing paths are never overwritten.
 Standalone dimensions: --width-mm WIDTH --height-mm HEIGHT (exact catalog geometry).
 Finite commands accept --json. Mutations accept --idempotency-key.

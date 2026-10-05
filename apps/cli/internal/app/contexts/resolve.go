@@ -3,6 +3,7 @@ package contexts
 
 import (
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
+	"strings"
 )
 
 const Version = 1
@@ -30,7 +31,7 @@ func Overlay(lower, higher Selection) Selection {
 	if higher.Context != "" && higher.Context != lower.Context {
 		lower.Context = higher.Context
 	}
-	if higher.Server != "" && higher.Server != lower.Server {
+	if higher.Server != "" && ServerKey(higher.Server) != ServerKey(lower.Server) {
 		lower.Server = higher.Server
 		lower.Tenant = ""
 		lower.Inventory = ""
@@ -55,7 +56,7 @@ func Resolve(config Config, request Selection, principal string) (Resolved, erro
 	if request.Server != "" {
 		result.Server = request.Server
 	}
-	if principal != "" && selected.Principal == principal && selected.Server == result.Server {
+	if principal != "" && selected.Principal == principal && ServerKey(selected.Server) == ServerKey(result.Server) {
 		result.Scope = ports.Scope{Tenant: selected.Tenant, Inventory: selected.Inventory}
 	}
 	if request.Tenant != "" {
@@ -87,12 +88,12 @@ func selectEntry(config Config, request Selection, principal string) (Entry, err
 	if request.Context != "" && selected.Name == "" {
 		return Entry{}, ports.Failure("configuration", "The context does not exist. Use stuffstash context list to see the available contexts.")
 	}
-	if request.Server == "" || request.Server == selected.Server {
+	if request.Server == "" || ServerKey(request.Server) == ServerKey(selected.Server) {
 		return selected, nil
 	}
 	selected = Entry{}
 	for _, entry := range config.Contexts {
-		if entry.Server != request.Server || entry.Principal != principal {
+		if ServerKey(entry.Server) != ServerKey(request.Server) || entry.Principal != principal {
 			continue
 		}
 		if selected.Name != "" {
@@ -102,3 +103,6 @@ func selectEntry(config Config, request Selection, principal string) (Entry, err
 	}
 	return selected, nil
 }
+
+// ServerKey follows the CLI endpoint convention: trailing slashes are optional.
+func ServerKey(server string) string { return strings.TrimRight(server, "/") }

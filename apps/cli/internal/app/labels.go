@@ -12,14 +12,15 @@ import (
 func isLabelCommand(o Options) bool {
 	return len(o.Command) >= 2 && o.Command[0] == "labels" && o.Command[1] != "print"
 }
-func validateLabelCommand(o Options) error {
+func validateLabelCommand(o Options) error { return validateLabelCommandOptions(o, true) }
+func validateLabelCommandOptions(o Options, requireScope bool) error {
 	if o.Command[1] == "resolve" && len(o.Command) == 3 {
 		if _, err := labels.Parse(o.Command[2]); err != nil {
 			return ports.Failure("usage", "invalid or unsupported label link")
 		}
 		return nil
 	}
-	if o.Scope.Tenant == "" || o.Scope.Inventory == "" {
+	if requireScope && (o.Scope.Tenant == "" || o.Scope.Inventory == "") {
 		return ports.Failure("usage", "label commands require --tenant and --inventory")
 	}
 	if o.Command[1] == "templates" && len(o.Command) == 2 {

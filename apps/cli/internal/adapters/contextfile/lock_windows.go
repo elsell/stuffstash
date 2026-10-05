@@ -16,7 +16,10 @@ func lock(ctx context.Context, root *os.Root, name string) (func(), error) {
 	} else if err != nil && !os.IsNotExist(err) {
 		return nil, configError()
 	}
-	file, err := root.OpenFile(name, os.O_CREATE|os.O_RDWR, 0600)
+	file, err := newPrivateFile(root, name)
+	if errors.Is(err, windows.STATUS_OBJECT_NAME_COLLISION) {
+		file, err = root.OpenFile(name, os.O_RDWR, 0600)
+	}
 	if err != nil {
 		return nil, configError()
 	}

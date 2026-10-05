@@ -78,3 +78,18 @@ func TestContextLifecycleDoesNotSilentlyChangeScope(t *testing.T) {
 		t.Fatal("current context not cleared")
 	}
 }
+
+func TestTrailingSlashDoesNotChangeContextIdentity(t *testing.T) {
+	ctx := context.Background()
+	store := &memoryStore{config: Config{Version: Version, Current: "home", Contexts: []Entry{{Name: "home", Server: "https://home.example/", Principal: "alice", Tenant: "home", Inventory: "garage"}}}}
+	got, err := Resolve(store.config, Selection{Server: "https://home.example"}, "alice")
+	if err != nil || got.Scope.Inventory != "garage" {
+		t.Fatalf("scope lost: %+v %v", got, err)
+	}
+	if err := (Manager{Store: store}).ClearServer(ctx, "https://home.example"); err != nil {
+		t.Fatal(err)
+	}
+	if store.config.Contexts[0].Principal != "" || store.config.Contexts[0].Tenant != "" {
+		t.Fatal("logout retained trailing-slash account scope")
+	}
+}

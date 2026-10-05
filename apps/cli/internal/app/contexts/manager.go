@@ -53,6 +53,7 @@ func (m Manager) Delete(ctx context.Context, name string) error {
 	})
 }
 func (m Manager) Remember(ctx context.Context, entry Entry) error {
+	entry.Server = ServerKey(entry.Server)
 	if entry.Principal == "" {
 		return ports.Failure("authentication", "Cannot save this selection without a verified account. Log in again.")
 	}
@@ -62,7 +63,7 @@ func (m Manager) Remember(ctx context.Context, entry Entry) error {
 	return m.Store.Update(ctx, func(config *Config) error {
 		for i, saved := range config.Contexts {
 			if saved.Name == entry.Name {
-				if saved.Server != entry.Server || saved.Principal != "" && saved.Principal != entry.Principal {
+				if ServerKey(saved.Server) != ServerKey(entry.Server) || saved.Principal != "" && saved.Principal != entry.Principal {
 					return ports.Failure("configuration", "This context belongs to another server or account. Use a different context name.")
 				}
 				config.Contexts[i] = entry
@@ -79,7 +80,7 @@ func (m Manager) ClearServer(ctx context.Context, server string) error {
 	return m.Store.Update(ctx, func(config *Config) error {
 		for i := range config.Contexts {
 			entry := &config.Contexts[i]
-			if entry.Server == server {
+			if ServerKey(entry.Server) == ServerKey(server) {
 				entry.Principal = ""
 				entry.Tenant = ""
 				entry.Inventory = ""

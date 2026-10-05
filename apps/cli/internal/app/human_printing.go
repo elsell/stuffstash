@@ -40,8 +40,9 @@ func selectPrinter(ctx context.Context, api ports.PrintSelectionSource, o Option
 func isPrintingCommand(o Options) bool {
 	return o.PrintLabel || (len(o.Command) > 0 && (o.Command[0] == "labels" || o.Command[0] == "printers" || o.Command[0] == "print-jobs"))
 }
-func validatePrintingCommand(o Options) error {
-	if len(o.Command) < 2 || o.Scope.Tenant == "" || o.Scope.Inventory == "" {
+func validatePrintingCommand(o Options) error { return validatePrintingCommandOptions(o, true) }
+func validatePrintingCommandOptions(o Options, requireScope bool) error {
+	if len(o.Command) < 2 || requireScope && (o.Scope.Tenant == "" || o.Scope.Inventory == "") {
 		return ports.Failure("usage", "printing requires --tenant and --inventory")
 	}
 	n := len(o.Command)

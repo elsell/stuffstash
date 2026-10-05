@@ -33,3 +33,13 @@ func TestContextCommandsNeedNoServerOrCredentials(t *testing.T) {
 		}
 	}
 }
+
+func TestInvalidCommandDoesNotLoadCredentials(t *testing.T) {
+	// Missing credential/auth ports make any premature access fail immediately.
+	runner := Runner{Contexts: contextfile.Store{Path: filepath.Join(t.TempDir(), "contexts.json")}}
+	for _, command := range [][]string{{"unknown", "action"}, {"assets", "create"}, {"assets", "move"}} {
+		if err := runner.Run(context.Background(), Options{Command: command}); err == nil {
+			t.Fatalf("invalid command accepted: %v", command)
+		}
+	}
+}

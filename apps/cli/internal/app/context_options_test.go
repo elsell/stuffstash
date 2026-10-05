@@ -1,6 +1,9 @@
 package app
 
-import "testing"
+import (
+	"github.com/stuffstash/stuff-stash/cli/internal/app/contexts"
+	"testing"
+)
 
 func TestScopeFlagsDoNotCarryEnvironmentAcrossBoundaries(t *testing.T) {
 	env := map[string]string{"STUFF_STASH_CLI_SERVER": "https://home.example", "STUFF_STASH_CLI_TENANT": "home", "STUFF_STASH_CLI_INVENTORY": "old", "STUFF_STASH_CLI_CONTEXT": "home"}
@@ -33,5 +36,18 @@ func TestEmptyExplicitScopeCannotFallBackToEnvironment(t *testing.T) {
 				t.Fatalf("empty explicit %s accepted", name)
 			}
 		}
+	}
+}
+
+func TestEquivalentServerFlagPreservesExplicitScope(t *testing.T) {
+	env := map[string]string{"STUFF_STASH_CLI_SERVER": "https://host.example", "STUFF_STASH_CLI_TENANT": "work", "STUFF_STASH_CLI_INVENTORY": "office"}
+	options, err := Parse([]string{"assets", "list", "--server", "https://host.example/"}, func(key string) string { return env[key] })
+	if err != nil {
+		t.Fatal(err)
+	}
+	config := contexts.Config{Version: contexts.Version, Current: "home", Contexts: []contexts.Entry{{Name: "home", Server: "https://host.example", Principal: "alice", Tenant: "home", Inventory: "garage"}}}
+	resolved, err := contexts.Resolve(config, options.Selection, "alice")
+	if err != nil || resolved.Scope.Tenant != "work" || resolved.Scope.Inventory != "office" {
+		t.Fatalf("equivalent server replaced explicit scope: %+v %v", resolved, err)
 	}
 }
