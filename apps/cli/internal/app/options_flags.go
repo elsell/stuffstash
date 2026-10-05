@@ -10,6 +10,7 @@ func optionFlags(o *Options) *flag.FlagSet {
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	expirationFlags(flags, o)
+	printSubmissionFlags(flags, o)
 	flags.StringVar(&o.InvitationStatus, "status", "", "invitation status filter")
 	flags.Func("view", "asset activity: changes or all", func(v string) error { o.ActivityView = ports.ActivityView(v); return nil })
 	flags.Func("details", "checkout or return notes", func(value string) error { o.Details = &value; return nil })

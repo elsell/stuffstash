@@ -81,18 +81,6 @@ func (c *Client) PrintJobs(ctx context.Context, s ports.Scope, p ports.Page, pri
 func (c *Client) PrintJob(ctx context.Context, s ports.Scope, id string) (ports.Result[ports.PrintJobSummary], error) {
 	return humanJobResult(read[generated.SuccessEnvelopePrintJob](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobId(ctx, s.Tenant, s.Inventory, id, nil)))
 }
-func humanSelection(s ports.LabelPrintSelection) generated.PrintJobSelection {
-	return generated.PrintJobSelection{PrinterId: s.PrinterID, ExpectedMediaFingerprint: s.ExpectedMediaFingerprint, TemplateId: s.TemplateID, TemplateVersion: int32(s.TemplateVersion), TemplateOptions: generated.PrintJobTemplateOptions{ShowReference: s.ShowReference}, Copies: int64(s.Copies)}
-}
-func (c *Client) QueueLabel(ctx context.Context, s ports.Scope, id string, selection ports.LabelPrintSelection, key string) (ports.Result[ports.PrintJobSummary], error) {
-	return humanJobResult(read[generated.SuccessEnvelopePrintJob](c.sdk.PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdPrintJobs(ctx, s.Tenant, s.Inventory, id, &generated.PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdPrintJobsParams{IdempotencyKey: key}, humanSelection(selection))))
-}
-func (c *Client) TestPrinter(ctx context.Context, s ports.Scope, selection ports.LabelPrintSelection, key string) (ports.Result[ports.PrintJobSummary], error) {
-	return humanJobResult(read[generated.SuccessEnvelopePrintJob](c.sdk.PostTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdTestJobs(ctx, s.Tenant, s.Inventory, selection.PrinterID, &generated.PostTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterIdTestJobsParams{IdempotencyKey: key}, humanSelection(selection))))
-}
-func (c *Client) Reprint(ctx context.Context, s ports.Scope, id string, selection ports.LabelPrintSelection, key string) (ports.Result[ports.PrintJobSummary], error) {
-	return humanJobResult(read[generated.SuccessEnvelopePrintJob](c.sdk.PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprints(ctx, s.Tenant, s.Inventory, id, &generated.PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdReprintsParams{IdempotencyKey: key}, humanSelection(selection))))
-}
 func (c *Client) CancelPrint(ctx context.Context, s ports.Scope, id string, revision uint64) (ports.Result[ports.PrintJobSummary], error) {
 	return humanJobResult(read[generated.SuccessEnvelopePrintJob](c.sdk.PostTenantsByTenantIdInventoriesByInventoryIdPrintJobsByJobIdCancellation(ctx, s.Tenant, s.Inventory, id, nil, generated.PrintJobRevision{Revision: int64(revision)})))
 }

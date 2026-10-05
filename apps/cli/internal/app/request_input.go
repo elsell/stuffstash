@@ -14,7 +14,7 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 	if !write {
 		return o, nil
 	}
-	if o.IdempotencyKey != "" && !(isAssetWrite(o) && o.Command[1] == "create") {
+	if o.IdempotencyKey != "" && !isPrintSubmission(o) && !(isAssetWrite(o) && o.Command[1] == "create") {
 		return o, ports.Failure("usage", "This API operation does not support --idempotency-key. Remove the option.")
 	}
 	if o.InputPath != "" && (o.Timezone != "" || o.ConnectorName != "" || o.TagColor != nil || o.TagKey != nil || o.Title != "" || o.Kind != "" || o.Parent != "" || o.PrintLabel || o.Details != nil) {
@@ -33,6 +33,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody = body
 	} else {
+		if isPrintSubmission(o) {
+			return o, nil
+		}
 		if isEvaluationCancellation(o) {
 			return r.prepareEvaluationCancellation(o)
 		}
@@ -81,6 +84,10 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 			return o, ports.Failure("usage", "Supply --name NAME or --input FILE for this command.")
 		}
 		o.RequestBody, _ = json.Marshal(map[string]string{"name": o.ConnectorName})
+	}
+	if isPrintSubmission(o) {
+		_, err := decodePrintSubmission(o)
+		return o, err
 	}
 	if isEvaluationCancellation(o) {
 		return r.prepareEvaluationCancellation(o)

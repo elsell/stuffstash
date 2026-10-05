@@ -11,6 +11,9 @@ type InventoryPrintDefaults struct {
 	ShowReference         bool
 }
 type LabelPrintSelection struct {
+	// RequestBody retains explicit input without replacing its concurrency checks.
+	RequestBody                                     []byte
+	PreviewFingerprint                              string
 	PrinterID, ExpectedMediaFingerprint, TemplateID string
 	TemplateVersion                                 uint32
 	ShowReference                                   bool

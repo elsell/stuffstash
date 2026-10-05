@@ -11,7 +11,7 @@ func selectPrinter(ctx context.Context, api ports.PrintSelectionSource, o Option
 	if err != nil {
 		return ports.LabelPrintSelection{}, err
 	}
-	selection := ports.LabelPrintSelection{PrinterID: defaults.PrinterID, TemplateID: defaults.TemplateID, TemplateVersion: defaults.TemplateVersion, ShowReference: defaults.ShowReference, Copies: o.Copies}
+	selection := ports.LabelPrintSelection{PrinterID: defaults.PrinterID, TemplateID: defaults.TemplateID, TemplateVersion: defaults.TemplateVersion, ShowReference: defaults.ShowReference, Copies: o.Copies, PreviewFingerprint: o.PreviewFingerprint}
 	if o.PrinterID != "" {
 		selection.PrinterID = o.PrinterID
 	}
@@ -26,6 +26,10 @@ func selectPrinter(ctx context.Context, api ports.PrintSelectionSource, o Option
 	}
 	if o.ShowReferenceSet {
 		selection.ShowReference = o.ShowReference
+	}
+	if o.ExpectedMediaFingerprint != "" {
+		selection.ExpectedMediaFingerprint = o.ExpectedMediaFingerprint
+		return selection, nil
 	}
 	printer, err := api.RegisteredPrinter(ctx, o.Scope, selection.PrinterID)
 	if err != nil {
@@ -85,9 +89,14 @@ func executePrinting(ctx context.Context, api ports.HumanPrintingAPI, o Options)
 	}
 	if o.Command[0] == "printers" {
 		o.PrinterID = o.Command[2]
-		o.Copies = 1
 	}
-	selection, err := selectPrinter(ctx, api, o)
+	var selection ports.LabelPrintSelection
+	var err error
+	if o.InputPath != "" {
+		selection, err = decodePrintSubmission(o)
+	} else {
+		selection, err = selectPrinter(ctx, api, o)
+	}
 	if err != nil {
 		return nil, err
 	}
