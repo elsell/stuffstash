@@ -62,8 +62,8 @@ func ParseHelp(args []string) (Options, bool, error) {
 	if err != nil {
 		return o, true, err
 	}
-	if err = flags.Parse(flagArgs); err != nil {
-		return o, true, ports.Failure("usage", "invalid command option")
+	if err = parseOptionValues(flags, flagArgs); err != nil {
+		return o, true, err
 	}
 	o.Command = command
 	return o, true, nil

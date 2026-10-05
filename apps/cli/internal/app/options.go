@@ -57,8 +57,8 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	if splitErr != nil {
 		return o, splitErr
 	}
-	if err := flags.Parse(flagArgs); err != nil {
-		return o, ports.Failure("usage", "invalid command option")
+	if err := parseOptionValues(flags, flagArgs); err != nil {
+		return o, err
 	}
 	explicit := contexts.Selection{}
 	var emptyScopeFlag string
@@ -86,8 +86,11 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	o.Selection = contexts.Overlay(environment, explicit)
 	o.Server = o.Selection.Server
 	o.Scope = ports.Scope{Tenant: o.Selection.Tenant, Inventory: o.Selection.Inventory}
-	if o.Copies < 1 || o.TemplateVersion > uint(^uint32(0)) {
-		return o, ports.Failure("usage", "invalid copies or template version")
+	if o.Copies < 1 {
+		return o, ports.Failure("usage", "Supply --copies with an integer of at least 1.")
+	}
+	if o.TemplateVersion > uint(^uint32(0)) {
+		return o, ports.Failure("usage", "Supply --template-version with an integer from 0 through 4294967295; 0 uses the default.")
 	}
 	if o.Color != "auto" && o.Color != "always" && o.Color != "never" {
 		return o, ports.Failure("usage", "Use --color auto, --color always, or --color never.")
