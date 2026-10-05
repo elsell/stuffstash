@@ -726,3 +726,22 @@ confirm the displayed version. Scripts must supply `--input FILE --yes` with
 `{"expectedVersion":3}`, using the version from `evaluation runs show RUN_ID`.
 A conflict requires a new review of the run. The CLI does not retry cancellation
 or silently replace your version check.
+
+### Submit a reviewed print request
+
+`labels print ASSET_ID`, `printers test PRINTER_ID`, and
+`print-jobs reprint JOB_ID` accept `--input FILE` or `--input -`. The JSON supplies
+the full selection: printer, media fingerprint, template and version, template
+options, copies, and optional preview fingerprint. This form preserves your
+reviewed request without looking up or replacing its values. Do not combine it
+with selection flags. A test request's printer ID must match the command target.
+
+For the usual flag-based workflow, `--expected-media-fingerprint` and
+`--preview-fingerprint` let you retain values from a prior review. The server
+rejects changed media or previews. It also enforces template and copy limits;
+a printer test permits one copy.
+
+Keep the printed request key and the exact request. If a reply is lost, inspect
+the print job before repeating anything. Reuse `--idempotency-key` with the same
+request for a retry; a new key can print another label. The CLI does not retry
+a submission automatically.

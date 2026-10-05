@@ -17,8 +17,8 @@ and Windows context-file CI have passed. Native Windows run
 also passed application, local help, input/output and terminal contracts plus
 a CLI build. Authenticated Windows keyring/bootstrap and real console interaction
 remain unverified. The operation inventory tracks 192
-contracts; 108 have their known workflow and field gaps closed. The remaining
-84 still need implementation or full contract verification. The scope-override
+contracts; 111 have their known workflow and field gaps closed. The remaining
+81 still need implementation or full contract verification. The scope-override
 persistence preference remains open before release. Search transport is implemented;
 search command scope defaults await user input.
 

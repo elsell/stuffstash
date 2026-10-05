@@ -2137,11 +2137,11 @@
         "domain": "printing",
         "contractSha256": "e91009c9ecc6a7cde5df5086294aee56d8c6dbf6daa579a058cca3416dc4711f"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "labels print"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-return": {
       "contract": {
@@ -2280,11 +2280,11 @@
         "domain": "printing",
         "contractSha256": "9f57b1c64e11af51024383ab1d02f15b1850f952af3e1f6918c6a4197ba14b19"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "print-jobs reprint"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id-resolution": {
       "contract": {
@@ -2319,11 +2319,11 @@
         "domain": "printing",
         "contractSha256": "b7ffe734261ce8ff007bc738b153e38e62a859d435167921d914e3badfd6e620"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "printers test"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-tags": {
       "contract": {
