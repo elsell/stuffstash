@@ -556,3 +556,9 @@ stuffstash access-grants remove PRINCIPAL_ID editor
 
 Removal asks for confirmation. In scripts, review the target and add `--yes`.
 It removes that relationship only; another grant can still provide access.
+
+Use `stuffstash access-grants create` to choose a principal ID and access level.
+For scripts, put `{"principalId":"USER_ID","relationship":"viewer"}` in a JSON
+file and run `stuffstash access-grants create --input grant.json --yes`.
+Use `editor` to allow changes. Check the displayed household and inventory
+before you confirm.

@@ -192,6 +192,7 @@ const Help = `Stuff Stash CLI
   stuffstash tenants audit [--limit N --cursor CURSOR]
   stuffstash inventories audit [--limit N --cursor CURSOR]
   stuffstash assets audit ASSET_ID [--limit N]
+  stuffstash access-grants create [--input FILE|-] [--yes]
   stuffstash access-grants list [--limit N --cursor CURSOR]
   stuffstash access-grants show|remove PRINCIPAL_ID viewer|editor [--yes]
   stuffstash assets activity ASSET_ID [--view changes|all --limit N --cursor CURSOR]

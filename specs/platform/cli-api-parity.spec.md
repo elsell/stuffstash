@@ -673,3 +673,12 @@ removal as revoking all effective access: another relationship may still apply.
 Do not retry a removal automatically. Reject invalid roles, arguments and
 unsupported mutation options before network access. Critical tests cover
 confirmation, exact targets, scope denials and complete read output.
+
+`access-grants create --input FILE|-` accepts the API grant object with
+principalId and relationship (viewer or editor). Without input, a terminal
+prompts for principal ID and offers a keyboard role picker, viewer first.
+Validate both fields before authentication and scope resolution. Preserve the
+input object for the generated SDK. Before mutation, show the exact principal,
+role and scope and require confirmation (or --yes). On an uncertain result,
+direct the user to inspect that grant before retrying; never retry automatically.
+Critical tests cover missing confirmation, exact request, denial and invalid role.

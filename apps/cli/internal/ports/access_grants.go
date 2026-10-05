@@ -16,6 +16,7 @@ type AccessGrant struct {
 	Relationship AccessRelationship `json:"relationship"`
 }
 type AccessGrantsAPI interface {
+	CreateAccessGrant(context.Context, Scope, []byte) (Result[AccessGrant], error)
 	AccessGrants(context.Context, Scope, Page) (Result[[]AccessGrant], error)
 	AccessGrant(context.Context, Scope, string, AccessRelationship) (Result[AccessGrant], error)
 	RemoveAccessGrant(context.Context, Scope, string, AccessRelationship) error

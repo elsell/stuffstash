@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"bytes"
 	"context"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi/generated"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
@@ -32,4 +33,12 @@ func (c *Client) AccessGrant(ctx context.Context, s ports.Scope, principal strin
 }
 func (c *Client) RemoveAccessGrant(ctx context.Context, s ports.Scope, principal string, role ports.AccessRelationship) error {
 	return noContent(c.sdk.DeleteTenantsByTenantIdInventoriesByInventoryIdAccessGrantsByPrincipalIdByRelationship(ctx, s.Tenant, s.Inventory, principal, generated.DeleteTenantsByTenantIdInventoriesByInventoryIdAccessGrantsByPrincipalIdByRelationshipParamsRelationship(role), nil))
+}
+
+func (c *Client) CreateAccessGrant(ctx context.Context, s ports.Scope, body []byte) (ports.Result[ports.AccessGrant], error) {
+	r, err := read[generated.SuccessEnvelopeGrantResponse](c.sdk.PostTenantsByTenantIdInventoriesByInventoryIdAccessGrantsWithBody(ctx, s.Tenant, s.Inventory, nil, "application/json", bytes.NewReader(body)))
+	if err != nil {
+		return ports.Result[ports.AccessGrant]{}, err
+	}
+	return ports.Result[ports.AccessGrant]{Data: accessGrant(r.Data), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }

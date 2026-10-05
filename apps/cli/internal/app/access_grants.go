@@ -10,12 +10,12 @@ func isAccessGrantCommand(o Options) bool {
 	return len(o.Command) > 0 && o.Command[0] == "access-grants"
 }
 func validateAccessGrants(o Options, scope bool) error {
-	valid := len(o.Command) == 2 && o.Command[1] == "list"
+	valid := len(o.Command) == 2 && (o.Command[1] == "list" || o.Command[1] == "create")
 	if len(o.Command) == 4 && (o.Command[1] == "show" || o.Command[1] == "remove") && o.Command[2] != "" && (o.Command[3] == string(ports.AccessViewer) || o.Command[3] == string(ports.AccessEditor)) {
 		valid = true
 	}
 	if !valid {
-		return ports.Failure("usage", "Use access-grants list, show PRINCIPAL_ID viewer|editor, or remove PRINCIPAL_ID viewer|editor.")
+		return ports.Failure("usage", "Use access-grants list, create, show PRINCIPAL_ID viewer|editor, or remove PRINCIPAL_ID viewer|editor.")
 	}
 	if o.IdempotencyKey != "" || o.ConnectorName != "" || o.Title != "" || o.Kind != "" || o.Parent != "" || (o.Command[1] != "list" && o.Page.Cursor != "") {
 		return ports.Failure("usage", "Access grants do not accept asset fields or retry keys. Use --cursor only with access-grants list.")
@@ -35,6 +35,8 @@ func (r Runner) accessGrantCommand(ctx context.Context, o Options, token string)
 	}
 	var result any
 	switch o.Command[1] {
+	case "create":
+		return r.createGrant(ctx, o, api)
 	case "list":
 		result, err = api.AccessGrants(ctx, o.Scope, o.Page)
 	case "show":

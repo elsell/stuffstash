@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 	"io"
@@ -19,18 +20,31 @@ func TestAccessGrantRemovalConfirmationAndScope(t *testing.T) {
 	for _, action := range []string{"viewer", "editor"} {
 		t.Run(action, func(t *testing.T) {
 			calls := 0
+			creating := false
 			reading := false
 			listing := false
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				calls++
 				expected := "/tenants/home/inventories/garage/access-grants/member/" + action
-				if listing {
+				if listing || creating {
 					expected = "/tenants/home/inventories/garage/access-grants"
 				}
 				if r.URL.Path != expected || r.Header.Get("Authorization") != "Bearer owner" {
 					w.WriteHeader(403)
 					return
 				}
+				if creating {
+					if r.Method != "POST" {
+						t.Error("wrong create method")
+					}
+					var body map[string]string
+					if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body["principalId"] != "member" || body["relationship"] != action {
+						t.Error("wrong grant body")
+					}
+					io.WriteString(w, `{"data":{"tenantId":"home","inventoryId":"garage","principalId":"member","relationship":"`+action+`"},"meta":{}}`)
+					return
+				}
+
 				if reading {
 					if r.Method != "GET" {
 						t.Error("wrong read method")
@@ -88,6 +102,30 @@ func TestAccessGrantRemovalConfirmationAndScope(t *testing.T) {
 					t.Fatal("scope boundary bypassed")
 				}
 			}
+			creating = true
+			input := filepath.Join(dir, "grant.json")
+			os.WriteFile(input, []byte(`{"principalId":"member","relationship":"`+action+`"}`), 0600)
+			create := append([]string{"access-grants", "create", "--input", input}, scope...)
+			beforeCreate := calls
+			if code := Run(context.Background(), create, getenv, &out, &diagnostic); code != 2 || calls != beforeCreate {
+				t.Fatal("unconfirmed grant created")
+			}
+			create = append(create, "--yes")
+			if code := Run(context.Background(), create, getenv, &out, &diagnostic); code != 0 || calls != beforeCreate+1 {
+				t.Fatalf("create: %d %s", code, &diagnostic)
+			}
+			for _, override := range [][]string{{"--tenant", "other"}, {"--inventory", "other"}} {
+				if code := Run(context.Background(), append(create, override...), getenv, &out, &diagnostic); code == 0 {
+					t.Fatal("create scope bypass")
+				}
+			}
+			os.WriteFile(input, []byte(`{"principalId":"member","relationship":"owner"}`), 0600)
+			beforeCreate = calls
+			if code := Run(context.Background(), create, getenv, &out, &diagnostic); code != 2 || calls != beforeCreate {
+				t.Fatal("invalid create reached API")
+			}
+			creating = false
+
 			reading = true
 			for _, mode := range []string{"show", "list"} {
 				listing = mode == "list"
