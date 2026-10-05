@@ -267,7 +267,7 @@ func validateCommandOptions(o Options, requireScope bool) error {
 		return ports.Failure("usage", "choose an inventory with --inventory or STUFF_STASH_CLI_INVENTORY")
 	}
 	switch o.Command[1] {
-	case "list", "checked-out":
+	case "list", "checked-out", "expiration":
 		if len(o.Command) == 2 {
 			return nil
 		}
@@ -302,6 +302,12 @@ func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 		return api.Inventories(ctx, o.Scope, o.Page)
 	}
 	action := o.Command[1]
+	if action == "expiration" {
+		q := o.Expiration
+		q.Page = o.Page
+		q.Kind = o.Kind
+		return api.ExpirationAssets(ctx, o.Scope, q)
+	}
 	if action == "checked-out" {
 		return api.CheckedOutAssets(ctx, o.Scope, o.Page)
 	}

@@ -433,3 +433,15 @@ limit/cursor pagination. Preserve each complete asset and current checkout,
 response metadata, schema reference, null/empty list distinctions, and exact
 custom-field numbers. Use the same number-preserving envelope override as asset
 lists. Human rows identify the asset and borrower with the checkout date.
+
+### Expiration browsing
+
+`assets expiration` exposes the complete expiration workspace: `--mode`
+(all/soon/expired), `--kind`, `--checkout-state`, `--query`, `--type-id`, repeated
+`--tag-id`, `--location-id`, `--from-date`, `--through-date`, limit and cursor.
+Omitted filters retain server defaults. Validate enums, ISO date values, date
+order, and a page size of 1–100 before requests. Reject expiration-only filters
+on unrelated commands. Keep query text and repeated tag IDs intact through the
+SDK. Preserve complete items, ancestor paths, counts, timezone, metadata, and
+exact custom-field numbers. Human output shows counts, timezone, expiration
+state/date, item titles, paths, and pagination. JSON retains the API shape.

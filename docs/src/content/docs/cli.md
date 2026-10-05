@@ -181,6 +181,20 @@ checkout notes. The write commands also accept `--input FILE|-` with a JSON
 before retrying a write whose result is unknown. These commands do not support
 retry keys. History includes pagination; pass `--cursor` for the next page.
 
+### Browse expiration dates
+
+```sh
+stuffstash assets expiration --mode expired
+stuffstash assets expiration --mode soon --location-id LOCATION_ID
+stuffstash assets expiration --from-date 2026-01-01 --through-date 2026-12-31 --tag-id TAG_ID
+```
+
+Omit `--mode` to include all expiration dates. Narrow results with `--kind`,
+`--checkout-state any|available|checked_out`, `--query`, or `--type-id`.
+Repeat `--tag-id` for multiple tags. Lists include counts, the inventory timezone,
+and item locations. Use `--limit` (1–100) and `--cursor` to page through results,
+or `--json` for complete items and metadata.
+
 ## Release operations
 
 The normal Release workflow attaches five portable CLI archives, individual

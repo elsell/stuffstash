@@ -61,6 +61,7 @@ type Session struct {
 	ExpiresAt    time.Time `json:"expiresAt"`
 }
 type API interface {
+	ExpirationAssets(context.Context, Scope, ExpirationQuery) (Result[ExpirationWorkspace], error)
 	CheckedOutAssets(context.Context, Scope, Page) (Result[[]CheckedOutAsset], error)
 	Checkouts(context.Context, Scope, string, Page) (Result[[]Checkout], error)
 	ChangeCheckout(context.Context, Scope, string, string, CheckoutAction, []byte) (Result[Checkout], error)

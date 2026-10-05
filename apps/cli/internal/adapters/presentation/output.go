@@ -26,6 +26,11 @@ func (o Output) Result(value any) error {
 			}
 		}
 		return o.pagination(v.Pagination)
+	case ports.Result[ports.ExpirationWorkspace]:
+		if err := o.expiration(v.Data); err != nil {
+			return err
+		}
+		return o.pagination(v.Pagination)
 	case ports.Result[[]ports.CheckedOutAsset]:
 		for _, item := range v.Data {
 			if _, err := fmt.Fprintf(o.Stdout, "%s  %s  %s  %s\n", strconv.Quote(item.Asset.ID), strconv.Quote(item.Asset.Title), strconv.Quote(item.Checkout.CheckedOutByPrincipalID), strconv.Quote(item.Checkout.CheckedOutAt)); err != nil {

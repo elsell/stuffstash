@@ -179,6 +179,9 @@ const Help = `Stuff Stash CLI
   stuffstash assets archive ID [--yes]
   stuffstash assets restore ID
   stuffstash assets delete ID [--yes]
+  stuffstash assets expiration [--mode all|soon|expired --kind KIND --checkout-state STATE]
+    [--query TEXT --type-id ID --tag-id ID --location-id ID --from-date YYYY-MM-DD --through-date YYYY-MM-DD]
+    [--limit N --cursor CURSOR]
   stuffstash assets checked-out [--limit N --cursor CURSOR]
   stuffstash assets checkout ID [--details TEXT | --input FILE|-]
   stuffstash assets return ID [--details TEXT | --input FILE|-]

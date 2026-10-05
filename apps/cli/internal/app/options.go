@@ -11,6 +11,7 @@ import (
 )
 
 type Options struct {
+	Expiration                                                            ports.ExpirationQuery
 	Details                                                               *string
 	Lifecycle, Sort                                                       string
 	TagColor, TagKey                                                      *string
@@ -49,6 +50,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	o.Selection.Context = environment.Context
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
+	expirationFlags(flags, &o)
 	flags.Func("details", "checkout or return notes", func(value string) error { o.Details = &value; return nil })
 	flags.Func("tag-color", "tag color as #RRGGBB, or an empty value", func(value string) error { o.TagColor = &value; return nil })
 	flags.Func("key", "stable key for a new tag", func(value string) error { o.TagKey = &value; return nil })
@@ -154,6 +156,9 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if err := validateExpiration(o); err != nil {
+		return o, err
+	}
 	if o.Details != nil && !isCheckoutWrite(o) {
 		return o, ports.Failure("usage", "Use --details only with checkout, return, or return-details.")
 	}

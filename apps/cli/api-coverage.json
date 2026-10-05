@@ -866,11 +866,11 @@
         "domain": "assets",
         "contractSha256": "9a6a80abeb652f692743b730843e48912da22d41a2eb73650ab1292cd3dce5e2"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets expiration"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs": {
       "contract": {

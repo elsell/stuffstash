@@ -13,8 +13,8 @@ The draft CLI batch adds private account-bound contexts, searchable scope
 selection, directory lifecycle commands, tags, and complete asset reads through
 the generated SDK. Critical scope and authenticated-request tests, the CLI suite,
 and Windows context-file CI have passed. The operation inventory tracks 192
-contracts; 31 have their known workflow and field gaps closed. The remaining
-161 still need implementation or full contract verification. The scope-override
+contracts; 32 have their known workflow and field gaps closed. The remaining
+160 still need implementation or full contract verification. The scope-override
 persistence preference remains open before release.
 
 
