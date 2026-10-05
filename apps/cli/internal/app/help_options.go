@@ -56,6 +56,7 @@ func ParseHelp(args []string) (Options, bool, error) {
 	var o Options
 	flags := optionFlags(&o)
 	flagArgs, command, requested, err := partitionOptions(args, flags)
+	o.Command = command
 	if !requested {
 		return o, false, nil
 	}

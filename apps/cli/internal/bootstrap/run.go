@@ -27,6 +27,9 @@ type systemClock struct{}
 
 func (systemClock) Now() time.Time { return time.Now() }
 func Run(ctx context.Context, args []string, getenv func(string) string, stdout, stderr io.Writer) int {
+ if len(args)>0 && args[0]=="__complete" {
+ return exit(presentation.Output{Stdout:stdout,Stderr:stderr},completionQuery(stdout,args))
+ }
 	helpOptions, requested, helpErr := app.ParseHelp(args)
 	if requested {
 		output := presentation.Output{Stdout: stdout, Stderr: stderr}
@@ -35,6 +38,12 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		}
 		return exit(output, writeHelp(stdout, helpOptions.Command))
 	}
+ if len(helpOptions.Command)>0 && helpOptions.Command[0]=="completion" {
+ options,err:=app.Parse(args,func(string)string{return ""})
+ output:=presentation.Output{Stdout:stdout,Stderr:stderr}
+ if err!=nil{return exit(output,err)}
+ return exit(output,writeCompletion(stdout,options.Command))
+ }
 	options, err := app.Parse(args, getenv)
 	output := presentation.Output{Stdout: stdout, Stderr: stderr, JSON: options.JSON}
 
