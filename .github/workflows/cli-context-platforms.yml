@@ -51,8 +51,8 @@ jobs:
         run: python ../../scripts/check-cli-api-coverage.py
       - name: Verify application contracts, input and private context storage
         run: go test -mod=readonly -timeout=2m ./internal/app ./internal/app/contexts ./internal/adapters/contextfile ./internal/adapters/inputfiles ./internal/adapters/presentation ./internal/adapters/terminal
-      - name: Verify local command help
-        run: go test -mod=readonly -timeout=2m ./internal/bootstrap -run 'Test(CommandHelp|Help)'
+      - name: Verify local help and authenticated Windows command
+        run: go test -mod=readonly -timeout=2m ./internal/bootstrap -run 'Test(CommandHelp|Help|WindowsKeyringCommandBoundary)'
       - name: Verify Windows Credential Manager isolation
         run: go test -mod=readonly -timeout=2m ./internal/adapters/credentials -run '^TestWindowsKeyringBoundary$'
       - name: Build the Windows CLI
