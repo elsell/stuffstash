@@ -73,11 +73,11 @@
         "domain": "inventory access",
         "contractSha256": "4ae8834eafcbaf4fe2e957eeff794c2414efa342170e2668c8a490943e579e46"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "access-grants remove"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id": {
       "contract": {
@@ -632,11 +632,11 @@
         "domain": "inventory access",
         "contractSha256": "6e4b84f905910969314bf18aa3538d75b651cadc00f90d5e1905fbb5992bf0ea"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "access-grants list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-access-grants-by-principal-id-by-relationship": {
       "contract": {
@@ -645,11 +645,11 @@
         "domain": "inventory access",
         "contractSha256": "f263beed6e9ea4fa4f7c9fe204810d82b2ac1f0f7a371bee8bc5b4bf4c655648"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "access-grants show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations": {
       "contract": {

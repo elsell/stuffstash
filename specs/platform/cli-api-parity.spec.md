@@ -659,3 +659,17 @@ Reading activity never executes undo. Reject invalid views before authentication
 or network access; --view applies only to this command. Reuse scope selection
 and safe error handling. Critical verification covers scoped requests, denied
 cross-scope reads, pagination and the complete timeline response.
+
+### Access grant inspection and removal
+
+Use `access-grants list [--limit N --cursor CURSOR]` and
+`access-grants show PRINCIPAL_ID viewer|editor` in the selected inventory.
+Preserve grant identity (household, inventory, principal and relationship),
+response metadata and list pagination. Human output uses a compact grant table
+or grant details. `access-grants remove PRINCIPAL_ID viewer|editor` removes only
+that explicit relationship. Display the server, household, inventory, principal
+and relationship before confirmation; scripts require --yes. Never describe
+removal as revoking all effective access: another relationship may still apply.
+Do not retry a removal automatically. Reject invalid roles, arguments and
+unsupported mutation options before network access. Critical tests cover
+confirmation, exact targets, scope denials and complete read output.

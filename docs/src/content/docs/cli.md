@@ -545,3 +545,14 @@ Asset history supports `--limit` but has no cursor in the current API.
 Use `assets activity ASSET_ID --view all` to include technical events. Activity
 shows changed values and available undo operation IDs. It does not undo changes.
 Use `--cursor` with the returned cursor to read the next page.
+
+### Inspect inventory access
+
+```sh
+stuffstash access-grants list
+stuffstash access-grants show PRINCIPAL_ID editor
+stuffstash access-grants remove PRINCIPAL_ID editor
+```
+
+Removal asks for confirmation. In scripts, review the target and add `--yes`.
+It removes that relationship only; another grant can still provide access.
