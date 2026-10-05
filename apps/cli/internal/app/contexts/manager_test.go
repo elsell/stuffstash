@@ -93,3 +93,19 @@ func TestTrailingSlashDoesNotChangeContextIdentity(t *testing.T) {
 		t.Fatal("logout retained trailing-slash account scope")
 	}
 }
+
+func TestDeletedResourceScopeClearsOnlyMatchingAccountAndTarget(t *testing.T){
+ store:=&memoryStore{config:Config{Version:Version,Contexts:[]Entry{
+  {Name:"selected",Server:"https://stash.example",Principal:"alice",Tenant:"home",Inventory:"garage"},
+  {Name:"other-inventory",Server:"https://stash.example",Principal:"alice",Tenant:"home",Inventory:"loft"},
+  {Name:"other-account",Server:"https://stash.example",Principal:"bob",Tenant:"home",Inventory:"garage"},
+  {Name:"other-server",Server:"https://other.example",Principal:"alice",Tenant:"home",Inventory:"garage"},
+ }}}
+ manager:=Manager{Store:store}
+ if err:=manager.ClearResource(context.Background(),"https://stash.example/","alice","home","garage");err!=nil{t.Fatal(err)}
+ entries:=store.config.Contexts
+ if entries[0].Tenant!="home" || entries[0].Inventory!="" || entries[1].Inventory!="loft" || entries[2].Inventory!="garage" || entries[3].Inventory!="garage"{t.Fatalf("wrong inventory cleanup: %+v",entries)}
+ if err:=manager.ClearResource(context.Background(),"https://stash.example","alice","home","");err!=nil{t.Fatal(err)}
+ entries=store.config.Contexts
+ if entries[0].Tenant!="" || entries[1].Tenant!="" || entries[1].Inventory!="" || entries[2].Tenant!="home" || entries[3].Tenant!="home"{t.Fatalf("wrong household cleanup: %+v",entries)}
+}

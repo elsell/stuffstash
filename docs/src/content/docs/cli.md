@@ -69,6 +69,20 @@ your current context.
 These four create/update operations do not support idempotency keys. If a create
 response is lost, check `tenants list` or `inventories list` before retrying.
 
+## Archive, restore, or delete a household or inventory
+
+Use `tenants archive`, `tenants restore`, or `tenants delete` for the selected
+household. Use the equivalent `inventories` commands for the selected inventory.
+Each command shows its target before it runs. Archive and delete ask for
+confirmation with Cancel selected first. Scripts must supply `--yes`; restore
+does not need confirmation. Delete permanently removes the selected resource.
+After deletion, matching saved scope is cleared for your account.
+
+```sh
+./stuffstash inventories archive --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
+./stuffstash inventories restore --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
+```
+
 ## Work with assets
 
 Run `stuffstash account show` to check the signed-in account and

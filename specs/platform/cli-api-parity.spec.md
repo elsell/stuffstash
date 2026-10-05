@@ -304,3 +304,27 @@ it in the same prompt. JSON, --no-input, redirected streams, and unsupported
 terminals fail with actionable explicit-input guidance instead of prompting.
 The prompt completes before authentication or scope selection; no mutation occurs
 until input and target scope are ready. Prompt diagnostics use stderr only.
+
+### Directory lifecycle commands
+
+`tenants archive/restore/delete` operates on the selected household;
+`inventories archive/restore/delete` operates on the selected inventory. They
+send no JSON body and do not support idempotency keys. Print the exact server,
+household ID, and applicable inventory ID before any lifecycle mutation.
+
+Archive and delete require confirmation. Interactive confirmation is a keyboard
+choice with Cancel selected by default and an explicit action choice. Delete
+warns that it permanently removes the selected resource. `--yes` skips this
+prompt; JSON, --no-input, or redirected streams require --yes and never wait.
+Declining or canceling performs no lifecycle request. Restore needs no
+confirmation. Authorization denial leaves local contexts unchanged.
+
+A confirmed HTTP 204 delete returns a CLI result with status `deleted` and the
+selected resource IDs. Never decode 204 as JSON or claim failure because it has
+no body. Other successful lifecycle responses retain full resource metadata.
+Do not automatically retry uncertain mutations. After a confirmed delete, clear matching saved resource scope for the same
+server and verified account. Household deletion clears tenant and inventory;
+inventory deletion clears only the matching inventory. Preserve context names,
+other accounts, and other servers. If local cleanup fails after server success,
+return the successful delete result with an actionable stderr warning; never
+report the server delete as failed or retry it.

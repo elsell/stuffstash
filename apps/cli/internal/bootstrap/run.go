@@ -88,6 +88,7 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
  textInput=prompt
 	}
 	runner := app.Runner{
+ DirectoryLifecycle:func(server,token string)(ports.DirectoryLifecycle,error){return httpapi.New(server,token,client,httpapi.Options{RequestID:options.RequestID})},
  TextInput:textInput,
 		InputFiles: inputfiles.Files{Stdin: os.Stdin, StdinTerminal: term.IsTerminal(int(os.Stdin.Fd()))},
 		DirectoryWriter: func(server, token string) (ports.DirectoryWriter, error) {
@@ -151,6 +152,8 @@ const Help = `Stuff Stash CLI
   stuffstash tenants update --name NAME
   stuffstash inventories create --name NAME
   stuffstash inventories update --input FILE|-
+  stuffstash tenants archive|restore|delete [--yes]
+  stuffstash inventories archive|restore|delete [--yes]
   stuffstash account show
   stuffstash tenants show [--tenant ID]
   stuffstash inventories show [--tenant ID --inventory ID]

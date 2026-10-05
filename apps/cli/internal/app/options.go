@@ -11,6 +11,7 @@ import (
 )
 
 type Options struct {
+ Yes bool
 	RequestID                                                             string
 	InputPath                                                             string
 	RequestBody                                                           []byte
@@ -49,7 +50,8 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	flags.StringVar(&o.InputPath, "input", "", "JSON request file, or - for stdin")
 	flags.StringVar(&o.Color, "color", "auto", "color output: auto, always, or never")
 	flags.StringVar(&o.Selection.Context, "context", environment.Context, "saved context name")
-	flags.BoolVar(&o.NoInput, "no-input", false, "do not ask for input")
+	flags.BoolVar(&o.Yes,"yes",false,"confirm the requested action without a prompt")
+ flags.BoolVar(&o.NoInput, "no-input", false, "do not ask for input")
 	flags.StringVar(&o.Format, "format", "png", "label file format: png or pdf")
 	flags.StringVar(&o.OutputPath, "output", "", "new private label file path")
 	flags.StringVar(&o.MediaPreset, "media-preset", "", "authorized media preset ID")

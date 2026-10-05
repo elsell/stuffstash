@@ -11,6 +11,7 @@ import (
 )
 
 type Runner struct {
+ DirectoryLifecycle func(string,string)(ports.DirectoryLifecycle,error)
  TextInput ports.TextInput
 	InputFiles      ports.InputFiles
 	DirectoryWriter func(string, string) (ports.DirectoryWriter, error)
@@ -125,7 +126,8 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 
-	if isDirectoryWrite(o) {
+	if isDirectoryLifecycle(o){return r.directoryLifecycle(ctx,o,session)}
+ if isDirectoryWrite(o) {
 		return r.writeDirectory(ctx, o, session.IDToken)
 	}
 	if isDirectoryCommand(o) {
@@ -201,7 +203,7 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	if !o.PrintLabel && isPrintingCommand(o) {
 		return validatePrintingCommandOptions(o, requireScope)
 	}
-	if isDirectoryCommand(o) || isDirectoryWrite(o) {
+	if isDirectoryCommand(o) || isDirectoryWrite(o) || isDirectoryLifecycle(o) {
 		if requireScope && missingResourceScope(o) {
 			return ports.Failure("usage", "Supply the required scope with --tenant and, for inventory commands, --inventory.")
 		}
