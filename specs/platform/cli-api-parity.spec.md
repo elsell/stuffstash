@@ -912,3 +912,13 @@ and asset, then requires confirmation (`--yes` in scripts). Both return the
 complete label and envelope. Do not automatically retry assignment. Reject
 unrelated input and cursor fields. Critical checks cover confirmation, scope,
 exact methods, safe errors and complete results.
+
+### Print connector inspection
+
+`connectors print list` and `connectors print show CONNECTOR_ID` use the human
+session and saved inventory context, unlike connector registration and worker
+commands. Preserve all status, assignment, generation, heartbeat and capability
+report fields, including nullable arrays and response metadata. List supports
+limit/cursor; detail provides complete report information. Do not disclose
+connector credentials. Critical tests cover human authentication, scope, paging,
+complete nested reports and shared-context routing.

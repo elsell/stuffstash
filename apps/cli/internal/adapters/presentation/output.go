@@ -19,6 +19,16 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[ports.PrintConnector]:
+		return o.printConnector(v.Data)
+	case ports.Result[[]ports.PrintConnector]:
+		for _, c := range v.Data {
+			if _, err := fmt.Fprintf(o.Stdout, "%s\t%s\t%s\t%s\n", strconv.Quote(c.ID), strconv.Quote(c.Name), strconv.Quote(c.State), strconv.Quote(c.Availability)); err != nil {
+				return err
+			}
+		}
+		return o.pagination(v.Pagination)
+
 	case ports.Result[ports.PrintSettings]:
 		printer := "Not set"
 		if v.Data.DefaultPrinterID != nil {

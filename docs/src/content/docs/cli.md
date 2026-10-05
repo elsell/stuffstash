@@ -674,3 +674,8 @@ Use `stuffstash labels show ASSET_ID` to read an asset's existing label.
 Use `stuffstash labels assign ASSET_ID` to obtain its stable label identity
 without rendering or printing. Assignment asks for confirmation; scripts use
 `--yes`. Both commands use the selected household and inventory.
+
+Use `stuffstash connectors print list` or
+`stuffstash connectors print show CONNECTOR_ID` to inspect connector availability,
+assigned printers, heartbeat times and reported capabilities. These commands use
+your normal sign-in and saved inventory context; they do not read connector secrets.

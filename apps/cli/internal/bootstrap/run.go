@@ -43,7 +43,7 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		return exit(output, err)
 	}
 	var contextStore contexts.Store
-	connector := len(options.Command) > 0 && options.Command[0] == "connectors"
+	connector := len(options.Command) == 3 && options.Command[0] == "connectors" && options.Command[1] == "print" && (options.Command[2] == "register" || options.Command[2] == "rotate" || options.Command[2] == "run")
 	if !connector {
 		local := len(options.Command) > 0 && options.Command[0] == "context"
 		contextStore, err = configuredContexts(getenv, local || options.Server == "" || options.Selection.Context != "")
@@ -90,6 +90,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		secretInput = prompt
 	}
 	runner := app.Runner{
+		ConnectorInspectionAPI: func(server, token string) (ports.ConnectorInspectionAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		PrintSettingsAPI: func(server, token string) (ports.PrintSettingsAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
@@ -283,6 +286,8 @@ const Help = `Stuff Stash CLI
   stuffstash print-jobs reprint JOB_ID [--printer ID]
   stuffstash printers discover
   stuffstash printers catalog [--json]
+  stuffstash connectors print list [--limit N --cursor CURSOR]
+  stuffstash connectors print show CONNECTOR_ID
   stuffstash connectors print register --name NAME
   stuffstash connectors print rotate --connector ID
   stuffstash connectors print run --connector ID [--journal-dir PATH]
