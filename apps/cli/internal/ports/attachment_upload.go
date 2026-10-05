@@ -24,3 +24,14 @@ type AttachmentUploads interface {
 type UploadTransfer interface {
 	Send(context.Context, DirectUpload, string, string, int64, io.Reader) error
 }
+
+// UploadFile owns Body; its caller must close it after the transfer.
+type UploadFile struct {
+	Body        io.ReadCloser
+	FileName    string
+	ContentType string
+	SizeBytes   int64
+}
+type UploadFiles interface {
+	OpenUpload(context.Context, string) (UploadFile, error)
+}

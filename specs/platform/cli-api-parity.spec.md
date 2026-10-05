@@ -535,3 +535,14 @@ editor or automatic redirect following. Do not retry requests. Do not include
 signed URLs or storage response bodies in errors. A canceled transfer returns
 cancellation; short input and non-success responses must never trigger completion.
 The CLI workflow must verify success before calling the completion API.
+
+### Upload file source
+
+The file source opens a readable, non-empty regular file and returns an owned,
+closable reader, basename, byte length and detected media type. Detect the type
+from at most 512 bytes without consuming the upload stream. Support the API's
+JPEG, PNG, WebP and PDF types. Reject other types with an actionable error.
+Use the opened handle's metadata; never rely only on a pre-open path check.
+Unix opens must be nonblocking before regular-file validation to prevent FIFO
+replacement from hanging. Cancellation closes the owned handle. Do not buffer
+the entire file or expose the full local path as the attachment filename.
