@@ -143,6 +143,10 @@ type EvaluationCancellation struct {
 }
 
 type EvaluationAPI interface {
+	CreateEvaluationCase(context.Context, string, []byte) (Result[EvaluationCaseRevision], error)
+	CreateEvaluationRevision(context.Context, string, string, []byte) (Result[EvaluationCaseRevision], error)
+	CreateEvaluationRun(context.Context, string, []byte) (Result[EvaluationRun], error)
+
 	CancelEvaluationRun(context.Context, string, string, EvaluationCancellation) (Result[EvaluationRun], error)
 	EvaluationCases(context.Context, string, Page) (Result[[]EvaluationCaseHead], error)
 	EvaluationCase(context.Context, string, string) (Result[EvaluationCaseRevision], error)

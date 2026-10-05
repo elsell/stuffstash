@@ -2,6 +2,10 @@ package bootstrap
 
 func administrationHelp() []commandHelp {
 	return []commandHelp{
+		{Path: "evaluation cases create", Scope: helpHousehold, Summary: "Create an evaluation case and its first revision.", Options: "input", Confirm: true, Input: evaluationDefinitionHelp, Example: "evaluation cases create --tenant HOME --input case.json --yes"},
+		{Path: "evaluation revisions create", Arguments: "CASE_ID", Scope: helpHousehold, Summary: "Append an evaluation case revision at the expected revision.", Options: "input", Confirm: true, Input: evaluationDefinitionHelp + " Also supply expectedRevision as a positive 64-bit integer. No latest-revision lookup or automatic retry occurs.", Example: "evaluation revisions create CASE_ID --tenant HOME --input revision.json --yes"},
+		{Path: "evaluation runs create", Scope: helpHousehold, Summary: "Queue a background text-only evaluation run.", Options: "input", Confirm: true, Input: "JSON requires workflowId, revisionId and cases (1 to 100 objects with caseId and revisionId); optional $schema is accepted. This queues provider work, does not activate a workflow, and does not retry automatically. Inspect runs list/show before repeating an uncertain request.", Example: "evaluation runs create --tenant HOME --input run.json --yes"},
+
 		{Path: "evaluation runs cancel", Arguments: "RUN_ID", Scope: helpHousehold, Summary: "Cancel an evaluation run at its expected version.", Options: "input", Input: "JSON requires expectedVersion as a positive 64-bit integer; optional $schema is allowed. Interactive terminals read the current version before confirmation. Scripts must supply --input FILE|- and --yes. The CLI does not retry cancellation automatically.", Confirm: true, Example: "evaluation runs cancel RUN_ID --input cancellation.json --yes"},
 		{Path: "provider-profiles list", Scope: helpHousehold, Summary: "List provider profiles."},
 		{Path: "provider-profiles show", Arguments: "PROFILE_ID", Scope: helpHousehold, Summary: "Inspect a provider profile without credential values."},
@@ -26,3 +30,5 @@ func administrationHelp() []commandHelp {
 		{Path: "evaluation revisions show", Arguments: "CASE_ID REVISION_ID", Scope: helpHousehold, Summary: "Inspect one evaluation case revision."},
 	}
 }
+
+const evaluationDefinitionHelp = "JSON requires definition with title, utterance and expectations.kind. Optional assets is an array of objects with id, title, kind and optional description, parentId, tagNames. Expectations accepts referencedAssets, locations (assetId, ancestorId), proposals (operation and optional targetId, destinationId, newTitle, newKind, details), and forbiddenOperations. Optional $schema is accepted. Use --input FILE|-; scripts require --yes. Inspect current cases before repeating an uncertain request."

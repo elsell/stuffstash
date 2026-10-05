@@ -11,7 +11,7 @@ import (
 func TestEvaluationHouseholdPickerAndValidation(t *testing.T) {
 	ctx := context.Background()
 	session := ports.Session{Issuer: "https://id.example", Subject: "owner", Server: "https://stash.example"}
-	for _, command := range [][]string{{"evaluation", "cases", "list"}, {"evaluation", "cases", "show", "case"}, {"evaluation", "revisions", "list", "case"}, {"evaluation", "revisions", "show", "case", "revision"}, {"evaluation", "runs", "list"}, {"evaluation", "runs", "show", "run"}} {
+	for _, command := range [][]string{{"evaluation", "cases", "list"}, {"evaluation", "cases", "show", "case"}, {"evaluation", "revisions", "list", "case"}, {"evaluation", "revisions", "show", "case", "revision"}, {"evaluation", "runs", "list"}, {"evaluation", "runs", "show", "run"}, {"evaluation", "cases", "create"}, {"evaluation", "revisions", "create", "case"}, {"evaluation", "runs", "create"}} {
 		store := contextfile.Store{Path: filepath.Join(t.TempDir(), "config", "contexts.json")}
 		runner := Runner{Contexts: store, Picker: firstScopeChoice{}, ScopeAPI: func(string, string) (ports.ScopeCatalog, error) { return scopeCatalog{}, nil }}
 		o := Options{Server: session.Server, Command: command}
@@ -29,7 +29,7 @@ func TestEvaluationHouseholdPickerAndValidation(t *testing.T) {
 			}
 		}
 	}
-	for _, args := range [][]string{{"evaluation"}, {"evaluation", "cases", "show"}, {"evaluation", "revisions", "show", "case"}, {"evaluation", "runs", "create"}, {"evaluation", "cases", "list", "extra"}} {
+	for _, args := range [][]string{{"evaluation"}, {"evaluation", "cases", "show"}, {"evaluation", "revisions", "show", "case"}, {"evaluation", "runs", "create", "extra"}, {"evaluation", "cases", "list", "extra"}} {
 		if err := validateEvaluation(Options{Command: args}, false); err == nil {
 			t.Fatalf("invalid grammar: %v", args)
 		}

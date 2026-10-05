@@ -19,8 +19,11 @@ func validateEvaluation(o Options, scope bool) error {
 	if isEvaluationCancellation(o) && len(o.Command) == 4 && o.Command[3] != "" {
 		valid = true
 	}
+	if isEvaluationWrite(o) {
+		valid = true
+	}
 	if !valid {
-		return ports.Failure("usage", "Use evaluation cases|runs list or show ID, evaluation runs cancel RUN_ID, or evaluation revisions list CASE_ID or show CASE_ID REVISION_ID.")
+		return ports.Failure("usage", "Use evaluation cases|runs create, list or show ID; evaluation runs cancel RUN_ID; or evaluation revisions create CASE_ID, list CASE_ID or show CASE_ID REVISION_ID.")
 	}
 	if scope && o.Scope.Tenant == "" {
 		return ports.Failure("usage", "Supply --tenant, or choose a saved household context.")
@@ -29,11 +32,14 @@ func validateEvaluation(o Options, scope bool) error {
 }
 func (r Runner) evaluationCommand(ctx context.Context, o Options, token string) error {
 	if r.EvaluationAPI == nil {
-		return ports.Failure("configuration", "Evaluation inspection is not available. Update the CLI and try again.")
+		return ports.Failure("configuration", "Evaluation commands are not available. Update the CLI and try again.")
 	}
 	api, err := r.EvaluationAPI(o.Server, token)
 	if err != nil {
 		return err
+	}
+	if isEvaluationWrite(o) {
+		return r.writeEvaluation(ctx, o, api)
 	}
 	if isEvaluationCancellation(o) {
 		return r.cancelEvaluationRun(ctx, o, api)

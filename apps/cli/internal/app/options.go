@@ -112,7 +112,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 			switch f.Name {
 			case "server", "tenant", "inventory", "context", "credential-file", "allow-loopback-http", "json", "no-input", "request-id", "color", "help":
 			case "input", "yes":
-				if !isEvaluationCancellation(o) {
+				if !isEvaluationCancellation(o) && !isEvaluationWrite(o) {
 					unsupported = f.Name
 				}
 			case "limit", "cursor":
