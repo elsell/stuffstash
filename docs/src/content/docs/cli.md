@@ -651,3 +651,7 @@ Use `stuffstash print-jobs list` to find a job, then
 The detail view includes attempt timing and the number of completed copies.
 Inspect uncertain outcomes before printing again to avoid duplicate labels.
 Add `--json` to retain the full job and response metadata in a script.
+
+Use `stuffstash print-settings show` to inspect the selected inventory's default
+printer, print-on-create setting and label template options. An unset printer is
+shown as **Not set**. Use `--json` for the complete settings and revision.

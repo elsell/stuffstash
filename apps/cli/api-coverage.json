@@ -1035,11 +1035,11 @@
         "domain": "printing",
         "contractSha256": "f980324e76d6718962134d9b5c9fc70eaf835a4feddfd11cc9e12d0f40609125"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "print-settings show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-printer-profiles": {
       "contract": {

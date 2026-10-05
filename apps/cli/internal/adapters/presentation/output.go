@@ -19,6 +19,13 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[ports.PrintSettings]:
+		printer := "Not set"
+		if v.Data.DefaultPrinterID != nil {
+			printer = *v.Data.DefaultPrinterID
+		}
+		return o.details([][2]string{{"Default printer", printer}, {"Print on create", strconv.FormatBool(v.Data.PrintOnCreateDefault)}, {"Template", v.Data.Template.ID}, {"Template version", strconv.FormatInt(int64(v.Data.Template.Version), 10)}, {"Show reference", strconv.FormatBool(v.Data.Template.Options.ShowReference)}, {"Revision", strconv.FormatInt(v.Data.Revision, 10)}})
+
 	case ports.Result[ports.ProviderTest]:
 		return o.details([][2]string{{"Profile", v.Data.ProfileID}, {"Status", v.Data.Status}, {"Message", v.Data.Message}, {"Provider", v.Data.ProviderKind}, {"Capability", v.Data.Capability}, {"Tested", v.Data.TestedAt}})
 	case ports.Result[ports.ProviderProfile]:

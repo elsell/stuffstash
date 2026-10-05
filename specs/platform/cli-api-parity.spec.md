@@ -860,3 +860,12 @@ remain compact with quoted values; a single-job result provides readable detail
 and attempt history. The shared job mapper also preserves these fields for
 queue, cancel, test and reprint responses. Critical tests exercise the CLI/SDK
 boundary for full evidence, inventory isolation, pagination and safe output.
+
+### Print settings inspection
+
+`print-settings show` uses the selected household and inventory and returns all
+saved print defaults: nullable default printer, print-on-create, template ID,
+version and options, and revision. Preserve both schema values and response
+metadata in JSON. Human output names an unset default explicitly. This read must
+not select a printer or modify settings. Critical checks cover null and configured
+defaults, complete output, exact revision and cross-scope denial.

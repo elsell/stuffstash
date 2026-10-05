@@ -90,6 +90,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		secretInput = prompt
 	}
 	runner := app.Runner{
+		PrintSettingsAPI: func(server, token string) (ports.PrintSettingsAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		ProviderProfilesAPI: func(server, token string) (ports.ProviderProfilesAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
@@ -266,6 +269,7 @@ const Help = `Stuff Stash CLI
   stuffstash labels render ASSET_ID --format png|pdf --output PATH [--printer ID | --media-preset ID]
   stuffstash labels resolve LABEL_URL
   stuffstash labels print ASSET_ID [--printer ID --template ID --template-version N]
+  stuffstash print-settings show
   stuffstash printers list
   stuffstash printers configure PRINTER_ID --label-size PRESET_ID
   stuffstash printers test PRINTER_ID
