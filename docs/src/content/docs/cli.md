@@ -708,6 +708,15 @@ Use `stuffstash connectors print list` or
 assigned printers, heartbeat times and reported capabilities. These commands use
 your normal sign-in and saved inventory context; they do not read connector secrets.
 
+On a registered connector computer, use `stuffstash connectors print printers
+--connector CONNECTOR_ID` to inspect its printer bindings. Use
+`stuffstash connectors print attempts list --connector CONNECTOR_ID` or
+`stuffstash connectors print attempts show ATTEMPT_ID --connector CONNECTOR_ID`
+to inspect delivery attempts. These commands use the stored connector credential
+and its registered scope. They do not access printer hardware or change attempts.
+The list accepts `--printer`, `--status unsettled`, `--limit` and `--cursor`;
+`--json` preserves the complete declared response and pagination metadata.
+
 `stuffstash print-jobs cancel JOB_ID` asks for confirmation before reading and
 cancelling the job. Scripts must add `--yes`. Cancellation uses the current job
 revision and does not retry conflicts. A label might already have printed;

@@ -311,12 +311,11 @@
         "contractSha256": "9c8835edeba4bedd42f32c7a2e4e7c5c61fffa648661f28bb2898cf5113a699a"
       },
       "commands": [
-        "connectors print run"
+        "connectors print run",
+        "connectors print attempts list"
       ],
-      "status": "partial",
-      "gaps": [
-        "Worker pages unsettled attempts with operational filters. Full filter control and attempt inspection, including timestamps/reasons/media/fingerprint, remain."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "get-print-consumer-attempts-by-attempt-id": {
       "contract": {
@@ -326,12 +325,11 @@
         "contractSha256": "750717689dcb4062f27e4ea4d049406c981cb8a4cf2ad54505e03e2b2cba1dd1"
       },
       "commands": [
-        "connectors print run"
+        "connectors print run",
+        "connectors print attempts show"
       ],
-      "status": "partial",
-      "gaps": [
-        "Journal recovery reads attempts but reduces timestamps, reasons, retryability, media/fingerprint and other fields. Complete inspection remains."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "get-print-consumer-printers": {
       "contract": {
@@ -341,12 +339,11 @@
         "contractSha256": "2f80cd532e022cb1c2ca774b2f5818c107c254d3811b8589cf5caec7993ec877"
       },
       "commands": [
-        "connectors print run"
+        "connectors print run",
+        "connectors print printers"
       ],
-      "status": "partial",
-      "gaps": [
-        "Worker retains physical bindings, generation, adapter, media, retirement and fingerprint. Full name/readiness/revision/report fields and envelope inspection remain."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id": {
       "contract": {
