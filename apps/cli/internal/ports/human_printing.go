@@ -31,23 +31,38 @@ type RegisteredPrinter struct {
 	MediaFingerprint string `json:"mediaFingerprint"`
 	Retired          bool   `json:"retired"`
 }
+type PrintJobResolution struct {
+	ReportedOutcome string    `json:"reportedOutcome"`
+	ResolvedAt      time.Time `json:"resolvedAt"`
+	ResolvedBy      string    `json:"resolvedBy"`
+}
 type PrintJobSummary struct {
-	ID          string                `json:"id"`
-	PrinterID   string                `json:"printerId"`
-	AssetID     string                `json:"assetId,omitempty"`
-	Predecessor string                `json:"predecessor,omitempty"`
-	Status      string                `json:"status"`
-	Revision    uint64                `json:"revision"`
-	Copies      int                   `json:"copies"`
-	CreatedAt   time.Time             `json:"createdAt"`
-	Attempts    []PrintAttemptSummary `json:"attempts"`
+	Kind             string                `json:"kind"`
+	MediaFingerprint string                `json:"mediaFingerprint"`
+	RequestedBy      string                `json:"requestedBy"`
+	UpdatedAt        time.Time             `json:"updatedAt"`
+	Resolution       *PrintJobResolution   `json:"resolution,omitempty"`
+	ID               string                `json:"id"`
+	PrinterID        string                `json:"printerId"`
+	AssetID          string                `json:"assetId,omitempty"`
+	Predecessor      string                `json:"predecessor,omitempty"`
+	Status           string                `json:"status"`
+	Revision         uint64                `json:"revision"`
+	Copies           int                   `json:"copies"`
+	CreatedAt        time.Time             `json:"createdAt"`
+	Attempts         []PrintAttemptSummary `json:"attempts"`
 }
 type PrintAttemptSummary struct {
-	ID              string `json:"id"`
-	ConnectorID     string `json:"connectorId"`
-	Outcome         string `json:"outcome"`
-	Reason          string `json:"reason,omitempty"`
-	CompletedCopies int    `json:"completedCopies"`
+	ClaimedAt       time.Time  `json:"claimedAt"`
+	LeaseExpiresAt  time.Time  `json:"leaseExpiresAt"`
+	IdleConfirmedAt *time.Time `json:"idleConfirmedAt,omitempty"`
+	SettledAt       *time.Time `json:"settledAt,omitempty"`
+	StartedAt       *time.Time `json:"startedAt,omitempty"`
+	ID              string     `json:"id"`
+	ConnectorID     string     `json:"connectorId"`
+	Outcome         string     `json:"outcome"`
+	Reason          string     `json:"reason"`
+	CompletedCopies int        `json:"completedCopies"`
 }
 type PrintSelectionSource interface {
 	PrintDefaults(context.Context, Scope) (InventoryPrintDefaults, error)

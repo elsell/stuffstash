@@ -154,7 +154,7 @@ func (o Output) Result(value any) error {
 		return o.printJob(v.Data)
 	case ports.Result[[]ports.PrintJobSummary]:
 		for _, j := range v.Data {
-			if err := o.printJob(j); err != nil {
+			if err := o.printJobRow(j); err != nil {
 				return err
 			}
 		}
@@ -189,10 +189,6 @@ func (o Output) Result(value any) error {
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(value)
 	}
-}
-func (o Output) printJob(j ports.PrintJobSummary) error {
-	_, err := fmt.Fprintf(o.Stdout, "%s\t%s\tprinter=%s\tcopies=%d\n", j.ID, j.Status, j.PrinterID, j.Copies)
-	return err
 }
 func (o Output) asset(a ports.Asset) error {
 	_, err := fmt.Fprintf(o.Stdout, "%s\t%s\t%s\t%s\n", strconv.Quote(a.ID), strconv.Quote(a.Kind), strconv.Quote(a.Title), strconv.Quote(a.Lifecycle))

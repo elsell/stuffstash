@@ -643,3 +643,11 @@ record a test result. Each action asks for confirmation; scripts need `--yes`.
 Inspect the test's `status` and `message`: a completed request can report a
 failed provider test. The CLI does not retry these actions automatically. If a
 request is interrupted, read the profile before repeating it.
+
+### Investigate a print job
+
+Use `stuffstash print-jobs list` to find a job, then
+`stuffstash print-jobs show JOB_ID` to inspect its status, attempts and resolution.
+The detail view includes attempt timing and the number of completed copies.
+Inspect uncertain outcomes before printing again to avoid duplicate labels.
+Add `--json` to retain the full job and response metadata in a script.

@@ -850,3 +850,13 @@ Do not log credentials or retry writes automatically. Critical transport tests
 cover exact input and route, authorization and household denial, full safe
 response fields and no retries. Interactive configuration design remains pending;
 transport completion alone does not close these operation gaps.
+
+### Complete print-job inspection
+
+Print-job list and detail JSON preserve the full API job, attempt, resolution
+and response metadata contracts. This includes requester, kind, media fingerprint,
+updated time, all attempt timestamps and manual resolution evidence. Human lists
+remain compact with quoted values; a single-job result provides readable detail
+and attempt history. The shared job mapper also preserves these fields for
+queue, cancel, test and reprint responses. Critical tests exercise the CLI/SDK
+boundary for full evidence, inventory isolation, pagination and safe output.
