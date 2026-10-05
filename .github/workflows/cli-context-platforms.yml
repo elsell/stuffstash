@@ -53,5 +53,7 @@ jobs:
         run: go test -mod=readonly -timeout=2m ./internal/app ./internal/app/contexts ./internal/adapters/contextfile ./internal/adapters/inputfiles ./internal/adapters/presentation ./internal/adapters/terminal
       - name: Verify local command help
         run: go test -mod=readonly -timeout=2m ./internal/bootstrap -run 'Test(CommandHelp|Help)'
+      - name: Verify Windows Credential Manager isolation
+        run: go test -mod=readonly -timeout=2m ./internal/adapters/credentials -run '^TestWindowsKeyringBoundary$'
       - name: Build the Windows CLI
         run: go build -mod=readonly -buildvcs=false -o "$env:RUNNER_TEMP/stuffstash.exe" ./cmd/stuffstash

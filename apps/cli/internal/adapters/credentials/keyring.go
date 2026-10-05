@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"runtime"
 
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 	"github.com/zalando/go-keyring"
@@ -19,7 +20,7 @@ func (Keyring) Load(_ context.Context, server string) (ports.Session, error) {
 		return ports.Session{}, ports.ErrNotLoggedIn
 	}
 	if err != nil {
-		return ports.Session{}, errors.New("OS credential store unavailable; headless hosts can explicitly configure STUFF_STASH_CLI_CREDENTIAL_FILE")
+		return ports.Session{}, credentialStoreError("read")
 	}
 	var s ports.Session
 	if json.Unmarshal([]byte(value), &s) != nil || s.Server != server {
@@ -33,7 +34,7 @@ func (Keyring) Save(_ context.Context, s ports.Session) error {
 		return err
 	}
 	if keyring.Set(service, s.Server, string(value)) != nil {
-		return errors.New("Cannot save your session to the system credential store. Unlock the store and run stuffstash login again. You can also set STUFF_STASH_CLI_CREDENTIAL_FILE to a private file path before login.")
+		return credentialStoreError("save")
 	}
 	return nil
 }
@@ -43,4 +44,12 @@ func (Keyring) Delete(_ context.Context, server string) error {
 		return nil
 	}
 	return err
+}
+
+func credentialStoreError(action string) error {
+	message := "Cannot " + action + " your session in the system credential store. Unlock the store and run stuffstash login again."
+	if runtime.GOOS != "windows" {
+		message += " You can also set STUFF_STASH_CLI_CREDENTIAL_FILE to a private file path before login."
+	}
+	return errors.New(message)
 }
