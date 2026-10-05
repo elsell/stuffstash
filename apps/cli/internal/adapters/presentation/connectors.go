@@ -8,7 +8,7 @@ import (
 )
 
 func (o Output) printConnector(v ports.PrintConnector) error {
-	fields := [][2]string{{"Connector", v.ID}, {"Name", v.Name}, {"State", v.State}, {"Availability", v.Availability}, {"Authorization pending", strconv.FormatBool(v.AuthorizationPending)}, {"Generation", strconv.FormatInt(v.Generation, 10)}}
+	fields := [][2]string{{"Connector", v.ID}, {"Name", v.Name}, {"State", v.State}, {"Availability", v.Availability}, {"Authorization pending", strconv.FormatBool(v.AuthorizationPending)}, {"Generation", strconv.FormatUint(v.Generation, 10)}}
 	if v.LastSeenAt != nil {
 		fields = append(fields, [2]string{"Last seen", v.LastSeenAt.Format(time.RFC3339Nano)})
 	}

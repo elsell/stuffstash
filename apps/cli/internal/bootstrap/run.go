@@ -119,6 +119,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		ConnectorInspectionAPI: func(server, token string) (ports.ConnectorInspectionAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
+		PrinterAdministrationAPI: func(server, token string) (ports.PrinterAdministrationAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		PrintSettingsAPI: func(server, token string) (ports.PrintSettingsAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},

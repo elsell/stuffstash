@@ -77,7 +77,7 @@ func (o Output) Result(value any) error {
 		if v.Data.DefaultPrinterID != nil {
 			printer = *v.Data.DefaultPrinterID
 		}
-		return o.details([][2]string{{"Default printer", printer}, {"Print on create", strconv.FormatBool(v.Data.PrintOnCreateDefault)}, {"Template", v.Data.Template.ID}, {"Template version", strconv.FormatInt(int64(v.Data.Template.Version), 10)}, {"Show reference", strconv.FormatBool(v.Data.Template.Options.ShowReference)}, {"Revision", strconv.FormatInt(v.Data.Revision, 10)}})
+		return o.details([][2]string{{"Default printer", printer}, {"Print on create", strconv.FormatBool(v.Data.PrintOnCreateDefault)}, {"Template", v.Data.Template.ID}, {"Template version", strconv.FormatInt(int64(v.Data.Template.Version), 10)}, {"Show reference", strconv.FormatBool(v.Data.Template.Options.ShowReference)}, {"Revision", strconv.FormatUint(v.Data.Revision, 10)}})
 
 	case ports.Result[ports.ProviderTest]:
 		return o.details([][2]string{{"Profile", v.Data.ProfileID}, {"Status", v.Data.Status}, {"Message", v.Data.Message}, {"Provider", v.Data.ProviderKind}, {"Capability", v.Data.Capability}, {"Tested", v.Data.TestedAt}})

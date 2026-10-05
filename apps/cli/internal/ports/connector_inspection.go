@@ -8,7 +8,7 @@ import (
 type PrintConnector struct {
 	ID                   string                `json:"id"`
 	Name                 string                `json:"name"`
-	Generation           int64                 `json:"generation"`
+	Generation           uint64                `json:"generation"`
 	AuthorizationPending bool                  `json:"authorizationPending"`
 	Availability         string                `json:"availability"`
 	State                string                `json:"state"`
@@ -27,14 +27,14 @@ type PrintConnectorReport struct {
 type PrintConnectorAdapter struct {
 	ID                 string                `json:"id"`
 	CompletionEvidence string                `json:"completionEvidence"`
-	ContractVersions   []int32               `json:"contractVersions"`
+	ContractVersions   []uint32              `json:"contractVersions"`
 	Formats            []string              `json:"formats"`
 	Wake               bool                  `json:"wake"`
 	Media              []PrintConnectorMedia `json:"media"`
 }
 type PrintConnectorMedia struct {
 	ID      string `json:"id"`
-	Version int32  `json:"version"`
+	Version uint32 `json:"version"`
 }
 type ConnectorInspectionAPI interface {
 	PrintConnectors(context.Context, Scope, Page) (Result[[]PrintConnector], error)

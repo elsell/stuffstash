@@ -9,6 +9,8 @@ import (
 func optionFlags(o *Options) *flag.FlagSet {
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
+	flags.StringVar(&o.PrinterAdapterID, "adapter", "", "printer adapter ID from the catalog")
+	flags.StringVar(&o.PrinterPresetVersion, "preset-version", "", "printer media preset version")
 	expirationFlags(flags, o)
 	printSubmissionFlags(flags, o)
 	flags.StringVar(&o.InvitationStatus, "status", "", "invitation status or unsettled connector-attempt filter")

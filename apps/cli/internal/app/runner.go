@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	PrinterAdministrationAPI   func(string, string) (ports.PrinterAdministrationAPI, error)
 	VoiceProviderAPI           func(string, string) (ports.VoiceProviderAPI, error)
 	EvaluationAPI              func(string, string) (ports.EvaluationAPI, error)
 	WorkflowsAPI               func(string, string) (ports.WorkflowsAPI, error)
@@ -149,6 +150,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 
+	if isPrinterAdministration(o) {
+		return r.printerAdministration(ctx, o, session.IDToken)
+	}
 	if isConnectorInspection(o) {
 		return r.connectorInspection(ctx, o, session.IDToken)
 	}
@@ -319,6 +323,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
+	}
+	if isPrinterAdministration(o) {
+		return validatePrinterAdministration(o, requireScope)
 	}
 	if isConnectorInspection(o) {
 		return validateConnectorInspection(o, requireScope)

@@ -6,12 +6,12 @@ type PrintSettings struct {
 	Schema               *string               `json:"$schema,omitempty"`
 	DefaultPrinterID     *string               `json:"defaultPrinterId"`
 	PrintOnCreateDefault bool                  `json:"printOnCreateDefault"`
-	Revision             int64                 `json:"revision"`
+	Revision             uint64                `json:"revision"`
 	Template             PrintSettingsTemplate `json:"template"`
 }
 type PrintSettingsTemplate struct {
 	ID      string               `json:"id"`
-	Version int32                `json:"version"`
+	Version uint32               `json:"version"`
 	Options PrintSettingsOptions `json:"options"`
 }
 type PrintSettingsOptions struct {

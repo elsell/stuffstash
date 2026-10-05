@@ -18,6 +18,6 @@ type PrinterMedia struct {
 	RasterHeight       int64          `json:"rasterHeight"`
 	RasterWidth        int64          `json:"rasterWidth"`
 	ResolutionDpi      int64          `json:"resolutionDpi"`
-	Version            int32          `json:"version"`
+	Version            uint32         `json:"version"`
 	WidthMicrometers   int64          `json:"widthMicrometers"`
 }

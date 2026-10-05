@@ -10,6 +10,7 @@ import (
 )
 
 type Options struct {
+	PrinterAdapterID, PrinterPresetVersion                                string
 	ExpectedMediaFingerprint, PreviewFingerprint                          string
 	InvitationStatus                                                      string
 	ActivityView                                                          ports.ActivityView
@@ -100,6 +101,9 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if err := validatePrinterAdministrationFlags(o, flags); err != nil {
+		return o, err
+	}
 	if err := validateConsumerInspection(flags, o); err != nil {
 		return o, err
 	}

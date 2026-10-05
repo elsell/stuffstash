@@ -14,7 +14,7 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 	if !write {
 		return o, nil
 	}
-	if o.IdempotencyKey != "" && !isPrintSubmission(o) && !(isAssetWrite(o) && o.Command[1] == "create") {
+	if o.IdempotencyKey != "" && !isPrintSubmission(o) && !isPrinterCreation(o) && !(isAssetWrite(o) && o.Command[1] == "create") {
 		return o, ports.Failure("usage", "This API operation does not support --idempotency-key. Remove the option.")
 	}
 	if o.InputPath != "" && (o.Timezone != "" || o.ConnectorName != "" || o.TagColor != nil || o.TagKey != nil || o.Title != "" || o.Kind != "" || o.Parent != "" || o.PrintLabel || o.Details != nil) {
@@ -35,6 +35,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 	} else {
 		if isEvaluationWrite(o) {
 			return prepareEvaluationWrite(o)
+		}
+		if isPrinterAdministration(o) {
+			return r.preparePrinterAdministration(ctx, o)
 		}
 		if isWorkflowWrite(o) {
 			return prepareWorkflowInput(o)
@@ -93,6 +96,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 	}
 	if isEvaluationWrite(o) {
 		return prepareEvaluationWrite(o)
+	}
+	if isPrinterAdministration(o) {
+		return r.preparePrinterAdministration(ctx, o)
 	}
 	if isWorkflowWrite(o) {
 		return prepareWorkflowInput(o)

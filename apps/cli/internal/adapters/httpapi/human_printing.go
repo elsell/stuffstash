@@ -8,34 +8,37 @@ import (
 )
 
 func (c *Client) PrintDefaults(ctx context.Context, s ports.Scope) (ports.InventoryPrintDefaults, error) {
-	r, err := read[generated.SuccessEnvelopeInventoryPrintSettings](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdPrintSettings(ctx, s.Tenant, s.Inventory, nil))
-	return ports.InventoryPrintDefaults{PrinterID: r.Data.DefaultPrinterId.GetOrEmpty(), TemplateID: r.Data.Template.Id, TemplateVersion: uint32(r.Data.Template.Version), ShowReference: r.Data.Template.Options.ShowReference}, err
+	r, err := c.PrintSettings(ctx, s)
+	if err != nil {
+		return ports.InventoryPrintDefaults{}, err
+	}
+	printer := ""
+	if r.Data.DefaultPrinterID != nil {
+		printer = *r.Data.DefaultPrinterID
+	}
+	return ports.InventoryPrintDefaults{PrinterID: printer, TemplateID: r.Data.Template.ID, TemplateVersion: r.Data.Template.Version, ShowReference: r.Data.Template.Options.ShowReference}, nil
 }
 func humanPrinter(p generated.Printer) ports.RegisteredPrinter {
 	return ports.RegisteredPrinter{Media: printerMedia(p.Media), ReadinessReason: p.ReadinessReason, ReportedAt: p.ReportedAt, AdapterID: p.AdapterId, Revision: uint64(p.Revision), MediaName: p.Media.Name, MediaPreset: p.Media.PresetId, ID: p.Id, Name: p.Name, Readiness: p.Readiness, Retired: p.Retired, MediaFingerprint: p.MediaFingerprint}
 }
 func (c *Client) Printer(ctx context.Context, s ports.Scope, id string) (ports.Result[ports.RegisteredPrinter], error) {
-	r, err := read[generated.SuccessEnvelopePrinter](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId(ctx, s.Tenant, s.Inventory, id, nil))
-	if err != nil {
-		return ports.Result[ports.RegisteredPrinter]{}, err
-	}
-	return ports.Result[ports.RegisteredPrinter]{Data: humanPrinter(r.Data), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
+	return printerResult(c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId(ctx, s.Tenant, s.Inventory, id, nil))
 }
 func (c *Client) RegisteredPrinter(ctx context.Context, s ports.Scope, id string) (ports.RegisteredPrinter, error) {
 	r, err := c.Printer(ctx, s, id)
 	return r.Data, err
 }
 func (c *Client) RegisteredPrinters(ctx context.Context, s ports.Scope, p ports.Page) (ports.Result[[]ports.RegisteredPrinter], error) {
-	r, err := read[generated.SuccessEnvelopeListPrinter](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdPrinters(ctx, s.Tenant, s.Inventory, &generated.GetTenantsByTenantIdInventoriesByInventoryIdPrintersParams{Limit: &p.Limit, Cursor: &p.Cursor}))
+	r, err := read[printerEnvelope[[]ports.RegisteredPrinter]](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdPrinters(ctx, s.Tenant, s.Inventory, &generated.GetTenantsByTenantIdInventoriesByInventoryIdPrintersParams{Limit: &p.Limit, Cursor: &p.Cursor}))
 	if err != nil {
 		return ports.Result[[]ports.RegisteredPrinter]{}, err
 	}
 	var values []ports.RegisteredPrinter
-	if r.Data.GetOrEmpty() != nil {
-		values = make([]ports.RegisteredPrinter, 0, len(r.Data.GetOrEmpty()))
+	if r.Data != nil {
+		values = make([]ports.RegisteredPrinter, 0, len(r.Data))
 	}
-	for _, v := range r.Data.GetOrEmpty() {
-		values = append(values, humanPrinter(v))
+	for _, v := range r.Data {
+		values = append(values, completePrinter(v))
 	}
 	return ports.Result[[]ports.RegisteredPrinter]{Data: values, Pagination: page(r.Meta), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }
