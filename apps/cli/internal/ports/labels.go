@@ -47,6 +47,8 @@ type LabelFileResult struct {
 	SHA256 string `json:"sha256"`
 }
 type LabelsAPI interface {
+	AssetLabel(context.Context, Scope, string) (Result[ResolvedLabel], error)
+	AssignLabel(context.Context, Scope, string) (Result[ResolvedLabel], error)
 	PrintDefaults(context.Context, Scope) (InventoryPrintDefaults, error)
 	LabelTemplates(context.Context, Scope) (Result[[]LabelTemplate], error)
 	LabelMedia(context.Context, Scope, string) ([]printing.Media, error)

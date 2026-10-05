@@ -166,6 +166,18 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if len(o.Command) > 1 && o.Command[0] == "labels" && (o.Command[1] == "show" || o.Command[1] == "assign") {
+		invalid := ""
+		flags.Visit(func(f *flag.Flag) {
+			switch f.Name {
+			case "format", "output", "media-preset", "width-mm", "height-mm", "printer", "template", "template-version", "copies", "show-reference", "label-size":
+				invalid = f.Name
+			}
+		})
+		if invalid != "" {
+			return o, ports.Failure("usage", "Label identity commands do not accept --"+invalid+". Use labels render or labels print for that option.")
+		}
+	}
 	if isProviderProfileCommand(o) {
 		unsupported := ""
 		flags.Visit(func(f *flag.Flag) {

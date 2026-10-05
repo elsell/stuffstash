@@ -23,6 +23,12 @@ func validateLabelCommandOptions(o Options, requireScope bool) error {
 	if requireScope && (o.Scope.Tenant == "" || o.Scope.Inventory == "") {
 		return ports.Failure("usage", "label commands require --tenant and --inventory")
 	}
+	if (o.Command[1] == "show" || o.Command[1] == "assign") && len(o.Command) == 3 && o.Command[2] != "" {
+		if o.IdempotencyKey != "" || o.Page.Cursor != "" || o.Title != "" || o.Kind != "" || o.Parent != "" || o.ConnectorName != "" {
+			return ports.Failure("usage", "Label identity commands do not accept input fields or cursors. Remove those options.")
+		}
+		return nil
+	}
 	if o.Command[1] == "templates" && len(o.Command) == 2 {
 		return nil
 	}
@@ -43,6 +49,10 @@ func validateLabelCommandOptions(o Options, requireScope bool) error {
 }
 func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFiles, o Options) (any, error) {
 	switch o.Command[1] {
+	case "show":
+		return api.AssetLabel(ctx, o.Scope, o.Command[2])
+	case "assign":
+		return api.AssignLabel(ctx, o.Scope, o.Command[2])
 	case "templates":
 		return api.LabelTemplates(ctx, o.Scope)
 	case "resolve":

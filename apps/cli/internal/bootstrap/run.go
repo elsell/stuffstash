@@ -265,6 +265,8 @@ const Help = `Stuff Stash CLI
   stuffstash assets checkouts ID [--limit N --cursor CURSOR]
   stuffstash assets return-details ASSET_ID CHECKOUT_ID --details TEXT | --input FILE|-
   stuffstash version
+  stuffstash labels show ASSET_ID
+  stuffstash labels assign ASSET_ID [--yes]
   stuffstash labels templates
   stuffstash labels render ASSET_ID --format png|pdf --output PATH [--printer ID | --media-preset ID]
   stuffstash labels resolve LABEL_URL

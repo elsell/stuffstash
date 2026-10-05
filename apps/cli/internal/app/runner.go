@@ -226,6 +226,14 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		if labelErr != nil {
 			return labelErr
 		}
+		if o.Command[1] == "assign" {
+			if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; asset: " + strconv.Quote(o.Command[2])); err != nil {
+				return err
+			}
+			if err := r.confirmAction(ctx, o, "Assign asset label", "Assign", "Assign a stable label identity without rendering or printing."); err != nil {
+				return err
+			}
+		}
 		result, err = executeLabels(ctx, labelAPI, r.LabelFiles, o)
 	} else if isPrintingCommand(o) {
 		if r.PrintingAPI == nil {

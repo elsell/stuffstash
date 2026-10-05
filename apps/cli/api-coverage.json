@@ -775,11 +775,11 @@
         "domain": "labels",
         "contractSha256": "8ffeb4db6409f0027483ae6f22ce6436b0a3d202fe58a6bcb21d4ae116c7198b"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "labels show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-audit-records": {
       "contract": {
@@ -2076,11 +2076,11 @@
         "domain": "labels",
         "contractSha256": "ec5501e91e8a58fd955030a5075b413395c7be3abc077661eec6ecea5d474b70"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "labels assign"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-label-renders": {
       "contract": {

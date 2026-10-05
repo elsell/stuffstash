@@ -669,3 +669,8 @@ Both server catalogs support `--json` for their complete configuration.
 `stuffstash labels resolve LABEL_URL` shows the label's full identity, canonical
 URL and inventory destination. It checks the instance against your configured
 server and does not send your credentials to the link's host.
+
+Use `stuffstash labels show ASSET_ID` to read an asset's existing label.
+Use `stuffstash labels assign ASSET_ID` to obtain its stable label identity
+without rendering or printing. Assignment asks for confirmation; scripts use
+`--yes`. Both commands use the selected household and inventory.

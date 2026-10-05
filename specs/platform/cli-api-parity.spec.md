@@ -902,3 +902,13 @@ the link's host, and reject mismatched server or returned label identities.
 No selected inventory is required. Human output quotes all server-controlled
 values and displays the full resolved identity. Critical tests cover full CLI
 output and the existing foreign-instance and authorization checks.
+
+### Asset label identity commands
+
+`labels show ASSET_ID` reads an existing label in the selected inventory.
+`labels assign ASSET_ID` provisions the stable label identity through the API
+without rendering or printing. Assignment displays server, household, inventory
+and asset, then requires confirmation (`--yes` in scripts). Both return the
+complete label and envelope. Do not automatically retry assignment. Reject
+unrelated input and cursor fields. Critical checks cover confirmation, scope,
+exact methods, safe errors and complete results.
