@@ -479,3 +479,14 @@ and retain every response field, optional inventory ID, null/empty arrays,
 metadata and schema. The server remains responsible for immutable keys/types
 and append-only option/target policies. Delete requires 204. CLI workflows stay
 incomplete until their scope syntax, inputs and confirmations are implemented.
+
+### Attachment metadata and lifecycle
+
+Provide inventory-scoped attachment list and detail reads, archive, restore and
+permanent deletion through the generated SDK. Each operation requires an asset
+ID; detail and lifecycle operations also require an attachment ID. Preserve all
+attachment fields, including the 64-bit size, digest, lifecycle, timestamps and
+scope IDs, plus response metadata and pagination. Delete requires HTTP 204.
+Archive and delete use the shared destructive confirmation policy. These
+metadata operations do not imply upload or download completion. Keep command
+coverage partial until dispatch, human output and confirmation are verified.

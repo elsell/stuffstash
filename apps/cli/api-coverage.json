@@ -113,9 +113,9 @@
         "contractSha256": "5679daa9f0d69b0b6efeafe3df646e5015b70bc737e5978d1ece63e87a9948e3"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete metadata/lifecycle SDK transport implemented. Named commands, confirmations and presentation remain."
       ]
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id": {
@@ -724,9 +724,9 @@
         "contractSha256": "5ceacee80a86f98dd26a7ee8666eaaf3810b8224d40ec883f1db86ceac777e6f"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete metadata/lifecycle SDK transport implemented. Named commands, confirmations and presentation remain."
       ]
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id": {
@@ -737,9 +737,9 @@
         "contractSha256": "a0191e17b3641208fa54c01c64f6be0996d3b83dcd9086c5dbfc4b2031eb04b9"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete metadata/lifecycle SDK transport implemented. Named commands, confirmations and presentation remain."
       ]
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-audit-records": {
@@ -1401,9 +1401,9 @@
         "contractSha256": "063eb08846f777653549cbbd798693fd25bdbb39034a57f20a3d9f2707669b0f"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete metadata/lifecycle SDK transport implemented. Named commands, confirmations and presentation remain."
       ]
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-restore": {
@@ -1414,9 +1414,9 @@
         "contractSha256": "25a80b8891cd7e165ff32a2c5638763c10234b5c463924e2d5ff8fa24c24f406"
       },
       "commands": [],
-      "status": "pending",
+      "status": "partial",
       "gaps": [
-        "Review the current contract and implement the complete command workflow."
+        "Complete metadata/lifecycle SDK transport implemented. Named commands, confirmations and presentation remain."
       ]
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkouts-by-checkout-id-return-details": {
