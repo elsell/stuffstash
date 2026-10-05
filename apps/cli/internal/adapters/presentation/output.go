@@ -19,6 +19,13 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[ports.PairingReview]:
+		return o.pairingReview(v.Data)
+	case ports.Result[ports.ApprovedPairing]:
+		return o.details([][2]string{{"Pairing", v.Data.ID}, {"State", v.Data.State}, {"Expires", v.Data.ExpiresAt}})
+	case ports.Result[ports.ApprovedConnector]:
+		return o.approvedConnector(v.Data)
+
 	case ports.Result[[]ports.ConsumerPrinter]:
 		for _, item := range v.Data {
 			if err := o.consumerPrinter(item); err != nil {

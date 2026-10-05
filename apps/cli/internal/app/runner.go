@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	PairingApprovalAPI         func(string, string) (ports.PairingApprovalAPI, error)
 	PrinterAdministrationAPI   func(string, string) (ports.PrinterAdministrationAPI, error)
 	TelemetryAPI               func(string, string) (ports.TelemetryAPI, error)
 	VoiceProviderAPI           func(string, string) (ports.VoiceProviderAPI, error)
@@ -154,6 +155,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 
+	if isPairingApproval(o) {
+		return r.pairingApprovalCommand(ctx, o, session.IDToken)
+	}
 	if isPrinterAdministration(o) {
 		return r.printerAdministration(ctx, o, session.IDToken)
 	}
@@ -327,6 +331,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
+	}
+	if isPairingApproval(o) {
+		return validatePairingCommand(o, requireScope)
 	}
 	if isPrinterAdministration(o) {
 		return validatePrinterAdministration(o, requireScope)
