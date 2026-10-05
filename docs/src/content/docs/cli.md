@@ -691,3 +691,27 @@ The interactive command asks for an outcome and confirmation. For scripts, pass
 `--input FILE|- --yes` with `reportedOutcome` (`printed`, `not_printed`, or
 `unknown`), the current positive `revision`, and
 `acknowledgeUncertainty: true`. A stale revision fails without retrying.
+
+### Inspect workflows and evaluations
+
+These administration commands use the selected household without requiring an
+inventory. They read configuration and evidence; they do not start conversations
+or run evaluations.
+
+| Task | Command |
+| --- | --- |
+| List workflows | `workflows list` |
+| Read the latest workflow revision | `workflows show WORKFLOW_ID` |
+| List workflow revisions | `workflows revisions list WORKFLOW_ID` |
+| Read a workflow revision | `workflows revisions show WORKFLOW_ID REVISION_ID` |
+| Read the selected workflow | `workflows selection show` |
+| List evaluation cases | `evaluation cases list` |
+| Read the latest case revision | `evaluation cases show CASE_ID` |
+| List case revisions | `evaluation revisions list CASE_ID` |
+| Read a case revision | `evaluation revisions show CASE_ID REVISION_ID` |
+| List evaluation runs | `evaluation runs list` |
+| Read run results | `evaluation runs show RUN_ID` |
+
+Prefix each command with `stuffstash`. Lists support `--limit` and `--cursor`.
+Use `--json --no-input` for complete configuration, evidence and response
+metadata in scripts.
