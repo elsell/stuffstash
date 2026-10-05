@@ -195,6 +195,19 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 			return o, ports.Failure("usage", "Label identity commands do not accept --"+invalid+". Use labels render or labels print for that option.")
 		}
 	}
+	if isVoiceProviderCommand(o) {
+		unsupported := ""
+		flags.Visit(func(f *flag.Flag) {
+			switch f.Name {
+			case "server", "tenant", "inventory", "context", "json", "no-input", "request-id", "color", "help", "allow-loopback-http", "credential-file":
+			default:
+				unsupported = f.Name
+			}
+		})
+		if unsupported != "" {
+			return o, ports.Failure("usage", "Voice provider inspection does not accept --"+unsupported+". Remove the option.")
+		}
+	}
 	if isWorkflowCommand(o) {
 		unsupported := ""
 		flags.Visit(func(f *flag.Flag) {

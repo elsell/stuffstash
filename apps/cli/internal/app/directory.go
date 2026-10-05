@@ -12,7 +12,7 @@ func isAccountCommand(o Options) bool {
 	return isTenantList(o) || len(o.Command) == 2 && o.Command[0] == "account" && o.Command[1] == "show"
 }
 func requiresInventory(o Options) bool {
-	if isProviderProfileCommand(o) || isEvaluationCommand(o) || isWorkflowCommand(o) {
+	if isProviderProfileCommand(o) || isEvaluationCommand(o) || isWorkflowCommand(o) || isVoiceProviderCommand(o) {
 		return false
 	}
 	return !(len(o.Command) == 2 && (o.Command[0] == "tenants" || o.Command[0] == "inventories" && (o.Command[1] == "list" || o.Command[1] == "create")))

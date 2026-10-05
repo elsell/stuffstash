@@ -19,6 +19,8 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[*ports.VoiceProviderConfiguration]:
+		return o.voiceProvider(v.Data)
 	case ports.Result[[]ports.EvaluationCaseHead]:
 		return o.evaluationCases(v)
 	case ports.Result[[]ports.EvaluationRunHead]:

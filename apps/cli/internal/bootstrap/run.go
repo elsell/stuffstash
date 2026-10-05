@@ -99,6 +99,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		PrintSettingsAPI: func(server, token string) (ports.PrintSettingsAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
+		VoiceProviderAPI: func(server, token string) (ports.VoiceProviderAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		WorkflowsAPI: func(server, token string) (ports.WorkflowsAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
@@ -223,6 +226,7 @@ const Help = `Stuff Stash CLI
   stuffstash workflows revisions list WORKFLOW_ID [--limit N] [--cursor CURSOR]
   stuffstash workflows revisions show WORKFLOW_ID REVISION_ID
   stuffstash workflows selection show
+  stuffstash voice-provider show
   stuffstash provider-profiles list|show PROFILE_ID
   stuffstash provider-profiles enable|disable|archive|test PROFILE_ID [--yes]
   stuffstash import-jobs cancel JOB_ID [--input FILE|-] [--yes]

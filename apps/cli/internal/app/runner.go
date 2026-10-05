@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	VoiceProviderAPI           func(string, string) (ports.VoiceProviderAPI, error)
 	EvaluationAPI              func(string, string) (ports.EvaluationAPI, error)
 	WorkflowsAPI               func(string, string) (ports.WorkflowsAPI, error)
 	ConnectorInspectionAPI     func(string, string) (ports.ConnectorInspectionAPI, error)
@@ -156,6 +157,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	}
 	if isEvaluationCommand(o) {
 		return r.evaluationCommand(ctx, o, session.IDToken)
+	}
+	if isVoiceProviderCommand(o) {
+		return r.voiceProviderCommand(ctx, o, session.IDToken)
 	}
 	if isWorkflowCommand(o) {
 		return r.workflowCommand(ctx, o, session.IDToken)
@@ -324,6 +328,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if isEvaluationCommand(o) {
 		return validateEvaluation(o, requireScope)
+	}
+	if isVoiceProviderCommand(o) {
+		return validateVoiceProvider(o, requireScope)
 	}
 	if isWorkflowCommand(o) {
 		return validateWorkflows(o, requireScope)
