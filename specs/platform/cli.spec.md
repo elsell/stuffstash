@@ -1,5 +1,12 @@
 # Stuff Stash CLI And Print Consumer
 
+## Full REST parity extension — October 5, 2026
+
+[Full REST CLI parity](cli-api-parity.spec.md) supersedes the limited command
+scope and explicit-only context rules below. It adds automatically remembered
+interactive scope selection and preserves non-interactive contracts. The earlier
+slice remains implemented; full parity is approved but not yet delivered.
+
 ## Status And Scope
 
 Implemented as the project-owned Go CLI `stuffstash` under `apps/cli`,
