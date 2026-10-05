@@ -166,6 +166,23 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if isEvaluationCommand(o) {
+		unsupported := ""
+		flags.Visit(func(f *flag.Flag) {
+			switch f.Name {
+			case "server", "tenant", "inventory", "context", "credential-file", "allow-loopback-http", "json", "no-input", "request-id", "color", "help":
+			case "limit", "cursor":
+				if len(o.Command) < 3 || o.Command[2] != "list" {
+					unsupported = f.Name
+				}
+			default:
+				unsupported = f.Name
+			}
+		})
+		if unsupported != "" {
+			return o, ports.Failure("usage", "Evaluation inspection does not accept --"+unsupported+" for this command.")
+		}
+	}
 	if len(o.Command) > 1 && o.Command[0] == "labels" && (o.Command[1] == "show" || o.Command[1] == "assign") {
 		invalid := ""
 		flags.Visit(func(f *flag.Flag) {

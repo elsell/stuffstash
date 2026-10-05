@@ -19,6 +19,22 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[[]ports.EvaluationCaseHead]:
+		return o.evaluationCases(v)
+	case ports.Result[[]ports.EvaluationRunHead]:
+		return o.evaluationRuns(v)
+	case ports.Result[ports.EvaluationCaseRevision]:
+		return o.evaluationRevision(v.Data)
+	case ports.Result[ports.EvaluationRun]:
+		return o.evaluationRun(v.Data)
+	case ports.Result[[]ports.EvaluationCaseRevision]:
+		for _, revision := range v.Data {
+			if err := o.evaluationRevision(revision); err != nil {
+				return err
+			}
+		}
+		return o.pagination(v.Pagination)
+
 	case ports.Result[ports.PrintConnector]:
 		return o.printConnector(v.Data)
 	case ports.Result[[]ports.PrintConnector]:

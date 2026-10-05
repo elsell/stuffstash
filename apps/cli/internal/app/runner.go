@@ -12,6 +12,7 @@ import (
 )
 
 type Runner struct {
+	EvaluationAPI              func(string, string) (ports.EvaluationAPI, error)
 	ConnectorInspectionAPI     func(string, string) (ports.ConnectorInspectionAPI, error)
 	PrintSettingsAPI           func(string, string) (ports.PrintSettingsAPI, error)
 	ProviderProfilesAPI        func(string, string) (ports.ProviderProfilesAPI, error)
@@ -151,6 +152,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	}
 	if isPrintSettingsCommand(o) {
 		return r.printSettingsCommand(ctx, o, session.IDToken)
+	}
+	if isEvaluationCommand(o) {
+		return r.evaluationCommand(ctx, o, session.IDToken)
 	}
 	if isProviderProfileCommand(o) {
 		return r.providerProfileCommand(ctx, o, session.IDToken)
@@ -313,6 +317,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if isPrintSettingsCommand(o) {
 		return validatePrintSettings(o, requireScope)
+	}
+	if isEvaluationCommand(o) {
+		return validateEvaluation(o, requireScope)
 	}
 	if isProviderProfileCommand(o) {
 		return validateProviderProfiles(o, requireScope)

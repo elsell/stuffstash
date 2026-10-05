@@ -90,6 +90,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		secretInput = prompt
 	}
 	runner := app.Runner{
+		EvaluationAPI: func(server, token string) (ports.EvaluationAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		ConnectorInspectionAPI: func(server, token string) (ports.ConnectorInspectionAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
@@ -210,6 +213,8 @@ const Help = `Stuff Stash CLI
   stuffstash tenants audit [--limit N --cursor CURSOR]
   stuffstash inventories audit [--limit N --cursor CURSOR]
   stuffstash assets audit ASSET_ID [--limit N]
+  stuffstash evaluation cases|runs list|show ID
+  stuffstash evaluation revisions list CASE_ID|show CASE_ID REVISION_ID
   stuffstash provider-profiles list|show PROFILE_ID
   stuffstash provider-profiles enable|disable|archive|test PROFILE_ID [--yes]
   stuffstash import-jobs cancel JOB_ID [--input FILE|-] [--yes]
