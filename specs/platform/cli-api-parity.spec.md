@@ -824,3 +824,16 @@ fields must not become output. Neither command probes or changes the provider.
 Reject unsupported cursors and mutation input before authentication. Critical
 checks exercise real CLI/SDK scope, full output, numeric precision, denial and
 private response suppression.
+
+### Provider lifecycle and connection checks
+
+`provider-profiles enable|disable|archive|test PROFILE_ID` use household scope.
+Show the server, household and profile ID before confirmation; scripts require
+`--yes`. Connection tests also require confirmation because they contact the
+configured provider and record a test result. Explain this effect before acting.
+All four operations call the generated SDK once and never retry automatically.
+Lifecycle output preserves the full updated profile; test output preserves status,
+message, provider, capability, profile ID and timestamp plus response metadata.
+A completed test request does not imply a successful provider test: show its status
+as returned. Critical command tests cover confirmation, scope, denials, exact
+routes, full results and uncertain response handling.

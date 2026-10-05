@@ -19,7 +19,19 @@ type ProviderProfile struct {
 	TenantID           string                 `json:"tenantId"`
 	UpdatedAt          string                 `json:"updatedAt"`
 }
+type ProviderTest struct {
+	ProfileID    string `json:"providerProfileId"`
+	Status       string `json:"status"`
+	Message      string `json:"message"`
+	ProviderKind string `json:"providerKind"`
+	Capability   string `json:"capability"`
+	TestedAt     string `json:"testedAt"`
+}
 type ProviderProfilesAPI interface {
+	EnableProvider(context.Context, string, string) (Result[ProviderProfile], error)
+	DisableProvider(context.Context, string, string) (Result[ProviderProfile], error)
+	ArchiveProvider(context.Context, string, string) (Result[ProviderProfile], error)
+	TestProvider(context.Context, string, string) (Result[ProviderTest], error)
 	ProviderProfiles(context.Context, string) (Result[[]ProviderProfile], error)
 	ProviderProfile(context.Context, string, string) (Result[ProviderProfile], error)
 }

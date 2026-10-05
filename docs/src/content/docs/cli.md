@@ -634,3 +634,12 @@ do not require an inventory and do not test or change the provider.
 
 Use `--json --no-input` for scripts. JSON includes all profile configuration
 and response metadata. Credential values are never returned.
+
+Use `provider-profiles enable PROFILE_ID`, `disable PROFILE_ID`, or
+`archive PROFILE_ID` to change a provider's state. Use
+`provider-profiles test PROFILE_ID` to contact the configured provider and
+record a test result. Each action asks for confirmation; scripts need `--yes`.
+
+Inspect the test's `status` and `message`: a completed request can report a
+failed provider test. The CLI does not retry these actions automatically. If a
+request is interrupted, read the profile before repeating it.

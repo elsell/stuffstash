@@ -205,6 +205,7 @@ const Help = `Stuff Stash CLI
   stuffstash inventories audit [--limit N --cursor CURSOR]
   stuffstash assets audit ASSET_ID [--limit N]
   stuffstash provider-profiles list|show PROFILE_ID
+  stuffstash provider-profiles enable|disable|archive|test PROFILE_ID [--yes]
   stuffstash import-jobs cancel JOB_ID [--input FILE|-] [--yes]
   stuffstash import-jobs list|show JOB_ID|delete JOB_ID [--yes]
   stuffstash server show|auth-config

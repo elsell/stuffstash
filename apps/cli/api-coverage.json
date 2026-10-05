@@ -2349,11 +2349,11 @@
         "domain": "provider profiles",
         "contractSha256": "f96078df5dcee00edfec28b91d1d3dd793b6b9c397a75b91d318caa6883b2cb3"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "provider-profiles archive"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-disable": {
       "contract": {
@@ -2362,11 +2362,11 @@
         "domain": "provider profiles",
         "contractSha256": "45410ccc2431eab42d6ad832ca9624010028f3133d8a47fe1d27343fa9bffeec"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "provider-profiles disable"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-enable": {
       "contract": {
@@ -2375,11 +2375,11 @@
         "domain": "provider profiles",
         "contractSha256": "c60b2c42f0ee0449fb62e5a80963b53baa4c0604b0532bd42d865d05010270f8"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "provider-profiles enable"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-test": {
       "contract": {
@@ -2388,11 +2388,11 @@
         "domain": "provider profiles",
         "contractSha256": "386263b77b68ee86f807841b750dce5780aa279d166f57002ca288cb27e1f93d"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "provider-profiles test"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "put-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences": {
       "contract": {

@@ -19,6 +19,8 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[ports.ProviderTest]:
+		return o.details([][2]string{{"Profile", v.Data.ProfileID}, {"Status", v.Data.Status}, {"Message", v.Data.Message}, {"Provider", v.Data.ProviderKind}, {"Capability", v.Data.Capability}, {"Tested", v.Data.TestedAt}})
 	case ports.Result[ports.ProviderProfile]:
 		return o.providerProfile(v.Data)
 	case ports.Result[[]ports.ProviderProfile]:
