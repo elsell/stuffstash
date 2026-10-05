@@ -12,7 +12,9 @@ func isTagCommand(o Options) bool { return len(o.Command) > 0 && o.Command[0] ==
 func isTagWrite(o Options) bool {
 	return isTagCommand(o) && len(o.Command) > 1 && (o.Command[1] == "create" || o.Command[1] == "update")
 }
-func acceptsBody(o Options) bool { return isDirectoryWrite(o) || isTagWrite(o) || isAssetWrite(o) }
+func acceptsBody(o Options) bool {
+	return isDirectoryWrite(o) || isTagWrite(o) || isAssetWrite(o) || isCheckoutWrite(o)
+}
 func validateTags(o Options, requireScope bool) error {
 	if len(o.Command) < 2 {
 		return ports.Failure("usage", "Supply a tag action. Use tags list, create, update ID, or delete ID.")

@@ -26,6 +26,20 @@ func (o Output) Result(value any) error {
 			}
 		}
 		return o.pagination(v.Pagination)
+	case ports.Result[ports.Checkout]:
+		return o.checkoutDetails(v.Data)
+	case ports.Result[[]ports.Checkout]:
+		for i, item := range v.Data {
+			if i > 0 {
+				if _, err := io.WriteString(o.Stdout, "\n"); err != nil {
+					return err
+				}
+			}
+			if err := o.checkoutDetails(item); err != nil {
+				return err
+			}
+		}
+		return o.pagination(v.Pagination)
 	case ports.Result[ports.Tag]:
 		fields := [][2]string{{"Tag", v.Data.DisplayName}, {"ID", v.Data.ID}, {"Key", v.Data.Key}, {"State", v.Data.Lifecycle}}
 		if v.Data.Color != nil {

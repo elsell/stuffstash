@@ -165,6 +165,21 @@ and optional schema reference. Lists include a continuation cursor when more res
 pass it with `--cursor`. Flags can also set `--server`, `--tenant`, and
 `--inventory` for one command.
 
+### Check out and return assets
+
+```sh
+stuffstash assets checkout ASSET_ID --details 'Lent to Sam'
+stuffstash assets return ASSET_ID --details 'Returned with charger'
+stuffstash assets checkouts ASSET_ID --limit 20
+stuffstash assets return-details ASSET_ID CHECKOUT_ID --details ''
+```
+
+Checkout and return notes are optional. Use `--details ''` to clear returned
+checkout notes. The write commands also accept `--input FILE|-` with a JSON
+`details` field. Do not combine the two input methods. Use the history command
+before retrying a write whose result is unknown. These commands do not support
+retry keys. History includes pagination; pass `--cursor` for the next page.
+
 ## Release operations
 
 The normal Release workflow attaches five portable CLI archives, individual

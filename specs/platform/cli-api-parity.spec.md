@@ -407,3 +407,21 @@ inventory. Archive and delete show the effective server/scope/asset and require
 the shared cancel-default confirmation or `--yes`. Restore needs no destructive
 confirmation. Reject retry keys for all three lifecycle operations because these
 contracts do not support them. Preserve full archive/restore response fields.
+
+### Checkout workflows
+
+Add `assets checkout ID`, `assets return ID`, `assets checkouts ID`, and
+`assets return-details ASSET_ID CHECKOUT_ID`. The three writes accept optional
+`--details TEXT` or `--input FILE|-`, preserving explicit empty details. Updating
+return details requires either option so an omitted value cannot silently clear
+notes. Checkout and return can omit details and send an empty object. History
+supports limit/cursor pagination. All commands use household/inventory scope,
+complete checkout models and metadata, and generated SDK operations. Writes show
+effective scope, reject unsupported retry keys, and never retry automatically.
+Uncertain write results instruct users to inspect checkout history. Preserve
+server authorization and validation failures. Human output presents checkout
+state, borrower, dates, details, and IDs; JSON preserves the complete response.
+
+Checkout writes reject unrelated name/title/kind/parent flags before login.
+Human checkout history includes checkout and return notes and return dates so
+users can inspect the outcome of an uncertain write without switching formats.

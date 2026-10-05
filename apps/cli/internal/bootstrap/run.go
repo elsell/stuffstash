@@ -179,6 +179,10 @@ const Help = `Stuff Stash CLI
   stuffstash assets archive ID [--yes]
   stuffstash assets restore ID
   stuffstash assets delete ID [--yes]
+  stuffstash assets checkout ID [--details TEXT | --input FILE|-]
+  stuffstash assets return ID [--details TEXT | --input FILE|-]
+  stuffstash assets checkouts ID [--limit N --cursor CURSOR]
+  stuffstash assets return-details ASSET_ID CHECKOUT_ID --details TEXT | --input FILE|-
   stuffstash version
   stuffstash labels templates
   stuffstash labels render ASSET_ID --format png|pdf --output PATH [--printer ID | --media-preset ID]

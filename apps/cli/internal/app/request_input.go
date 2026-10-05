@@ -18,7 +18,7 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 	if o.IdempotencyKey != "" && !(isAssetWrite(o) && o.Command[1] == "create") {
 		return o, ports.Failure("usage", "This API operation does not support --idempotency-key. Remove the option.")
 	}
-	if o.InputPath != "" && (o.ConnectorName != "" || o.TagColor != nil || o.TagKey != nil || o.Title != "" || o.Kind != "" || o.Parent != "" || o.PrintLabel) {
+	if o.InputPath != "" && (o.ConnectorName != "" || o.TagColor != nil || o.TagKey != nil || o.Title != "" || o.Kind != "" || o.Parent != "" || o.PrintLabel || o.Details != nil) {
 		return o, ports.Failure("usage", "Use either field options or --input. Do not combine them.")
 	}
 	if o.InputPath != "" {
@@ -35,6 +35,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody = body
 	} else {
+		if isCheckoutWrite(o) {
+			return prepareCheckoutInput(o)
+		}
 		if isAssetWrite(o) {
 			return r.prepareAssetInput(ctx, o)
 		}

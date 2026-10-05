@@ -140,7 +140,7 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	if isDirectoryCommand(o) {
 		return r.directoryCommand(ctx, o, session.IDToken)
 	}
-	if isAssetWrite(o) {
+	if isAssetWrite(o) || isCheckoutWrite(o) {
 		if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory)); err != nil {
 			return err
 		}
@@ -210,6 +210,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		if isAssetWrite(o) && o.Command[1] == "create" {
 			return assetCreateFailure(o, err)
 		}
+		if isCheckoutWrite(o) {
+			return checkoutFailure(err)
+		}
 		return err
 	}
 	if isLabelCommand(o) {
@@ -224,6 +227,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 func validateCommand(o Options) error      { return validateCommandOptions(o, true) }
 func validateCommandShape(o Options) error { return validateCommandOptions(o, false) }
 func validateCommandOptions(o Options, requireScope bool) error {
+	if isCheckoutWrite(o) && (o.ConnectorName != "" || o.Title != "" || o.Kind != "" || o.Parent != "") {
+		return ports.Failure("usage", "Use --details or --input for checkout notes. Remove unrelated asset field options.")
+	}
 	if len(o.Command) > 1 && o.Command[0] == "assets" && (o.Command[1] == "update" || o.Command[1] == "move" || isAssetLifecycle(o)) && o.IdempotencyKey != "" {
 		return ports.Failure("usage", "This asset action does not support retry keys. Remove --idempotency-key.")
 	}
@@ -269,12 +275,16 @@ func validateCommandOptions(o Options, requireScope bool) error {
 		if len(o.Command) == 2 && (!requireScope || len(o.RequestBody) > 0 || (o.Title != "" && o.Kind != "")) {
 			return nil
 		}
-	case "show", "archive", "restore", "delete":
+	case "show", "archive", "restore", "delete", "checkout", "return", "checkouts":
 		if len(o.Command) == 3 {
 			return nil
 		}
 	case "update":
 		if len(o.Command) == 3 && (!requireScope || len(o.RequestBody) > 0 || o.Title != "") {
+			return nil
+		}
+	case "return-details":
+		if len(o.Command) == 4 {
 			return nil
 		}
 	case "move":
@@ -314,6 +324,14 @@ func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 			change = ports.AssetChange{MoveToRoot: true}
 		}
 		return api.UpdateAsset(ctx, o.Scope, id, change, "")
+	case "checkouts":
+		return api.Checkouts(ctx, o.Scope, id, o.Page)
+	case "checkout", "return", "return-details":
+		checkoutID := ""
+		if len(o.Command) == 4 {
+			checkoutID = o.Command[3]
+		}
+		return api.ChangeCheckout(ctx, o.Scope, id, checkoutID, ports.CheckoutAction(action), o.RequestBody)
 	case "delete":
 		if err := api.DeleteAsset(ctx, o.Scope, id); err != nil {
 			return nil, err

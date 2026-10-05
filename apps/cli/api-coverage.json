@@ -762,11 +762,11 @@
         "domain": "assets",
         "contractSha256": "ce0eed5edf0819fbbf2c8afcd1558ac3981d7ffcf8255eb3d4e221454c4e17f7"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets checkouts"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-label": {
       "contract": {
@@ -1426,11 +1426,11 @@
         "domain": "assets",
         "contractSha256": "24b912a9850bb3b130a8f76808bcd7ebddb5b129c9b01d379a933eea8209925f"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets return-details"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-restore": {
       "contract": {
@@ -2063,11 +2063,11 @@
         "domain": "assets",
         "contractSha256": "262a4c86bf549ab74f9e7926e3dd56b3b78552261ffe9893cc9e07113cd3fcdf"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets checkout"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-label": {
       "contract": {
@@ -2115,11 +2115,11 @@
         "domain": "assets",
         "contractSha256": "abba84cdf1c022ecfd9aff7e147e313ad14ec41ecab2ffd913e003c03587b3a5"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "assets return"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types": {
       "contract": {
