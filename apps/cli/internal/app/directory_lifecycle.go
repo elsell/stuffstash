@@ -25,19 +25,13 @@ func (r Runner) directoryLifecycle(ctx context.Context, o Options, session ports
 	}
 	action := ports.LifecycleAction(o.Command[1])
 	if action != ports.Restore && !o.Yes {
-		if r.Picker == nil || o.JSON || o.NoInput {
-			return ports.Failure("usage", "This action needs confirmation. Review the target and add --yes to continue.")
-		}
+
 		detail := "Remove from active use. You can restore it later."
 		if action == ports.Delete {
 			detail = "Permanently delete this " + string(resource) + "."
 		}
-		selected, err := r.Picker.Pick(ctx, "Confirm "+string(action)+" "+string(resource), []ports.Choice{{ID: "cancel", Label: "Cancel", Detail: "Keep the resource unchanged"}, {ID: "confirm", Label: string(action), Detail: detail}})
-		if err != nil {
+		if err := r.confirmAction(ctx, o, "Confirm "+string(action)+" "+string(resource), string(action), detail); err != nil {
 			return err
-		}
-		if selected != "confirm" {
-			return context.Canceled
 		}
 	}
 	if r.DirectoryLifecycle == nil {

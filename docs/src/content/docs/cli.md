@@ -83,6 +83,22 @@ After deletion, matching saved scope is cleared for your account.
 ./stuffstash inventories restore --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
 ```
 
+## Manage tags
+
+```sh
+./stuffstash tags list
+./stuffstash tags create --name 'Tools' --key tools --tag-color '#247BA0'
+./stuffstash tags update TAG_ID --name 'Hand tools'
+./stuffstash tags update TAG_ID --tag-color ''
+./stuffstash tags delete TAG_ID
+```
+
+Tags use the current household and inventory. Omit a required name to enter it
+interactively, or use `--input FILE` for JSON. A color-only update leaves the name
+unchanged; an empty color value clears the color. The stable key is set only when
+you create the tag. Delete asks for confirmation; scripts must add `--yes`.
+`--tag-color` sets the tag color, while `--color` controls terminal presentation.
+
 ## Work with assets
 
 Run `stuffstash account show` to check the signed-in account and

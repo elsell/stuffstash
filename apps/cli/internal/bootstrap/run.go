@@ -79,17 +79,22 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 	client := &http.Client{Timeout: 30 * time.Second}
 	clock := systemClock{}
 	var picker ports.Selector
- var textInput ports.TextInput
+	var textInput ports.TextInput
 	terminalOutput, _ := stdout.(*os.File)
 	terminalErrors, _ := stderr.(*os.File)
 	if !options.NoInput && !options.JSON && getenv("TERM") != "dumb" && terminal.Available(os.Stdin, terminalOutput, terminalErrors) {
-		prompt:=terminal.Picker{Input: os.Stdin, Output: terminalErrors, Color: options.Color == "always" || (options.Color == "auto" && getenv("NO_COLOR") == "")}
- picker=prompt
- textInput=prompt
+		prompt := terminal.Picker{Input: os.Stdin, Output: terminalErrors, Color: options.Color == "always" || (options.Color == "auto" && getenv("NO_COLOR") == "")}
+		picker = prompt
+		textInput = prompt
 	}
 	runner := app.Runner{
- DirectoryLifecycle:func(server,token string)(ports.DirectoryLifecycle,error){return httpapi.New(server,token,client,httpapi.Options{RequestID:options.RequestID})},
- TextInput:textInput,
+		TagsAPI: func(server, token string) (ports.TagsAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
+		DirectoryLifecycle: func(server, token string) (ports.DirectoryLifecycle, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
+		TextInput:  textInput,
 		InputFiles: inputfiles.Files{Stdin: os.Stdin, StdinTerminal: term.IsTerminal(int(os.Stdin.Fd()))},
 		DirectoryWriter: func(server, token string) (ports.DirectoryWriter, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
@@ -154,6 +159,10 @@ const Help = `Stuff Stash CLI
   stuffstash inventories update --input FILE|-
   stuffstash tenants archive|restore|delete [--yes]
   stuffstash inventories archive|restore|delete [--yes]
+  stuffstash tags list [--limit N --cursor CURSOR]
+  stuffstash tags create --name NAME [--key KEY --tag-color HEX]
+  stuffstash tags update ID [--name NAME --tag-color HEX | --input FILE]
+  stuffstash tags delete ID [--yes]
   stuffstash account show
   stuffstash tenants show [--tenant ID]
   stuffstash inventories show [--tenant ID --inventory ID]

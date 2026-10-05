@@ -11,27 +11,28 @@ import (
 )
 
 type Runner struct {
- DirectoryLifecycle func(string,string)(ports.DirectoryLifecycle,error)
- TextInput ports.TextInput
-	InputFiles      ports.InputFiles
-	DirectoryWriter func(string, string) (ports.DirectoryWriter, error)
-	DirectoryAPI    func(string, string) (ports.Directory, error)
-	Picker          ports.Selector
-	ScopeAPI        func(string, string) (ports.ScopeCatalog, error)
-	Contexts        contexts.Store
-	LabelsAPI       func(string, string) (ports.LabelsAPI, error)
-	LabelFiles      ports.LabelFiles
-	PrintingAPI     func(string, string) (ports.HumanPrintingAPI, error)
-	API             func(string, string) (ports.API, error)
-	Auth            ports.Auth
-	Credentials     ports.Credentials
-	Output          ports.Output
-	Clock           ports.Clock
-	Observer        ports.Observer
+	TagsAPI            func(string, string) (ports.TagsAPI, error)
+	DirectoryLifecycle func(string, string) (ports.DirectoryLifecycle, error)
+	TextInput          ports.TextInput
+	InputFiles         ports.InputFiles
+	DirectoryWriter    func(string, string) (ports.DirectoryWriter, error)
+	DirectoryAPI       func(string, string) (ports.Directory, error)
+	Picker             ports.Selector
+	ScopeAPI           func(string, string) (ports.ScopeCatalog, error)
+	Contexts           contexts.Store
+	LabelsAPI          func(string, string) (ports.LabelsAPI, error)
+	LabelFiles         ports.LabelFiles
+	PrintingAPI        func(string, string) (ports.HumanPrintingAPI, error)
+	API                func(string, string) (ports.API, error)
+	Auth               ports.Auth
+	Credentials        ports.Credentials
+	Output             ports.Output
+	Clock              ports.Clock
+	Observer           ports.Observer
 }
 
 func (r Runner) Run(ctx context.Context, o Options) error {
-	if o.InputPath != "" && !isDirectoryWrite(o) {
+	if o.InputPath != "" && !acceptsBody(o) {
 		return ports.Failure("usage", "This command does not accept --input. Remove the option.")
 	}
 	if len(o.Command) == 0 {
@@ -126,8 +127,13 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return err
 	}
 
-	if isDirectoryLifecycle(o){return r.directoryLifecycle(ctx,o,session)}
- if isDirectoryWrite(o) {
+	if isTagCommand(o) {
+		return r.tagsCommand(ctx, o, session.IDToken)
+	}
+	if isDirectoryLifecycle(o) {
+		return r.directoryLifecycle(ctx, o, session)
+	}
+	if isDirectoryWrite(o) {
 		return r.writeDirectory(ctx, o, session.IDToken)
 	}
 	if isDirectoryCommand(o) {
@@ -197,6 +203,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
 		return ports.Failure("usage", "--print-label is only available for assets create")
 	}
+	if isTagCommand(o) {
+		return validateTags(o, requireScope)
+	}
 	if isLabelCommand(o) {
 		return validateLabelCommandOptions(o, requireScope)
 	}
@@ -249,6 +258,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	return ports.Failure("usage", "invalid asset command arguments; use --help")
 }
 func execute(ctx context.Context, api ports.API, o Options) (any, error) {
+	if len(o.Command) < 2 || (o.Command[0] != "assets" && !(o.Command[0] == "inventories" && o.Command[1] == "list")) {
+		return nil, ports.Failure("usage", "This command has no executor. Use --help to choose a supported command.")
+	}
 	if o.Command[0] == "inventories" {
 		return api.Inventories(ctx, o.Scope, o.Page)
 	}

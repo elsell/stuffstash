@@ -11,7 +11,8 @@ import (
 )
 
 type Options struct {
- Yes bool
+	TagColor, TagKey                                                      *string
+	Yes                                                                   bool
 	RequestID                                                             string
 	InputPath                                                             string
 	RequestBody                                                           []byte
@@ -46,12 +47,14 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	o.Selection.Context = environment.Context
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
+	flags.Func("tag-color", "tag color as #RRGGBB, or an empty value", func(value string) error { o.TagColor = &value; return nil })
+	flags.Func("key", "stable key for a new tag", func(value string) error { o.TagKey = &value; return nil })
 	flags.StringVar(&o.RequestID, "request-id", "", "API request correlation ID")
 	flags.StringVar(&o.InputPath, "input", "", "JSON request file, or - for stdin")
 	flags.StringVar(&o.Color, "color", "auto", "color output: auto, always, or never")
 	flags.StringVar(&o.Selection.Context, "context", environment.Context, "saved context name")
-	flags.BoolVar(&o.Yes,"yes",false,"confirm the requested action without a prompt")
- flags.BoolVar(&o.NoInput, "no-input", false, "do not ask for input")
+	flags.BoolVar(&o.Yes, "yes", false, "confirm the requested action without a prompt")
+	flags.BoolVar(&o.NoInput, "no-input", false, "do not ask for input")
 	flags.StringVar(&o.Format, "format", "png", "label file format: png or pdf")
 	flags.StringVar(&o.OutputPath, "output", "", "new private label file path")
 	flags.StringVar(&o.MediaPreset, "media-preset", "", "authorized media preset ID")
@@ -146,10 +149,13 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
-	if o.InputPath != "" && !isDirectoryWrite(o) {
+	if (o.TagColor != nil || o.TagKey != nil) && !isTagCommand(o) {
+		return o, ports.Failure("usage", "Use --tag-color and --key only with tag commands.")
+	}
+	if o.InputPath != "" && !acceptsBody(o) {
 		return o, ports.Failure("usage", "This command does not accept --input. Remove the option.")
 	}
-	if o.Page.Limit < 1 {
+	if o.Page.Limit < 0 || o.Page.Limit == 0 && !(len(o.Command) == 2 && o.Command[0] == "tags" && o.Command[1] == "list") {
 		return o, ports.Failure("usage", "--limit must be positive")
 	}
 	return o, nil

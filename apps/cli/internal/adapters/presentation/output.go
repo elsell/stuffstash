@@ -19,6 +19,19 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[[]ports.Tag]:
+		for _, item := range v.Data {
+			if _, err := fmt.Fprintf(o.Stdout, "%s\t%s\t%s\t%s\n", strconv.Quote(item.ID), strconv.Quote(item.DisplayName), strconv.Quote(item.Key), strconv.Quote(item.Lifecycle)); err != nil {
+				return err
+			}
+		}
+		return o.pagination(v.Pagination)
+	case ports.Result[ports.Tag]:
+		fields := [][2]string{{"Tag", v.Data.DisplayName}, {"ID", v.Data.ID}, {"Key", v.Data.Key}, {"State", v.Data.Lifecycle}}
+		if v.Data.Color != nil {
+			fields = append(fields, [2]string{"Color", *v.Data.Color})
+		}
+		return o.details(fields)
 	case ports.Result[ports.Principal]:
 		fields := [][2]string{{"ID", v.Data.ID}}
 		if v.Data.DisplayName != nil {

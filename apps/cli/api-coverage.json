@@ -203,11 +203,11 @@
         "domain": "tags",
         "contractSha256": "1a208d4cde7972774e90b961d415fdb6b500a9fa974252ebff9ffbd944a08a5c"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "tags delete"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "download-inventory-archive": {
       "contract": {
@@ -1087,11 +1087,11 @@
         "domain": "tags",
         "contractSha256": "ae45dc102034ea5fa51478e4cbc9a8537aa4c3c6f312028b0ea80d0c98ac4ac2"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "tags list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-provider-profiles": {
       "contract": {
@@ -1568,11 +1568,11 @@
         "domain": "tags",
         "contractSha256": "fd4ec0793dc2f991d2905481085d7f44309e4f595437c9308a73f601137c2a3d"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "tags update"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-provider-profiles-by-provider-profile-id": {
       "contract": {
@@ -2296,11 +2296,11 @@
         "domain": "tags",
         "contractSha256": "df47da4f65a827091edc623a456109ae296cd460c35a7ba20db0ba59ffab9366"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "tags create"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-undoable-operations-by-operation-id-redo": {
       "contract": {

@@ -328,3 +328,26 @@ inventory deletion clears only the matching inventory. Preserve context names,
 other accounts, and other servers. If local cleanup fails after server success,
 return the successful delete result with an actionable stderr warning; never
 report the server delete as failed or retry it.
+
+### Tag commands
+
+`tags list` lists inventory tags with complete metadata and all tag fields. It
+accepts limit 0 for the API default, positive limits, and cursors. `tags create`
+accepts --name (display name), optional --key, and --tag-color; `tags update ID`
+accepts --name and --tag-color. The color flag is separate from terminal --color.
+An explicit empty --tag-color sends an empty string, not an omitted field. The
+stable key cannot be updated. Either write also accepts --input FILE or stdin,
+without mixing JSON input and field flags. A missing required name is prompted
+only in interactive mode, with the API's 80-character limit. Color-only updates
+do not ask for a name. JSON input retains omitted/null/empty distinctions.
+
+`tags delete ID` requires cancel-default confirmation or --yes and returns the
+API tag response, including its resulting lifecycle state. All commands require
+household and inventory scope. All mutations display their scope and target,
+use generated SDK methods, preserve API metadata, reject unsupported idempotency
+keys, and never retry automatically. Diagnostics do not leak response bodies.
+
+Command dispatch must fail closed: an unhandled command family must never fall
+through to another domain's execution path. The legacy asset executor accepts
+only asset commands and its explicitly supported inventory-list route. This
+check protects new command integrations from accidentally mutating assets.

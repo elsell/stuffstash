@@ -8,7 +8,7 @@ import (
 )
 
 func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
-	write := isDirectoryWrite(o)
+	write := acceptsBody(o)
 	if o.InputPath != "" && !write {
 		return o, ports.Failure("usage", "This command does not accept --input. Remove the option.")
 	}
@@ -18,8 +18,8 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 	if o.IdempotencyKey != "" {
 		return o, ports.Failure("usage", "This API operation does not support --idempotency-key. Remove the option.")
 	}
-	if o.InputPath != "" && o.ConnectorName != "" {
-		return o, ports.Failure("usage", "Use either --name or --input. Do not combine them.")
+	if o.InputPath != "" && (o.ConnectorName != "" || o.TagColor != nil || o.TagKey != nil) {
+		return o, ports.Failure("usage", "Use either field options or --input. Do not combine them.")
 	}
 	if o.InputPath != "" {
 		if r.InputFiles == nil {
@@ -35,15 +35,22 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody = body
 	} else {
-		if o.ConnectorName=="" && r.TextInput!=nil && !o.NoInput && !o.JSON {
-   title:="Household name"
-   if o.Command[0]=="inventories"{title="Inventory name"}
-   name,err:=r.TextInput.ReadText(ctx,title,120)
-   if err!=nil{return o,err}
-   o.ConnectorName=name
-  }
-  if o.ConnectorName == "" {
-   return o, ports.Failure("usage", "Supply --name NAME or --input FILE for this command.")
+		if isTagWrite(o) {
+			return r.prepareTagInput(ctx, o)
+		}
+		if o.ConnectorName == "" && r.TextInput != nil && !o.NoInput && !o.JSON {
+			title := "Household name"
+			if o.Command[0] == "inventories" {
+				title = "Inventory name"
+			}
+			name, err := r.TextInput.ReadText(ctx, title, 120)
+			if err != nil {
+				return o, err
+			}
+			o.ConnectorName = name
+		}
+		if o.ConnectorName == "" {
+			return o, ports.Failure("usage", "Supply --name NAME or --input FILE for this command.")
 		}
 		o.RequestBody, _ = json.Marshal(map[string]string{"name": o.ConnectorName})
 	}
