@@ -152,7 +152,7 @@ func readRune(ctx context.Context, reader *bufio.Reader) (rune, error) {
 		return 0, ctx.Err()
 	case got := <-ready:
 		if got.err != nil {
-			return 0, ports.Failure("input", "Input ended before a choice was made. Run the command again or supply scope options.")
+			return 0, ports.Failure("input", "Input ended before the prompt was complete. Run the command again with explicit options.")
 		}
 		return got.value, nil
 	}

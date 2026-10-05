@@ -79,12 +79,16 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 	client := &http.Client{Timeout: 30 * time.Second}
 	clock := systemClock{}
 	var picker ports.Selector
+ var textInput ports.TextInput
 	terminalOutput, _ := stdout.(*os.File)
 	terminalErrors, _ := stderr.(*os.File)
 	if !options.NoInput && !options.JSON && getenv("TERM") != "dumb" && terminal.Available(os.Stdin, terminalOutput, terminalErrors) {
-		picker = terminal.Picker{Input: os.Stdin, Output: terminalErrors, Color: options.Color == "always" || (options.Color == "auto" && getenv("NO_COLOR") == "")}
+		prompt:=terminal.Picker{Input: os.Stdin, Output: terminalErrors, Color: options.Color == "always" || (options.Color == "auto" && getenv("NO_COLOR") == "")}
+ picker=prompt
+ textInput=prompt
 	}
 	runner := app.Runner{
+ TextInput:textInput,
 		InputFiles: inputfiles.Files{Stdin: os.Stdin, StdinTerminal: term.IsTerminal(int(os.Stdin.Fd()))},
 		DirectoryWriter: func(server, token string) (ports.DirectoryWriter, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})

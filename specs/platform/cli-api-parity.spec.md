@@ -292,3 +292,15 @@ null collections versus empty arrays and empty strings versus
 null cursors. Keep the existing top-level `pagination` field for compatibility;
 new metadata is additive. Header correlation is diagnostic, not an idempotency
 mechanism. Commands must never promise duplicate-write protection from it.
+
+### Guided directory names
+
+When a directory create/update command omits both --name and --input, a capable
+interactive terminal asks for the household or inventory name. Use the existing
+pinned terminal library for familiar cursor movement, deletion, and Unicode
+entry. Ctrl-C cancels without a request. Trim surrounding whitespace, reject an
+empty name or a name over the API's 120-character limit, and let the user correct
+it in the same prompt. JSON, --no-input, redirected streams, and unsupported
+terminals fail with actionable explicit-input guidance instead of prompting.
+The prompt completes before authentication or scope selection; no mutation occurs
+until input and target scope are ready. Prompt diagnostics use stderr only.

@@ -58,6 +58,9 @@ removes the locally stored session for the selected server.
 ./stuffstash inventories update --name 'Workshop'
 ```
 
+Omit `--name` in an interactive terminal to enter the name in a prompt. Use
+arrow keys to edit and Ctrl-C to cancel. Scripts must supply a name or JSON.
+
 Use `--input request.json` instead of `--name` to send a JSON object, or pipe it
 with `--input -`. The limit is 1 MiB. The CLI prints the target scope to stderr
 before a write; `--json` keeps the result on stdout. New resources do not change

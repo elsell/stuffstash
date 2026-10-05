@@ -35,8 +35,15 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody = body
 	} else {
-		if o.ConnectorName == "" {
-			return o, ports.Failure("usage", "Supply --name NAME or --input FILE for this command.")
+		if o.ConnectorName=="" && r.TextInput!=nil && !o.NoInput && !o.JSON {
+   title:="Household name"
+   if o.Command[0]=="inventories"{title="Inventory name"}
+   name,err:=r.TextInput.ReadText(ctx,title,120)
+   if err!=nil{return o,err}
+   o.ConnectorName=name
+  }
+  if o.ConnectorName == "" {
+   return o, ports.Failure("usage", "Supply --name NAME or --input FILE for this command.")
 		}
 		o.RequestBody, _ = json.Marshal(map[string]string{"name": o.ConnectorName})
 	}

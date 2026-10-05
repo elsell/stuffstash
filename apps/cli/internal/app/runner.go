@@ -11,6 +11,7 @@ import (
 )
 
 type Runner struct {
+ TextInput ports.TextInput
 	InputFiles      ports.InputFiles
 	DirectoryWriter func(string, string) (ports.DirectoryWriter, error)
 	DirectoryAPI    func(string, string) (ports.Directory, error)

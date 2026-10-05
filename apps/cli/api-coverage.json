@@ -1220,10 +1220,8 @@
       "commands": [
         "tenants update"
       ],
-      "status": "partial",
-      "gaps": [
-        "Guided missing-name input remains unfinished."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-archive": {
       "contract": {
@@ -1326,10 +1324,8 @@
       "commands": [
         "inventories update"
       ],
-      "status": "partial",
-      "gaps": [
-        "Guided missing-name input remains unfinished."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-cancel": {
       "contract": {
@@ -1783,10 +1779,8 @@
       "commands": [
         "tenants create"
       ],
-      "status": "partial",
-      "gaps": [
-        "Guided missing-name input remains unfinished."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-archive-jobs": {
       "contract": {
@@ -1954,10 +1948,8 @@
       "commands": [
         "inventories create"
       ],
-      "status": "partial",
-      "gaps": [
-        "Guided missing-name input remains unfinished."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-access-grants": {
       "contract": {
