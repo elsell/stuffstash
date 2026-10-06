@@ -72,7 +72,7 @@ func groupHelpText(command []string) (string, error) {
 		if len(path) == len(command)+1 {
 			children[name] = entry.Summary
 		} else if _, ok := children[name]; !ok {
-			children[name] = "Browse " + name + " commands."
+			children[name] = helpGroupSummary(path[:len(command)+1])
 		}
 	}
 	if len(children) == 0 {

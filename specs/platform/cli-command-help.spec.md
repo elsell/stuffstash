@@ -27,6 +27,9 @@ registered flags. Command-specific metadata selects relevant options and records
 scope, body requirements and confirmation semantics rather than guessing from
 verb names. Examples use placeholders and only supported flags. Root and group
 help are short navigation aids; command detail stays relevant to that command.
+Each group summary explains its user task. Do not repeat the group name as
+"Browse GROUP commands." Readers must be able to find the appropriate command
+without opening every group. Keep summaries short and avoid API jargon.
 
 Help must distinguish local commands, public server discovery, account scope,
 household scope, inventory scope and connector credentials. Scripted writes that
