@@ -739,3 +739,16 @@ Browse route title. Menu callbacks must use the latest committed handler and
 become inert on teardown. Verify that contract with focused tests and retain
 native frame/hit-target checks in the Browse journey. Native screenshot review
 must cover appearance and spacing; source tests alone do not certify rendering.
+
+### Native title and dark fixture verification (2026-10-06)
+
+Use an explicit empty native header title for the Browse view selector. A render
+callback returning null does not reliably suppress UIKit's fallback route title;
+no truncated Browse title may remain between the selector and action group.
+
+Dark Browse native verification must select dark appearance after its fixture
+route opens, rather than relying on an in-memory setting on an earlier route.
+Assert both the resolved app appearance and native appearance are dark before
+capturing top, scrolled, menu, and Map evidence. Retain normal light coverage and
+existing action hit-target and non-overlap checks. Prior light screenshots from
+the dark-named test do not count as dark-mode evidence.

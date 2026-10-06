@@ -4,6 +4,7 @@ import { browseSurfaceHeaderOptions } from './BrowseSurfaceHeaderOptions.ios';
 it('uses a leading native selection menu and leaves trailing actions untouched', () => {
   const selected: string[] = [];
   const options = browseSurfaceHeaderOptions('map', next => selected.push(next));
+  expect(options.headerTitle).toBe('');
   expect(options.headerRight).toBeUndefined();
   expect(options.unstable_headerRightItems).toBeUndefined();
   const menu = options.unstable_headerLeftItems?.({ canGoBack: false })[0];

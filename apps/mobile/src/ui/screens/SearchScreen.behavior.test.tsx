@@ -298,7 +298,7 @@ it('keeps native search and refinements across an immediate List/Map switch',asy
  try{
   await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async()=>({tenantId:'tenant',inventoryId:'inventory'})}><AppFeedbackProvider><SearchScreen {...props}/></AppFeedbackProvider></MobileServerStateProvider>);
   await settle(h);await settle(h);
-  expect(navigationOptions().some(options => typeof (options as {headerTitle?: unknown}).headerTitle === 'function')).toBe(true);
+  expect(navigationOptions().some(options => (options as {headerTitle?: unknown}).headerTitle === '')).toBe(true);
   expect(h.byLabel('Browse view: List')).toBeDefined();
   await h.run(()=>{nativeSearch().onFocus();nativeSearch().onChangeText({nativeEvent:{text:'Tent'}});});
   await switchTo('Map');await settle(h);

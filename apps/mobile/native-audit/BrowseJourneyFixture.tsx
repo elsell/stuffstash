@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Image } from 'react-native';
+import { Appearance, Image, View } from 'react-native';
+import { useAppearance } from '../src/ui/theme/AppearanceContext';
 import { useLocalSearchParams } from 'expo-router';
 import { SearchScreen } from '../src/ui/screens/SearchScreen';
 import { parseBrowseRouteParams } from '../src/ui/screens/BrowseRouteParams';
@@ -20,9 +21,18 @@ const assets: readonly AssetSummary[] = ['Garage', 'Kitchen', 'Camping tent', 'T
 /** Actual Browse screen and native header, with isolated read-only fixture data. */
 export function BrowseJourneyFixture() {
   const params = useLocalSearchParams();
+  const { preference, resolvedColorScheme, setPreference } = useAppearance();
+  const forcedDark = params.appearance === 'dark';
+  useEffect(() => {
+    if (forcedDark && preference !== 'dark') void setPreference('dark');
+  }, [forcedDark, preference, setPreference]);
   const mixedPhotos = params.photoMix === 'true';
   const dense = params.dense === 'true';
-  return <BrowseJourneyContent key={`${mixedPhotos}:${dense}`} params={params} mixedPhotos={mixedPhotos} dense={dense} />;
+  if (forcedDark && (preference !== 'dark' || resolvedColorScheme !== 'dark')) return null;
+  return <View style={{ flex: 1 }} collapsable={false}
+    testID={`audit-browse-appearance-${resolvedColorScheme}-${Appearance.getColorScheme()}`}>
+    <BrowseJourneyContent key={`${mixedPhotos}:${dense}`} params={params} mixedPhotos={mixedPhotos} dense={dense} />
+  </View>;
 }
 
 function BrowseJourneyContent({ params, mixedPhotos, dense }: {
