@@ -17,7 +17,10 @@ func (c *Client) Heartbeat(ctx context.Context, session string, report *printing
 	if err != nil {
 		return err
 	}
-	_, err = read[ports.Result[ports.PrintConnector]](c.sdk.PostPrintConsumerHeartbeatWithBody(ctx, nil, "application/json", body))
+	result, err := read[ports.Result[ports.PrintConnector]](c.sdk.PostPrintConsumerHeartbeatWithBody(ctx, nil, "application/json", body))
+	if err == nil {
+		c.recordReceipt(ctx, "heartbeat", ports.WorkerConnectorReceipt(result))
+	}
 	return consumerError(err)
 }
 func (c *Client) Printers(ctx context.Context) ([]printing.RegisteredPrinter, error) {
@@ -61,7 +64,10 @@ func (c *Client) Report(ctx context.Context, id string, readiness printing.Readi
 			reason = "unknown"
 		}
 	}
-	_, err := read[generated.SuccessEnvelopeStruct](c.sdk.PostPrintConsumerPrinterReports(ctx, nil, generated.PrinterReportInputBody{PrinterId: id, State: state, Reason: &reason}))
+	result, err := read[ports.Result[struct{}]](c.sdk.PostPrintConsumerPrinterReports(ctx, nil, generated.PrinterReportInputBody{PrinterId: id, State: state, Reason: &reason}))
+	if err == nil {
+		c.recordReceipt(ctx, "printer-report", ports.WorkerAcknowledgementReceipt(result))
+	}
 	return consumerError(err)
 }
 

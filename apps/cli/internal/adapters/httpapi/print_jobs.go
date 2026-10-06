@@ -30,6 +30,7 @@ func (c *Client) Claim(ctx context.Context, printerID string, control printing.A
 	if err != nil {
 		return nil, consumerError(err)
 	}
+	c.recordAttempt(ctx, "claim", result)
 	value := result.Data
 	if value.AttemptID == "" && value.JobID == "" {
 		return nil, nil
@@ -52,6 +53,7 @@ func (c *Client) Start(ctx context.Context, control printing.AttemptControl) (pr
 	if err != nil {
 		return printing.AttemptStatus{}, consumerError(err)
 	}
+	c.recordAttempt(ctx, "start", result)
 	return attemptStatus(result.Data)
 }
 func (c *Client) Renew(ctx context.Context, control printing.AttemptControl) (printing.AttemptStatus, error) {
@@ -63,6 +65,7 @@ func (c *Client) Renew(ctx context.Context, control printing.AttemptControl) (pr
 	if err != nil {
 		return printing.AttemptStatus{}, consumerError(err)
 	}
+	c.recordAttempt(ctx, "renewal", result)
 	return attemptStatus(result.Data)
 }
 func (c *Client) Outcome(ctx context.Context, control printing.AttemptControl, evidence printing.Evidence) error {
@@ -70,7 +73,10 @@ func (c *Client) Outcome(ctx context.Context, control printing.AttemptControl, e
 	if err != nil {
 		return err
 	}
-	_, err = read[ports.Result[workerAttempt]](c.sdk.PostPrintConsumerClaimsByAttemptIdOutcomeWithBody(ctx, control.AttemptID, nil, "application/json", body))
+	result, err := read[ports.Result[workerAttempt]](c.sdk.PostPrintConsumerClaimsByAttemptIdOutcomeWithBody(ctx, control.AttemptID, nil, "application/json", body))
+	if err == nil {
+		c.recordAttempt(ctx, "outcome", result)
+	}
 	return consumerError(err)
 }
 func (c *Client) Attempt(ctx context.Context, id string) (printing.AttemptStatus, error) {
@@ -89,7 +95,10 @@ func (c *Client) Reconcile(ctx context.Context, id string, revision uint64, evid
 	if err != nil {
 		return err
 	}
-	_, err = read[ports.Result[workerAttempt]](c.sdk.PostPrintConsumerAttemptsByAttemptIdReconciliationWithBody(ctx, id, nil, "application/json", body))
+	result, err := read[ports.Result[workerAttempt]](c.sdk.PostPrintConsumerAttemptsByAttemptIdReconciliationWithBody(ctx, id, nil, "application/json", body))
+	if err == nil {
+		c.recordAttempt(ctx, "reconciliation", result)
+	}
 	return consumerError(err)
 }
 func (c *Client) Unsettled(ctx context.Context, printerID string) ([]printing.AttemptStatus, error) {
@@ -163,6 +172,9 @@ func (c *Client) ConfirmIdle(ctx context.Context, id string, revision uint64) er
 	if err != nil {
 		return err
 	}
-	_, err = read[ports.Result[workerAttempt]](c.sdk.PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithBody(ctx, id, nil, "application/json", body))
+	result, err := read[ports.Result[workerAttempt]](c.sdk.PostPrintConsumerAttemptsByAttemptIdIdleConfirmationWithBody(ctx, id, nil, "application/json", body))
+	if err == nil {
+		c.recordAttempt(ctx, "idle-confirmation", result)
+	}
 	return consumerError(err)
 }

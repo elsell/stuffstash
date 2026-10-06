@@ -19,6 +19,20 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.ProtocolReceipt:
+		if err := o.details([][2]string{{"Protocol receipt", v.Operation}}); err != nil {
+			return err
+		}
+		return o.Result(v.Result)
+	case ports.WorkerAttemptReceipt:
+		return o.consumerAttempt(v.Data)
+	case ports.WorkerConnectorReceipt:
+		return o.Result(ports.Result[ports.PrintConnector](v))
+	case ports.WorkerAcknowledgementReceipt:
+		return o.details([][2]string{{"Acknowledgement", "Accepted by server"}})
+	case ports.VerifiedPrintArtifactReceipt:
+		return o.details([][2]string{{"Attempt", v.AttemptID}, {"SHA-256", v.SHA256}, {"Content type", v.ContentType}, {"Bytes", strconv.FormatInt(v.ByteLength, 10)}, {"Width", strconv.Itoa(v.WidthPixels)}, {"Height", strconv.Itoa(v.HeightPixels)}})
+
 	case ports.Result[ports.ArchiveJob]:
 		return o.archiveJob(v.Data)
 	case ports.Result[ports.ArchivePreview]:

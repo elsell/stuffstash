@@ -11,9 +11,15 @@ import (
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 )
 
-type Client struct{ sdk *generated.Client }
+type Client struct {
+	sdk      *generated.Client
+	receipts ports.ProtocolReceipts
+}
 
-type Options struct{ RequestID string }
+type Options struct {
+	RequestID string
+	Receipts  ports.ProtocolReceipts
+}
 
 func New(server, token string, httpClient *http.Client, options ...Options) (*Client, error) {
 	requestID := ""
@@ -39,7 +45,11 @@ func New(server, token string, httpClient *http.Client, options ...Options) (*Cl
 	if err != nil {
 		return nil, err
 	}
-	return &Client{sdk: sdk}, nil
+	var receipts ports.ProtocolReceipts
+	if len(options) > 0 {
+		receipts = options[0].Receipts
+	}
+	return &Client{sdk: sdk, receipts: receipts}, nil
 }
 func read[T any](response *http.Response, err error) (T, error) {
 	var zero T

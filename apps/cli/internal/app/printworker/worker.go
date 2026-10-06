@@ -17,6 +17,7 @@ type Config struct {
 	LeaseSafety, ObserveInterval, ReadinessTimeout time.Duration
 }
 type Worker struct {
+	Receipts ports.ProtocolReceipts
 	Jobs     ports.PrintJobs
 	Clock    ports.Clock
 	Waiter   ports.Waiter

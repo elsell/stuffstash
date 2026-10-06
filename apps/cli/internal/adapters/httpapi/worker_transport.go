@@ -13,6 +13,7 @@ import (
 // timestamp parsing and nullable-object semantics at this transport boundary.
 type workerAttempt struct {
 	ports.ConsumerAttempt
+	null           bool
 	LeaseExpiresAt time.Time            `json:"leaseExpiresAt"`
 	StartedAt      *time.Time           `json:"startedAt,omitempty"`
 	SettledAt      *time.Time           `json:"settledAt,omitempty"`
@@ -51,4 +52,22 @@ func workerRequest(value any) (io.Reader, error) {
 		return nil, ports.Failure("protocol", "Could not encode the print-worker request.")
 	}
 	return bytes.NewReader(body), nil
+}
+
+// Decode the safe public projection separately from operational timestamp fields.
+// Both use the same body; credentials and unknown fields are never retained.
+func (v *workerAttempt) UnmarshalJSON(body []byte) error {
+	type operational workerAttempt
+	var parsed operational
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return err
+	}
+	var safe ports.ConsumerAttempt
+	if err := json.Unmarshal(body, &safe); err != nil {
+		return err
+	}
+	*v = workerAttempt(parsed)
+	v.ConsumerAttempt = safe
+	v.null = bytes.Equal(bytes.TrimSpace(body), []byte("null"))
+	return nil
 }

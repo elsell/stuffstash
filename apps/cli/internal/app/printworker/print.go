@@ -24,6 +24,9 @@ func (w *Worker) print(ctx context.Context, journal ports.LockedPrintState, prin
 	if err = validateArtifact(claim, body, contentType); err != nil {
 		return err
 	}
+	if w.Receipts != nil {
+		w.Receipts.Record(ctx, ports.ProtocolReceipt{Operation: "artifact-verified", Result: ports.VerifiedPrintArtifactReceipt{AttemptID: claim.Control.AttemptID, SHA256: claim.Artifact.SHA256, ContentType: contentType, ByteLength: int64(len(body)), WidthPixels: claim.Artifact.Width, HeightPixels: claim.Artifact.Height}})
+	}
 	request, cancel, err = w.callContext(ctx, claim.LeaseExpiresAt)
 	if err != nil {
 		return err
