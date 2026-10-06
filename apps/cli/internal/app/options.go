@@ -109,6 +109,9 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if err := providerWriteFlags(o, flags); err != nil {
+		return o, err
+	}
 	if err := validateCustomizationFlags(flags, o); err != nil {
 		return o, err
 	}

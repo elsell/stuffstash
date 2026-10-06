@@ -981,3 +981,38 @@ stdout; do not combine it with `--json`.
 `inventories export --format json --output inventory.json` preserves inventory
 data and referenced names. `--format csv` creates a report, not a full backup.
 Neither export includes photo or file contents; use an archive for those.
+
+## Set up a provider
+
+Run `provider-profiles create` in a terminal to choose the provider and capability,
+name the profile, and configure optional fields. The CLI does not guess an
+endpoint or model. Use your provider's documented values.
+
+`provider-profiles update PROFILE_ID` changes only the fields you choose.
+`provider-profiles credential PROFILE_ID` asks for a credential purpose and reads
+keys or tokens without displaying them. Server ADC uses the server's Google
+credentials and does not ask for a secret.
+
+For scripts, each command accepts `--input FILE|- --yes`. A create request can be:
+
+```json
+{
+  "displayName": "Local inference",
+  "providerKind": "local_http",
+  "capability": "language_inference",
+  "endpointUrl": "https://model.example",
+  "modelName": "your-model",
+  "enable": false
+}
+```
+
+Update JSON can include displayName, endpointUrl, modelName, promptTemplate,
+runtimeOptions, and capabilityMetadata. Omitted fields stay unchanged. JSON
+values, including explicit null and false, are sent without rewriting them.
+Credential JSON uses purpose (`api_key`, `oauth_bearer`, or `server_adc`) and
+credential for keys or tokens. Keep credential files private, or pipe them through
+stdin. Never put credentials in command arguments or runtimeOptions.
+
+All three commands show the household and ask for confirmation; scripts use
+`--yes`. They do not test providers or retry changes automatically. Use
+`provider-profiles test PROFILE_ID` separately to check the configuration.

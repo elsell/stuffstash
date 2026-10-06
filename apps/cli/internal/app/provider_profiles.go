@@ -9,6 +9,9 @@ func isProviderProfileCommand(o Options) bool {
 	return len(o.Command) > 0 && o.Command[0] == "provider-profiles"
 }
 func validateProviderProfiles(o Options, scope bool) error {
+	if isProviderWrite(o) {
+		return validateProviderWrite(o, scope)
+	}
 	if !(len(o.Command) == 2 && o.Command[1] == "list") && !(len(o.Command) == 3 && (o.Command[1] == "show" || isProviderAction(o.Command[1])) && o.Command[2] != "") {
 		return ports.Failure("usage", "Use provider-profiles list, or show|enable|disable|archive|test PROFILE_ID.")
 	}
@@ -21,6 +24,9 @@ func validateProviderProfiles(o Options, scope bool) error {
 	return nil
 }
 func (r Runner) providerProfileCommand(ctx context.Context, o Options, token string) error {
+	if isProviderWrite(o) {
+		return r.writeProvider(ctx, o, token)
+	}
 	if r.ProviderProfilesAPI == nil {
 		return ports.Failure("configuration", "Provider profile commands are not available. Update the CLI and try again.")
 	}

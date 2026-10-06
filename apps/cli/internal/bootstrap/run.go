@@ -154,6 +154,9 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		WorkflowsAPI: func(server, token string) (ports.WorkflowsAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
+		ProviderWrites: func(server, token string) (ports.ProviderWrites, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		ProviderProfilesAPI: func(server, token string) (ports.ProviderProfilesAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},

@@ -1590,11 +1590,11 @@
         "domain": "provider profiles",
         "contractSha256": "662c799d538bfd34f137719fa7e6562af6cc343c47fdb628a0a730c4c1ab32d4"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Full generated SDK write transport implemented with exact JSON input, household scope, safe complete responses and no automatic retries. CLI input flow, confirmation, presentation and command-boundary checks remain."
-      ]
+      "commands": [
+        "provider-profiles update"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-restore": {
       "contract": {
@@ -2368,11 +2368,11 @@
         "domain": "provider profiles",
         "contractSha256": "cbffb3093f7b4424ded6af4884120f7f99057f65879be56a3b997f9db7d02d5a"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Full generated SDK write transport implemented with exact JSON input, household scope, safe complete responses and no automatic retries. CLI input flow, confirmation, presentation and command-boundary checks remain."
-      ]
+      "commands": [
+        "provider-profiles create"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-archive": {
       "contract": {
@@ -2498,11 +2498,11 @@
         "domain": "provider profiles",
         "contractSha256": "c623725e40290934d06fbb0a0b164f0ab3a249595af7988c36d9572dd116b1d9"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Full generated SDK write transport implemented with exact JSON input, household scope, safe complete responses and no automatic retries. CLI input flow, confirmation, presentation and command-boundary checks remain."
-      ]
+      "commands": [
+        "provider-profiles credential"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "put-tenants-by-tenant-id-voice-provider-configuration": {
       "contract": {

@@ -1009,3 +1009,25 @@ stdout. `attachments upload ASSET_ID --file PATH` uses direct storage and confir
 completion only after transfer succeeds. `--transfer api` streams base64 JSON to
 the API instead. No upload retries are automatic. A failed transfer never calls
 completion; uncertain completion directs users to inspect the asset attachments.
+
+### Guided provider profile setup
+
+`provider-profiles create`, `update PROFILE_ID`, and `credential PROFILE_ID`
+write household-scoped provider settings. All accept exact JSON through
+`--input FILE|-`, preserving omitted fields, explicit false/null, nested objects,
+and number precision. Reject unknown top-level fields without echoing their
+values. Credential values are accepted only through JSON files/stdin or a masked
+terminal prompt, never command-line arguments. All writes show the effective
+server and household and require confirmation (scripts use --yes).
+
+Interactive create selects the existing provider kind (Gemini, OpenAI compatible,
+or local HTTP) and capability (speech input, language inference, or speech output),
+then asks for a display name. An optional-fields menu configures endpoint, model,
+prompt template, runtime options, capability metadata, and initial enabled state.
+Do not invent endpoint, model, TLS, or credential defaults. Update uses the same
+field menu without changing provider kind or capability; only selected fields
+are submitted. Object fields accept JSON in a terminal text prompt, with files
+recommended for larger configurations. Credential setup chooses API key, OAuth
+bearer, or server ADC; ADC sends no credential, other purposes use masked input.
+The server remains authoritative for provider/capability compatibility. No command
+runs a provider test or retries a mutation automatically.

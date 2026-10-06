@@ -16,7 +16,7 @@ func acceptsBody(o Options) bool {
 	if isArchiveBody(o) || isImportSource(o) {
 		return true
 	}
-	return customizationBody(o) || isLabelRender(o) || isVoiceProviderUpdate(o) || isPairingApproval(o) || isTelemetry(o) || isPrinterAdministration(o) || isEvaluationWrite(o) || isWorkflowWrite(o) || isPrintSubmission(o) || isEvaluationCancellation(o) || isPrintResolution(o) || isImportCancel(o) || isInvitationTokenCommand(o) || isInvitationExpiration(o) || isGrantCreate(o) || isDeviceRegistration(o) || isPreferenceWrite(o) || isDirectoryWrite(o) || isTagWrite(o) || isAssetWrite(o) || isCheckoutWrite(o)
+	return isProviderWrite(o) || customizationBody(o) || isLabelRender(o) || isVoiceProviderUpdate(o) || isPairingApproval(o) || isTelemetry(o) || isPrinterAdministration(o) || isEvaluationWrite(o) || isWorkflowWrite(o) || isPrintSubmission(o) || isEvaluationCancellation(o) || isPrintResolution(o) || isImportCancel(o) || isInvitationTokenCommand(o) || isInvitationExpiration(o) || isGrantCreate(o) || isDeviceRegistration(o) || isPreferenceWrite(o) || isDirectoryWrite(o) || isTagWrite(o) || isAssetWrite(o) || isCheckoutWrite(o)
 }
 func validateTags(o Options, requireScope bool) error {
 	if len(o.Command) < 2 {

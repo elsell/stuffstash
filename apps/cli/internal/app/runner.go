@@ -12,9 +12,10 @@ import (
 )
 
 type Runner struct {
-	ArchiveAPI    func(string, string) (ports.ArchiveAPI, error)
-	ImportSources func(string, string) (ports.ImportSources, error)
-	SearchAPI     func(string, string) (ports.AssetSearch, error)
+	ProviderWrites func(string, string) (ports.ProviderWrites, error)
+	ArchiveAPI     func(string, string) (ports.ArchiveAPI, error)
+	ImportSources  func(string, string) (ports.ImportSources, error)
+	SearchAPI      func(string, string) (ports.AssetSearch, error)
 
 	BinaryFiles    ports.BinaryFiles
 	StreamFiles    ports.StreamFiles
