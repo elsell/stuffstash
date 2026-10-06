@@ -8,7 +8,7 @@ export function browseSurfaceHeaderOptions(surface: InventoryMapSurface,
   const choices = buildBrowseSurfaceOptions();
   const label = choices.find(choice => choice.value === surface)!.label;
   return {
-    headerTitle: () => null,
+    headerTitle: '',
     unstable_headerLeftItems: () => [{
       type: 'menu', label,
       accessibilityLabel: `${t('mobile.BrowseSurfaceControl.browseView')}: ${label}`,

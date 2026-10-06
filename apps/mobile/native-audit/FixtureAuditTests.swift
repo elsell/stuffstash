@@ -3006,18 +3006,20 @@ final class FixtureAuditTests: XCTestCase {
   }
 
   func testBrowseHeaderDarkAppearance() {
-    openSettingsControls()
-    let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose appearance")).firstMatch
-    XCTAssertTrue(choice.isHittable)
-    choice.tap()
-    app.buttons["Dark"].tap()
-    XCTAssertTrue(app.staticTexts["Appearance value: dark"].waitForExistence(timeout: 5))
-    app.buttons["Back to audit menu"].tap()
-    testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll()
+    verifyBrowseViewSwitcher(dark: true)
   }
 
   func testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll() {
-    guard openFixtureURL("audit-browse-journey?dense=true") else { return }
+    verifyBrowseViewSwitcher(dark: false)
+  }
+
+  private func verifyBrowseViewSwitcher(dark: Bool) {
+    let route = "audit-browse-journey?dense=true" + (dark ? "&appearance=dark" : "")
+    guard openFixtureURL(route) else { return }
+    if dark {
+      XCTAssertTrue(app.otherElements["audit-browse-appearance-dark-dark"].waitForExistence(timeout: 10),
+        "Both app and native appearance must resolve to dark before header evidence")
+    }
     XCTAssertTrue(browseViewMenu("List").waitForExistence(timeout: 10))
     let initialFrame = browseViewMenu("List").frame
     func verifyAnchor(_ surface: String) {
@@ -3025,6 +3027,8 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(control.isHittable)
       XCTAssertEqual(app.navigationBars.buttons.matching(identifier: "Browse view: \(surface)").count, 1)
       XCTAssertEqual(app.segmentedControls.count, 0)
+      XCTAssertFalse(app.navigationBars.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Brow")).firstMatch.exists,
+        "The view menu replaces the visual Browse title; no truncated fallback title may remain")
       XCTAssertEqual(control.frame.minX, initialFrame.minX, accuracy: 1)
       XCTAssertEqual(control.frame.minY, initialFrame.minY, accuracy: 1)
       XCTAssertGreaterThan(control.frame.width, 0)

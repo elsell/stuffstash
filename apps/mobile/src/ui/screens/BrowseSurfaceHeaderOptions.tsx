@@ -5,7 +5,7 @@ import type { InventoryMapSurface } from './InventoryMapPresentation';
 export function browseSurfaceHeaderOptions(surface: InventoryMapSurface,
   onChange: (surface: InventoryMapSurface) => void): HeaderOptions {
   return {
-    headerTitle: () => null,
+    headerTitle: '',
     headerLeft: () => <BrowseSurfaceControl selectedSurface={surface} onChangeSurface={onChange} />
   };
 }

@@ -19,7 +19,7 @@ it('settles header feedback, keeps current view handlers, and retires them on te
     change = choice.props.onPress;
     expect(choice.props.accessibilityState.selected).toBe(true);
     expect(h.byType('NativeSegmentedControl')).toBeUndefined();
-    expect((navigationOptions().at(-1) as { headerTitle: () => unknown }).headerTitle()).toBeNull();
+    expect((navigationOptions().at(-1) as { headerTitle: string }).headerTitle).toBe('');
     await h.render(render('current', 'map'));
     expect(h.byLabel('Browse view: Map')).toBeDefined();
     await h.run(change);
