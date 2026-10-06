@@ -22,13 +22,21 @@ Native Windows run
 [37350269032](https://github.com/elsell/stuffstash/actions/runs/37350269032)
 verified authenticated bootstrap through Credential Manager and the HTTP boundary.
 Browser sign-in and real console interaction remain unverified.
-Command-specific help and Bash/Zsh/Fish completion now share reviewed metadata;
-native completion checks passed without adding project dependencies. The operation inventory tracks 192
-contracts; 131 have their known workflow and field gaps closed. The remaining
-61 still need implementation or full contract verification. The remaining workflow defaults were approved October 6: temporary overrides
-do not change saved context; search defaults to the selected inventory. Implement
-customization, portability, media, sharing and provider workflows in parallel
-reviewed batches. Approval does not itself close their operation coverage gaps.
+Command-specific help and Bash/Zsh/Fish completion share reviewed metadata.
+The coverage manifest now closes the known workflow and field gaps for all 192
+REST operations. Safe pairing and printing receipts preserve server response
+metadata without exposing worker proofs or allowing human commands to invent
+hardware outcomes. Receipt output cannot block worker leases or recovery.
+
+The user approved the remaining workflow defaults on October 6. Customization,
+portability, media, sharing and provider commands now implement those choices.
+The cumulative 180-operation revision passed full CI and Windows contracts;
+subsequent worker/pairing additions passed the combined CLI suite, focused race
+checks and critic review. Final cumulative CI and release remain pending.
+Full ASD-STE100 Issue 9 vocabulary/grammar conformance is unverified: the official
+PDF is unavailable to this environment. Do not label plain-language review as
+formal conformance. Physical printer and real-console acceptance remain separate
+from fake-device and command-boundary evidence.
 
 
 ## Labels, Printers, And CLI: Released — October 4, 2026

@@ -1054,3 +1054,14 @@ registration result. If stdout cannot drain, suppress the competing final write
 and return success: missing display is not a reason to repeat registration or
 rotation. The stored credential remains authoritative. Error paths close the
 receipt queue without waiting indefinitely.
+
+
+## Complete operation inventory — October 6, 2026
+
+All 192 reviewed REST operations have named command workflows or real worker-owned
+workflows. The nine final consumer operations remain owned by `connectors print
+run`; registration and rotation also report activation heartbeat receipts.
+Artifact bytes are downloaded and validated by the worker rather than exposed as
+a manual bypass of print claims. Completion in the manifest means known operation,
+field and workflow gaps are closed; it does not certify language conformance,
+physical hardware behavior, or release delivery. See the roadmap for that evidence.

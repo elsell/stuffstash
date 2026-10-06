@@ -1159,10 +1159,8 @@
       "commands": [
         "connectors print run"
       ],
-      "status": "partial",
-      "gaps": [
-        "Authenticated bounded artifact download and verification exist in the worker. General file-output parity remains; proof and artifact verification must stay enforced."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "list-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-content": {
       "contract": {
@@ -1684,10 +1682,8 @@
       "commands": [
         "connectors print run"
       ],
-      "status": "partial",
-      "gaps": [
-        "Worker confirms physical idle during recovery. Full parity remains to be reconciled with physical safety; no manual idle assertion bypass."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-print-consumer-attempts-by-attempt-id-reconciliation": {
       "contract": {
@@ -1699,10 +1695,8 @@
       "commands": [
         "connectors print run"
       ],
-      "status": "partial",
-      "gaps": [
-        "Worker reconciles durable journal evidence. Full parity remains to be reconciled with safe recovery; no manual evidence bypass."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-print-consumer-claims": {
       "contract": {
@@ -1714,10 +1708,8 @@
       "commands": [
         "connectors print run"
       ],
-      "status": "partial",
-      "gaps": [
-        "Worker generates attempt, session and proof and retains execution/media/artifact inputs. Complete safe response inspection remains."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-print-consumer-claims-by-attempt-id-outcome": {
       "contract": {
@@ -1729,10 +1721,8 @@
       "commands": [
         "connectors print run"
       ],
-      "status": "partial",
-      "gaps": [
-        "Worker settles with physical evidence and scoped proofs. Complete safe response inspection remains; no manual settlement bypass."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-print-consumer-claims-by-attempt-id-renewal": {
       "contract": {
@@ -1744,10 +1734,8 @@
       "commands": [
         "connectors print run"
       ],
-      "status": "partial",
-      "gaps": [
-        "Worker renews leases using scoped proofs. Response handling is operational rather than complete inspection; preserve existing recovery safeguards."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-print-consumer-claims-by-attempt-id-start": {
       "contract": {
@@ -1759,10 +1747,8 @@
       "commands": [
         "connectors print run"
       ],
-      "status": "partial",
-      "gaps": [
-        "Worker acknowledges start before physical output and records durable intent. Response is reduced to recovery state; complete safe contract exposure remains."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-print-consumer-heartbeat": {
       "contract": {
@@ -1772,14 +1758,12 @@
         "contractSha256": "02e287a0486e8e017320014b2cae06b3cf444014578199b32ecd6c84cc7a6694"
       },
       "commands": [
+        "connectors print run",
         "connectors print register",
-        "connectors print rotate",
-        "connectors print run"
+        "connectors print rotate"
       ],
-      "status": "partial",
-      "gaps": [
-        "Registration activation and worker heartbeat send session plus full capabilities/software report. Connector response is discarded; complete safe inspection remains."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-print-consumer-printer-reports": {
       "contract": {
@@ -1791,10 +1775,8 @@
       "commands": [
         "connectors print run"
       ],
-      "status": "partial",
-      "gaps": [
-        "Worker sends physical readiness/reason reports. Existing workflow must be reconciled with complete request/response acceptance before marking parity complete."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants": {
       "contract": {
