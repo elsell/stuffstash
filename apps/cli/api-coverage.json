@@ -2004,11 +2004,11 @@
         "domain": "inventory access",
         "contractSha256": "6f978cf94d9e2edcf00450f346c1b07572a7f1de2d87c5809a0fe91161d89787"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "invitations create"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-accept": {
       "contract": {

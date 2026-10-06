@@ -8,12 +8,12 @@ import (
 
 func isInvitationCommand(o Options) bool { return len(o.Command) > 0 && o.Command[0] == "invitations" }
 func validateInvitations(o Options, scope bool) error {
-	valid := len(o.Command) == 2 && o.Command[1] == "list"
+	valid := isInvitationCreate(o) || len(o.Command) == 2 && o.Command[1] == "list"
 	if len(o.Command) == 3 && o.Command[2] != "" && (o.Command[1] == "preview" || o.Command[1] == "accept" || o.Command[1] == "expiration" || o.Command[1] == "show" || o.Command[1] == "cancel" || o.Command[1] == "delete") {
 		valid = true
 	}
 	if !valid {
-		return ports.Failure("usage", "Use invitations list, show ID, preview ID, accept ID, expiration ID, cancel ID, or delete ID.")
+		return ports.Failure("usage", "Use invitations create, list, show ID, preview ID, accept ID, expiration ID, cancel ID, or delete ID.")
 	}
 	if o.InvitationStatus != "" {
 		switch o.InvitationStatus {
@@ -31,6 +31,9 @@ func validateInvitations(o Options, scope bool) error {
 	return nil
 }
 func (r Runner) invitationCommand(ctx context.Context, o Options, token string) error {
+	if isInvitationCreate(o) {
+		return r.createInvitation(ctx, o, token)
+	}
 	if r.InvitationsAPI == nil {
 		return ports.Failure("configuration", "Invitation commands are not available. Update the CLI and try again.")
 	}

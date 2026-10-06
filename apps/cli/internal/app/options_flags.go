@@ -15,6 +15,8 @@ func optionFlags(o *Options) *flag.FlagSet {
 	flags.StringVar(&o.PrinterAdapterID, "adapter", "", "printer adapter ID from the catalog")
 	flags.StringVar(&o.PrinterPresetVersion, "preset-version", "", "printer media preset version")
 	flags.BoolVar(&o.AllInventories, "all-inventories", false, "search all inventories in the selected household")
+	flags.StringVar(&o.InvitationEmail, "email", "", "invitation email address")
+	flags.StringVar(&o.InvitationRole, "role", "", "invitation role: viewer or editor")
 	customizationFlags(flags, o)
 	expirationFlags(flags, o)
 	printSubmissionFlags(flags, o)

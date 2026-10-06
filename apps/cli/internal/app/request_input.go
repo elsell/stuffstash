@@ -36,6 +36,9 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 		}
 		o.RequestBody = body
 	} else {
+		if isInvitationCreate(o) {
+			return r.prepareInvitationCreate(ctx, o)
+		}
 		if isProviderWrite(o) {
 			return r.prepareProviderWrite(ctx, o)
 		}
@@ -155,6 +158,10 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 	}
 	if isInvitationTokenCommand(o) {
 		return o, validateInvitationToken(o.RequestBody)
+	}
+	if isInvitationCreate(o) {
+		_, err := decodeInvitationCreate(o.RequestBody)
+		return o, err
 	}
 	if isInvitationExpiration(o) {
 		_, err := invitationExpiration(o.RequestBody)

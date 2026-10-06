@@ -628,11 +628,17 @@ before you confirm.
 ### Manage invitations
 
 ```sh
+stuffstash invitations create --email friend@example.test --role viewer --yes
 stuffstash invitations list --status pending
 stuffstash invitations show INVITATION_ID
 stuffstash invitations cancel INVITATION_ID
 stuffstash invitations delete INVITATION_ID
 ```
+
+Creation shows a one-time invitation link. Save or share it before closing the
+terminal; list and show cannot retrieve it later. Use `--input FILE|-` with
+`email` and `relationship` for scripts, or omit missing fields on a terminal
+to choose them interactively.
 
 Cancel stops a pending invitation. Delete removes its stored metadata.
 Both ask for confirmation; scripts require `--yes`. These actions do not remove

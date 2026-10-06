@@ -138,6 +138,15 @@ func (o Output) Result(value any) error {
 			return err
 		}
 		return o.accessGrant(v.Data.Grant)
+	case ports.Result[ports.CreatedInvitation]:
+		if err := o.invitation(v.Data.Invitation); err != nil {
+			return err
+		}
+		if err := o.details([][2]string{{"Invitation link", v.Data.InviteURL}}); err != nil {
+			return err
+		}
+		_, err := fmt.Fprintln(o.Stdout, "Save or share this link now. It is shown only when the invitation is created.")
+		return err
 	case ports.Result[ports.Invitation]:
 		return o.invitation(v.Data)
 	case ports.Result[[]ports.Invitation]:

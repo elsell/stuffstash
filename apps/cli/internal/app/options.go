@@ -10,7 +10,8 @@ import (
 )
 
 type Options struct {
-	AllInventories bool
+	InvitationEmail, InvitationRole string
+	AllInventories                  bool
 
 	FilePath, Transfer, Variant string
 
@@ -109,6 +110,12 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if (o.InvitationEmail != "" || o.InvitationRole != "") && !isInvitationCreate(o) {
+		return o, ports.Failure("usage", "Use --email and --role only with invitations create.")
+	}
+	if o.InputPath != "" && (o.InvitationEmail != "" || o.InvitationRole != "") {
+		return o, ports.Failure("usage", "Use either --input or invitation field options, not both.")
+	}
 	if err := providerWriteFlags(o, flags); err != nil {
 		return o, err
 	}
