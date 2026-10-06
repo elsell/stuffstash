@@ -1173,11 +1173,11 @@
         "domain": "attachments",
         "contractSha256": "d5c305330e1bf0da3765921577cd4f6722b1c2d38564b88cc954cbaca6775e8f"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Binary streaming SDK transport implemented with redirect refusal. CLI destination choice, safe file output and named workflow remain."
-      ]
+      "commands": [
+        "attachments download"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "list-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-thumbnail": {
       "contract": {
@@ -1186,11 +1186,11 @@
         "domain": "attachments",
         "contractSha256": "0b0a81bd542146c725208265c83aeba7a861998751cfd558798707d080a2d939"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Binary streaming SDK transport implemented with redirect refusal. CLI destination choice, safe file output and named workflow remain."
-      ]
+      "commands": [
+        "attachments thumbnail"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "list-tenants-by-tenant-id-inventories-by-inventory-id-export": {
       "contract": {
@@ -1199,11 +1199,11 @@
         "domain": "exports",
         "contractSha256": "58de2218f80dfbf9c9f8ee715de06e534f18c0dd0cf0dee3681b7a554203750b"
       },
-      "commands": [],
-      "status": "pending",
-      "gaps": [
-        "Review the current contract and implement the complete command workflow."
-      ]
+      "commands": [
+        "inventories export"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "list-tenants-by-tenant-id-inventories-by-inventory-id-label-renders-by-render-id-content": {
       "contract": {
@@ -1213,12 +1213,10 @@
         "contractSha256": "663468fb7e85018d3cefa7affcc229116f968c0a6b3c3aad7a8e015561cd0287"
       },
       "commands": [
-        "labels render"
+        "labels download"
       ],
-      "status": "partial",
-      "gaps": [
-        "Existing render workflow downloads bounded validated content to private non-overwriting files. Independent render-ID download command awaits shared destination decision; full content contract verification remains."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id": {
       "contract": {
@@ -2058,11 +2056,11 @@
         "domain": "attachments",
         "contractSha256": "52e9242fe71b2c1ada91a10eb2ff369603ce51d54771ca092e166700746970a0"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "SDK create/direct-upload initiation/completion transport implemented. File inputs, storage transfer, recovery and named CLI workflows remain."
-      ]
+      "commands": [
+        "attachments upload"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-direct-uploads": {
       "contract": {
@@ -2071,11 +2069,11 @@
         "domain": "attachments",
         "contractSha256": "d6038762193e37ae9fba77645bfe926a8e681c61475a0c5b037c612ae7e45f9c"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "SDK create/direct-upload initiation/completion transport implemented. File inputs, storage transfer, recovery and named CLI workflows remain."
-      ]
+      "commands": [
+        "attachments upload"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-direct-uploads-by-upload-id-complete": {
       "contract": {

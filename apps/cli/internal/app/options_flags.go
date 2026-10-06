@@ -9,6 +9,9 @@ import (
 func optionFlags(o *Options) *flag.FlagSet {
 	flags := flag.NewFlagSet("stuffstash", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
+	flags.StringVar(&o.FilePath, "file", "", "binary input path, or - for supported stdin uploads")
+	flags.StringVar(&o.Transfer, "transfer", "direct", "attachment transfer: direct or api")
+	flags.StringVar(&o.Variant, "variant", "", "thumbnail size: small, medium, or large")
 	flags.StringVar(&o.PrinterAdapterID, "adapter", "", "printer adapter ID from the catalog")
 	flags.StringVar(&o.PrinterPresetVersion, "preset-version", "", "printer media preset version")
 	flags.BoolVar(&o.AllInventories, "all-inventories", false, "search all inventories in the selected household")

@@ -10,7 +10,10 @@ import (
 )
 
 type Options struct {
-	AllInventories                                                        bool
+	AllInventories bool
+
+	FilePath, Transfer, Variant string
+
 	PrinterAdapterID, PrinterPresetVersion                                string
 	ExpectedMediaFingerprint, PreviewFingerprint                          string
 	InvitationStatus                                                      string
@@ -107,6 +110,10 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	}
 	if o.AllInventories {
 		return o, ports.Failure("usage", "Use --all-inventories only with assets search.")
+	}
+
+	if err := binaryFlags(flags, o); err != nil {
+		return o, err
 	}
 	if err := labelRenderFlags(o, flags); err != nil {
 		return o, err

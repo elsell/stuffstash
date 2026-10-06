@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/cli/internal/adapters/binaryfiles"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/inputfiles"
@@ -16,6 +17,7 @@ import (
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/oidcauth"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/presentation"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/terminal"
+	"github.com/stuffstash/stuff-stash/cli/internal/adapters/uploadtransfer"
 	"github.com/stuffstash/stuff-stash/cli/internal/app"
 	"github.com/stuffstash/stuff-stash/cli/internal/app/contexts"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
@@ -198,8 +200,15 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		ScopeAPI: func(server, token string) (ports.ScopeCatalog, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
-		Contexts:   contextStore,
-		LabelFiles: labelfiles.Files{},
+		Contexts:       contextStore,
+		LabelFiles:     labelfiles.Files{},
+		BinaryFiles:    binaryfiles.Files{Stdout: stdout},
+		StreamFiles:    inputfiles.Files{Stdin: os.Stdin, StdinTerminal: term.IsTerminal(int(os.Stdin.Fd()))},
+		UploadFiles:    inputfiles.Files{},
+		UploadTransfer: uploadtransfer.Client{HTTP: &http.Client{Timeout: client.Timeout}, AllowLoopbackHTTP: getenv("STUFF_STASH_CLI_ALLOW_LOOPBACK_HTTP") == "true"},
+		BinaryAPI: func(server, token string) (ports.BinaryAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		LabelsAPI: func(server, token string) (ports.LabelsAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},

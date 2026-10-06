@@ -12,7 +12,14 @@ import (
 )
 
 type Runner struct {
-	SearchAPI                  func(string, string) (ports.AssetSearch, error)
+	SearchAPI func(string, string) (ports.AssetSearch, error)
+
+	BinaryFiles    ports.BinaryFiles
+	StreamFiles    ports.StreamFiles
+	UploadFiles    ports.UploadFiles
+	UploadTransfer ports.UploadTransfer
+	BinaryAPI      func(string, string) (ports.BinaryAPI, error)
+
 	PairingApprovalAPI         func(string, string) (ports.PairingApprovalAPI, error)
 	PrinterAdministrationAPI   func(string, string) (ports.PrinterAdministrationAPI, error)
 	TelemetryAPI               func(string, string) (ports.TelemetryAPI, error)
@@ -210,6 +217,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	if isNotificationCommand(o) {
 		return r.notificationsCommand(ctx, o, session.IDToken)
 	}
+	if isBinaryCommand(o) {
+		return r.binaryCommand(ctx, o, session.IDToken)
+	}
 	if isAttachmentCommand(o) {
 		return r.attachmentsCommand(ctx, o, session.IDToken)
 	}
@@ -327,6 +337,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 func validateCommand(o Options) error      { return validateCommandOptions(o, true) }
 func validateCommandShape(o Options) error { return validateCommandOptions(o, false) }
 func validateCommandOptions(o Options, requireScope bool) error {
+	if isBinaryCommand(o) {
+		return validateBinary(o, requireScope)
+	}
 	if isCheckoutWrite(o) && (o.ConnectorName != "" || o.Title != "" || o.Kind != "" || o.Parent != "") {
 		return ports.Failure("usage", "Use --details or --input for checkout notes. Remove unrelated asset field options.")
 	}

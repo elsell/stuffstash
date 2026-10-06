@@ -894,3 +894,23 @@ Add `--json` to include the complete render response under `render`, alongside
 the saved path, format and checksum. This includes fingerprints, expiry and
 response metadata. PNG/PDF validation, scoped downloads and private file
 publication still apply. Existing files are never overwritten.
+
+## Upload and download files
+
+Upload a JPEG, PNG, WebP, or PDF attachment with
+`stuffstash attachments upload ASSET_ID --file receipt.pdf`. The CLI sends the
+file directly to storage and completes the attachment after the transfer. Use
+`--transfer api` when direct storage is unavailable. Uploads do not retry
+automatically. After an uncertain result, inspect `attachments list ASSET_ID`
+before starting another upload.
+
+Download an attachment with `attachments download ASSET_ID ATTACHMENT_ID
+--output receipt.pdf`, or use `attachments thumbnail` with optional
+`--variant small|medium|large`. `labels download RENDER_ID --output label.pdf`
+downloads an existing label render. Existing files are never replaced; a failed
+download does not publish a partial file. `--output -` writes only file bytes to
+stdout; do not combine it with `--json`.
+
+`inventories export --format json --output inventory.json` preserves inventory
+data and referenced names. `--format csv` creates a report, not a full backup.
+Neither export includes photo or file contents; use an archive for those.

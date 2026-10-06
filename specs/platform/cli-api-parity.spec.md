@@ -987,3 +987,23 @@ than silently ignoring them. Scope selection uses the existing authorized keyboa
 picker; scripts missing required scope fail without prompts. Exercise saved scope,
 explicit overrides, household-wide search, all filter forwarding and safe denial
 at the command HTTP boundary. No search request may write remembered defaults.
+
+### Shared binary file publication
+
+Downloads stream to the explicit `--output PATH|-`. File output uses a private
+temporary file and publishes without replacing any existing path; failed or
+truncated transfers do not publish a destination. Standard output contains only
+bytes, never a JSON envelope or success message. Callers close response streams.
+The shared BinaryFiles port serves attachment, archive, label and export flows.
+
+### Approved media transfer commands
+
+`attachments download|thumbnail ASSET_ID ATTACHMENT_ID --output PATH|-` streams
+content; thumbnail accepts --variant small|medium|large. `labels download
+RENDER_ID --output PATH|-` and `inventories export --format json|csv --output
+PATH|-` use the same private publication. JSON exports preserve relational data;
+CSV is a convenience report, not a complete backup. --json cannot wrap binary
+stdout. `attachments upload ASSET_ID --file PATH` uses direct storage and confirms
+completion only after transfer succeeds. `--transfer api` streams base64 JSON to
+the API instead. No upload retries are automatic. A failed transfer never calls
+completion; uncertain completion directs users to inspect the asset attachments.
