@@ -1031,3 +1031,26 @@ recommended for larger configurations. Credential setup chooses API key, OAuth
 bearer, or server ADC; ADC sends no credential, other purposes use masked input.
 The server remains authoritative for provider/capability compatibility. No command
 runs a provider test or retries a mutation automatically.
+
+### Safe pairing protocol receipts
+
+The owning `connectors print register` and `rotate` workflows expose safe,
+structured receipts for pairing initiation, status polling, and credential
+exchange. Preserve response schema and metadata and every non-secret response
+field: pairing ID, approval code and verification URL, state and expiry, and
+connector registration scope, credential expiry and activation deadline. Explicit
+project-owned receipt models exclude poll tokens, credentials, key material and
+signatures; never serialize internal pairing or registration structures directly.
+A receipt is evidence of the completed server interaction, not proof that later
+local credential storage or activation succeeded. Output failure must not turn a
+successful protocol mutation into a retry. Existing key-bound proof, private
+credential storage, deadline checks, rotation isolation and activation ordering
+remain unchanged. These endpoints are owned workflow steps, not arbitrary manual
+proof/token commands.
+
+Pairing receipt display is best effort. After credentials are stored and activation
+succeeds, drain pending receipts with a bounded deadline before writing the final
+registration result. If stdout cannot drain, suppress the competing final write
+and return success: missing display is not a reason to repeat registration or
+rotation. The stored credential remains authoritative. Error paths close the
+receipt queue without waiting indefinitely.

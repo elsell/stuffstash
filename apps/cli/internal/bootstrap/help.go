@@ -177,6 +177,8 @@ func commandHelpOptions(c commandHelp) []string {
 	}
 	if c.Path != "connectors print run" {
 		names = append(names, "json", "no-input", "color")
+	} else {
+		names = append(names, "json")
 	}
 	return append(names, "help")
 }

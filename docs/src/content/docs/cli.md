@@ -1022,3 +1022,14 @@ stdin. Never put credentials in command arguments or runtimeOptions.
 All three commands show the household and ask for confirmation; scripts use
 `--yes`. They do not test providers or retry changes automatically. Use
 `provider-profiles test PROFILE_ID` separately to check the configuration.
+
+Pairing registration and rotation emit safe protocol receipts as they progress.
+With `--json`, each receipt is a JSON line containing its operation name and
+response envelope. Receipts include pairing expiry and the new credential's
+activation deadline, but never polling tokens, machine credentials, signatures,
+or private keys. A credential-exchange receipt confirms the server step; the
+final registration result confirms local storage and activation also succeeded.
+
+Receipt display is best effort. If output stalls after successful registration,
+the CLI keeps the stored credential and returns success without a final display
+message. Do not repeat registration or rotation because receipt output is missing.

@@ -19,6 +19,12 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.PairingStartedReceipt:
+		return o.pairingStartedReceipt(v)
+	case ports.PairingStatusReceipt:
+		return o.pairingStatusReceipt(v)
+	case ports.PairingCredentialReceipt:
+		return o.pairingCredentialReceipt(v)
 	case ports.ProtocolReceipt:
 		if err := o.details([][2]string{{"Protocol receipt", v.Operation}}); err != nil {
 			return err

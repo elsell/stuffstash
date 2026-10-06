@@ -85,6 +85,8 @@ func TestGeneratedPairingClientPreservesKeyAndMachineCredentialBoundary(t *testi
 	if err != nil {
 		t.Fatal(err)
 	}
+	receipts := &pairingReceiptRecorder{}
+	api.Receipts = receipts
 	key, _ := (pairingkeys.Keys{}).NewKey()
 	challenge, err := api.Start(ctx, ports.PairingRequest{Name: "Garage", PublicKey: key.PublicKey()})
 	if err != nil {
@@ -111,8 +113,14 @@ func TestGeneratedPairingClientPreservesKeyAndMachineCredentialBoundary(t *testi
 	if _, err := api.Exchange(ctx, challenge, key.Sign(challenge.ID, challenge.PollToken)); err == nil {
 		t.Fatal("consumed proof exchanged again")
 	}
+	if len(receipts.receipts) != 3 {
+		t.Fatalf("failed exchanges produced receipts: %d", len(receipts.receipts))
+	}
 	if err := api.Activate(ctx, registration, "session"); err != nil || !state.active {
 		t.Fatalf("activation: %v", err)
+	}
+	if len(receipts.receipts) != 4 || receipts.receipts[3].Operation != "heartbeat" {
+		t.Fatal("activation heartbeat receipt missing")
 	}
 }
 func TestPairingClientDoesNotForwardSecretAcrossRedirect(t *testing.T) {

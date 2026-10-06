@@ -51,3 +51,7 @@ Existing CLI tests must continue to pass after sharing flag registration.
 The catalog includes evaluation-run cancellation from its preceding stack change:
 `evaluation runs cancel RUN_ID`, expectedVersion JSON input, and required scripted
 confirmation. It does not add that operation or alter its behavior.
+
+Print worker help must list `--json` and explain safe newline-delimited receipt
+output. The long-running worker has no single final JSON result. Receipt delivery
+is best effort and does not change mutation success or retry behavior.

@@ -13,13 +13,15 @@ import (
 
 // ConnectorRegistrar owns key-bound pairing and durable activation ordering.
 type ConnectorRegistrar struct {
-	API          ports.PairingAPI
-	Credentials  ports.ConnectorCredentials
-	Keys         ports.PairingKeys
-	Clock        ports.Clock
-	Waiter       ports.Waiter
-	Output       ports.Output
-	PollInterval time.Duration
+	Receipts            ports.ReceiptDrain
+	ReceiptDrainTimeout time.Duration
+	API                 ports.PairingAPI
+	Credentials         ports.ConnectorCredentials
+	Keys                ports.PairingKeys
+	Clock               ports.Clock
+	Waiter              ports.Waiter
+	Output              ports.Output
+	PollInterval        time.Duration
 }
 
 func (r ConnectorRegistrar) Register(ctx context.Context, server, name string, candidates []ports.PairingCandidate) error {
@@ -29,6 +31,9 @@ func (r ConnectorRegistrar) Register(ctx context.Context, server, name string, c
 func (r ConnectorRegistrar) pair(ctx context.Context, server, name string, candidates []ports.PairingCandidate, target *ports.ConnectorRegistration) error {
 	if strings.TrimSpace(name) == "" || (target == nil && len(candidates) == 0) {
 		return ports.Failure("usage", "registration needs --name and a discovered printer")
+	}
+	if r.Receipts != nil && r.ReceiptDrainTimeout <= 0 {
+		return ports.Failure("configuration", "Receipt drain timeout must be positive. Check the CLI configuration.")
 	}
 	if r.PollInterval <= 0 {
 		return ports.Failure("configuration", "pairing poll interval must be positive")
@@ -91,6 +96,14 @@ func (r ConnectorRegistrar) pair(ctx context.Context, server, name string, candi
 			}
 			if err := r.API.Activate(ctx, registration, challenge.ID); err != nil {
 				return ports.Failure("activation", "registration saved; run connectors print run --connector "+registration.ConnectorID+" to retry activation")
+			}
+			if r.Receipts != nil {
+				drainCtx, cancel := context.WithTimeout(context.Background(), r.ReceiptDrainTimeout)
+				drained := r.Receipts.Close(drainCtx)
+				cancel()
+				if !drained {
+					return nil
+				}
 			}
 			return r.Output.Result(struct {
 				ConnectorID string `json:"connectorId"`

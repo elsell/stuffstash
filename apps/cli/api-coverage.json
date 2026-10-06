@@ -298,10 +298,8 @@
         "connectors print register",
         "connectors print rotate"
       ],
-      "status": "partial",
-      "gaps": [
-        "Authenticated pairing polling exists; response ID, expiry and envelope are reduced to state. Complete inspection remains."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "get-print-consumer-attempts": {
       "contract": {
@@ -1633,10 +1631,8 @@
         "connectors print register",
         "connectors print rotate"
       ],
-      "status": "partial",
-      "gaps": [
-        "Registration and rotation send name, public key, rotation and discovered device candidates. Complete request/output parity remains to be reconciled without exposing secrets."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-print-connector-pairings-by-pairing-id-approval": {
       "contract": {
@@ -1662,10 +1658,8 @@
         "connectors print register",
         "connectors print rotate"
       ],
-      "status": "partial",
-      "gaps": [
-        "Signed exchange, private persistence and strict activation deadline checks exist. Full safe response-envelope inspection remains; credentials and proofs must remain private."
-      ]
+      "status": "implemented",
+      "gaps": []
     },
     "post-print-connector-pairings-by-pairing-id-review": {
       "contract": {

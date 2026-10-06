@@ -103,3 +103,35 @@ func TestRegisterConnectorPersistsBeforeActivationAndNeverOutputsSecrets(t *test
 		})
 	}
 }
+
+type pairingReceiptDrain struct {
+	fixture *pairingFixture
+	drained bool
+	called  bool
+}
+
+func (d *pairingReceiptDrain) Close(ctx context.Context) bool {
+	d.called = true
+	if d.fixture.saved == nil || !d.fixture.active {
+		panic("drained before durable activation")
+	}
+	if _, ok := ctx.Deadline(); !ok {
+		panic("unbounded drain")
+	}
+	return d.drained
+}
+func TestPairingReceiptDrainBeforeFinalOutput(t *testing.T) {
+	for _, drained := range []bool{true, false} {
+		f := &pairingFixture{now: time.Now()}
+		drain := &pairingReceiptDrain{fixture: f, drained: drained}
+		var output, notice bytes.Buffer
+		runner := app.ConnectorRegistrar{API: f, Credentials: f, Keys: pairingkeys.Keys{}, Clock: f, Waiter: f, Output: presentation.Output{Stdout: &output, Stderr: &notice, JSON: true}, PollInterval: time.Second, Receipts: drain, ReceiptDrainTimeout: time.Second}
+		err := runner.Register(context.Background(), "https://stash.example", "Garage", []ports.PairingCandidate{{ID: "device", Name: "Brother", AdapterID: "brother-ql800", DeviceID: "physical"}})
+		if err != nil || !drain.called || f.saved == nil || !f.active {
+			t.Fatalf("registration not durably completed: %v", err)
+		}
+		if (output.Len() > 0) != drained {
+			t.Fatalf("final output competed with stalled receipt: %q", output.String())
+		}
+	}
+}
