@@ -692,3 +692,5 @@ PR #411 also removes the subsequently disclosed grpc-go vulnerable version; its
 GitHub alert is closed. Native acceptance and current release rollout remain
 separate evidence from dependency checks.
 Per-alert evidence lives in `docs/reports/2026-10-04-dependency-security/`.
+
+CLI live acceptance on 2026-10-06 verified released v0.43.0 browser PKCE and device-code sign-in against isolated Dex, logout credential/scope clearing, Linux terminal scope selection and saved non-interactive JSON reuse, and cross-instance archive restore with retained tag names, fresh IDs, identical PNG/PDF bytes and private downloaded files. Evidence: `/tmp/stuffstash-cli-live-20261006/result.json`. Household-wide archive discovery exposed an API/CLI scope mismatch; current fix preserves creator isolation and rechecks source access before pagination. Remaining manual acceptance includes macOS/Windows launchers and consoles, physical printer behavior, and full simplified technical English review.

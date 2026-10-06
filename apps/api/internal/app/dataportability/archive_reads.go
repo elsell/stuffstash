@@ -5,6 +5,7 @@ import (
 
 	"github.com/stuffstash/stuff-stash/internal/domain/archivejob"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -56,6 +57,7 @@ func (s ArchiveService) Download(ctx context.Context, a ArchiveAccess, id string
 	if err != nil {
 		return nil, 0, err
 	}
+	a.InventoryID = inventory.InventoryID(job.SourceInventoryID)
 	if err = s.auditArchiveRead(ctx, a, id, "download"); err != nil {
 		stream.Close()
 		return nil, 0, err

@@ -296,9 +296,10 @@ the same cancellation lifecycle. Blob deletion continues through its existing qu
 that header. Both return a job resource. `archive-jobs/{jobId}` supports GET and
 DELETE (cancel); POST subresources `retry` and `approve` retry or approve the new
 inventory name. GET subresources `preview` and `content` return validated preview
-counts/remappings or stream a ready ZIP download. Export job reads/actions carry
-inventoryId as a query parameter; restore jobs use household scope without it.
-Scope must exactly match the job. Listings are cursor-paginated and principal-filtered.
+counts/remappings or stream a ready ZIP download. Export job reads/actions may carry
+inventoryId as an exact source filter; omitting it resolves the creator-owned job
+within the household and checks its current source permission. Restore jobs use
+household scope without it. Listings are cursor-paginated and principal-filtered.
 
 All boundaries authenticate first and require current authorization. Responses use
 standard envelopes and safe fields only: no artifact keys, checksums, lease tokens,
@@ -477,3 +478,7 @@ of them. The fixture uses synthetic data and a loopback transfer peer, so even a
 runtime pass does not establish authenticated production restore, physical file
 providers or assistive acceptance. Allow one bounded hosted build attempt before
 deciding from its terminal evidence; do not start unchanged retries.
+
+### Household-wide archive discovery
+
+Omitting inventoryId lists the requesting principal’s archive jobs across the household, including exports and restores. Explicit inventoryId remains an exact export scope. All job reads and actions resolve the stored source inventory and recheck current view permission; restores require current household inventory-creation permission. Unauthorized jobs are omitted before pagination, and inaccessible individual jobs return not found. Tenant and creator isolation remain mandatory.

@@ -11,10 +11,15 @@ import (
 var ErrArchiveJobConflict = errors.New("archive job changed or request conflicts")
 var ErrArchiveJobScope = errors.New("archive job scope is required")
 
-type ArchiveJobScope struct{ TenantID, SourceInventoryID, PrincipalID string }
+type ArchiveJobScope struct {
+	TenantID, SourceInventoryID, PrincipalID string
+	// AllInventories is only valid for creator-scoped household discovery.
+	AllInventories bool
+}
 
 // Restore jobs have an empty SourceInventoryID and are tenant-owned. Export
-// reads require the exact source inventory as well as the tenant.
+// reads require exact source inventory unless creator-scoped household discovery
+// is explicit. Application services must authorize each discovered job.
 type ArchiveJobRepository interface {
 	CreateArchiveJob(context.Context, archivejob.Record) (archivejob.Record, error)
 	ArchiveJobByID(context.Context, ArchiveJobScope, string) (archivejob.Record, bool, error)

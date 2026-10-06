@@ -94,10 +94,14 @@ func runArchiveJobHTTPBoundary(t *testing.T, coverage *executedScenarioCoverage,
 		t.Fatal("missing job")
 	}
 	item := path + "/" + job.Data.ID
+	all := performRequest(server, http.MethodGet, path, "Bearer dev:owner", nil)
+	if all.Code != 200 || !strings.Contains(all.Body.String(), job.Data.ID) {
+		t.Fatalf("household listing missing export: %d %s", all.Code, all.Body.String())
+	}
 	for _, test := range []struct {
 		path, token string
 		code        int
-	}{{item + "?inventoryId=inventory", "Bearer dev:viewer", 404}, {item, "Bearer dev:owner", 404}, {"/tenants/elsewhere/archive-jobs/" + job.Data.ID + "?inventoryId=inventory", "Bearer dev:owner", 404}, {item + "?inventoryId=inventory", "", 401}} {
+	}{{item + "?inventoryId=inventory", "Bearer dev:viewer", 404}, {item, "Bearer dev:owner", 200}, {"/tenants/elsewhere/archive-jobs/" + job.Data.ID + "?inventoryId=inventory", "Bearer dev:owner", 404}, {item + "?inventoryId=inventory", "", 401}} {
 		r := performRequest(server, http.MethodGet, test.path, test.token, nil)
 		if r.Code != test.code {
 			t.Fatalf("private job %d want%d: %s", r.Code, test.code, r.Body.String())
@@ -147,7 +151,7 @@ func runArchiveJobHTTPBoundary(t *testing.T, coverage *executedScenarioCoverage,
 		t.Fatal("missing export")
 	}
 	must(worker.RunJob(ctx, exportJob))
-	download := performRequest(server, http.MethodGet, downloadPath, "Bearer dev:owner", nil)
+	download := performRequest(server, http.MethodGet, item+"/content", "Bearer dev:owner", nil)
 	if download.Code != 200 || download.Header().Get("Content-Type") != "application/zip" || download.Body.Len() <= 512 {
 		t.Fatalf("download: %d %s", download.Code, download.Body.String())
 	}
@@ -331,6 +335,43 @@ func runArchiveJobHTTPBoundary(t *testing.T, coverage *executedScenarioCoverage,
 	if retried.Code != 200 || !strings.Contains(retried.Body.String(), "queued") {
 		t.Fatalf("retry: %d %s", retried.Code, retried.Body.String())
 	}
+	// Household discovery remains creator-private and rechecks revoked source access.
+	must(store.SaveInventory(ctx, inventory.Inventory{ID: "other", TenantID: "home", Name: "Other", LifecycleState: inventory.LifecycleStateActive}))
+	must(authorizer.GrantInventoryViewer(ctx, viewer, "home", "other"))
+	must(authorizer.GrantInventoryViewer(ctx, viewer, "home", "inventory"))
+	otherExport := performRequestWithHeaders(server, http.MethodPost, path, "Bearer dev:viewer", map[string]string{"Idempotency-Key": "other-export"}, map[string]any{"inventoryId": "other", "photos": false, "otherFiles": false})
+	if otherExport.Code != 201 {
+		t.Fatal(otherExport.Body.String())
+	}
+	var otherJob struct {
+		Data struct {
+			ID string `json:"id"`
+		}
+	}
+	must(json.Unmarshal(otherExport.Body.Bytes(), &otherJob))
+	ownExport := performRequestWithHeaders(server, http.MethodPost, path, "Bearer dev:viewer", map[string]string{"Idempotency-Key": "viewer-discovery-export"}, body)
+	if ownExport.Code != 201 {
+		t.Fatal(ownExport.Body.String())
+	}
+	var viewerJob struct {
+		Data struct {
+			ID string `json:"id"`
+		}
+	}
+	must(json.Unmarshal(ownExport.Body.Bytes(), &viewerJob))
+	visible := performRequest(server, http.MethodGet, path, "Bearer dev:viewer", nil)
+	if visible.Code != 200 || !strings.Contains(visible.Body.String(), viewerJob.Data.ID) || strings.Contains(visible.Body.String(), job.Data.ID) {
+		t.Fatalf("creator isolation: %s", visible.Body.String())
+	}
+	must(authorizer.RevokeInventoryViewer(ctx, viewer, "home", "inventory"))
+	hidden := performRequest(server, http.MethodGet, path+"?limit=1", "Bearer dev:viewer", nil)
+	if hidden.Code != 200 || strings.Contains(hidden.Body.String(), viewerJob.Data.ID) || !strings.Contains(hidden.Body.String(), otherJob.Data.ID) {
+		t.Fatalf("revoked export leaked: %s", hidden.Body.String())
+	}
+	deniedJob := performRequest(server, http.MethodGet, path+"/"+viewerJob.Data.ID, "Bearer dev:viewer", nil)
+	if deniedJob.Code != 404 {
+		t.Fatalf("revoked job: %d", deniedJob.Code)
+	}
 	readAudit.fail = true
 	for _, path := range []string{downloadPath, item + "?inventoryId=inventory", restorePath + "/preview", "/tenants/home/archive-jobs?inventoryId=inventory"} {
 		response := performRequest(server, http.MethodGet, path, "Bearer dev:owner", nil)
@@ -343,7 +384,7 @@ func runArchiveJobHTTPBoundary(t *testing.T, coverage *executedScenarioCoverage,
 	must(err)
 	foundReadAudit := false
 	for _, record := range history {
-		if record.Action.String() == "archive_job.viewed" {
+		if record.Action.String() == "archive_job.viewed" && record.Metadata["operation"] == "download" {
 			foundReadAudit = true
 		}
 	}
