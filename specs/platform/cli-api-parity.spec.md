@@ -22,6 +22,39 @@ arbitrary method/path request command and call that parity. A low-level escape
 hatch does not close an operation's acceptance. Connector-only endpoints retain
 the connector credential boundary; human login never supplies their authority.
 
+## Workflow defaults approved October 6, 2026
+
+These decisions supersede the pending-design notes below. Completion still
+requires real commands and verification; approval alone closes no operation gap.
+
+- Asset search uses the selected inventory by default. `--all-inventories`
+  explicitly searches the selected household without an inventory filter.
+- Explicit one-command scope flags and environment overrides do not change saved
+  defaults. Only accepted interactive scope selections or explicit context
+  management change remembered selections.
+- Custom types and field definitions use `--scope household|inventory`. Missing
+  scope on an interactive terminal opens a keyboard picker. Non-interactive
+  callers must specify scope; never infer household scope from a missing ID.
+- Binary downloads require `--output PATH|-`. A path is created privately without
+  replacing an existing file. `-` streams bytes to stdout; diagnostics and
+  progress stay on stderr. Never use server filenames as local destinations.
+- Attachment uploads use direct-storage upload by default. Validate server upload
+  instructions and keep API credentials separate from storage requests. Provide
+  explicit access to the supported alternate API upload contract for parity.
+- Invitation creation presents its one-time link on successful creation. Explain
+  that it must be saved/shared now; ordinary list/show never invents or exposes it.
+- Import and provider setup support guided terminal input and exact JSON input
+  for scripts. Credentials use protected file/stdin or masked input, never argv.
+  Do not silently enable private networks, insecure TLS or permissive defaults.
+- Archive job lists default to the whole selected household. An explicit
+  inventory filter narrows them; the remembered inventory does not silently do so.
+  Archive creation selects an inventory; uploads are ZIP streams, not extraction.
+- Worker IDs, claim tokens, proofs and hardware evidence remain controlled by
+  the worker workflow. Expose non-secret inspection/results; do not introduce
+  human commands that manufacture successful hardware delivery evidence. Map
+  worker operations to their real owning commands and retain field/workflow gaps
+  until exercised through that boundary.
+
 ## Command organization and coverage
 
 - Preserve existing `assets`, `inventories`, `labels`, `printers`, `print-jobs`,
