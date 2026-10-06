@@ -16,6 +16,7 @@ import { getAppearancePreferenceController } from '../bootstrap/mobileCompositio
 import { AppServicesProvider } from '../ui/navigation/AppServicesContext';
 import { InventoryInvitationLinkProvider } from '../ui/navigation/InventoryInvitationLinkContext';
 import { AppearanceProvider, useAppearance } from '../ui/theme/AppearanceContext';
+import { NavigationTheme } from '../ui/theme/NavigationTheme';
 import {
   createAssetNativeSheetOptions
 } from '../ui/screens/AssetNativeSheetOptions';
@@ -47,7 +48,7 @@ function ThemedApp() {
   }
 
   return (
-    <LabelLinkProvider><InventoryInvitationLinkProvider>
+    <NavigationTheme><LabelLinkProvider><InventoryInvitationLinkProvider>
     <AppServicesProvider><HomeReturnTaskProvider><AssetTagSelectionTaskProvider><AddDestinationTaskProvider>
       <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack
@@ -104,6 +105,6 @@ function ThemedApp() {
       <VoiceConversationReturn />
       <AppKeyboardAccessory />
     </AddDestinationTaskProvider></AssetTagSelectionTaskProvider></HomeReturnTaskProvider></AppServicesProvider>
-    </InventoryInvitationLinkProvider></LabelLinkProvider>
+    </InventoryInvitationLinkProvider></LabelLinkProvider></NavigationTheme>
   );
 }

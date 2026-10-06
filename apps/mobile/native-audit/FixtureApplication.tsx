@@ -56,6 +56,7 @@ import { Stack, useRouter, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AppearancePreferenceController, type AppearancePreference } from '../src/application/settings/AppearancePreference';
 import { AppearanceProvider, useAppearance } from '../src/ui/theme/AppearanceContext';
+import { NavigationTheme } from '../src/ui/theme/NavigationTheme';
 import { AppKeyboardProvider } from '../src/ui/components/AppKeyboardProvider';
 import { AppKeyboardAccessory } from '../src/ui/components/AppKeyboardAccessory';
 import { AppFeedbackProvider, useAppFeedback } from '../src/ui/feedback/AppFeedback';
@@ -102,7 +103,7 @@ function FixtureRoot({ keyboardProviderEnabled }: { readonly keyboardProviderEna
     });
   });
   const body = <AppearanceProvider controller={controller}>
-    <AppearanceWriteCount.Provider value={appearanceWrites}><VoiceProposalFixtureProvider><FixtureNavigation keyboardProviderEnabled={keyboardProviderEnabled} /></VoiceProposalFixtureProvider></AppearanceWriteCount.Provider>
+    <NavigationTheme><AppearanceWriteCount.Provider value={appearanceWrites}><VoiceProposalFixtureProvider><FixtureNavigation keyboardProviderEnabled={keyboardProviderEnabled} /></VoiceProposalFixtureProvider></AppearanceWriteCount.Provider></NavigationTheme>
   </AppearanceProvider>;
   return keyboardProviderEnabled ? <AppKeyboardProvider>{body}</AppKeyboardProvider>
     : <View testID="audit-keyboard-provider-omitted" collapsable={false} style={{ flex: 1 }}>{body}</View>;

@@ -699,3 +699,43 @@ fails to activate the well. Retain SwiftUI ColorPicker, direct system presentati
 optional empty selection, disabled guards and parent draft updates. Native center
 activation and open/close/clear acceptance remain required; a trailing-coordinate
 probe alone does not establish accessible activation.
+
+## Navigation appearance follows the app (2026-10-05)
+
+The hydrated root navigation tree must receive a React Navigation theme derived
+from the resolved app appearance and current semantic palette. Preserve the
+native library's light/dark theme defaults and fonts while mapping primary,
+background, card, text, border and notification colors to the app palette. In
+particular, the theme's `dark` flag must match the resolved appearance: the pinned
+native stack explicitly sets UIKit navigation-bar appearance from this flag.
+React Native appearance synchronization remains necessary for other native views.
+
+Verify that descendants receive matching light/dark state and palette colors,
+including appearance changes and increased contrast. Keep this correction separate
+from Browse action grouping, placement and tint choices. Native iPhone/iPad glass
+contrast remains a visual acceptance check; theme propagation tests do not certify
+its final rendering.
+
+## Compact Browse view menu (2026-10-05)
+
+Replace the navigation-title List/Map segmented control with a compact leading
+native selection menu. Its visible label identifies the current view; its
+accessibility label includes both Browse view and the current selection. List and
+Map remain available in the menu, with a native checkmark on the selected view.
+The menu stays in the same leading header position through view changes and
+scrolling. Do not reserve a separate title or content row for the selector.
+
+This is an in-place, mutually exclusive presentation choice, not a new screen.
+Use UIKit's native navigation menu on iOS and the existing native action-menu
+adapter on Android. Retain normal native touch targets. The trailing Add, Scan,
+Filter (in List) and Search actions retain their current behavior and visibility;
+active filters remain blue with a count. The view menu and trailing actions must
+not overlap on supported compact phone widths. Search text, applied refinements,
+map clearance and permission-sensitive actions must survive view changes.
+
+Header ownership is separate: the view component owns leading selection and
+empty visual title; the action component owns only trailing actions and the
+Browse route title. Menu callbacks must use the latest committed handler and
+become inert on teardown. Verify that contract with focused tests and retain
+native frame/hit-target checks in the Browse journey. Native screenshot review
+must cover appearance and spacing; source tests alone do not certify rendering.

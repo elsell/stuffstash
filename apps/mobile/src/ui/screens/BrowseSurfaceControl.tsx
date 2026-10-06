@@ -1,32 +1,20 @@
 import { t } from '../../presentation/localization';
-import { StyleSheet, View } from 'react-native';
-import { NativeSegmentedControl } from '../components/NativeSegmentedControl';
-import type { MobileColorPalette } from '../theme/tokens';
+import { NativeActionMenu } from '../components/NativeActionMenu';
 import { buildBrowseSurfaceOptions, type InventoryMapSurface } from './InventoryMapPresentation';
 
-export function BrowseSurfaceControl({
-  palette,
-  selectedSurface,
-  onChangeSurface
-}: {
-  readonly palette: MobileColorPalette;
+/** Android's native menu and the non-native test renderer share these choices. */
+export function BrowseSurfaceControl({ selectedSurface, onChangeSurface }: {
   readonly selectedSurface: InventoryMapSurface;
   readonly onChangeSurface: (surface: InventoryMapSurface) => void;
 }) {
-  return (
-    <View accessibilityLabel={t('mobile.BrowseSurfaceControl.browseView')} accessibilityRole="tablist" style={styles.container}>
-      <NativeSegmentedControl
-        colors={palette}
-        onChange={(surface) => onChangeSurface(surface as InventoryMapSurface)}
-        segments={buildBrowseSurfaceOptions()}
-        style={styles.control}
-        value={selectedSurface}
-      />
-    </View>
-  );
+  const choices = buildBrowseSurfaceOptions();
+  const label = choices.find(choice => choice.value === selectedSurface)!.label;
+  return <NativeActionMenu
+    accessibilityLabel={`${t('mobile.BrowseSurfaceControl.browseView')}: ${label}`}
+    trigger={{ kind: 'label', label }}
+    groups={[{ id: 'browse-view', items: choices.map(choice => ({
+      id: choice.value, label: choice.label, isSelected: choice.value === selectedSurface,
+      onPress: () => onChangeSurface(choice.value)
+    })) }]}
+  />;
 }
-
-const styles = StyleSheet.create({
-  container: { minWidth: 142 },
-  control: { width: 142 }
-});
