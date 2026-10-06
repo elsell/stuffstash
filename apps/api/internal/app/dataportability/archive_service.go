@@ -76,33 +76,24 @@ func (s ArchiveService) authorize(ctx context.Context, a ArchiveAccess) error {
 	return s.deps.Authorizer.CheckTenant(ctx, a.Principal, ports.TenantPermissionCreateInventory, a.TenantID)
 }
 func (s ArchiveService) Job(ctx context.Context, a ArchiveAccess, id string) (archivejob.Record, error) {
-	if err := s.authorize(ctx, a); err != nil {
+	if err := s.authorizeDiscovery(ctx, a); err != nil {
 		return archivejob.Record{}, err
 	}
-	job, found, err := s.deps.Jobs.ArchiveJobByID(ctx, a.scope(), id)
+	job, found, err := s.deps.Jobs.ArchiveJobByID(ctx, a.discoveryScope(), id)
 	if err != nil {
 		return archivejob.Record{}, err
 	}
 	if !found || job.PrincipalID != a.Principal.ID.String() {
 		return archivejob.Record{}, apperrors.ErrNotFound
 	}
+	if err = s.authorizeJob(ctx, a, job); err != nil {
+		return archivejob.Record{}, err
+	}
+	a.InventoryID = inventory.InventoryID(job.SourceInventoryID)
 	if err = s.auditArchiveRead(ctx, a, id, "get"); err != nil {
 		return archivejob.Record{}, err
 	}
 	return job, nil
-}
-func (s ArchiveService) List(ctx context.Context, a ArchiveAccess, after string, limit int) ([]archivejob.Record, error) {
-	if err := s.authorize(ctx, a); err != nil {
-		return nil, err
-	}
-	jobs, err := s.deps.Jobs.ListArchiveJobs(ctx, a.scope(), after, limit)
-	if err != nil {
-		return nil, err
-	}
-	if err = s.auditArchiveRead(ctx, a, "", "list"); err != nil {
-		return nil, err
-	}
-	return jobs, nil
 }
 func (s ArchiveService) CreateExport(ctx context.Context, a ArchiveAccess, key string, photos, files bool) (archivejob.Record, error) {
 	if a.InventoryID == "" {

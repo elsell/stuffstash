@@ -53,7 +53,7 @@ func (s Store) CreateArchiveJob(ctx context.Context, r archivejob.Record) (archi
 	return previous, nil
 }
 func (s Store) ArchiveJobByID(ctx context.Context, scope ports.ArchiveJobScope, id string) (archivejob.Record, bool, error) {
-	if scope.TenantID == "" || id == "" {
+	if scope.TenantID == "" || id == "" || (scope.AllInventories && scope.PrincipalID == "") {
 		return archivejob.Record{}, false, ports.ErrArchiveJobScope
 	}
 	var m archiveJobModel
@@ -68,7 +68,7 @@ func (s Store) ArchiveJobByID(ctx context.Context, scope ports.ArchiveJobScope, 
 	return r, err == nil, err
 }
 func (s Store) ListArchiveJobs(ctx context.Context, scope ports.ArchiveJobScope, after string, limit int) ([]archivejob.Record, error) {
-	if scope.TenantID == "" || limit <= 0 || limit > 200 {
+	if scope.TenantID == "" || (scope.AllInventories && scope.PrincipalID == "") || limit <= 0 || limit > 200 {
 		return nil, ports.ErrArchiveJobScope
 	}
 	q := archiveJobQuery(s.db.WithContext(ctx), scope)
@@ -120,7 +120,11 @@ func archiveJobQuery(db *gorm.DB, scope ports.ArchiveJobScope) *gorm.DB {
 	if scope.PrincipalID != "" {
 		db = db.Where(clause.Eq{Column: "principal_id", Value: scope.PrincipalID})
 	}
-	return db.Where(clause.Eq{Column: "tenant_id", Value: scope.TenantID}).Where(clause.Eq{Column: "source_inventory_id", Value: scope.SourceInventoryID})
+	db = db.Where(clause.Eq{Column: "tenant_id", Value: scope.TenantID})
+	if !scope.AllInventories {
+		db = db.Where(clause.Eq{Column: "source_inventory_id", Value: scope.SourceInventoryID})
+	}
+	return db
 }
 func readArchiveJobs(q *gorm.DB) ([]archivejob.Record, error) {
 	var models []archiveJobModel
