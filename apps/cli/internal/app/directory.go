@@ -15,6 +15,9 @@ func requiresInventory(o Options) bool {
 	if isSearch(o) && o.AllInventories {
 		return false
 	}
+	if isCustomization(o) {
+		return o.DefinitionLevel == "inventory"
+	}
 	if isProviderProfileCommand(o) || isEvaluationCommand(o) || isWorkflowCommand(o) || isVoiceProviderCommand(o) {
 		return false
 	}

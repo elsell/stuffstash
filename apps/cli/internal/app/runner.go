@@ -20,6 +20,8 @@ type Runner struct {
 	UploadTransfer ports.UploadTransfer
 	BinaryAPI      func(string, string) (ports.BinaryAPI, error)
 
+	AssetTypesAPI              func(string, string) (ports.AssetTypesAPI, error)
+	FieldDefinitionsAPI        func(string, string) (ports.FieldDefinitionsAPI, error)
 	PairingApprovalAPI         func(string, string) (ports.PairingApprovalAPI, error)
 	PrinterAdministrationAPI   func(string, string) (ports.PrinterAdministrationAPI, error)
 	TelemetryAPI               func(string, string) (ports.TelemetryAPI, error)
@@ -114,7 +116,11 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	if err := validateCommandShape(o); err != nil {
 		return err
 	}
-	o, err := r.prepareInput(ctx, o)
+	o, err := r.chooseDefinitionLevel(ctx, o)
+	if err != nil {
+		return err
+	}
+	o, err = r.prepareInput(ctx, o)
 	if err != nil {
 		return err
 	}
@@ -183,6 +189,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	}
 	if isVoiceProviderCommand(o) {
 		return r.voiceProviderCommand(ctx, o, session.IDToken)
+	}
+	if isCustomization(o) {
+		return r.customizationCommand(ctx, o, session.IDToken)
 	}
 	if isWorkflowCommand(o) {
 		return r.workflowCommand(ctx, o, session.IDToken)
@@ -372,6 +381,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if isVoiceProviderCommand(o) {
 		return validateVoiceProvider(o, requireScope)
+	}
+	if isCustomization(o) {
+		return validateCustomization(o, requireScope)
 	}
 	if isWorkflowCommand(o) {
 		return validateWorkflows(o, requireScope)

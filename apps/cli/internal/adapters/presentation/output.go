@@ -21,6 +21,24 @@ func (o Output) Result(value any) error {
 	switch v := value.(type) {
 	case ports.Result[[]ports.SearchResult]:
 		return o.searchResults(v)
+	case ports.Result[ports.AssetType]:
+		return o.assetType(v.Data)
+	case ports.Result[ports.FieldDefinition]:
+		return o.fieldDefinition(v.Data)
+	case ports.Result[[]ports.AssetType]:
+		for _, item := range v.Data {
+			if err := o.assetType(item); err != nil {
+				return err
+			}
+		}
+		return o.pagination(v.Pagination)
+	case ports.Result[[]ports.FieldDefinition]:
+		for _, item := range v.Data {
+			if err := o.fieldDefinition(item); err != nil {
+				return err
+			}
+		}
+		return o.pagination(v.Pagination)
 	case ports.Result[ports.PairingReview]:
 		return o.pairingReview(v.Data)
 	case ports.Result[ports.ApprovedPairing]:

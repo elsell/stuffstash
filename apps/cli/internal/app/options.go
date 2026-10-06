@@ -14,6 +14,10 @@ type Options struct {
 
 	FilePath, Transfer, Variant string
 
+	DefinitionLevel, FieldType string
+	TypeDescription            *string
+	TypeExpiration             *bool
+
 	PrinterAdapterID, PrinterPresetVersion                                string
 	ExpectedMediaFingerprint, PreviewFingerprint                          string
 	InvitationStatus                                                      string
@@ -105,6 +109,9 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if err := validateCustomizationFlags(flags, o); err != nil {
+		return o, err
+	}
 	if isSearch(o) {
 		return o, validateSearchFlags(o, flags)
 	}
@@ -247,7 +254,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "Use --details only with checkout, return, or return-details.")
 	}
 	if o.Lifecycle != "" || o.Sort != "" {
-		if len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "list" {
+		if !(len(o.Command) == 2 && o.Command[0] == "assets" && o.Command[1] == "list") && !(customizationList(o) && o.Sort == "") {
 			return o, ports.Failure("usage", "Use --lifecycle and --sort only with assets list.")
 		}
 		if o.Lifecycle != "" && o.Lifecycle != "active" && o.Lifecycle != "archived" && o.Lifecycle != "all" {
@@ -258,7 +265,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		}
 	}
 
-	if (o.TagColor != nil || o.TagKey != nil) && !isTagCommand(o) {
+	if (o.TagColor != nil || o.TagKey != nil && !isCustomization(o)) && !isTagCommand(o) {
 		return o, ports.Failure("usage", "Use --tag-color and --key only with tag commands.")
 	}
 	if o.InputPath != "" && !acceptsBody(o) {

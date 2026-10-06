@@ -20,6 +20,7 @@ const (
 	helpHousehold
 	helpInventory
 	helpConnector
+	helpCustomization
 )
 
 type commandHelp struct {
@@ -31,7 +32,7 @@ type commandHelp struct {
 
 func helpCatalog() []commandHelp {
 	var commands []commandHelp
-	for _, group := range [][]commandHelp{localHelp(), inventoryHelp(), accessHelp(), administrationHelp(), printingHelp()} {
+	for _, group := range [][]commandHelp{localHelp(), inventoryHelp(), accessHelp(), administrationHelp(), printingHelp(), customizationHelp()} {
 		commands = append(commands, group...)
 	}
 	return commands
@@ -137,10 +138,10 @@ func commandHelpText(c commandHelp) string {
 	if c.Confirm {
 		confirmation = "Review and confirm in an interactive terminal, or supply --yes. JSON, redirected or --no-input runs require --yes."
 	}
-	for _,section:=range []struct{title,text string}{{"Input",input},{"Output",output},{"Confirmation",confirmation}} {
- fmt.Fprintf(&b,"\n%s:\n",section.title)
- helpParagraph(&b,section.text)
- }
+	for _, section := range []struct{ title, text string }{{"Input", input}, {"Output", output}, {"Confirmation", confirmation}} {
+		fmt.Fprintf(&b, "\n%s:\n", section.title)
+		helpParagraph(&b, section.text)
+	}
 	example := c.Example
 	if example == "" {
 		example = c.Path
@@ -160,15 +161,15 @@ func commandHelpOptions(c commandHelp) []string {
 		names = append(names, "yes")
 	}
 	switch c.Scope {
-	case helpServer, helpAccount, helpHousehold, helpInventory:
+	case helpServer, helpAccount, helpHousehold, helpInventory, helpCustomization:
 		names = append(names, "server", "context")
 	case helpConnector:
 		names = append(names, "server")
 	}
-	if c.Scope == helpHousehold || c.Scope == helpInventory {
+	if c.Scope == helpHousehold || c.Scope == helpInventory || c.Scope == helpCustomization {
 		names = append(names, "tenant")
 	}
-	if c.Scope == helpInventory {
+	if c.Scope == helpInventory || c.Scope == helpCustomization {
 		names = append(names, "inventory")
 	}
 	if c.Scope != helpLocal && c.Scope != helpConnector {
@@ -191,6 +192,8 @@ func scopeHelp(scope helpScope) string {
 		return "Signed-in household from --tenant, STUFF_STASH_CLI_TENANT or the same account's saved context. Interactive terminals can choose a household. Scripts must supply or remember it."
 	case helpInventory:
 		return "Signed-in household and inventory from --tenant/--inventory, STUFF_STASH_CLI_TENANT/STUFF_STASH_CLI_INVENTORY or the same account's saved context. Interactive terminals can choose missing scope; scripts must supply or remember it."
+	case helpCustomization:
+		return "Choose --scope household or inventory explicitly in scripts; terminals offer a keyboard picker. Household and inventory IDs come from --tenant/--inventory, environment or the saved context. Inventory scope requires both IDs; household scope requires only the household. Inventory lists include inherited household definitions."
 	case helpConnector:
 		return "Server and connector credentials, independent of user sign-in or saved resource scope. Use the OS credential store, or explicitly set STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE on headless hosts."
 	default:
@@ -228,12 +231,17 @@ func helpOptionValue(name string) string {
 
 // Help remains readable in redirected output without inspecting terminal state.
 func helpParagraph(b *strings.Builder, text string) {
- const width=88
- line:="  "
- for _,word:=range strings.Fields(text) {
- if len(line)>2 && len(line)+1+len(word)>width {b.WriteString(line+"\n");line="  "}
- if len(line)>2 {line+=" "}
- line+=word
- }
- b.WriteString(line+"\n")
+	const width = 88
+	line := "  "
+	for _, word := range strings.Fields(text) {
+		if len(line) > 2 && len(line)+1+len(word) > width {
+			b.WriteString(line + "\n")
+			line = "  "
+		}
+		if len(line) > 2 {
+			line += " "
+		}
+		line += word
+	}
+	b.WriteString(line + "\n")
 }

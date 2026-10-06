@@ -34,11 +34,11 @@
         "domain": "custom asset types",
         "contractSha256": "6fb491daad9857dad57475c6a9a05cbd52c7438ae6de973c218c6f05b2c6877f"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types delete"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "delete-tenants-by-tenant-id-custom-field-definitions-by-definition-id": {
       "contract": {
@@ -47,11 +47,11 @@
         "domain": "custom field definitions",
         "contractSha256": "9a785541f7b49022274e81c9e15483713472a0772e2e30471d9e81295a544cf8"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions delete"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id": {
       "contract": {
@@ -125,11 +125,11 @@
         "domain": "custom asset types",
         "contractSha256": "e8b18cea4ce42fc21fafe1dcad7c25d3e4a5c93209fbc036dd1b208098e8c1c2"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types delete"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id": {
       "contract": {
@@ -138,11 +138,11 @@
         "domain": "custom field definitions",
         "contractSha256": "581f3a0e4516574ef0c9ba38034d117e67f43e629c1334c7ced254362b21ecee"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions delete"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "delete-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id": {
       "contract": {
@@ -560,11 +560,11 @@
         "domain": "custom asset types",
         "contractSha256": "c2451e43ea6bf816e8b7784562110fdfdf9c47c7cc7536d7cdb290a531f19490"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id": {
       "contract": {
@@ -573,11 +573,11 @@
         "domain": "custom asset types",
         "contractSha256": "48b3ba7b139b6cd73e73c10ffea3cd5c6c85f5da509184ec6d95a5424e1a0d79"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-custom-field-definitions": {
       "contract": {
@@ -586,11 +586,11 @@
         "domain": "custom field definitions",
         "contractSha256": "7537de87a47121f9fb2acfccff70b4a9b9fa5a88db506f6f5b0f3c0ea43f9f6b"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-custom-field-definitions-by-definition-id": {
       "contract": {
@@ -599,11 +599,11 @@
         "domain": "custom field definitions",
         "contractSha256": "e157f34d4d465fee0f7d93984deccfbbffb4b0aeda3ce227785a8e140412c685"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories": {
       "contract": {
@@ -820,11 +820,11 @@
         "domain": "custom asset types",
         "contractSha256": "5ffed40aec11af8acb61c1699ff4aad78cf668d2d1b59f1ebb3b5c8f5c025a97"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id": {
       "contract": {
@@ -833,11 +833,11 @@
         "domain": "custom asset types",
         "contractSha256": "d86ae9cd8ae52ef8f622119fe54d620064756dd5c365fc0ae6395f8e55ede508"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions": {
       "contract": {
@@ -846,11 +846,11 @@
         "domain": "custom field definitions",
         "contractSha256": "6d28b4d7592506b589b9792d13ac1664a91618b267bfeafba8ae9153e6ff0766"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id": {
       "contract": {
@@ -859,11 +859,11 @@
         "domain": "custom field definitions",
         "contractSha256": "1c4e011a040df92d1d9db4781ffaa26854f3a0b3a8fe2136f6dd712ebb018da4"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-inventories-by-inventory-id-expiration-assets": {
       "contract": {
@@ -1251,11 +1251,11 @@
         "domain": "custom asset types",
         "contractSha256": "68c78792ca13938974ee153e3615f28fd61eb789025d0e94878f3770de3a14fe"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types update"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id-archive": {
       "contract": {
@@ -1264,11 +1264,11 @@
         "domain": "custom asset types",
         "contractSha256": "9249f77cefa7d895a991dd4c866f1ca5c187b789dd663c8e15ad753ba112f456"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types archive"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id-restore": {
       "contract": {
@@ -1277,11 +1277,11 @@
         "domain": "custom asset types",
         "contractSha256": "cec3d49da7be5b560f5824ff7cd35595bf25a0293154efc024548cf63576d5a2"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types restore"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id": {
       "contract": {
@@ -1290,11 +1290,11 @@
         "domain": "custom field definitions",
         "contractSha256": "1e77599298b1adc8a2f496e04b8ee4eee7ecd5e33bf1794539982f82f17d25fa"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions update"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id-archive": {
       "contract": {
@@ -1303,11 +1303,11 @@
         "domain": "custom field definitions",
         "contractSha256": "91da16aefc0d010367906ad1930e8ccbc3a67166dc508b40409caa37774e860d"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions archive"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id-restore": {
       "contract": {
@@ -1316,11 +1316,11 @@
         "domain": "custom field definitions",
         "contractSha256": "2e34c2676c0eacbf59e753f08dbc09f5680db840bf8f73c6482bc7e0b1f57ed8"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions restore"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id": {
       "contract": {
@@ -1460,11 +1460,11 @@
         "domain": "custom asset types",
         "contractSha256": "8c3591e6973b5479a6c28b8c1c79f7fcf2acb58d37bc0dc8d324071c427e897b"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types update"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id-archive": {
       "contract": {
@@ -1473,11 +1473,11 @@
         "domain": "custom asset types",
         "contractSha256": "21cf1c7d928afb2b8cd166e2e4ab890c34f08997fddc0c80605c2c0c959bd30c"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types archive"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id-restore": {
       "contract": {
@@ -1486,11 +1486,11 @@
         "domain": "custom asset types",
         "contractSha256": "91f58e0ca11d68d580b24c3fc4318e45b19f27d6a753123a52e77ceb2f3d85b6"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types restore"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id": {
       "contract": {
@@ -1499,11 +1499,11 @@
         "domain": "custom field definitions",
         "contractSha256": "5e960384c818b667551c984fe7d2762c2b8a608b515561fab53f8e738600f10c"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions update"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-archive": {
       "contract": {
@@ -1512,11 +1512,11 @@
         "domain": "custom field definitions",
         "contractSha256": "78e93c132161572c30d22b3f642740cd14d5f16c8dec08251dc45868b716ef63"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions archive"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-restore": {
       "contract": {
@@ -1525,11 +1525,11 @@
         "domain": "custom field definitions",
         "contractSha256": "606c3607de30ac67eb55f12adb99f745b1dcd2d6dd07046b298e192b92d62318"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions restore"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "patch-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id": {
       "contract": {
@@ -1952,11 +1952,11 @@
         "domain": "custom asset types",
         "contractSha256": "f2caa8255e5e42ba647bb7a6f0a9a2cd1dbcecaab2462a0e75dcbd74ab2ffbf7"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types create"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-custom-field-definitions": {
       "contract": {
@@ -1965,11 +1965,11 @@
         "domain": "custom field definitions",
         "contractSha256": "7312f173d43ed8c45582853dc87ef78a7f7693a78e01dda8f7b52c9ad3059c8d"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions create"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories": {
       "contract": {
@@ -2160,11 +2160,11 @@
         "domain": "custom asset types",
         "contractSha256": "701bed61fad503e7760b25a618e902ebbcf5ef3926129b82f31460052068b742"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, input guidance, confirmations and presentation remain."
-      ]
+      "commands": [
+        "asset-types create"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions": {
       "contract": {
@@ -2173,11 +2173,11 @@
         "domain": "custom field definitions",
         "contractSha256": "f03fa3c42ed4a7b27c9aaf7c303256ac2b8255b3d9b525d183d626fc39945996"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK transport implemented. CLI scope selection, named commands, guided field inputs, confirmations and presentation remain."
-      ]
+      "commands": [
+        "field-definitions create"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id-cancel": {
       "contract": {

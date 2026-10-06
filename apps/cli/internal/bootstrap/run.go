@@ -139,6 +139,12 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		VoiceProviderAPI: func(server, token string) (ports.VoiceProviderAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},
+		AssetTypesAPI: func(server, token string) (ports.AssetTypesAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
+		FieldDefinitionsAPI: func(server, token string) (ports.FieldDefinitionsAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		WorkflowsAPI: func(server, token string) (ports.WorkflowsAPI, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},

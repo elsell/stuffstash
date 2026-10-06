@@ -499,8 +499,9 @@ must fail before any request, never fall back to household scope. List supports
 lifecycle and pagination. Writes preserve the complete supplied JSON object;
 results retain every type field, optional inventory ID, metadata and schema.
 Delete succeeds only on the documented 204 response. Use generated SDK routes
-for every operation. CLI scope syntax remains a pending user decision; these
-transport operations alone do not count as completed CLI workflows.
+for every operation. The approved `asset-types` commands expose all seven operations with explicit
+`--scope household|inventory`, keyboard guidance, exact JSON, confirmations, and
+complete output, as specified in `cli-customization.spec.md`.
 
 ### Custom field definition transport
 
@@ -510,8 +511,9 @@ scope validation; never infer or downgrade scope. List includes lifecycle and
 pagination. Keep complete JSON bodies, including empty option/target arrays,
 and retain every response field, optional inventory ID, null/empty arrays,
 metadata and schema. The server remains responsible for immutable keys/types
-and append-only option/target policies. Delete requires 204. CLI workflows stay
-incomplete until their scope syntax, inputs and confirmations are implemented.
+and append-only option/target policies. Delete requires 204. The approved `field-definitions` commands expose both scopes with guided common
+fields, exact JSON, confirmations, and complete output. See
+`cli-customization.spec.md` for command behavior and verification.
 
 ### Attachment metadata and lifecycle
 

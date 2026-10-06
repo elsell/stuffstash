@@ -92,6 +92,32 @@ your current context.
 These four create/update operations do not support idempotency keys. If a create
 response is lost, check `tenants list` or `inventories list` before retrying.
 
+## Custom asset types and fields
+
+Use `asset-types` and `field-definitions` to list, show, create, update, archive,
+restore, or delete definitions. Choose `--scope household` to share a definition
+across the household, or `--scope inventory` for one inventory. Terminals offer a
+scope picker; scripts must supply the scope. Inventory lists include inherited
+household definitions.
+
+```sh
+./stuffstash asset-types create --scope household --tenant HOME --key appliance --name Appliance
+./stuffstash field-definitions create --scope inventory --tenant HOME --inventory GARAGE --key warranty --name Warranty --field-type date
+./stuffstash asset-types list --scope inventory --tenant HOME --inventory GARAGE --lifecycle all
+```
+
+Omit common required fields in a terminal to enter them through prompts. Enum
+fields prompt for options. For full control, use `--input definition.json` or
+`--input -` instead of field flags. Each command's `--help` lists its JSON fields.
+An asset type update can explicitly disable expiration with
+`--expiration-enabled=false`. Complex field updates, such as appending enum
+options or applicable asset types, use JSON; the server checks compatibility.
+
+Changes require confirmation; scripts add `--yes`. Delete permanently removes
+an eligible definition. There are no automatic retries: inspect `list` or `show`
+if a change's result is uncertain. Lists accept `--limit` and `--cursor`; JSON
+includes complete definition fields and response metadata.
+
 ## Archive, restore, or delete a household or inventory
 
 Use `tenants archive`, `tenants restore`, or `tenants delete` for the selected
