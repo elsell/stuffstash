@@ -1,42 +1,35 @@
 # Roadmap Spec
 
-## Current focus — Full REST CLI parity, October 5, 2026
+## Current focus — CLI delivery and acceptance, October 6, 2026
 
-Implement [the approved CLI parity contract](cli-api-parity.spec.md): all REST
-operations, remembered per-server contexts, keyboard-driven prompts, reliable
-scripting, STE errors, and minimal measured binary/dependency growth. Chat is
-out of scope. The generated SDK is the transport foundation, not proof of
-complete command workflows. Full parity is not yet delivered. Existing native
-acceptance remains tracked separately and does not block this work.
+The [approved CLI parity implementation](cli-api-parity.spec.md) merged in
+[PR #461](https://github.com/elsell/stuffstash/pull/461) at `7211bf40c`.
+The coverage manifest closes the known command workflow and field gaps for all
+192 REST operations; chat remains outside scope. Publication is pending, so do
+not describe the merged batch as released or the entire goal as complete.
 
-The draft CLI batch adds private account-bound contexts, searchable scope
-selection, directory lifecycle commands, tags, asset workflows, and attachment metadata/lifecycle commands through
-the generated SDK. Critical scope and authenticated-request tests, the CLI suite,
-and Windows context-file CI have passed. Native Windows run
-[37346221820](https://github.com/elsell/stuffstash/actions/runs/37346221820)
-also passed application, local help, input/output and terminal contracts plus
-a CLI build. Native Windows run
-[37347873869](https://github.com/elsell/stuffstash/actions/runs/37347873869)
-also verified the real Credential Manager boundary and server isolation.
-Native Windows run
-[37350269032](https://github.com/elsell/stuffstash/actions/runs/37350269032)
-verified authenticated bootstrap through Credential Manager and the HTTP boundary.
-Browser sign-in and real console interaction remain unverified.
-Command-specific help and Bash/Zsh/Fish completion share reviewed metadata.
-The coverage manifest now closes the known workflow and field gaps for all 192
-REST operations. Safe pairing and printing receipts preserve server response
-metadata without exposing worker proofs or allowing human commands to invent
-hardware outcomes. Receipt output cannot block worker leases or recovery.
+The implementation includes remembered per-server contexts, keyboard scope
+selection, interactive and scripted workflows, complete media/portability and
+provider setup, and safe pairing/printing receipts. Receipt output cannot block
+worker leases or recovery and never exposes credentials or hardware proofs.
+Command help and Bash/Zsh/Fish completion share reviewed metadata.
 
-The user approved the remaining workflow defaults on October 6. Customization,
-portability, media, sharing and provider commands now implement those choices.
-The cumulative 180-operation revision passed full CI and Windows contracts;
-subsequent worker/pairing additions passed the combined CLI suite, focused race
-checks and critic review. Final cumulative CI and release remain pending.
-Full ASD-STE100 Issue 9 vocabulary/grammar conformance is unverified: the official
-PDF is unavailable to this environment. Do not label plain-language review as
-formal conformance. Physical printer and real-console acceptance remain separate
-from fake-device and command-boundary evidence.
+Final cumulative [CI](https://github.com/elsell/stuffstash/actions/runs/37408551836)
+and [Windows contracts](https://github.com/elsell/stuffstash/actions/runs/37408551714)
+passed. The combined CLI suite, critical authentication/scope boundaries, receipt
+race tests and code-critic review passed. A real Linux PTY verified keyboard scope
+selection, remembered scope and subsequent non-interactive reuse.
+
+Follow-up [native Windows run 37410860621](https://github.com/elsell/stuffstash/actions/runs/37410860621)
+passed at `894273576`, including actual published download-file ownership and
+protected, owner-only DACLs under a broadly inheritable parent. The run also
+passed no-overwrite/truncation checks, Credential Manager isolation,
+authenticated bootstrap, application/input/terminal contracts and the CLI build.
+
+Browser sign-in for this batch, real macOS/Windows console interaction and
+physical-printer acceptance remain unverified. Full ASD-STE100 Issue 9
+vocabulary/grammar conformance is also unverified: the official PDF is unavailable
+to this environment. Do not label plain-language review as formal conformance.
 
 
 ## Labels, Printers, And CLI: Released — October 4, 2026
