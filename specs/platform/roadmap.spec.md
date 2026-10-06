@@ -5,8 +5,11 @@
 The [approved CLI parity implementation](cli-api-parity.spec.md) merged in
 [PR #461](https://github.com/elsell/stuffstash/pull/461) at `7211bf40c`.
 The coverage manifest closes the known command workflow and field gaps for all
-192 REST operations; chat remains outside scope. Publication is pending, so do
-not describe the merged batch as released or the entire goal as complete.
+192 REST operations; chat remains outside scope. The batch is published as
+[v0.43.0](https://github.com/elsell/stuffstash/releases/tag/v0.43.0), built from
+`7211bf40ca1791440f92991e3e09c892f998a2e7`. All five platform archives are available;
+the Linux archive checksum and executable version/commit were verified. Release
+does not establish the remaining acceptance or formal STE requirements below.
 
 The implementation includes remembered per-server contexts, keyboard scope
 selection, interactive and scripted workflows, complete media/portability and
