@@ -38,6 +38,8 @@ func TestPrivateNoOverwriteAndTruncation(t *testing.T) {
 	}
 	if err := f.PublishContent(context.Background(), p, body("bad!", 4)); err == nil {
 		t.Fatal("overwrote destination")
+	} else if !strings.Contains(err.Error(), "already exists") {
+		t.Fatalf("wrong recovery advice: %v", err)
 	}
 	b, _ := os.ReadFile(p)
 	if string(b) != "good" {

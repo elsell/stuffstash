@@ -11,3 +11,14 @@ CLI errors explain the failed operation and a concrete next action when known. T
 Authored guidance uses short sentences and direct instructions consistent with the CLI's ASD-STE100 writing goal. This bounded review is not a complete dictionary audit or certification.
 
 Critical verification covers classification of context read/save failures, distinct credential type/permission errors with unchanged rejection, and existing label destinations remaining intact. Existing authentication, file security, and CLI tests remain required. Do not add copy-only tests for every reworded message.
+
+Streaming input guidance must be valid for both `--file` transfers and `--input`
+imports. Shared errors refer to a file path instead of naming the wrong flag.
+Binary downloads distinguish an existing destination from other publication
+failures. They explain that the existing file was not changed and ask for another
+output path, while preserving atomic no-overwrite behavior on Unix and Windows.
+Invalid file-backed connector registration explains how to select a new private
+`STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE` path and pair again. Never delete or
+replace the invalid credential store automatically. System credential storage
+can replace an invalid entry through pairing, so its guidance asks users to pair
+again without recommending unsupported file credentials on Windows.

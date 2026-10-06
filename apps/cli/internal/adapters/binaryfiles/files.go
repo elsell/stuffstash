@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 	"io"
- "math"
+	"math"
 	"os"
 )
 

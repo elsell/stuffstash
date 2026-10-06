@@ -13,11 +13,11 @@ func (f Files) OpenStream(ctx context.Context, path string) (io.ReadCloser, erro
 	}
 	if path == "-" {
 		if f.StdinTerminal || f.Stdin == nil {
-			return nil, ports.Failure("usage", "Pipe the file into stdin or supply --file PATH.")
+			return nil, ports.Failure("usage", "Pipe the file into stdin, or use a file path instead of -.")
 		}
 		r, close, err := prepareStdin(f.Stdin)
 		if err != nil {
-			return nil, ports.Failure("file", "Cannot read stdin. Supply --file PATH instead.")
+			return nil, ports.Failure("file", "Cannot read stdin. Use a file path instead of -.")
 		}
 		var once sync.Once
 		cleanup := func() { once.Do(close) }
