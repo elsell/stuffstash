@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"io"
 	"mime"
 	"strings"
@@ -16,15 +17,14 @@ import (
 )
 
 func (c *Client) LabelTemplates(ctx context.Context, s ports.Scope) (ports.Result[[]ports.LabelTemplate], error) {
-	r, err := read[generated.SuccessEnvelopeListTemplateResponse](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates(ctx, s.Tenant, s.Inventory, nil))
+	r, err := read[labelEnvelope[[]ports.LabelTemplate]](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdLabelTemplates(ctx, s.Tenant, s.Inventory, nil))
 	if err != nil {
 		return ports.Result[[]ports.LabelTemplate]{}, err
 	}
-	result := ports.Result[[]ports.LabelTemplate]{Data: []ports.LabelTemplate{}}
-	for _, v := range r.Data.GetOrEmpty() {
-		result.Data = append(result.Data, ports.LabelTemplate{ID: v.Id, Version: uint32(v.Version), Name: v.Name, Purpose: v.Purpose, ShowReference: v.Defaults.ShowReference})
+	for i := range r.Data {
+		r.Data[i].ShowReference = r.Data[i].Defaults.ShowReference
 	}
-	return result, nil
+	return ports.Result[[]ports.LabelTemplate]{Data: r.Data, Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }
 func (c *Client) ResolveLabel(ctx context.Context, ref labels.Reference) (ports.Result[ports.ResolvedLabel], error) {
 	instance, err := read[generated.SuccessEnvelopeInstanceResponse](c.sdk.GetInstance(ctx))
@@ -41,40 +41,44 @@ func (c *Client) ResolveLabel(ctx context.Context, ref labels.Reference) (ports.
 	if r.Data.InstanceId != ref.Instance || r.Data.LabelId != ref.Label {
 		return ports.Result[ports.ResolvedLabel]{}, ports.Failure("protocol", "label identity did not match")
 	}
-	return ports.Result[ports.ResolvedLabel]{Data: ports.ResolvedLabel{TenantID: r.Data.TenantId, InventoryID: r.Data.InventoryId, AssetID: r.Data.AssetId, Lifecycle: r.Data.LifecycleState}}, nil
+	return labelResult(r), nil
 }
 func (c *Client) LabelMedia(ctx context.Context, s ports.Scope, printer string) ([]printing.Media, error) {
 	if printer != "" {
-		r, err := read[generated.SuccessEnvelopePrinter](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdPrintersByPrinterId(ctx, s.Tenant, s.Inventory, printer, nil))
+		r, err := c.Printer(ctx, s, printer)
 		if err != nil {
 			return nil, err
 		}
 		return []printing.Media{labelProfileMedia(r.Data.Media)}, nil
 	}
-	r, err := read[generated.SuccessEnvelopeListPrinterProfile](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdPrinterProfiles(ctx, s.Tenant, s.Inventory, nil))
+	r, err := c.PrinterProfiles(ctx, s)
 	if err != nil {
 		return nil, err
 	}
 	result := []printing.Media{}
-	for _, profile := range r.Data.GetOrEmpty() {
-		for _, media := range profile.Media.GetOrEmpty() {
+	for _, profile := range r.Data {
+		for _, media := range profile.Media {
 			result = append(result, labelProfileMedia(media))
 		}
 	}
 	return result, nil
 }
-func labelProfileMedia(v generated.MediaProfile) printing.Media {
-	return printing.Media{PresetID: v.PresetId, Version: uint32(v.Version), WidthMicrometers: int(v.WidthMicrometers), HeightMicrometers: int(v.HeightMicrometers), Margins: printing.Margins{Left: int(v.MarginsMicrometers.Left), Right: int(v.MarginsMicrometers.Right), Top: int(v.MarginsMicrometers.Top), Bottom: int(v.MarginsMicrometers.Bottom)}, ResolutionDPI: int(v.ResolutionDpi), RasterWidth: int(v.RasterWidth), RasterHeight: int(v.RasterHeight), Orientation: v.Orientation, ColorMode: v.ColorMode, CutPolicy: v.CutPolicy, DisplayRotation: int(v.DisplayRotation)}
-}
-func labelMedia(v printing.Media) generated.Media {
-	version := int32(v.Version)
-	return generated.Media{PresetId: &v.PresetID, Version: &version, WidthMicrometers: int64(v.WidthMicrometers), HeightMicrometers: int64(v.HeightMicrometers), MarginsMicrometers: generated.Margins{Left: int64(v.Margins.Left), Right: int64(v.Margins.Right), Top: int64(v.Margins.Top), Bottom: int64(v.Margins.Bottom)}, ResolutionDpi: int64(v.ResolutionDPI), RasterWidth: int64(v.RasterWidth), RasterHeight: int64(v.RasterHeight), Orientation: v.Orientation, ColorMode: v.ColorMode, CutPolicy: v.CutPolicy, DisplayRotation: int64(v.DisplayRotation)}
+func labelProfileMedia(v ports.PrinterMedia) printing.Media {
+	return printing.Media{PresetID: v.PresetID, Version: uint32(v.Version), WidthMicrometers: int(v.WidthMicrometers), HeightMicrometers: int(v.HeightMicrometers), Margins: printing.Margins{Left: int(v.MarginsMicrometers.Left), Right: int(v.MarginsMicrometers.Right), Top: int(v.MarginsMicrometers.Top), Bottom: int(v.MarginsMicrometers.Bottom)}, ResolutionDPI: int(v.ResolutionDpi), RasterWidth: int(v.RasterWidth), RasterHeight: int(v.RasterHeight), Orientation: v.Orientation, ColorMode: v.ColorMode, CutPolicy: v.CutPolicy, DisplayRotation: int(v.DisplayRotation)}
 }
 func (c *Client) RenderLabel(ctx context.Context, s ports.Scope, asset string, selection ports.LabelRenderSelection) (ports.LabelArtifact, error) {
+	body := selection.RequestBody
+	if len(body) == 0 {
+		var err error
+		body, err = json.Marshal(labelRenderBody{Media: selection.Media, Format: selection.Format, Template: labelRenderTemplate{ID: selection.TemplateID, Version: selection.TemplateVersion, Options: ports.LabelTemplateDefaults{ShowReference: selection.ShowReference}}})
+		if err != nil {
+			return ports.LabelArtifact{}, ports.Failure("input", "The render selection could not be encoded.")
+		}
+	}
 	if _, err := read[generated.SuccessEnvelopeLabelResponse](c.sdk.PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel(ctx, s.Tenant, s.Inventory, asset, nil)); err != nil {
 		return ports.LabelArtifact{}, err
 	}
-	rendered, err := read[generated.SuccessEnvelopeRenderResponse](c.sdk.PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRenders(ctx, s.Tenant, s.Inventory, asset, nil, generated.RenderInputBody{Format: generated.RenderInputBodyFormat(selection.Format), Media: labelMedia(selection.Media), Template: generated.TemplateSelection{Id: selection.TemplateID, Version: int32(selection.TemplateVersion), Options: generated.TemplateOptions{ShowReference: selection.ShowReference}}}))
+	rendered, err := read[labelEnvelope[ports.LabelRenderMetadata]](c.sdk.PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabelRendersWithBody(ctx, s.Tenant, s.Inventory, asset, nil, "application/json", bytes.NewReader(body)))
 	if err != nil {
 		return ports.LabelArtifact{}, err
 	}
@@ -87,7 +91,7 @@ func (c *Client) RenderLabel(ctx context.Context, s ports.Scope, asset string, s
 	if rendered.Data.ContentType != expectedType {
 		return ports.LabelArtifact{}, ports.Failure("protocol", "unexpected label format")
 	}
-	response, err := c.sdk.ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent(ctx, s.Tenant, s.Inventory, rendered.Data.Id, nil)
+	response, err := c.sdk.ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent(ctx, s.Tenant, s.Inventory, rendered.Data.ID, nil)
 	if err != nil {
 		return ports.LabelArtifact{}, ports.Failure("network", "label download failed")
 	}
@@ -110,10 +114,10 @@ func (c *Client) RenderLabel(ctx context.Context, s ports.Scope, asset string, s
 	}
 	digest := sha256.Sum256(content)
 	checksum := hex.EncodeToString(digest[:])
-	if len(content) > maximumBytes || !bytes.HasPrefix(content, signature) || !strings.EqualFold(checksum, rendered.Data.Sha256) {
+	if len(content) > maximumBytes || !bytes.HasPrefix(content, signature) || !strings.EqualFold(checksum, rendered.Data.SHA256) {
 		return ports.LabelArtifact{}, ports.Failure("protocol", "label content integrity check failed")
 	}
-	return ports.LabelArtifact{Content: content, Format: selection.Format, SHA256: checksum}, nil
+	return ports.LabelArtifact{Content: content, Format: selection.Format, SHA256: checksum, Render: ports.Result[ports.LabelRenderMetadata]{Data: rendered.Data, Schema: rendered.Schema, Meta: metadata(rendered.Meta)}}, nil
 }
 
 var _ ports.LabelsAPI = (*Client)(nil)

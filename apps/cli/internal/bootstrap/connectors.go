@@ -9,6 +9,7 @@ import (
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi"
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/pairingkeys"
+	"github.com/stuffstash/stuff-stash/cli/internal/adapters/presentation"
 	"github.com/stuffstash/stuff-stash/cli/internal/app"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 )
@@ -44,6 +45,13 @@ func registerPrintConnector(ctx context.Context, options app.Options, getenv fun
 	if err != nil {
 		return err
 	}
+	receipts := presentation.NewProtocolReceipts(output)
+	api.Receipts = receipts
+	defer func() {
+		drainCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		receipts.Close(drainCtx)
+	}()
 	interval := 5 * time.Second
 	if raw := getenv("STUFF_STASH_CLI_PAIRING_POLL_INTERVAL"); raw != "" {
 		interval, err = time.ParseDuration(raw)
@@ -51,7 +59,7 @@ func registerPrintConnector(ctx context.Context, options app.Options, getenv fun
 			return ports.Failure("configuration", "pairing poll interval must be between 1s and 1m")
 		}
 	}
-	registrar := app.ConnectorRegistrar{API: api, Credentials: connectorCredentialStore(options), Keys: pairingkeys.Keys{}, Clock: systemClock{}, Waiter: timerWaiter{}, Output: output, PollInterval: interval}
+	registrar := app.ConnectorRegistrar{Receipts: receipts, ReceiptDrainTimeout: time.Second, API: api, Credentials: connectorCredentialStore(options), Keys: pairingkeys.Keys{}, Clock: systemClock{}, Waiter: timerWaiter{}, Output: output, PollInterval: interval}
 	if options.Command[2] == "rotate" {
 		return registrar.Rotate(ctx, options.Server, options.ConnectorID)
 	}

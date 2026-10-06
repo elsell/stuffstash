@@ -16,6 +16,9 @@ pre-commit:
     go-domain-imports:
       glob: "*.go"
       run: scripts/check-go-domain-imports.sh {staged_files}
+    cli-api-coverage:
+      glob: "{packages/api-client/openapi.json,apps/cli/api-coverage.json,scripts/check-cli-api-coverage.py}"
+      run: python3 scripts/check-cli-api-coverage.py
     cli-client-check-generated:
       glob: "{apps/api/internal/adapters/httpserver/**,apps/api/cmd/stuff-stash-openapi/**,packages/api-client/openapi.json,apps/cli/oapi-codegen.yaml,apps/cli/internal/adapters/httpapi/generated/**,scripts/*cli-client*}"
       run: make cli-client-check-generated

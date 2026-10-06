@@ -41,14 +41,14 @@ func ValidateURL(raw string, allowLoopback bool) error {
 }
 func (a Adapter) provider(ctx context.Context, issuer, clientID string) (context.Context, *oidc.Provider, oauth2.Config, error) {
 	if ValidateURL(issuer, a.AllowLoopbackHTTP) != nil || clientID == "" {
-		return ctx, nil, oauth2.Config{}, ports.Failure("configuration", "invalid OIDC issuer or client ID")
+		return ctx, nil, oauth2.Config{}, ports.Failure("configuration", "The sign-in provider configuration is invalid. Ask the server administrator to check the OIDC issuer URL and CLI client ID.")
 	}
 	safe := *a.HTTP
 	safe.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	ctx = oidc.ClientContext(ctx, &safe)
 	provider, err := oidc.NewProvider(ctx, issuer)
 	if err != nil {
-		return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "OIDC discovery failed")
+		return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "Cannot get the sign-in provider configuration. Check your connection and run stuffstash login again. If the error continues, contact the server administrator.")
 	}
 	var extra endpoints
 	if provider.Claims(&extra) != nil {
@@ -98,10 +98,10 @@ func (a Adapter) session(ctx context.Context, p *oidc.Provider, clientID, server
 		return ports.Session{}, ports.Failure("authentication", "provider did not return an OIDC ID token; configure openid support for this grant")
 	}
 	verified, err := p.Verifier(&oidc.Config{ClientID: clientID, Now: a.Clock.Now}).Verify(ctx, raw)
-	if err != nil || nonce != "" && verified.Nonce != nonce {
+	if err != nil || verified.Subject == "" || nonce != "" && verified.Nonce != nonce {
 		return ports.Session{}, ports.Failure("authentication", "provider identity token failed verification")
 	}
-	return ports.Session{Server: server, Issuer: verified.Issuer, ClientID: clientID, IDToken: raw, RefreshToken: token.RefreshToken, ExpiresAt: verified.Expiry}, nil
+	return ports.Session{Server: server, Issuer: verified.Issuer, Subject: verified.Subject, ClientID: clientID, IDToken: raw, RefreshToken: token.RefreshToken, ExpiresAt: verified.Expiry}, nil
 }
 func (a Adapter) Refresh(ctx context.Context, s ports.Session) (ports.Session, error) {
 	if s.RefreshToken == "" {
@@ -116,6 +116,9 @@ func (a Adapter) Refresh(ctx context.Context, s ports.Session) (ports.Session, e
 		return ports.Session{}, ports.Failure("authentication", "session refresh failed; log in again")
 	}
 	result, err := a.session(ctx, p, s.ClientID, s.Server, token, "")
+	if err == nil && (result.Issuer != s.Issuer || s.Subject != "" && result.Subject != s.Subject) {
+		return ports.Session{}, ports.Failure("authentication", "The account changed during sign-in renewal. Log in again.")
+	}
 	if err == nil && result.RefreshToken == "" {
 		result.RefreshToken = s.RefreshToken
 	}

@@ -1,0 +1,9 @@
+# Machine-credential print inspection
+
+The CLI supports `connectors print printers --connector ID`, `connectors print attempts list --connector ID`, and `connectors print attempts show ATTEMPT_ID --connector ID`. These read-only commands use the configured server and stored connector credential, never a human session or saved context principal. They perform no hardware access, journal writes, credential writes, claims, starts, or settlements.
+
+The credential store must validate server and connector identity; expired credentials fail before network access using the injected clock. Scope comes from the registration. Supplied or environment household/inventory scope must match it; conflicting scope fails. Explicit context and human credential options are rejected. Unknown or inapplicable flags fail before credential access. Attempts list accepts printer, status (only unsettled), limit (1–100), and cursor; the server performs authorization and pagination with no automatic retry.
+
+The three generated SDK routes stay behind a project-owned inspection port. Decode their response bodies into declared project-owned models, retaining all declared fields, null and absent optional fields, int64 numeric values, uint32 media versions, and uint64 revisions/generations. Unknown fields, including injected credentials or claim tokens, never reach output. Preserve schema, metadata and pagination. Human list/detail output must escape remote strings; JSON keeps the complete declared result. A reusable typed optional-field primitive preserves absence/null without untyped numeric conversion.
+
+Real CLI boundary tests cover machine-only authorization, mismatched identities and scope, expired/revoked credentials, 401/403, blocked redirects, secret exclusion, complete nested fields and numeric limits, pagination and filters. These checks verify read transport behavior, not physical printers or worker recovery.

@@ -7,17 +7,17 @@ import (
 	"time"
 )
 
-func proof(control printing.AttemptControl) generated.PrintClaimProof {
-	return generated.PrintClaimProof{SessionId: control.SessionID, ClaimToken: control.ClaimToken, Revision: int64(control.Revision)}
+func proof(control printing.AttemptControl) workerProof {
+	return workerProof{SessionID: control.SessionID, ClaimToken: control.ClaimToken, Revision: control.Revision}
 }
-func consumerMedia(value generated.PrintConsumerMedia) printing.Media {
-	return printing.Media{PresetID: value.PresetId, Version: uint32(value.Version), WidthMicrometers: int(value.WidthMicrometers), HeightMicrometers: int(value.HeightMicrometers), Margins: printing.Margins{Left: int(value.MarginsMicrometers.Left), Right: int(value.MarginsMicrometers.Right), Top: int(value.MarginsMicrometers.Top), Bottom: int(value.MarginsMicrometers.Bottom)}, ResolutionDPI: int(value.ResolutionDpi), RasterWidth: int(value.RasterWidth), RasterHeight: int(value.RasterHeight), Orientation: value.Orientation, ColorMode: value.ColorMode, CutPolicy: value.CutPolicy, DisplayRotation: int(value.DisplayRotation)}
+func consumerMedia(value ports.ConsumerMedia) printing.Media {
+	return printing.Media{PresetID: value.PresetID, Version: value.Version, WidthMicrometers: int(value.WidthMicrometers), HeightMicrometers: int(value.HeightMicrometers), Margins: printing.Margins{Left: int(value.MarginsMicrometers.Left), Right: int(value.MarginsMicrometers.Right), Top: int(value.MarginsMicrometers.Top), Bottom: int(value.MarginsMicrometers.Bottom)}, ResolutionDPI: int(value.ResolutionDPI), RasterWidth: int(value.RasterWidth), RasterHeight: int(value.RasterHeight), Orientation: value.Orientation, ColorMode: value.ColorMode, CutPolicy: value.CutPolicy, DisplayRotation: int(value.DisplayRotation)}
 }
-func attemptStatus(value generated.PrintConsumerAttempt) (printing.AttemptStatus, error) {
-	if value.Revision <= 0 || value.AttemptId == "" || value.SessionId == "" || value.JobId == "" {
+func attemptStatus(value workerAttempt) (printing.AttemptStatus, error) {
+	if value.Revision <= 0 || value.AttemptID == "" || value.SessionID == "" || value.JobID == "" {
 		return printing.AttemptStatus{}, ports.Failure("protocol", "invalid print attempt response")
 	}
-	result := printing.AttemptStatus{AttemptID: value.AttemptId, SessionID: value.SessionId, JobID: value.JobId, Revision: uint64(value.Revision), LeaseExpiresAt: value.LeaseExpiresAt, Outcome: printing.Outcome(value.Outcome.Kind), CompletedCopies: int(value.Outcome.CompletedCopies)}
+	result := printing.AttemptStatus{AttemptID: value.AttemptID, SessionID: value.SessionID, JobID: value.JobID, Revision: value.Revision, LeaseExpiresAt: value.LeaseExpiresAt, Outcome: printing.Outcome(value.Outcome.Kind), CompletedCopies: int(value.Outcome.CompletedCopies)}
 	// Attempt settlement takes precedence over the parent job, which may already
 	// be queued or claimed again after a proven no-output attempt.
 	if value.SettledAt != nil {

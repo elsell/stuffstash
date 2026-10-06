@@ -22,7 +22,7 @@ func validRegistration(r ports.ConnectorRegistration) bool {
 func decodeRegistration(body []byte) (ports.ConnectorRegistration, error) {
 	var r ports.ConnectorRegistration
 	if json.Unmarshal(body, &r) != nil || !validRegistration(r) {
-		return r, errors.New("invalid connector credential store")
+		return r, errors.New("The stored connector registration is invalid. Pair the connector again.")
 	}
 	return r, nil
 }
@@ -37,7 +37,11 @@ func (f ConnectorFile) read() (ports.ConnectorRegistration, error) {
 	if err != nil {
 		return ports.ConnectorRegistration{}, err
 	}
-	return decodeRegistration(body)
+	registration, err := decodeRegistration(body)
+	if err != nil {
+		return registration, errors.New("The stored connector registration is invalid. Set STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE to a new private file path. Pair the connector again.")
+	}
+	return registration, nil
 }
 func (f ConnectorFile) Load(_ context.Context, server, id string) (ports.ConnectorRegistration, error) {
 	r, err := f.read()

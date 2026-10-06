@@ -10,12 +10,13 @@ var ErrConnectorNotRegistered = errors.New("connector is not registered; run con
 
 // ConnectorRegistration is secret local state, never a presentation DTO.
 type ConnectorRegistration struct {
-	Server      string    `json:"server"`
-	TenantID    string    `json:"tenantId"`
-	InventoryID string    `json:"inventoryId"`
-	ConnectorID string    `json:"connectorId"`
-	Credential  string    `json:"credential"`
-	ExpiresAt   time.Time `json:"expiresAt"`
+	Server             string    `json:"server"`
+	TenantID           string    `json:"tenantId"`
+	InventoryID        string    `json:"inventoryId"`
+	ConnectorID        string    `json:"connectorId"`
+	Credential         string    `json:"credential"`
+	ExpiresAt          time.Time `json:"expiresAt"`
+	ActivationDeadline time.Time `json:"activationDeadline"`
 }
 
 type ConnectorCredentials interface {

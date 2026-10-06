@@ -5,18 +5,38 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/stuffstash/stuff-stash/cli/internal/adapters/httpapi/generated"
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 )
 
-type Client struct{ sdk *generated.Client }
+type Client struct {
+	sdk      *generated.Client
+	receipts ports.ProtocolReceipts
+}
 
-func New(server, token string, httpClient *http.Client) (*Client, error) {
+type Options struct {
+	RequestID string
+	Receipts  ports.ProtocolReceipts
+}
+
+func New(server, token string, httpClient *http.Client, options ...Options) (*Client, error) {
+	requestID := ""
+	if len(options) > 0 {
+		requestID = options[0].RequestID
+	}
+	if strings.IndexFunc(requestID, func(r rune) bool { return r < 32 || r > 126 }) >= 0 {
+		return nil, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
+	}
+
 	// API credentials must never follow a server redirect to another origin.
 	safe := *httpClient
 	safe.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	sdk, err := generated.NewClient(server, generated.WithHTTPClient(&safe), generated.WithRequestEditorFn(func(_ context.Context, r *http.Request) error {
+		if requestID != "" {
+			r.Header.Set("X-Request-ID", requestID)
+		}
 		if token != "" {
 			r.Header.Set("Authorization", "Bearer "+token)
 		}
@@ -25,34 +45,42 @@ func New(server, token string, httpClient *http.Client) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{sdk: sdk}, nil
+	var receipts ports.ProtocolReceipts
+	if len(options) > 0 {
+		receipts = options[0].Receipts
+	}
+	return &Client{sdk: sdk, receipts: receipts}, nil
 }
 func read[T any](response *http.Response, err error) (T, error) {
 	var zero T
 	if err != nil {
-		return zero, ports.Failure("network", "could not reach Stuff Stash")
+		return zero, ports.Failure("network", "Could not reach Stuff Stash. Check your connection and server address. Check the current state before you repeat a change.")
 	}
 	defer response.Body.Close()
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		category, message := "api", "Stuff Stash rejected the request"
+		category, message := "api", "Stuff Stash did not return a successful result. Check the current state before you repeat a change."
 		switch response.StatusCode {
 		case 401:
-			category, message = "authentication", "session expired or invalid; log in again"
+			category, message = "authentication", "Your session is not valid. Run stuffstash login and try again."
 		case 403:
-			category, message = "forbidden", "you do not have permission for this action"
+			category, message = "forbidden", "You do not have permission for this action. Ask a household or inventory owner to check your access."
 		case 404:
-			category, message = "not_found", "resource not found"
+			category, message = "not_found", "The resource was not found. Check its ID and the selected household and inventory."
 		case 409:
-			category, message = "conflict", "the resource changed or the operation conflicts; refresh and retry"
+			category, message = "conflict", "The request conflicts with the current state. Read the resource again and review your change before you submit it."
 		case 400, 422:
-			category, message = "validation", "request is invalid; check the supplied values"
+			category, message = "validation", "The request is not valid. Check the input values against the command help and API requirements."
+		case 429:
+			category, message = "api", "Too many requests were sent. Wait before you send another request. Check the current state before you repeat a change."
 		case 503:
-			category, message = "unavailable", "service or login method unavailable"
+			category, message = "unavailable", "The service is not available. Wait for it to recover. Check the current state before you repeat a change."
 		}
 		return zero, ports.Failure(category, message)
 	}
-	if err := json.NewDecoder(io.LimitReader(response.Body, 16<<20)).Decode(&zero); err != nil {
-		return zero, ports.Failure("protocol", "invalid Stuff Stash response")
+	decoder := json.NewDecoder(io.LimitReader(response.Body, 16<<20))
+	decoder.UseNumber()
+	if err := decoder.Decode(&zero); err != nil {
+		return zero, ports.Failure("protocol", "The server response is not valid. Check the current state before you repeat a change. Contact the server operator if this continues.")
 	}
 	return zero, nil
 }
@@ -64,46 +92,45 @@ func page(meta generated.Meta) *ports.Pagination {
 		return nil
 	}
 	p := meta.Pagination
-	return &ports.Pagination{Limit: int(p.Limit), NextCursor: optionalCursor(p.NextCursor.GetOrEmpty()), HasMore: p.HasMore}
-}
-func asset(a generated.AssetResponse) ports.Asset {
-	p := ""
-	if a.ParentAssetId != nil {
-		p = *a.ParentAssetId
+	var cursor *string
+	if value, err := p.NextCursor.Get(); err == nil {
+		cursor = &value
 	}
-	printJobID := ""
-	if a.PrintJobId != nil {
-		printJobID = *a.PrintJobId
-	}
-	return ports.Asset{PrintJobID: printJobID, ID: a.Id, Title: a.Title, Kind: a.Kind, Parent: p, Lifecycle: a.LifecycleState}
+	return &ports.Pagination{Limit: p.Limit, NextCursor: cursor, HasMore: p.HasMore}
 }
 func assetResult(r generated.SuccessEnvelopeAssetResponse, err error) (ports.Result[ports.Asset], error) {
 	if err != nil {
 		return ports.Result[ports.Asset]{}, err
 	}
-	return ports.Result[ports.Asset]{Data: asset(r.Data)}, nil
+	return ports.Result[ports.Asset]{Data: asset(r.Data), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }
 func (c *Client) Inventories(ctx context.Context, s ports.Scope, p ports.Page) (ports.Result[[]ports.Inventory], error) {
 	r, err := read[generated.SuccessEnvelopeListInventoryResponse](c.sdk.GetTenantsByTenantIdInventories(ctx, s.Tenant, &generated.GetTenantsByTenantIdInventoriesParams{Limit: &p.Limit, Cursor: &p.Cursor}))
 	if err != nil {
 		return ports.Result[[]ports.Inventory]{}, err
 	}
-	items := make([]ports.Inventory, 0)
-	for _, v := range r.Data.GetOrEmpty() {
-		items = append(items, ports.Inventory{ID: v.Id, Name: v.Name, Lifecycle: v.LifecycleState})
+	var items []ports.Inventory
+	if r.Data.GetOrEmpty() != nil {
+		items = make([]ports.Inventory, 0, len(r.Data.GetOrEmpty()))
 	}
-	return ports.Result[[]ports.Inventory]{Data: items, Pagination: page(r.Meta)}, nil
+	for _, v := range r.Data.GetOrEmpty() {
+		items = append(items, inventory(v))
+	}
+	return ports.Result[[]ports.Inventory]{Data: items, Pagination: page(r.Meta), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }
-func (c *Client) Assets(ctx context.Context, s ports.Scope, p ports.Page) (ports.Result[[]ports.Asset], error) {
-	r, err := read[generated.SuccessEnvelopeListAssetResponse](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdAssets(ctx, s.Tenant, s.Inventory, &generated.GetTenantsByTenantIdInventoriesByInventoryIdAssetsParams{Limit: &p.Limit, Cursor: &p.Cursor}))
+func (c *Client) Assets(ctx context.Context, s ports.Scope, query ports.AssetQuery) (ports.Result[[]ports.Asset], error) {
+	r, err := read[assetListResponse](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdAssets(ctx, s.Tenant, s.Inventory, assetQuery(query)))
 	if err != nil {
 		return ports.Result[[]ports.Asset]{}, err
 	}
-	items := make([]ports.Asset, 0)
-	for _, v := range r.Data.GetOrEmpty() {
+	var items []ports.Asset
+	if r.Data != nil {
+		items = make([]ports.Asset, 0, len(r.Data))
+	}
+	for _, v := range r.Data {
 		items = append(items, asset(v))
 	}
-	return ports.Result[[]ports.Asset]{Data: items, Pagination: page(r.Meta)}, nil
+	return ports.Result[[]ports.Asset]{Data: items, Pagination: page(r.Meta), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }
 func (c *Client) Asset(ctx context.Context, s ports.Scope, id string) (ports.Result[ports.Asset], error) {
 	return assetResult(read[generated.SuccessEnvelopeAssetResponse](c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetId(ctx, s.Tenant, s.Inventory, id, nil)))
@@ -114,4 +141,8 @@ func optionalCursor(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+func metadata(meta generated.Meta) *ports.Metadata {
+	return &ports.Metadata{RequestID: meta.RequestId, TenantID: meta.TenantId, Pagination: page(meta)}
 }

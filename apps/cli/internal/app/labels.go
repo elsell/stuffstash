@@ -12,24 +12,28 @@ import (
 func isLabelCommand(o Options) bool {
 	return len(o.Command) >= 2 && o.Command[0] == "labels" && o.Command[1] != "print"
 }
-func validateLabelCommand(o Options) error {
+func validateLabelCommand(o Options) error { return validateLabelCommandOptions(o, true) }
+func validateLabelCommandOptions(o Options, requireScope bool) error {
 	if o.Command[1] == "resolve" && len(o.Command) == 3 {
 		if _, err := labels.Parse(o.Command[2]); err != nil {
 			return ports.Failure("usage", "invalid or unsupported label link")
 		}
 		return nil
 	}
-	if o.Scope.Tenant == "" || o.Scope.Inventory == "" {
+	if requireScope && (o.Scope.Tenant == "" || o.Scope.Inventory == "") {
 		return ports.Failure("usage", "label commands require --tenant and --inventory")
+	}
+	if (o.Command[1] == "show" || o.Command[1] == "assign") && len(o.Command) == 3 && o.Command[2] != "" {
+		if o.IdempotencyKey != "" || o.Page.Cursor != "" || o.Title != "" || o.Kind != "" || o.Parent != "" || o.ConnectorName != "" {
+			return ports.Failure("usage", "Label identity commands do not accept input fields or cursors. Remove those options.")
+		}
+		return nil
 	}
 	if o.Command[1] == "templates" && len(o.Command) == 2 {
 		return nil
 	}
 	if o.Command[1] != "render" || len(o.Command) != 3 || o.OutputPath == "" || o.OutputPath == "-" || (o.Format != "png" && o.Format != "pdf") {
 		return ports.Failure("usage", "use labels render ASSET --format png|pdf --output PATH")
-	}
-	if o.TemplateVersion > math.MaxInt32 {
-		return ports.Failure("usage", "template version exceeds the API limit")
 	}
 	dimensions := o.WidthMM != 0 || o.HeightMM != 0
 	if dimensions && (o.WidthMM <= 0 || o.HeightMM <= 0 || math.IsNaN(o.WidthMM) || math.IsNaN(o.HeightMM) || math.IsInf(o.WidthMM, 0) || math.IsInf(o.HeightMM, 0)) {
@@ -42,6 +46,10 @@ func validateLabelCommand(o Options) error {
 }
 func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFiles, o Options) (any, error) {
 	switch o.Command[1] {
+	case "show":
+		return api.AssetLabel(ctx, o.Scope, o.Command[2])
+	case "assign":
+		return api.AssignLabel(ctx, o.Scope, o.Command[2])
 	case "templates":
 		return api.LabelTemplates(ctx, o.Scope)
 	case "resolve":
@@ -50,6 +58,9 @@ func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFi
 			return nil, ports.Failure("usage", "invalid label link")
 		}
 		return api.ResolveLabel(ctx, ref)
+	}
+	if o.InputPath != "" {
+		return publishRenderedLabel(ctx, api, files, o, ports.LabelRenderSelection{RequestBody: o.RequestBody, Format: o.Format})
 	}
 	defaults, err := api.PrintDefaults(ctx, o.Scope)
 	if err != nil {
@@ -95,6 +106,9 @@ func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFi
 		return nil, ports.Failure("usage", "media selection is unsupported or ambiguous; choose an authorized catalog preset")
 	}
 	selection.Media = selected[0]
+	return publishRenderedLabel(ctx, api, files, o, selection)
+}
+func publishRenderedLabel(ctx context.Context, api ports.LabelsAPI, files ports.LabelFiles, o Options, selection ports.LabelRenderSelection) (any, error) {
 	artifact, err := api.RenderLabel(ctx, o.Scope, o.Command[2], selection)
 	if err != nil {
 		return nil, err
@@ -105,5 +119,5 @@ func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFi
 	if err = files.Publish(ctx, o.OutputPath, artifact.Content); err != nil {
 		return nil, err
 	}
-	return ports.LabelFileResult{Path: o.OutputPath, Format: artifact.Format, SHA256: artifact.SHA256}, nil
+	return ports.LabelFileResult{Path: o.OutputPath, Format: artifact.Format, SHA256: artifact.SHA256, Render: artifact.Render}, nil
 }

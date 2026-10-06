@@ -36,5 +36,5 @@ func (c *Client) ConfigurePrinterMedia(ctx context.Context, s ports.Scope, id st
 	if err != nil {
 		return ports.Result[ports.RegisteredPrinter]{}, err
 	}
-	return ports.Result[ports.RegisteredPrinter]{Data: humanPrinter(response.Data)}, nil
+	return ports.Result[ports.RegisteredPrinter]{Data: humanPrinter(response.Data), Schema: response.Schema, Meta: metadata(response.Meta)}, nil
 }

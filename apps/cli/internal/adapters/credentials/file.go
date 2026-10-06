@@ -18,8 +18,11 @@ func checkFile(path string) error {
 	if err != nil {
 		return err
 	}
-	if !info.Mode().IsRegular() || info.Mode().Perm()&0077 != 0 {
-		return errors.New("credential file must be a regular owner-only file (0600)")
+	if !info.Mode().IsRegular() {
+		return errors.New("The credential path is not a regular file. Choose a private regular file for credential storage.")
+	}
+	if info.Mode().Perm()&0077 != 0 {
+		return errors.New("Other accounts can access the credential file. Set its permissions to 0600.")
 	}
 	return checkOwner(info)
 }

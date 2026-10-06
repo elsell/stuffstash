@@ -16,12 +16,12 @@ func TestConnectorFileSeparatesIdentityAndProtectsSecret(t *testing.T) {
 	ctx := context.Background()
 	path := filepath.Join(t.TempDir(), "private", "connector.json")
 	store := ConnectorFile{Path: path}
-	registration := ports.ConnectorRegistration{Server: "https://stash.example", TenantID: "tenant", InventoryID: "inventory", ConnectorID: "connector", Credential: "secret", ExpiresAt: time.Now().UTC()}
+	registration := ports.ConnectorRegistration{Server: "https://stash.example", TenantID: "tenant", InventoryID: "inventory", ConnectorID: "connector", Credential: "secret", ExpiresAt: time.Now().UTC(), ActivationDeadline: time.Date(2030, 1, 2, 3, 4, 5, 678, time.UTC)}
 	if err := store.Save(ctx, registration); err != nil {
 		t.Fatal(err)
 	}
 	got, err := store.Load(ctx, registration.Server, registration.ConnectorID)
-	if err != nil || got.Credential != registration.Credential {
+	if err != nil || got.Credential != registration.Credential || !got.ActivationDeadline.Equal(registration.ActivationDeadline) {
 		t.Fatalf("saved credential unavailable: %v", err)
 	}
 	for _, identity := range [][2]string{{"https://other.example", "connector"}, {registration.Server, "other"}} {

@@ -1,0 +1,2510 @@
+{
+  "version": 1,
+  "operations": {
+    "delete-tenants-by-tenant-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}",
+        "domain": "tenants",
+        "contractSha256": "81a2ba0a7f51335d62748dc73273dbe2ad829ae866969158706951fdf1ccb883"
+      },
+      "commands": [
+        "tenants delete"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-archive-jobs-by-job-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/archive-jobs/{jobId}",
+        "domain": "archives",
+        "contractSha256": "8419e2885fe6f79116f3d9e370ca77874c72a41b33c0267fb1f4352411ab9370"
+      },
+      "commands": [
+        "archive-jobs delete"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}",
+        "domain": "custom asset types",
+        "contractSha256": "6fb491daad9857dad57475c6a9a05cbd52c7438ae6de973c218c6f05b2c6877f"
+      },
+      "commands": [
+        "asset-types delete"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-custom-field-definitions-by-definition-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/custom-field-definitions/{definitionId}",
+        "domain": "custom field definitions",
+        "contractSha256": "9a785541f7b49022274e81c9e15483713472a0772e2e30471d9e81295a544cf8"
+      },
+      "commands": [
+        "field-definitions delete"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}",
+        "domain": "inventories",
+        "contractSha256": "7dc6b38fc26546d77fa6264951f7da379c992277ec7b222f752fa541d68261d0"
+      },
+      "commands": [
+        "inventories delete"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-access-grants-by-principal-id-by-relationship": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}",
+        "domain": "inventory access",
+        "contractSha256": "4ae8834eafcbaf4fe2e957eeff794c2414efa342170e2668c8a490943e579e46"
+      },
+      "commands": [
+        "access-grants remove"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}",
+        "domain": "inventory access",
+        "contractSha256": "fe8c4b1eb12d3757e90bac56e72034905da3f00185e18aeadbef0ba4e1695320"
+      },
+      "commands": [
+        "invitations delete"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}",
+        "domain": "assets",
+        "contractSha256": "6113671b9091d06e81a1c1c3718714a3418163f0fa3ee5f502e1e52411a28a94"
+      },
+      "commands": [
+        "assets delete"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}",
+        "domain": "attachments",
+        "contractSha256": "5679daa9f0d69b0b6efeafe3df646e5015b70bc737e5978d1ece63e87a9948e3"
+      },
+      "commands": [
+        "attachments delete"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}",
+        "domain": "custom asset types",
+        "contractSha256": "e8b18cea4ce42fc21fafe1dcad7c25d3e4a5c93209fbc036dd1b208098e8c1c2"
+      },
+      "commands": [
+        "asset-types delete"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}",
+        "domain": "custom field definitions",
+        "contractSha256": "581f3a0e4516574ef0c9ba38034d117e67f43e629c1334c7ced254362b21ecee"
+      },
+      "commands": [
+        "field-definitions delete"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}",
+        "domain": "imports",
+        "contractSha256": "fd2b3b6e4e2eb4833bd202bf664744e07bc1f9b16cd6fa35c200d9d2f9f0c794"
+      },
+      "commands": [
+        "import-jobs delete"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices-by-device-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notification-devices/{deviceId}",
+        "domain": "notifications",
+        "contractSha256": "84a562f89a52bd1d882596fb848345f10a83bcd210a81d2e10f5e53c34b93a27"
+      },
+      "commands": [
+        "notification-devices remove"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-types-by-custom-asset-type-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notification-preferences/types/{customAssetTypeId}",
+        "domain": "notifications",
+        "contractSha256": "0225cfa30a37c49a071e94616595827462b83f0ae224548339b1b9e015e25aba"
+      },
+      "commands": [
+        "notification-preferences remove-override"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id-read": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notifications/{notificationId}/read",
+        "domain": "notifications",
+        "contractSha256": "23158b4faa2399cbf1027839885d7eb8661863cadb0f43a9282b66b02e48377d"
+      },
+      "commands": [
+        "notifications unread"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "delete-tenants-by-tenant-id-inventories-by-inventory-id-tags-by-tag-id": {
+      "contract": {
+        "method": "DELETE",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/tags/{tagId}",
+        "domain": "tags",
+        "contractSha256": "1a208d4cde7972774e90b961d415fdb6b500a9fa974252ebff9ffbd944a08a5c"
+      },
+      "commands": [
+        "tags delete"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "download-inventory-archive": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/archive-jobs/{jobId}/content",
+        "domain": "archives",
+        "contractSha256": "c13d3634dc0403dfe6402543b60c0ac0b4f2d5d48c2c2a274cc6042fc00408fb"
+      },
+      "commands": [
+        "archive-jobs download"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-cli-auth-config": {
+      "contract": {
+        "method": "GET",
+        "path": "/auth/cli/config",
+        "domain": "identity",
+        "contractSha256": "47172ca351c0e25c37cb12d0ce09e9368aea96e9c5a026199945e3da567fe772"
+      },
+      "commands": [
+        "server auth-config"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-instance": {
+      "contract": {
+        "method": "GET",
+        "path": "/instance",
+        "domain": "labels",
+        "contractSha256": "231e734dbc9f439ee270289725cac12d3af9d19849a896c2389d2ffd80197b77"
+      },
+      "commands": [
+        "server show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-labels-v1-by-instance-id-by-label-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/labels/v1/{instanceId}/{labelId}",
+        "domain": "labels",
+        "contractSha256": "44d4a1ccd571521b26f19459187eea993d06a51f4bd1264ab860a3e094f4ea6c"
+      },
+      "commands": [
+        "labels resolve"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-me": {
+      "contract": {
+        "method": "GET",
+        "path": "/me",
+        "domain": "identity",
+        "contractSha256": "c4913b0cb8629202f02007a6641d56f70496b0ee3743c9597b2d480368e639c7"
+      },
+      "commands": [
+        "account show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-me-tenants": {
+      "contract": {
+        "method": "GET",
+        "path": "/me/tenants",
+        "domain": "identity",
+        "contractSha256": "a3f319467406fea472d9f09ad5a39173ee3ed9e893b751bb132440a6616c9092"
+      },
+      "commands": [
+        "tenants list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-print-connector-pairings-by-pairing-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/print-connector-pairings/{pairingId}",
+        "domain": "printing",
+        "contractSha256": "9a61327da3716970fc4838bc6f899ca15c8be7a123bc8d1383da951ac83206cf"
+      },
+      "commands": [
+        "connectors print register",
+        "connectors print rotate"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-print-consumer-attempts": {
+      "contract": {
+        "method": "GET",
+        "path": "/print-consumer/attempts",
+        "domain": "printing",
+        "contractSha256": "9c8835edeba4bedd42f32c7a2e4e7c5c61fffa648661f28bb2898cf5113a699a"
+      },
+      "commands": [
+        "connectors print run",
+        "connectors print attempts list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-print-consumer-attempts-by-attempt-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/print-consumer/attempts/{attemptId}",
+        "domain": "printing",
+        "contractSha256": "750717689dcb4062f27e4ea4d049406c981cb8a4cf2ad54505e03e2b2cba1dd1"
+      },
+      "commands": [
+        "connectors print run",
+        "connectors print attempts show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-print-consumer-printers": {
+      "contract": {
+        "method": "GET",
+        "path": "/print-consumer/printers",
+        "domain": "printing",
+        "contractSha256": "2f80cd532e022cb1c2ca774b2f5818c107c254d3811b8589cf5caec7993ec877"
+      },
+      "commands": [
+        "connectors print run",
+        "connectors print printers"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}",
+        "domain": "tenants",
+        "contractSha256": "3e3fcac86e33aef78e316d898eced27c2380a473c3554b46c24a2ad6e5396da4"
+      },
+      "commands": [
+        "tenants show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-archive-jobs": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/archive-jobs",
+        "domain": "archives",
+        "contractSha256": "53263251442535cdfba4cb5d3aeef43b21b496054b0b15037fd37d4f49e69aca"
+      },
+      "commands": [
+        "archive-jobs list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-archive-jobs-by-job-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/archive-jobs/{jobId}",
+        "domain": "archives",
+        "contractSha256": "4f03b5babac162d6fc051d47259ce631f30e5a8cd1a6f7f1aea11363bae06147"
+      },
+      "commands": [
+        "archive-jobs show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-archive-jobs-by-job-id-preview": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/archive-jobs/{jobId}/preview",
+        "domain": "archives",
+        "contractSha256": "4cc140544623c7345862e08a7b82fe7fc55778d601bb823835bfb7d8bd5fb244"
+      },
+      "commands": [
+        "archive-jobs preview"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-audit-records": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/audit-records",
+        "domain": "audit records",
+        "contractSha256": "abf8716b0137e827abcc9059159f11242ae819b51a82a2405b1095c02f5122f5"
+      },
+      "commands": [
+        "tenants audit"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-conversation-evaluation-cases": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/conversation-evaluation-cases",
+        "domain": "conversation evaluation cases",
+        "contractSha256": "4add4156d5de0e17b1fc97db2fd6c28118e6239126e51368911995594e38d435"
+      },
+      "commands": [
+        "evaluation cases list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/conversation-evaluation-cases/{caseId}",
+        "domain": "conversation evaluation cases",
+        "contractSha256": "aeb8353f3f9078126f94575a38b12ee832f7048cdefd77aba22fb114cbf931da"
+      },
+      "commands": [
+        "evaluation cases show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id-revisions": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/conversation-evaluation-cases/{caseId}/revisions",
+        "domain": "conversation evaluation cases",
+        "contractSha256": "dd727fb9471fc7ea9c63374b2f4f2705a9b302e81afe9cec4d776d0d543dd59d"
+      },
+      "commands": [
+        "evaluation revisions list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id-revisions-by-revision-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/conversation-evaluation-cases/{caseId}/revisions/{revisionId}",
+        "domain": "conversation evaluation cases",
+        "contractSha256": "637521f8840c1c0d339e3fab51565f42e7144750b8c1e1798778a2888f0b5c24"
+      },
+      "commands": [
+        "evaluation revisions show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-conversation-evaluation-runs": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/conversation-evaluation-runs",
+        "domain": "conversation evaluation runs",
+        "contractSha256": "3e86f654e134dd835802772b4847a4fd1c0aad4f339bc2aba1bda14e57a629d4"
+      },
+      "commands": [
+        "evaluation runs list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-conversation-evaluation-runs-by-run-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/conversation-evaluation-runs/{runId}",
+        "domain": "conversation evaluation runs",
+        "contractSha256": "43094c8d2d2ec447480e7e256844ebfecd8aa250ce16cc6ad6de072742df5599"
+      },
+      "commands": [
+        "evaluation runs show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-conversation-workflow-selection": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/conversation-workflow-selection",
+        "domain": "conversation workflows",
+        "contractSha256": "fd9055dc258a34d766b4a1ec7195d443a55dbe2394eb18effdb8301af951b9cb"
+      },
+      "commands": [
+        "workflows selection show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-conversation-workflows": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/conversation-workflows",
+        "domain": "conversation workflows",
+        "contractSha256": "5a3838e24417eb9206b72d36781e13208e1727a90e22da11827927154d248816"
+      },
+      "commands": [
+        "workflows list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-conversation-workflows-by-workflow-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/conversation-workflows/{workflowId}",
+        "domain": "conversation workflows",
+        "contractSha256": "f7e72031a66aea0cd510a8e9377f76746eb69442e59916cc9ab647b8636e4b23"
+      },
+      "commands": [
+        "workflows show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/conversation-workflows/{workflowId}/revisions",
+        "domain": "conversation workflows",
+        "contractSha256": "8c16fc68431be0a5de9c05ab3310f393281fb5df52b39cd08184fc67021774d8"
+      },
+      "commands": [
+        "workflows revisions list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions-by-revision-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/conversation-workflows/{workflowId}/revisions/{revisionId}",
+        "domain": "conversation workflows",
+        "contractSha256": "87d91034e35a894ce66e344a66fcb0ffc948900fe7bf5e8d4bd1b9cd9676e913"
+      },
+      "commands": [
+        "workflows revisions show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-custom-asset-types": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/custom-asset-types",
+        "domain": "custom asset types",
+        "contractSha256": "c2451e43ea6bf816e8b7784562110fdfdf9c47c7cc7536d7cdb290a531f19490"
+      },
+      "commands": [
+        "asset-types list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}",
+        "domain": "custom asset types",
+        "contractSha256": "48b3ba7b139b6cd73e73c10ffea3cd5c6c85f5da509184ec6d95a5424e1a0d79"
+      },
+      "commands": [
+        "asset-types show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-custom-field-definitions": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/custom-field-definitions",
+        "domain": "custom field definitions",
+        "contractSha256": "7537de87a47121f9fb2acfccff70b4a9b9fa5a88db506f6f5b0f3c0ea43f9f6b"
+      },
+      "commands": [
+        "field-definitions list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-custom-field-definitions-by-definition-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/custom-field-definitions/{definitionId}",
+        "domain": "custom field definitions",
+        "contractSha256": "e157f34d4d465fee0f7d93984deccfbbffb4b0aeda3ce227785a8e140412c685"
+      },
+      "commands": [
+        "field-definitions show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories",
+        "domain": "inventories",
+        "contractSha256": "152324975af9a56fdf3351d5201098ba28469cf495289e271c3d621053b7e1f5"
+      },
+      "commands": [
+        "inventories list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}",
+        "domain": "inventories",
+        "contractSha256": "5a01cde58c65e3581ead9310e5745135086d301fa94c7612f1e39611c343b68a"
+      },
+      "commands": [
+        "inventories show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-access-grants": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/access-grants",
+        "domain": "inventory access",
+        "contractSha256": "6e4b84f905910969314bf18aa3538d75b651cadc00f90d5e1905fbb5992bf0ea"
+      },
+      "commands": [
+        "access-grants list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-access-grants-by-principal-id-by-relationship": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/access-grants/{principalId}/{relationship}",
+        "domain": "inventory access",
+        "contractSha256": "f263beed6e9ea4fa4f7c9fe204810d82b2ac1f0f7a371bee8bc5b4bf4c655648"
+      },
+      "commands": [
+        "access-grants show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations",
+        "domain": "inventory access",
+        "contractSha256": "b664d6807aecae14399d8e25146a6115d2731de7901a20b4b33cd54ac81fdba4"
+      },
+      "commands": [
+        "invitations list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}",
+        "domain": "inventory access",
+        "contractSha256": "eccfb8620a529da2ca893292b2cd64ec289afa3d137b7e43964220c0bf8351dc"
+      },
+      "commands": [
+        "invitations show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets",
+        "domain": "assets",
+        "contractSha256": "dca73be97313ef75c02c132923fe12449980da13bfda76321f83a023f5c8df97"
+      },
+      "commands": [
+        "assets list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}",
+        "domain": "assets",
+        "contractSha256": "2292d1e42506476aa0825ddde0769b558273938ac12ea2ff35fafbd37c50396e"
+      },
+      "commands": [
+        "assets show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-activity": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/activity",
+        "domain": "audit records",
+        "contractSha256": "a3b5db09b2dea13abc2126b0a70371a7da5ea02d0472ed7b7dd773f6d6be8230"
+      },
+      "commands": [
+        "assets activity"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments",
+        "domain": "attachments",
+        "contractSha256": "5ceacee80a86f98dd26a7ee8666eaaf3810b8224d40ec883f1db86ceac777e6f"
+      },
+      "commands": [
+        "attachments list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}",
+        "domain": "attachments",
+        "contractSha256": "a0191e17b3641208fa54c01c64f6be0996d3b83dcd9086c5dbfc4b2031eb04b9"
+      },
+      "commands": [
+        "attachments show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-audit-records": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/audit-records",
+        "domain": "audit records",
+        "contractSha256": "d7267f28ac605c3e344b8ce1a3b63c67132335b9036c8a3f9b52e82ea8bde7d1"
+      },
+      "commands": [
+        "assets audit"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkouts": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts",
+        "domain": "assets",
+        "contractSha256": "ce0eed5edf0819fbbf2c8afcd1558ac3981d7ffcf8255eb3d4e221454c4e17f7"
+      },
+      "commands": [
+        "assets checkouts"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-label": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label",
+        "domain": "labels",
+        "contractSha256": "8ffeb4db6409f0027483ae6f22ce6436b0a3d202fe58a6bcb21d4ae116c7198b"
+      },
+      "commands": [
+        "labels show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-audit-records": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/audit-records",
+        "domain": "audit records",
+        "contractSha256": "34ec09e580b56efb0a96e1883543abee3916cfebf3685737f71ca39a47e0afcf"
+      },
+      "commands": [
+        "inventories audit"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-checked-out-assets": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/checked-out-assets",
+        "domain": "assets",
+        "contractSha256": "9acf07f2d4c140138abbe5e9c8b716fbe29100b8456201be4d34e67e82b5c727"
+      },
+      "commands": [
+        "assets checked-out"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types",
+        "domain": "custom asset types",
+        "contractSha256": "5ffed40aec11af8acb61c1699ff4aad78cf668d2d1b59f1ebb3b5c8f5c025a97"
+      },
+      "commands": [
+        "asset-types list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}",
+        "domain": "custom asset types",
+        "contractSha256": "d86ae9cd8ae52ef8f622119fe54d620064756dd5c365fc0ae6395f8e55ede508"
+      },
+      "commands": [
+        "asset-types show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions",
+        "domain": "custom field definitions",
+        "contractSha256": "6d28b4d7592506b589b9792d13ac1664a91618b267bfeafba8ae9153e6ff0766"
+      },
+      "commands": [
+        "field-definitions list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}",
+        "domain": "custom field definitions",
+        "contractSha256": "1c4e011a040df92d1d9db4781ffaa26854f3a0b3a8fe2136f6dd712ebb018da4"
+      },
+      "commands": [
+        "field-definitions show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-expiration-assets": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/expiration-assets",
+        "domain": "assets",
+        "contractSha256": "9a6a80abeb652f692743b730843e48912da22d41a2eb73650ab1292cd3dce5e2"
+      },
+      "commands": [
+        "assets expiration"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs",
+        "domain": "imports",
+        "contractSha256": "93e62d4cd1f2a79e9e197430cf713051badaa5549be1145c49054911a958d694"
+      },
+      "commands": [
+        "import-jobs list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}",
+        "domain": "imports",
+        "contractSha256": "72bf66ad42525f69f234f960263ad9c5134be692e765e2bd2c0258cff4286402"
+      },
+      "commands": [
+        "import-jobs show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-label-templates": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/label-templates",
+        "domain": "labels",
+        "contractSha256": "356dd75b3537ff0d0198daf365ff67b819b3d02f1e18ddd82206d0e0b183f42b"
+      },
+      "commands": [
+        "labels templates"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices-by-installation-by-installation-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notification-devices/by-installation/{installationId}",
+        "domain": "notifications",
+        "contractSha256": "db4c0cbc2042b77c88fb07c0922e90d44a0d03cfd448e87e53ce720366767034"
+      },
+      "commands": [
+        "notification-devices show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notification-preferences",
+        "domain": "notifications",
+        "contractSha256": "878b43f9743199ef808c40f9b6a6937f7b386af16fd032973e9cc10f54b3f639"
+      },
+      "commands": [
+        "notification-preferences show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-notifications": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notifications",
+        "domain": "notifications",
+        "contractSha256": "0672417874ea92e2d483b3d9100094c3e74af185e6a73122b723135730c12bc9"
+      },
+      "commands": [
+        "notifications list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notifications/{notificationId}",
+        "domain": "notifications",
+        "contractSha256": "8ee4fcd150c4c3f5694bf3f7eb5cf3c8b58bcd2dc23d665567f11fefa54ba17b"
+      },
+      "commands": [
+        "notifications show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-notifications-unread-count": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notifications/unread-count",
+        "domain": "notifications",
+        "contractSha256": "40033e25b1f6e7dcdb18ad2076a2ab50185bc0437c741ed6bddfe197913bd3ca"
+      },
+      "commands": [
+        "notifications unread-count"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/print-connectors",
+        "domain": "printing",
+        "contractSha256": "5b035ab24505def215f940102ec665dfaeaa45af99788f15b98a47fe4849163b"
+      },
+      "commands": [
+        "connectors print list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}",
+        "domain": "printing",
+        "contractSha256": "2604c501db2b8d6a1e9be6727242b3f2dfd8bbdaf3f004be33f153365f1d2d5e"
+      },
+      "commands": [
+        "connectors print show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/print-jobs",
+        "domain": "printing",
+        "contractSha256": "ad0a760ae6b412f6db5c87541b81c2899f1ff372345e803bf7a44d5e7e1ef236"
+      },
+      "commands": [
+        "print-jobs list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}",
+        "domain": "printing",
+        "contractSha256": "56afcdf3e58d8f367ac7cc7b88c6dba7943ee14830726c5e99e75ebf735aeff2"
+      },
+      "commands": [
+        "print-jobs show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-print-settings": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/print-settings",
+        "domain": "printing",
+        "contractSha256": "f980324e76d6718962134d9b5c9fc70eaf835a4feddfd11cc9e12d0f40609125"
+      },
+      "commands": [
+        "print-settings show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-printer-profiles": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/printer-profiles",
+        "domain": "printing",
+        "contractSha256": "35bbedff3d73883898058ff89aa6197cd7a29460bd84a49fdecf3bc963cfe74d"
+      },
+      "commands": [
+        "printers profiles"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-printers": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/printers",
+        "domain": "printing",
+        "contractSha256": "5d4eec150ba265feb3909497506e52340a9251f988661c2f4180880bb23c2bfd"
+      },
+      "commands": [
+        "printers list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId}",
+        "domain": "printing",
+        "contractSha256": "7996a1b5b9660869d230877b191f922408b775ffb6d8d4b8617089050a41a0e6"
+      },
+      "commands": [
+        "printers show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-inventories-by-inventory-id-tags": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/tags",
+        "domain": "tags",
+        "contractSha256": "ae45dc102034ea5fa51478e4cbc9a8537aa4c3c6f312028b0ea80d0c98ac4ac2"
+      },
+      "commands": [
+        "tags list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-provider-profiles": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/provider-profiles",
+        "domain": "provider profiles",
+        "contractSha256": "58d0890ff2ea8e52bdf4286bc5f7ac78ef51a9490ffe6d5842e1470e37a9f3a3"
+      },
+      "commands": [
+        "provider-profiles list"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-provider-profiles-by-provider-profile-id": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/provider-profiles/{providerProfileId}",
+        "domain": "provider profiles",
+        "contractSha256": "f33f68f86ea6597e6ec75b270aafe7347b8a854848d7f4a84223f45efe034577"
+      },
+      "commands": [
+        "provider-profiles show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-search-assets": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/search/assets",
+        "domain": "search",
+        "contractSha256": "ece2bf536a2cec4b87a640e5e225d385711c1fdddfb975a7c5a2306299dd7ab1"
+      },
+      "commands": [
+        "assets search"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "get-tenants-by-tenant-id-voice-provider-configuration": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/voice-provider-configuration",
+        "domain": "provider profiles",
+        "contractSha256": "b1f2ed37237ec9e362fa0eb45661fa175e3f50fdf0dac61068cc43b4454ab697"
+      },
+      "commands": [
+        "voice-provider show"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "list-print-consumer-claims-by-attempt-id-content": {
+      "contract": {
+        "method": "GET",
+        "path": "/print-consumer/claims/{attemptId}/content",
+        "domain": "printing",
+        "contractSha256": "1435034e45a88f77819deeb238123b906ac89e368592913528994023e221117e"
+      },
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "list-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-content": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/content",
+        "domain": "attachments",
+        "contractSha256": "d5c305330e1bf0da3765921577cd4f6722b1c2d38564b88cc954cbaca6775e8f"
+      },
+      "commands": [
+        "attachments download"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "list-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-thumbnail": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/thumbnail",
+        "domain": "attachments",
+        "contractSha256": "0b0a81bd542146c725208265c83aeba7a861998751cfd558798707d080a2d939"
+      },
+      "commands": [
+        "attachments thumbnail"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "list-tenants-by-tenant-id-inventories-by-inventory-id-export": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/export",
+        "domain": "exports",
+        "contractSha256": "58de2218f80dfbf9c9f8ee715de06e534f18c0dd0cf0dee3681b7a554203750b"
+      },
+      "commands": [
+        "inventories export"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "list-tenants-by-tenant-id-inventories-by-inventory-id-label-renders-by-render-id-content": {
+      "contract": {
+        "method": "GET",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/label-renders/{renderId}/content",
+        "domain": "labels",
+        "contractSha256": "663468fb7e85018d3cefa7affcc229116f968c0a6b3c3aad7a8e015561cd0287"
+      },
+      "commands": [
+        "labels download"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}",
+        "domain": "tenants",
+        "contractSha256": "0dbc90b227fc0358e4e5056f8b7adb71770aecdaa1dba0d8afee4a105e66ebe1"
+      },
+      "commands": [
+        "tenants update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-archive": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/archive",
+        "domain": "tenants",
+        "contractSha256": "9d91845b78644eb7993c6bdd7e93446bfa9186fbf393fa9b656f8121f2b8d78f"
+      },
+      "commands": [
+        "tenants archive"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}",
+        "domain": "custom asset types",
+        "contractSha256": "68c78792ca13938974ee153e3615f28fd61eb789025d0e94878f3770de3a14fe"
+      },
+      "commands": [
+        "asset-types update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id-archive": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}/archive",
+        "domain": "custom asset types",
+        "contractSha256": "9249f77cefa7d895a991dd4c866f1ca5c187b789dd663c8e15ad753ba112f456"
+      },
+      "commands": [
+        "asset-types archive"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id-restore": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/custom-asset-types/{customAssetTypeId}/restore",
+        "domain": "custom asset types",
+        "contractSha256": "cec3d49da7be5b560f5824ff7cd35595bf25a0293154efc024548cf63576d5a2"
+      },
+      "commands": [
+        "asset-types restore"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/custom-field-definitions/{definitionId}",
+        "domain": "custom field definitions",
+        "contractSha256": "1e77599298b1adc8a2f496e04b8ee4eee7ecd5e33bf1794539982f82f17d25fa"
+      },
+      "commands": [
+        "field-definitions update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id-archive": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/custom-field-definitions/{definitionId}/archive",
+        "domain": "custom field definitions",
+        "contractSha256": "91da16aefc0d010367906ad1930e8ccbc3a67166dc508b40409caa37774e860d"
+      },
+      "commands": [
+        "field-definitions archive"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-custom-field-definitions-by-definition-id-restore": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/custom-field-definitions/{definitionId}/restore",
+        "domain": "custom field definitions",
+        "contractSha256": "2e34c2676c0eacbf59e753f08dbc09f5680db840bf8f73c6482bc7e0b1f57ed8"
+      },
+      "commands": [
+        "field-definitions restore"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}",
+        "domain": "inventories",
+        "contractSha256": "2e41c5dcf11d35cd81e5a9dc737fd340797692abf0cd7a046d35102a5d45e942"
+      },
+      "commands": [
+        "inventories update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-cancel": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/cancel",
+        "domain": "inventory access",
+        "contractSha256": "78a3bc6ef50521a64c72bf0f7df8cda2b02b98ec9c44be0ee9bb0cd2537faa3c"
+      },
+      "commands": [
+        "invitations cancel"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-expiration": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/expiration",
+        "domain": "inventory access",
+        "contractSha256": "f10e0b56cd919493a037beaa4e95d6c942f91df1b90c440fab2a86a767ef0b1b"
+      },
+      "commands": [
+        "invitations expiration"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-archive": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/archive",
+        "domain": "inventories",
+        "contractSha256": "7e8a25777f239bf5055b4130a876b056d11cbff4fa594f5bf5cadb596e5491c4"
+      },
+      "commands": [
+        "inventories archive"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}",
+        "domain": "assets",
+        "contractSha256": "ba117330a02f0feab7289cb3d1a848ea4221b1fc9a6a1a51779850c3f8938c4b"
+      },
+      "commands": [
+        "assets update",
+        "assets move"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-archive": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive",
+        "domain": "assets",
+        "contractSha256": "058cd8d9fec7598ac2e721d73fc0009b938da1cc6f714699efb8977f704fd303"
+      },
+      "commands": [
+        "assets archive"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-archive": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/archive",
+        "domain": "attachments",
+        "contractSha256": "063eb08846f777653549cbbd798693fd25bdbb39034a57f20a3d9f2707669b0f"
+      },
+      "commands": [
+        "attachments archive"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-by-attachment-id-restore": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/{attachmentId}/restore",
+        "domain": "attachments",
+        "contractSha256": "25a80b8891cd7e165ff32a2c5638763c10234b5c463924e2d5ff8fa24c24f406"
+      },
+      "commands": [
+        "attachments restore"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkouts-by-checkout-id-return-details": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkouts/{checkoutId}/return-details",
+        "domain": "assets",
+        "contractSha256": "24b912a9850bb3b130a8f76808bcd7ebddb5b129c9b01d379a933eea8209925f"
+      },
+      "commands": [
+        "assets return-details"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-restore": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/restore",
+        "domain": "assets",
+        "contractSha256": "c87e510d389ebf0cc89406ad704a02312129652017611e6782c40c126f8c2959"
+      },
+      "commands": [
+        "assets restore"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}",
+        "domain": "custom asset types",
+        "contractSha256": "8c3591e6973b5479a6c28b8c1c79f7fcf2acb58d37bc0dc8d324071c427e897b"
+      },
+      "commands": [
+        "asset-types update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id-archive": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}/archive",
+        "domain": "custom asset types",
+        "contractSha256": "21cf1c7d928afb2b8cd166e2e4ab890c34f08997fddc0c80605c2c0c959bd30c"
+      },
+      "commands": [
+        "asset-types archive"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types-by-custom-asset-type-id-restore": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types/{customAssetTypeId}/restore",
+        "domain": "custom asset types",
+        "contractSha256": "91f58e0ca11d68d580b24c3fc4318e45b19f27d6a753123a52e77ceb2f3d85b6"
+      },
+      "commands": [
+        "asset-types restore"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}",
+        "domain": "custom field definitions",
+        "contractSha256": "5e960384c818b667551c984fe7d2762c2b8a608b515561fab53f8e738600f10c"
+      },
+      "commands": [
+        "field-definitions update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-archive": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}/archive",
+        "domain": "custom field definitions",
+        "contractSha256": "78e93c132161572c30d22b3f642740cd14d5f16c8dec08251dc45868b716ef63"
+      },
+      "commands": [
+        "field-definitions archive"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions-by-definition-id-restore": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions/{definitionId}/restore",
+        "domain": "custom field definitions",
+        "contractSha256": "606c3607de30ac67eb55f12adb99f745b1dcd2d6dd07046b298e192b92d62318"
+      },
+      "commands": [
+        "field-definitions restore"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}",
+        "domain": "printing",
+        "contractSha256": "6a6d1a7a6b5072ad324e46f2cc76f662fce92173833fa8f0c4ac6468fce4d25d"
+      },
+      "commands": [
+        "connectors print update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId}",
+        "domain": "printing",
+        "contractSha256": "4aff0b7e8c75f7428fb808aba7f8c079f0edd34a99439d9c831075d98caa0b08"
+      },
+      "commands": [
+        "printers update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-restore": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/restore",
+        "domain": "inventories",
+        "contractSha256": "ae696668d45b7741072a03a9cbf1a997fe9c655880f75ab825515bb3b82299aa"
+      },
+      "commands": [
+        "inventories restore"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-inventories-by-inventory-id-tags-by-tag-id": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/tags/{tagId}",
+        "domain": "tags",
+        "contractSha256": "fd4ec0793dc2f991d2905481085d7f44309e4f595437c9308a73f601137c2a3d"
+      },
+      "commands": [
+        "tags update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-provider-profiles-by-provider-profile-id": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/provider-profiles/{providerProfileId}",
+        "domain": "provider profiles",
+        "contractSha256": "662c799d538bfd34f137719fa7e6562af6cc343c47fdb628a0a730c4c1ab32d4"
+      },
+      "commands": [
+        "provider-profiles update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "patch-tenants-by-tenant-id-restore": {
+      "contract": {
+        "method": "PATCH",
+        "path": "/tenants/{tenantId}/restore",
+        "domain": "tenants",
+        "contractSha256": "5a7507c3795dc4a4001461bd195f7401e8d62a87f7582fe190eb2a2e61589ea1"
+      },
+      "commands": [
+        "tenants restore"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-client-telemetry": {
+      "contract": {
+        "method": "POST",
+        "path": "/client-telemetry",
+        "domain": "telemetry",
+        "contractSha256": "d3d580297631dc2a3effade2082329ff79e3b169fa06793d8bf2d05677890bde"
+      },
+      "commands": [
+        "telemetry submit"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-print-connector-pairings": {
+      "contract": {
+        "method": "POST",
+        "path": "/print-connector-pairings",
+        "domain": "printing",
+        "contractSha256": "6ae0e8fc9986727b47137c18d25f6152bacc1b789ab5db1235a92b477a7835c5"
+      },
+      "commands": [
+        "connectors print register",
+        "connectors print rotate"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-print-connector-pairings-by-pairing-id-approval": {
+      "contract": {
+        "method": "POST",
+        "path": "/print-connector-pairings/{pairingId}/approval",
+        "domain": "printing",
+        "contractSha256": "3a44e9a8834e3c4de3378d0270a45974e1aae6bd2af7993f3e5736760251f2a6"
+      },
+      "commands": [
+        "connectors print pairings approve"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-print-connector-pairings-by-pairing-id-credential": {
+      "contract": {
+        "method": "POST",
+        "path": "/print-connector-pairings/{pairingId}/credential",
+        "domain": "printing",
+        "contractSha256": "e8c8f03192cae140697f87bdc22ade755446333c706d16c325e5b118a335b5e9"
+      },
+      "commands": [
+        "connectors print register",
+        "connectors print rotate"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-print-connector-pairings-by-pairing-id-review": {
+      "contract": {
+        "method": "POST",
+        "path": "/print-connector-pairings/{pairingId}/review",
+        "domain": "printing",
+        "contractSha256": "34b46fcef64dd6cadb8c76d9567d3f9c0eea07ecceff8a452e6118a983e4fd7d"
+      },
+      "commands": [
+        "connectors print pairings review"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-print-consumer-attempts-by-attempt-id-idle-confirmation": {
+      "contract": {
+        "method": "POST",
+        "path": "/print-consumer/attempts/{attemptId}/idle-confirmation",
+        "domain": "printing",
+        "contractSha256": "7ad4d8ef6d4f097603e2fb3df6a19f760cf89e298ec7963acd847d24df727b72"
+      },
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-print-consumer-attempts-by-attempt-id-reconciliation": {
+      "contract": {
+        "method": "POST",
+        "path": "/print-consumer/attempts/{attemptId}/reconciliation",
+        "domain": "printing",
+        "contractSha256": "6fe78379f76152e4d47b90d9d69cbc455d23176287073b52b08c98ab3c7e5f33"
+      },
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-print-consumer-claims": {
+      "contract": {
+        "method": "POST",
+        "path": "/print-consumer/claims",
+        "domain": "printing",
+        "contractSha256": "029d881e9395b70a8595eb202b0ae2ce48ab3119851d6d498fde73358eb13807"
+      },
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-print-consumer-claims-by-attempt-id-outcome": {
+      "contract": {
+        "method": "POST",
+        "path": "/print-consumer/claims/{attemptId}/outcome",
+        "domain": "printing",
+        "contractSha256": "df8cde9d3d2eb508270284fa62dea76d9c3c317fd9420b3d20e4a718c52ed76f"
+      },
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-print-consumer-claims-by-attempt-id-renewal": {
+      "contract": {
+        "method": "POST",
+        "path": "/print-consumer/claims/{attemptId}/renewal",
+        "domain": "printing",
+        "contractSha256": "1ec0c6415a3fdc367971240770a5ca05fc180e1ffd7ad7dc52b90e22375b1f75"
+      },
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-print-consumer-claims-by-attempt-id-start": {
+      "contract": {
+        "method": "POST",
+        "path": "/print-consumer/claims/{attemptId}/start",
+        "domain": "printing",
+        "contractSha256": "26be63e5fa84ab04dfb785e53f6c8481c1511b39eb51c5b20123562fdb38fb7d"
+      },
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-print-consumer-heartbeat": {
+      "contract": {
+        "method": "POST",
+        "path": "/print-consumer/heartbeat",
+        "domain": "printing",
+        "contractSha256": "02e287a0486e8e017320014b2cae06b3cf444014578199b32ecd6c84cc7a6694"
+      },
+      "commands": [
+        "connectors print run",
+        "connectors print register",
+        "connectors print rotate"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-print-consumer-printer-reports": {
+      "contract": {
+        "method": "POST",
+        "path": "/print-consumer/printer-reports",
+        "domain": "printing",
+        "contractSha256": "92d555a2a36b9750979b432e20e422c2cde6a3c4d4b5862ff463cbc9eccde7e9"
+      },
+      "commands": [
+        "connectors print run"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants",
+        "domain": "tenants",
+        "contractSha256": "2295764bd7c137e349e2392f72e913964870b7e8b27c251290112153a98295aa"
+      },
+      "commands": [
+        "tenants create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-archive-jobs": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/archive-jobs",
+        "domain": "archives",
+        "contractSha256": "f284adf567adcee29fa7e04a6343bb98e304159341c3614d553f2428923b662a"
+      },
+      "commands": [
+        "archive-jobs create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-archive-jobs-by-job-id-approve": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/archive-jobs/{jobId}/approve",
+        "domain": "archives",
+        "contractSha256": "9fbd3347d225e0c75c5fa9db65ce52ec0c73d514ce92a76aef87246e5c6d87cc"
+      },
+      "commands": [
+        "archive-jobs approve"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-archive-jobs-by-job-id-retry": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/archive-jobs/{jobId}/retry",
+        "domain": "archives",
+        "contractSha256": "4eb9deefa15bdf065deb0a41b21266490688cf698de847a18501e2880fb5c3ab"
+      },
+      "commands": [
+        "archive-jobs retry"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-conversation-evaluation-cases": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/conversation-evaluation-cases",
+        "domain": "conversation evaluation cases",
+        "contractSha256": "b65dfdf1be97760fb2096cbb5d6676d851f87e26986e9423459336d3ad1efc4d"
+      },
+      "commands": [
+        "evaluation cases create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-conversation-evaluation-cases-by-case-id-revisions": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/conversation-evaluation-cases/{caseId}/revisions",
+        "domain": "conversation evaluation cases",
+        "contractSha256": "b899771336c96a5f4a3996b9bfe093520093f442332329651f31b8f76fa519dd"
+      },
+      "commands": [
+        "evaluation revisions create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-conversation-evaluation-runs": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/conversation-evaluation-runs",
+        "domain": "conversation evaluation runs",
+        "contractSha256": "dea34ed99d244ba32b2dd1f09ad02e275d26a3e37793e99ce879b62c25cc2ce7"
+      },
+      "commands": [
+        "evaluation runs create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-conversation-evaluation-runs-by-run-id-cancellation": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/conversation-evaluation-runs/{runId}/cancellation",
+        "domain": "conversation evaluation runs",
+        "contractSha256": "c634aba312dbc7b7ec75dad9d74f0e5d6cbcd141cffdaae5576a7ea3db9fc757"
+      },
+      "commands": [
+        "evaluation runs cancel"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-conversation-workflows": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/conversation-workflows",
+        "domain": "conversation workflows",
+        "contractSha256": "35e192cd07a9962237fb9cdd15990dff26cb569b76611d0608bc88ebee22974a"
+      },
+      "commands": [
+        "workflows create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-conversation-workflows-by-workflow-id-activation": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/conversation-workflows/{workflowId}/activation",
+        "domain": "conversation workflows",
+        "contractSha256": "722e5e43323dba449555917028181acb9194be6c07389f1cf8a62cd6c4612965"
+      },
+      "commands": [
+        "workflows activate"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-conversation-workflows-by-workflow-id-revisions": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/conversation-workflows/{workflowId}/revisions",
+        "domain": "conversation workflows",
+        "contractSha256": "1da3a13c13e2b37f2f838b519a7ae6026105be009f0794fbc89b27c34ae080aa"
+      },
+      "commands": [
+        "workflows revisions create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-custom-asset-types": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/custom-asset-types",
+        "domain": "custom asset types",
+        "contractSha256": "f2caa8255e5e42ba647bb7a6f0a9a2cd1dbcecaab2462a0e75dcbd74ab2ffbf7"
+      },
+      "commands": [
+        "asset-types create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-custom-field-definitions": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/custom-field-definitions",
+        "domain": "custom field definitions",
+        "contractSha256": "7312f173d43ed8c45582853dc87ef78a7f7693a78e01dda8f7b52c9ad3059c8d"
+      },
+      "commands": [
+        "field-definitions create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories",
+        "domain": "inventories",
+        "contractSha256": "4610ad166922d7d805e993a8a72b2e71306804495a6e09ebb72e23a6f3c24824"
+      },
+      "commands": [
+        "inventories create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-access-grants": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/access-grants",
+        "domain": "inventory access",
+        "contractSha256": "668e9896d5e9ab683847f446e202b09b11c3b296526452731105cfe5055fcaf9"
+      },
+      "commands": [
+        "access-grants create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations",
+        "domain": "inventory access",
+        "contractSha256": "6f978cf94d9e2edcf00450f346c1b07572a7f1de2d87c5809a0fe91161d89787"
+      },
+      "commands": [
+        "invitations create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-accept": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/accept",
+        "domain": "inventory access",
+        "contractSha256": "8722508a39e692729174ba895c9770fec00384e909545ef96b7cf51d00f870f9"
+      },
+      "commands": [
+        "invitations accept"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-access-invitations-by-invitation-id-preview": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/access-invitations/{invitationId}/preview",
+        "domain": "inventory access",
+        "contractSha256": "35a5a32c1b1e85d30cfe288cc3efce49c18ec4c38ef1146545fc685a5582befd"
+      },
+      "commands": [
+        "invitations preview"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets",
+        "domain": "assets",
+        "contractSha256": "f016d640a73b1460816a32481970092f1cf4ebc13ac5d791c5568f2b49ff3810"
+      },
+      "commands": [
+        "assets create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments",
+        "domain": "attachments",
+        "contractSha256": "52e9242fe71b2c1ada91a10eb2ff369603ce51d54771ca092e166700746970a0"
+      },
+      "commands": [
+        "attachments upload"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-direct-uploads": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/direct-uploads",
+        "domain": "attachments",
+        "contractSha256": "d6038762193e37ae9fba77645bfe926a8e681c61475a0c5b037c612ae7e45f9c"
+      },
+      "commands": [
+        "attachments upload"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-attachments-direct-uploads-by-upload-id-complete": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/attachments/direct-uploads/{uploadId}/complete",
+        "domain": "attachments",
+        "contractSha256": "489946baf81a139de8157e068cbead75af3cc72c2669d862aa3248e7789022c1"
+      },
+      "commands": [
+        "attachments complete-upload"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-checkout": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/checkout",
+        "domain": "assets",
+        "contractSha256": "262a4c86bf549ab74f9e7926e3dd56b3b78552261ffe9893cc9e07113cd3fcdf"
+      },
+      "commands": [
+        "assets checkout"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-label": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label",
+        "domain": "labels",
+        "contractSha256": "ec5501e91e8a58fd955030a5075b413395c7be3abc077661eec6ecea5d474b70"
+      },
+      "commands": [
+        "labels assign"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-label-renders": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/label-renders",
+        "domain": "labels",
+        "contractSha256": "04be4eda3eb9c6d7f4a1b74c182abc60a3f9d581eb3b896e17822803c39e73b3"
+      },
+      "commands": [
+        "labels render"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-print-jobs": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/print-jobs",
+        "domain": "printing",
+        "contractSha256": "e91009c9ecc6a7cde5df5086294aee56d8c6dbf6daa579a058cca3416dc4711f"
+      },
+      "commands": [
+        "labels print"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-assets-by-asset-id-return": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/return",
+        "domain": "assets",
+        "contractSha256": "abba84cdf1c022ecfd9aff7e147e313ad14ec41ecab2ffd913e003c03587b3a5"
+      },
+      "commands": [
+        "assets return"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-custom-asset-types": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-asset-types",
+        "domain": "custom asset types",
+        "contractSha256": "701bed61fad503e7760b25a618e902ebbcf5ef3926129b82f31460052068b742"
+      },
+      "commands": [
+        "asset-types create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-custom-field-definitions": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/custom-field-definitions",
+        "domain": "custom field definitions",
+        "contractSha256": "f03fa3c42ed4a7b27c9aaf7c303256ac2b8255b3d9b525d183d626fc39945996"
+      },
+      "commands": [
+        "field-definitions create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id-cancel": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}/cancel",
+        "domain": "imports",
+        "contractSha256": "c812a8c585eb11e43767ca143fd7c98494eaf168e72c8ae06d82886a1a85388e"
+      },
+      "commands": [
+        "import-jobs cancel"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-by-job-id-start": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}/start",
+        "domain": "imports",
+        "contractSha256": "edb79cd945bacb15757e3ad5e76e1abaa4ec47a2b7b700c64b10c7fd03c81de5"
+      },
+      "commands": [
+        "import-jobs start"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-preview": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/preview",
+        "domain": "imports",
+        "contractSha256": "a927852011e9be148f17980a241dd6394e65cf0de8224dd126053edb52be09f0"
+      },
+      "commands": [
+        "import-jobs preview"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notification-devices",
+        "domain": "notifications",
+        "contractSha256": "028c366e8b6e6b6f9ff925ac6768385d000ea4902253407ae122b7264cb462e5"
+      },
+      "commands": [
+        "notification-devices register"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-initialize": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notification-preferences/initialize",
+        "domain": "notifications",
+        "contractSha256": "845b37435e47dc6db6e5e7b9e80b0282bdc8b1ec9fc80bbef95d88dde436e3e8"
+      },
+      "commands": [
+        "notification-preferences initialize"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-print-connectors-by-connector-id-credential-rotation": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/print-connectors/{connectorId}/credential-rotation",
+        "domain": "printing",
+        "contractSha256": "2b032209b2325af95975c281f8f241299eedec17365da25f1a7211c0bab18b73"
+      },
+      "commands": [
+        "connectors print rotations approve"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id-cancellation": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/cancellation",
+        "domain": "printing",
+        "contractSha256": "ea11f16d40f8f16f96bb7f4a06a75ebe329f991d1191b9f16ae5d35475b4d4b9"
+      },
+      "commands": [
+        "print-jobs cancel"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id-reprints": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/reprints",
+        "domain": "printing",
+        "contractSha256": "9f57b1c64e11af51024383ab1d02f15b1850f952af3e1f6918c6a4197ba14b19"
+      },
+      "commands": [
+        "print-jobs reprint"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-print-jobs-by-job-id-resolution": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/print-jobs/{jobId}/resolution",
+        "domain": "printing",
+        "contractSha256": "2e5c58b7c68ac00bd9ef2f8112acc7c0e52d159d13785724101083127f254cce"
+      },
+      "commands": [
+        "print-jobs resolve"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-printers": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/printers",
+        "domain": "printing",
+        "contractSha256": "9622a2ab9382dcbf9ff8aa7b1f3a777d9376ae801d58751988adb1d3126e960d"
+      },
+      "commands": [
+        "printers create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-printers-by-printer-id-test-jobs": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/printers/{printerId}/test-jobs",
+        "domain": "printing",
+        "contractSha256": "b7ffe734261ce8ff007bc738b153e38e62a859d435167921d914e3badfd6e620"
+      },
+      "commands": [
+        "printers test"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-tags": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/tags",
+        "domain": "tags",
+        "contractSha256": "df47da4f65a827091edc623a456109ae296cd460c35a7ba20db0ba59ffab9366"
+      },
+      "commands": [
+        "tags create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-undoable-operations-by-operation-id-redo": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/redo",
+        "domain": "undoable-operations",
+        "contractSha256": "3fba832625f8b8333acceb2a26e780bf421d5b25547cfe952af207e6ea431eb8"
+      },
+      "commands": [
+        "operations redo"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-inventories-by-inventory-id-undoable-operations-by-operation-id-undo": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/undoable-operations/{operationId}/undo",
+        "domain": "undoable-operations",
+        "contractSha256": "9a403b78bf1b673ad53624a4556e9443fad926b69677d7311baabca0eeb246df"
+      },
+      "commands": [
+        "operations undo"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-provider-profiles": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/provider-profiles",
+        "domain": "provider profiles",
+        "contractSha256": "cbffb3093f7b4424ded6af4884120f7f99057f65879be56a3b997f9db7d02d5a"
+      },
+      "commands": [
+        "provider-profiles create"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-archive": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/provider-profiles/{providerProfileId}/archive",
+        "domain": "provider profiles",
+        "contractSha256": "f96078df5dcee00edfec28b91d1d3dd793b6b9c397a75b91d318caa6883b2cb3"
+      },
+      "commands": [
+        "provider-profiles archive"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-disable": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/provider-profiles/{providerProfileId}/disable",
+        "domain": "provider profiles",
+        "contractSha256": "45410ccc2431eab42d6ad832ca9624010028f3133d8a47fe1d27343fa9bffeec"
+      },
+      "commands": [
+        "provider-profiles disable"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-enable": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/provider-profiles/{providerProfileId}/enable",
+        "domain": "provider profiles",
+        "contractSha256": "c60b2c42f0ee0449fb62e5a80963b53baa4c0604b0532bd42d865d05010270f8"
+      },
+      "commands": [
+        "provider-profiles enable"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "post-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-test": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/provider-profiles/{providerProfileId}/test",
+        "domain": "provider profiles",
+        "contractSha256": "386263b77b68ee86f807841b750dce5780aa279d166f57002ca288cb27e1f93d"
+      },
+      "commands": [
+        "provider-profiles test"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "put-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences": {
+      "contract": {
+        "method": "PUT",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notification-preferences",
+        "domain": "notifications",
+        "contractSha256": "1aae91d8e7869f16ada8c07d0d16f68093fe497f5701b87f77630ab85eac2eae"
+      },
+      "commands": [
+        "notification-preferences update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "put-tenants-by-tenant-id-inventories-by-inventory-id-notification-preferences-types-by-custom-asset-type-id": {
+      "contract": {
+        "method": "PUT",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notification-preferences/types/{customAssetTypeId}",
+        "domain": "notifications",
+        "contractSha256": "db8d0fa968075fe7bcfc5b08c9edd3419f6dd475eb3e4ddfe1b75d98112ccef5"
+      },
+      "commands": [
+        "notification-preferences override"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-by-notification-id-read": {
+      "contract": {
+        "method": "PUT",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notifications/{notificationId}/read",
+        "domain": "notifications",
+        "contractSha256": "75e1ac25fd9bd92cbe342cd913cadc849e58fd67c9f3986ed2e969dbdc23aca2"
+      },
+      "commands": [
+        "notifications read"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "put-tenants-by-tenant-id-inventories-by-inventory-id-notifications-read-all": {
+      "contract": {
+        "method": "PUT",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/notifications/read-all",
+        "domain": "notifications",
+        "contractSha256": "a9f0860b21465b4c1fedfd2282af5e72e34f39451070f7d46c02c6f437d8d660"
+      },
+      "commands": [
+        "notifications read-all"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "put-tenants-by-tenant-id-inventories-by-inventory-id-print-settings": {
+      "contract": {
+        "method": "PUT",
+        "path": "/tenants/{tenantId}/inventories/{inventoryId}/print-settings",
+        "domain": "printing",
+        "contractSha256": "66c0cd10d9b54bd444efd5cc4d07b6a323921dc4c5a40074925e722809e18bb6"
+      },
+      "commands": [
+        "print-settings update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "put-tenants-by-tenant-id-provider-profiles-by-provider-profile-id-credential": {
+      "contract": {
+        "method": "PUT",
+        "path": "/tenants/{tenantId}/provider-profiles/{providerProfileId}/credential",
+        "domain": "provider profiles",
+        "contractSha256": "c623725e40290934d06fbb0a0b164f0ab3a249595af7988c36d9572dd116b1d9"
+      },
+      "commands": [
+        "provider-profiles credential"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "put-tenants-by-tenant-id-voice-provider-configuration": {
+      "contract": {
+        "method": "PUT",
+        "path": "/tenants/{tenantId}/voice-provider-configuration",
+        "domain": "provider profiles",
+        "contractSha256": "63adce2491614f17a19b85a23297b7a7b4f5368acd84279eec2f2273812ce64c"
+      },
+      "commands": [
+        "voice-provider update"
+      ],
+      "status": "implemented",
+      "gaps": []
+    },
+    "upload-archive-restore": {
+      "contract": {
+        "method": "POST",
+        "path": "/tenants/{tenantId}/archive-restores",
+        "domain": "archives",
+        "contractSha256": "7982e1a88d9506d7a945c1364834dc4dfb6fd4f413a66b87c572741263a8079f"
+      },
+      "commands": [
+        "archive-jobs upload"
+      ],
+      "status": "implemented",
+      "gaps": []
+    }
+  }
+}

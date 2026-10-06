@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
@@ -32,5 +33,32 @@ func TestFileRefusesUnsafePermissionsAndOtherServer(t *testing.T) {
 	}
 	if err := store.Save(ctx, s); err == nil {
 		t.Fatal("overwrote insecure credentials")
+	}
+}
+
+func TestCredentialFailuresDistinguishFileTypeFromPermissions(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "session.json")
+	if err := os.Mkdir(path, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := (File{Path: path}).Save(context.Background(), ports.Session{}); err == nil || !strings.Contains(err.Error(), "regular file") || strings.Contains(err.Error(), "0600") {
+		t.Fatalf("file type guidance: %v", err)
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte("private-session"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(path, 0644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := (File{Path: path}).Load(context.Background(), "https://stash.example"); err == nil || !strings.Contains(err.Error(), "0600") || strings.Contains(err.Error(), "private-session") {
+		t.Fatalf("permission guidance: %v", err)
+	}
+	content, err := os.ReadFile(path)
+	if err != nil || string(content) != "private-session" {
+		t.Fatal("credential changed")
 	}
 }

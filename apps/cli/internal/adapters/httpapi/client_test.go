@@ -31,11 +31,11 @@ func TestGeneratedTransportPreservesScopeNullMoveAndDenial(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	result, err := client.UpdateAsset(context.Background(), ports.Scope{Tenant: "tenant", Inventory: "inventory"}, "asset", ports.AssetChange{MoveToRoot: true}, "logical-action")
+	result, err := client.UpdateAsset(context.Background(), ports.Scope{Tenant: "tenant", Inventory: "inventory"}, "asset", ports.AssetChange{MoveToRoot: true}, "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.Data.ID != "asset" || gotPath != "/tenants/tenant/inventories/inventory/assets/asset" || !strings.Contains(gotBody, `"parentAssetId":null`) || gotKey != "logical-action" {
+	if result.Data.ID != "asset" || gotPath != "/tenants/tenant/inventories/inventory/assets/asset" || !strings.Contains(gotBody, `"parentAssetId":null`) || gotKey != "" {
 		t.Fatalf("incorrect wire behavior: %#v %s %s %s", result, gotPath, gotBody, gotKey)
 	}
 	denied, _ := New(server.URL, "denied", server.Client())

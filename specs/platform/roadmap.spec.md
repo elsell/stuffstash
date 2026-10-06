@@ -9,6 +9,35 @@ out of scope. The generated SDK is the transport foundation, not proof of
 complete command workflows. Full parity is not yet delivered. Existing native
 acceptance remains tracked separately and does not block this work.
 
+The draft CLI batch adds private account-bound contexts, searchable scope
+selection, directory lifecycle commands, tags, asset workflows, and attachment metadata/lifecycle commands through
+the generated SDK. Critical scope and authenticated-request tests, the CLI suite,
+and Windows context-file CI have passed. Native Windows run
+[37346221820](https://github.com/elsell/stuffstash/actions/runs/37346221820)
+also passed application, local help, input/output and terminal contracts plus
+a CLI build. Native Windows run
+[37347873869](https://github.com/elsell/stuffstash/actions/runs/37347873869)
+also verified the real Credential Manager boundary and server isolation.
+Native Windows run
+[37350269032](https://github.com/elsell/stuffstash/actions/runs/37350269032)
+verified authenticated bootstrap through Credential Manager and the HTTP boundary.
+Browser sign-in and real console interaction remain unverified.
+Command-specific help and Bash/Zsh/Fish completion share reviewed metadata.
+The coverage manifest now closes the known workflow and field gaps for all 192
+REST operations. Safe pairing and printing receipts preserve server response
+metadata without exposing worker proofs or allowing human commands to invent
+hardware outcomes. Receipt output cannot block worker leases or recovery.
+
+The user approved the remaining workflow defaults on October 6. Customization,
+portability, media, sharing and provider commands now implement those choices.
+The cumulative 180-operation revision passed full CI and Windows contracts;
+subsequent worker/pairing additions passed the combined CLI suite, focused race
+checks and critic review. Final cumulative CI and release remain pending.
+Full ASD-STE100 Issue 9 vocabulary/grammar conformance is unverified: the official
+PDF is unavailable to this environment. Do not label plain-language review as
+formal conformance. Physical printer and real-console acceptance remain separate
+from fake-device and command-boundary evidence.
+
 
 ## Labels, Printers, And CLI: Released — October 4, 2026
 

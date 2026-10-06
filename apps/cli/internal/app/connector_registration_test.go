@@ -21,6 +21,8 @@ type pairingFixture struct {
 	approved, consumed, active bool
 	saved                      *ports.ConnectorRegistration
 	storageFull                bool
+	activationDeadline         *time.Time
+	saveDelay                  time.Duration
 }
 
 func (f *pairingFixture) Now() time.Time { return f.now }
@@ -47,7 +49,11 @@ func (f *pairingFixture) Exchange(_ context.Context, c ports.PairingChallenge, s
 		return ports.ConnectorRegistration{}, errors.New("denied")
 	}
 	f.consumed = true
-	return ports.ConnectorRegistration{Server: "https://stash.example", TenantID: "t", InventoryID: "i", ConnectorID: "connector", Credential: "machine-secret", ExpiresAt: f.now.Add(time.Hour)}, nil
+	deadline := f.now.Add(time.Minute)
+	if f.activationDeadline != nil {
+		deadline = *f.activationDeadline
+	}
+	return ports.ConnectorRegistration{Server: "https://stash.example", TenantID: "t", InventoryID: "i", ConnectorID: "connector", Credential: "machine-secret", ExpiresAt: f.now.Add(time.Hour), ActivationDeadline: deadline}, nil
 }
 func (f *pairingFixture) Activate(_ context.Context, r ports.ConnectorRegistration, _ string) error {
 	if f.saved == nil || f.saved.Credential != r.Credential {
@@ -61,6 +67,7 @@ func (f *pairingFixture) Save(_ context.Context, r ports.ConnectorRegistration) 
 		return errors.New("storage full")
 	}
 	f.saved = &r
+	f.now = f.now.Add(f.saveDelay)
 	return nil
 }
 func (f *pairingFixture) Load(context.Context, string, string) (ports.ConnectorRegistration, error) {
@@ -94,5 +101,37 @@ func TestRegisterConnectorPersistsBeforeActivationAndNeverOutputsSecrets(t *test
 				t.Fatal("approval code missing")
 			}
 		})
+	}
+}
+
+type pairingReceiptDrain struct {
+	fixture *pairingFixture
+	drained bool
+	called  bool
+}
+
+func (d *pairingReceiptDrain) Close(ctx context.Context) bool {
+	d.called = true
+	if d.fixture.saved == nil || !d.fixture.active {
+		panic("drained before durable activation")
+	}
+	if _, ok := ctx.Deadline(); !ok {
+		panic("unbounded drain")
+	}
+	return d.drained
+}
+func TestPairingReceiptDrainBeforeFinalOutput(t *testing.T) {
+	for _, drained := range []bool{true, false} {
+		f := &pairingFixture{now: time.Now()}
+		drain := &pairingReceiptDrain{fixture: f, drained: drained}
+		var output, notice bytes.Buffer
+		runner := app.ConnectorRegistrar{API: f, Credentials: f, Keys: pairingkeys.Keys{}, Clock: f, Waiter: f, Output: presentation.Output{Stdout: &output, Stderr: &notice, JSON: true}, PollInterval: time.Second, Receipts: drain, ReceiptDrainTimeout: time.Second}
+		err := runner.Register(context.Background(), "https://stash.example", "Garage", []ports.PairingCandidate{{ID: "device", Name: "Brother", AdapterID: "brother-ql800", DeviceID: "physical"}})
+		if err != nil || !drain.called || f.saved == nil || !f.active {
+			t.Fatalf("registration not durably completed: %v", err)
+		}
+		if (output.Len() > 0) != drained {
+			t.Fatalf("final output competed with stalled receipt: %q", output.String())
+		}
 	}
 }
