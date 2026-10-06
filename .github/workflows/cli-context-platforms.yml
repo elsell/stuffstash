@@ -49,8 +49,8 @@ jobs:
           cache: false
       - name: Verify API coverage inventory
         run: python ../../scripts/check-cli-api-coverage.py
-      - name: Verify application contracts, input and private context storage
-        run: go test -mod=readonly -timeout=2m ./internal/app ./internal/app/contexts ./internal/adapters/contextfile ./internal/adapters/inputfiles ./internal/adapters/presentation ./internal/adapters/terminal
+      - name: Verify application contracts, input and private file storage
+        run: go test -mod=readonly -timeout=2m ./internal/app ./internal/app/contexts ./internal/adapters/contextfile ./internal/adapters/binaryfiles ./internal/adapters/inputfiles ./internal/adapters/presentation ./internal/adapters/terminal
       - name: Verify local help and authenticated Windows command
         run: go test -mod=readonly -timeout=2m ./internal/bootstrap -run 'Test(CommandHelp|Help|WindowsKeyringCommandBoundary)'
       - name: Verify Windows Credential Manager isolation

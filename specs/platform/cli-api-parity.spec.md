@@ -1065,3 +1065,13 @@ Artifact bytes are downloaded and validated by the worker rather than exposed as
 a manual bypass of print claims. Completion in the manifest means known operation,
 field and workflow gaps are closed; it does not certify language conformance,
 physical hardware behavior, or release delivery. See the roadmap for that evidence.
+
+### Native Windows download acceptance
+
+The Windows CLI contract job must execute the binary file adapter tests, including
+no-overwrite and truncated-download handling. Verify a successfully published
+file through its opened Windows handle: owner is the current user, the DACL is
+protected, and no inherited or broad access grant survives publication. Exercise
+creation inside a directory with an inheritable broad grant so the test proves
+private creation rather than relying on the runner's default directory ACL.
+Cross-compilation alone does not establish this native security property.
