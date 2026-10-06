@@ -10,6 +10,7 @@ import (
 )
 
 type Options struct {
+	AllInventories                                                        bool
 	PrinterAdapterID, PrinterPresetVersion                                string
 	ExpectedMediaFingerprint, PreviewFingerprint                          string
 	InvitationStatus                                                      string
@@ -101,6 +102,12 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	if isSearch(o) {
+		return o, validateSearchFlags(o, flags)
+	}
+	if o.AllInventories {
+		return o, ports.Failure("usage", "Use --all-inventories only with assets search.")
+	}
 	if err := labelRenderFlags(o, flags); err != nil {
 		return o, err
 	}

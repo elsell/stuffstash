@@ -19,6 +19,8 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[[]ports.SearchResult]:
+		return o.searchResults(v)
 	case ports.Result[ports.PairingReview]:
 		return o.pairingReview(v.Data)
 	case ports.Result[ports.ApprovedPairing]:

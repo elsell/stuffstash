@@ -24,8 +24,8 @@ verified authenticated bootstrap through Credential Manager and the HTTP boundar
 Browser sign-in and real console interaction remain unverified.
 Command-specific help and Bash/Zsh/Fish completion now share reviewed metadata;
 native completion checks passed without adding project dependencies. The operation inventory tracks 192
-contracts; 130 have their known workflow and field gaps closed. The remaining
-62 still need implementation or full contract verification. The remaining workflow defaults were approved October 6: temporary overrides
+contracts; 131 have their known workflow and field gaps closed. The remaining
+61 still need implementation or full contract verification. The remaining workflow defaults were approved October 6: temporary overrides
 do not change saved context; search defaults to the selected inventory. Implement
 customization, portability, media, sharing and provider workflows in parallel
 reviewed batches. Approval does not itself close their operation coverage gaps.

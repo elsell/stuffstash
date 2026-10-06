@@ -974,3 +974,16 @@ in their existing workflows. Do not expose an unsafe manual claim/start/settle
 shortcut merely to add a command mapping. Existing workflow/security tests remain
 the evidence for the implemented portion; remaining fields and user workflows
 must be verified before changing a partial entry to implemented.
+
+### Approved asset search command
+
+`assets search --query TEXT` searches the selected inventory. `--all-inventories`
+explicitly omits the inventory filter within the selected household; it does not
+change saved context. Accept mode fuzzy/exact, repeated tag IDs, custom type,
+lifecycle active/archived/all, checkout any/available/checked_out, limit and cursor.
+Preserve complete search results and pagination in JSON. Human output shows title,
+inventory, ancestor path, match context and ID. Reject unsupported filters rather
+than silently ignoring them. Scope selection uses the existing authorized keyboard
+picker; scripts missing required scope fail without prompts. Exercise saved scope,
+explicit overrides, household-wide search, all filter forwarding and safe denial
+at the command HTTP boundary. No search request may write remembered defaults.

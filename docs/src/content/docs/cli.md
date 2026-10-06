@@ -204,6 +204,19 @@ checkout notes. The write commands also accept `--input FILE|-` with a JSON
 before retrying a write whose result is unknown. These commands do not support
 retry keys. History includes pagination; pass `--cursor` for the next page.
 
+### Search assets
+
+```sh
+stuffstash assets search --query "Cordless drill"
+stuffstash assets search --query "Tools" --all-inventories
+stuffstash assets search --query "Drill" --mode exact --tag-id TAG_ID
+```
+
+Search uses your selected inventory. Add `--all-inventories` to search the
+selected household. A temporary `--inventory` override does not change your
+saved selection. Use `--limit` and `--cursor` to page through results; `--json`
+keeps the full match details and pagination for scripts.
+
 ### Browse expiration dates
 
 ```sh
