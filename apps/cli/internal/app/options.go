@@ -122,6 +122,9 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	if err := binaryFlags(flags, o); err != nil {
 		return o, err
 	}
+	if err := validatePortabilityFlags(o, flags); err != nil {
+		return o, err
+	}
 	if err := labelRenderFlags(o, flags); err != nil {
 		return o, err
 	}

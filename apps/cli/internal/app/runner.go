@@ -12,7 +12,9 @@ import (
 )
 
 type Runner struct {
-	SearchAPI func(string, string) (ports.AssetSearch, error)
+	ArchiveAPI    func(string, string) (ports.ArchiveAPI, error)
+	ImportSources func(string, string) (ports.ImportSources, error)
+	SearchAPI     func(string, string) (ports.AssetSearch, error)
 
 	BinaryFiles    ports.BinaryFiles
 	StreamFiles    ports.StreamFiles
@@ -161,6 +163,9 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		}
 		o.Scope = resolved.Scope
 	}
+	if isArchiveCommand(o) && o.Command[1] != "create" {
+		o.Scope.Inventory = o.Selection.Inventory
+	}
 	o, err = r.chooseMissingScope(ctx, o, session)
 	if err != nil {
 		return err
@@ -171,6 +176,12 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 
 	if isSearch(o) {
 		return r.searchAssets(ctx, o, session.IDToken)
+	}
+	if isArchiveCommand(o) {
+		return r.archiveCommand(ctx, o, session.IDToken)
+	}
+	if isImportSource(o) {
+		return r.importSourceCommand(ctx, o, session.IDToken)
 	}
 	if isPairingApproval(o) {
 		return r.pairingApprovalCommand(ctx, o, session.IDToken)
@@ -390,6 +401,9 @@ func validateCommandOptions(o Options, requireScope bool) error {
 	}
 	if isProviderProfileCommand(o) {
 		return validateProviderProfiles(o, requireScope)
+	}
+	if isArchiveCommand(o) {
+		return validateArchive(o, requireScope)
 	}
 	if isImportJobCommand(o) {
 		return validateImportJobs(o, requireScope)

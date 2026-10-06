@@ -7,6 +7,9 @@ import (
 )
 
 func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
+	if isArchiveBody(o) || isImportSource(o) {
+		return r.preparePortability(ctx, o)
+	}
 	write := acceptsBody(o)
 	if o.InputPath != "" && !write {
 		return o, ports.Failure("usage", "This command does not accept --input. Remove the option.")

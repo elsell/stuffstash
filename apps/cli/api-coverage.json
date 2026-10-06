@@ -21,11 +21,11 @@
         "domain": "archives",
         "contractSha256": "8419e2885fe6f79116f3d9e370ca77874c72a41b33c0267fb1f4352411ab9370"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK metadata transport implemented, including optional inventory filters and full job/preview fields. CLI default filter decision, commands, confirmation and presentation remain."
-      ]
+      "commands": [
+        "archive-jobs delete"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "delete-tenants-by-tenant-id-custom-asset-types-by-custom-asset-type-id": {
       "contract": {
@@ -216,11 +216,11 @@
         "domain": "archives",
         "contractSha256": "c13d3634dc0403dfe6402543b60c0ac0b4f2d5d48c2c2a274cc6042fc00408fb"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Streaming SDK transport implemented with byte/scope/redirect checks; no local ZIP extraction. CLI file input/output, confirmation and recovery wiring remain pending design choices."
-      ]
+      "commands": [
+        "archive-jobs download"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-cli-auth-config": {
       "contract": {
@@ -365,11 +365,11 @@
         "domain": "archives",
         "contractSha256": "53263251442535cdfba4cb5d3aeef43b21b496054b0b15037fd37d4f49e69aca"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK metadata transport implemented, including optional inventory filters and full job/preview fields. CLI default filter decision, commands, confirmation and presentation remain."
-      ]
+      "commands": [
+        "archive-jobs list"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-archive-jobs-by-job-id": {
       "contract": {
@@ -378,11 +378,11 @@
         "domain": "archives",
         "contractSha256": "4f03b5babac162d6fc051d47259ce631f30e5a8cd1a6f7f1aea11363bae06147"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK metadata transport implemented, including optional inventory filters and full job/preview fields. CLI default filter decision, commands, confirmation and presentation remain."
-      ]
+      "commands": [
+        "archive-jobs show"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-archive-jobs-by-job-id-preview": {
       "contract": {
@@ -391,11 +391,11 @@
         "domain": "archives",
         "contractSha256": "4cc140544623c7345862e08a7b82fe7fc55778d601bb823835bfb7d8bd5fb244"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK metadata transport implemented, including optional inventory filters and full job/preview fields. CLI default filter decision, commands, confirmation and presentation remain."
-      ]
+      "commands": [
+        "archive-jobs preview"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "get-tenants-by-tenant-id-audit-records": {
       "contract": {
@@ -1822,11 +1822,11 @@
         "domain": "archives",
         "contractSha256": "f284adf567adcee29fa7e04a6343bb98e304159341c3614d553f2428923b662a"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Scoped SDK transport preserves complete input, retry key where required and job response. CLI guided input, confirmation, scope policy and recovery remain."
-      ]
+      "commands": [
+        "archive-jobs create"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-archive-jobs-by-job-id-approve": {
       "contract": {
@@ -1835,11 +1835,11 @@
         "domain": "archives",
         "contractSha256": "9fbd3347d225e0c75c5fa9db65ce52ec0c73d514ce92a76aef87246e5c6d87cc"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Scoped SDK transport preserves complete input, retry key where required and job response. CLI guided input, confirmation, scope policy and recovery remain."
-      ]
+      "commands": [
+        "archive-jobs approve"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-archive-jobs-by-job-id-retry": {
       "contract": {
@@ -1848,11 +1848,11 @@
         "domain": "archives",
         "contractSha256": "4eb9deefa15bdf065deb0a41b21266490688cf698de847a18501e2880fb5c3ab"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK metadata transport implemented, including optional inventory filters and full job/preview fields. CLI default filter decision, commands, confirmation and presentation remain."
-      ]
+      "commands": [
+        "archive-jobs retry"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-conversation-evaluation-cases": {
       "contract": {
@@ -2199,11 +2199,11 @@
         "domain": "imports",
         "contractSha256": "edb79cd945bacb15757e3ad5e76e1abaa4ec47a2b7b700c64b10c7fd03c81de5"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK source transport and full job response mapping implemented. CLI source input design, guided/file input, scope notice, start confirmation and recovery remain."
-      ]
+      "commands": [
+        "import-jobs start"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-imports-jobs-preview": {
       "contract": {
@@ -2212,11 +2212,11 @@
         "domain": "imports",
         "contractSha256": "a927852011e9be148f17980a241dd6394e65cf0de8224dd126053edb52be09f0"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Complete scoped SDK source transport and full job response mapping implemented. CLI source input design, guided/file input, scope notice, start confirmation and recovery remain."
-      ]
+      "commands": [
+        "import-jobs preview"
+      ],
+      "status": "implemented",
+      "gaps": []
     },
     "post-tenants-by-tenant-id-inventories-by-inventory-id-notification-devices": {
       "contract": {
@@ -2524,11 +2524,11 @@
         "domain": "archives",
         "contractSha256": "7982e1a88d9506d7a945c1364834dc4dfb6fd4f413a66b87c572741263a8079f"
       },
-      "commands": [],
-      "status": "partial",
-      "gaps": [
-        "Streaming SDK transport implemented with byte/scope/redirect checks; no local ZIP extraction. CLI file input/output, confirmation and recovery wiring remain pending design choices."
-      ]
+      "commands": [
+        "archive-jobs upload"
+      ],
+      "status": "implemented",
+      "gaps": []
     }
   }
 }

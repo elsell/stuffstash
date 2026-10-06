@@ -13,6 +13,9 @@ func isTagWrite(o Options) bool {
 	return isTagCommand(o) && len(o.Command) > 1 && (o.Command[1] == "create" || o.Command[1] == "update")
 }
 func acceptsBody(o Options) bool {
+	if isArchiveBody(o) || isImportSource(o) {
+		return true
+	}
 	return customizationBody(o) || isLabelRender(o) || isVoiceProviderUpdate(o) || isPairingApproval(o) || isTelemetry(o) || isPrinterAdministration(o) || isEvaluationWrite(o) || isWorkflowWrite(o) || isPrintSubmission(o) || isEvaluationCancellation(o) || isPrintResolution(o) || isImportCancel(o) || isInvitationTokenCommand(o) || isInvitationExpiration(o) || isGrantCreate(o) || isDeviceRegistration(o) || isPreferenceWrite(o) || isDirectoryWrite(o) || isTagWrite(o) || isAssetWrite(o) || isCheckoutWrite(o)
 }
 func validateTags(o Options, requireScope bool) error {

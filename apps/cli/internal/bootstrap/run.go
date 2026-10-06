@@ -115,6 +115,12 @@ func Run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		secretInput = prompt
 	}
 	runner := app.Runner{
+		ArchiveAPI: func(server, token string) (ports.ArchiveAPI, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
+		ImportSources: func(server, token string) (ports.ImportSources, error) {
+			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
+		},
 		SearchAPI: func(server, token string) (ports.AssetSearch, error) {
 			return httpapi.New(server, token, client, httpapi.Options{RequestID: options.RequestID})
 		},

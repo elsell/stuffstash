@@ -687,6 +687,47 @@ with `{"mode":"keep_partial_progress"}` or
 Cancellation can continue in the background; use `import-jobs show JOB_ID` to
 inspect its current state.
 
+### Create and restore archives
+
+Archive history is household-wide by default. Add `--inventory INVENTORY_ID`
+to filter it; your saved inventory does not narrow the list automatically.
+
+```sh
+stuffstash archive-jobs list
+stuffstash archive-jobs create
+stuffstash archive-jobs show JOB_ID
+stuffstash archive-jobs download JOB_ID --output backup.zip
+stuffstash archive-jobs upload --file backup.zip
+stuffstash archive-jobs preview RESTORE_JOB_ID
+stuffstash archive-jobs approve RESTORE_JOB_ID
+```
+
+Creation asks which inventory and attachments to include. Upload sends ZIP bytes
+without extracting them. Review the preview before approving a restore into a
+new inventory. Scripts use `--input FILE --yes`: creation requires `inventoryId`,
+`photos` and `otherFiles`; approval requires `name`. Save the reported request
+key when creating or uploading. After an uncertain response, inspect job history
+before repeating the same request with `--idempotency-key KEY`.
+
+Downloads never overwrite a path. `--output -` writes only archive bytes to
+stdout; omit `--json` in this mode. `--file -` uploads bytes from stdin. `archive-jobs retry JOB_ID` asks the
+server to retry a job once. `archive-jobs delete JOB_ID` removes its retained
+content. Mutations require confirmation; jobs are not polled automatically.
+
+### Preview and start imports
+
+Run `stuffstash import-jobs preview` for guided legacy Homebox or CSV input.
+Credentials are masked. Private networks and untrusted TLS stay blocked unless
+you explicitly enable them. The server reads the source; the CLI does not connect
+to it. Preview creates a review job without importing inventory records.
+
+Scripts can pass protected JSON with `--input source.json --yes`. See
+`import-jobs preview --help` for all fields. Keep credentials out of arguments and
+shell history. After reviewing `import-jobs show JOB_ID`, run
+`import-jobs start JOB_ID --input source.json --yes` with the same source and
+security choices. The server checks that they match the preview. CSV files may
+be up to 10 MiB; JSON input may be up to 16 MiB. Server deployment limits also apply.
+
 ### Inspect model providers
 
 Use `stuffstash provider-profiles list` to see model providers in the selected

@@ -19,6 +19,17 @@ func (o Output) Result(value any) error {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
 	switch v := value.(type) {
+	case ports.Result[ports.ArchiveJob]:
+		return o.archiveJob(v.Data)
+	case ports.Result[ports.ArchivePreview]:
+		return o.archivePreview(v.Data)
+	case ports.Result[[]ports.ArchiveJob]:
+		for _, job := range v.Data {
+			if err := o.archiveJob(job); err != nil {
+				return err
+			}
+		}
+		return o.pagination(v.Pagination)
 	case ports.Result[[]ports.SearchResult]:
 		return o.searchResults(v)
 	case ports.Result[ports.AssetType]:

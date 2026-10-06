@@ -32,7 +32,7 @@ type commandHelp struct {
 
 func helpCatalog() []commandHelp {
 	var commands []commandHelp
-	for _, group := range [][]commandHelp{localHelp(), inventoryHelp(), accessHelp(), administrationHelp(), printingHelp(), customizationHelp()} {
+	for _, group := range [][]commandHelp{localHelp(), portabilityHelp(), inventoryHelp(), accessHelp(), administrationHelp(), printingHelp(), customizationHelp()} {
 		commands = append(commands, group...)
 	}
 	return commands

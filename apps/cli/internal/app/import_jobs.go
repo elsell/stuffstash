@@ -8,8 +8,8 @@ import (
 
 func isImportJobCommand(o Options) bool { return len(o.Command) > 0 && o.Command[0] == "import-jobs" }
 func validateImportJobs(o Options, scope bool) error {
-	if !(len(o.Command) == 2 && o.Command[1] == "list") && !(len(o.Command) == 3 && o.Command[2] != "" && (o.Command[1] == "cancel" || o.Command[1] == "show" || o.Command[1] == "delete")) {
-		return ports.Failure("usage", "Use import-jobs list, show JOB_ID, cancel JOB_ID, or delete JOB_ID.")
+	if !(len(o.Command) == 2 && o.Command[1] == "preview") && !(len(o.Command) == 3 && o.Command[1] == "start" && o.Command[2] != "") && !(len(o.Command) == 2 && o.Command[1] == "list") && !(len(o.Command) == 3 && o.Command[2] != "" && (o.Command[1] == "cancel" || o.Command[1] == "show" || o.Command[1] == "delete")) {
+		return ports.Failure("usage", "Use import-jobs list, show JOB_ID, cancel JOB_ID, delete JOB_ID, preview, or start JOB_ID.")
 	}
 	if o.IdempotencyKey != "" || o.Title != "" || o.Kind != "" || o.Parent != "" || o.ConnectorName != "" || o.Page.Cursor != "" {
 		return ports.Failure("usage", "Import job history does not accept asset fields, retry keys or cursors. Remove those options.")

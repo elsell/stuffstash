@@ -12,6 +12,9 @@ func isAccountCommand(o Options) bool {
 	return isTenantList(o) || len(o.Command) == 2 && o.Command[0] == "account" && o.Command[1] == "show"
 }
 func requiresInventory(o Options) bool {
+	if isArchiveCommand(o) {
+		return len(o.Command) > 1 && o.Command[1] == "create"
+	}
 	if isSearch(o) && o.AllInventories {
 		return false
 	}
