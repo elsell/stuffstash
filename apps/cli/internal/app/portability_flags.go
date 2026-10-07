@@ -25,7 +25,7 @@ func validatePortabilityFlags(o Options, flags *flag.FlagSet) error {
 			if !archiveMutation(o) && !isImportSource(o) {
 				unsupported = f.Name
 			}
-		case "limit", "cursor":
+		case "limit", "cursor", "all":
 			if !isArchiveCommand(o) || action != "list" {
 				unsupported = f.Name
 			}

@@ -75,7 +75,7 @@ func (r Runner) tagsCommand(ctx context.Context, o Options, token string) error 
 		return err
 	}
 	if o.Command[1] == "list" {
-		result, err := api.Tags(ctx, o.Scope, o.Page)
+		result, err := listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.Tag], error) { return api.Tags(ctx, o.Scope, page) })
 		if err != nil {
 			return err
 		}

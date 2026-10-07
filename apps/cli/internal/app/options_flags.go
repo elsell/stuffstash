@@ -58,6 +58,7 @@ func optionFlags(o *Options) *flag.FlagSet {
 	flags.StringVar(&o.Kind, "kind", "", "asset kind")
 	flags.StringVar(&o.Parent, "parent", "", "parent ID or root")
 	flags.StringVar(&o.IdempotencyKey, "idempotency-key", "", "logical mutation key")
+	flags.BoolVar(&o.AllPages, "all", false, "read all remaining pages; does not create an atomic snapshot")
 	flags.Int64Var(&o.Page.Limit, "limit", 50, "page size")
 	flags.StringVar(&o.Page.Cursor, "cursor", "", "page cursor")
 	flags.BoolVar(&o.JSON, "json", false, "JSON output")

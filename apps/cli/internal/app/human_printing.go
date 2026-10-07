@@ -75,9 +75,13 @@ func executePrinting(ctx context.Context, api ports.HumanPrintingAPI, o Options)
 	case "printers profiles":
 		return api.PrinterProfiles(ctx, o.Scope)
 	case "printers list":
-		return api.RegisteredPrinters(ctx, o.Scope, o.Page)
+		return listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.RegisteredPrinter], error) {
+			return api.RegisteredPrinters(ctx, o.Scope, page)
+		})
 	case "print-jobs list":
-		return api.PrintJobs(ctx, o.Scope, o.Page, o.PrinterID)
+		return listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.PrintJobSummary], error) {
+			return api.PrintJobs(ctx, o.Scope, page, o.PrinterID)
+		})
 	case "print-jobs show":
 		return api.PrintJob(ctx, o.Scope, o.Command[2])
 	case "print-jobs cancel":

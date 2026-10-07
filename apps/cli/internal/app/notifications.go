@@ -61,7 +61,9 @@ func (r Runner) notificationsCommand(ctx context.Context, o Options, token strin
 	var result any
 	switch action {
 	case "list":
-		result, err = api.Notifications(ctx, o.Scope, o.Page, o.UnreadOnly)
+		result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.Notification], error) {
+			return api.Notifications(ctx, o.Scope, page, o.UnreadOnly)
+		})
 	case "show":
 		result, err = api.Notification(ctx, o.Scope, o.Command[2])
 	case "unread-count":

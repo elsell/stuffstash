@@ -10,6 +10,7 @@ import (
 )
 
 type Options struct {
+	AllPages                        bool
 	InvitationEmail, InvitationRole string
 	AllInventories                  bool
 
@@ -110,6 +111,15 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "The request ID contains characters that are not permitted. Use printable ASCII characters.")
 	}
 	o.Command = positional
+	allPresent := false
+	flags.Visit(func(f *flag.Flag) {
+		if f.Name == "all" {
+			allPresent = true
+		}
+	})
+	if allPresent && !SupportsAllPages(o.Command) {
+		return o, ports.Failure("usage", "This command does not support --all. Remove the option and use --help for its available options.")
+	}
 	if (o.InvitationEmail != "" || o.InvitationRole != "") && !isInvitationCreate(o) {
 		return o, ports.Failure("usage", "Use --email and --role only with invitations create.")
 	}
@@ -159,7 +169,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 				if !isEvaluationCancellation(o) && !isEvaluationWrite(o) {
 					unsupported = f.Name
 				}
-			case "limit", "cursor":
+			case "limit", "cursor", "all":
 				if len(o.Command) < 3 || o.Command[2] != "list" {
 					unsupported = f.Name
 				}
@@ -222,7 +232,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 				if !isWorkflowWrite(o) {
 					unsupported = f.Name
 				}
-			case "limit", "cursor":
+			case "limit", "cursor", "all":
 				if !workflowList(o) {
 					unsupported = f.Name
 				}

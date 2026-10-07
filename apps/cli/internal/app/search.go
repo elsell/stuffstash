@@ -15,7 +15,7 @@ func validateSearchFlags(o Options, flags *flag.FlagSet) error {
 	var unsupported string
 	flags.Visit(func(f *flag.Flag) {
 		switch f.Name {
-		case "server", "tenant", "inventory", "context", "json", "no-input", "request-id", "color", "help", "query", "mode", "type-id", "tag-id", "lifecycle", "checkout-state", "limit", "cursor", "all-inventories":
+		case "server", "tenant", "inventory", "context", "json", "no-input", "request-id", "color", "help", "query", "mode", "type-id", "tag-id", "lifecycle", "checkout-state", "limit", "cursor", "all", "all-inventories":
 		default:
 			unsupported = f.Name
 		}
@@ -66,7 +66,9 @@ func (r Runner) searchAssets(ctx context.Context, o Options, token string) error
 		scope.Inventory = ""
 	}
 	q := o.Expiration
-	result, err := api.SearchAssets(ctx, scope, ports.SearchQuery{Page: o.Page, Query: q.Query, Mode: q.Mode, TypeID: q.TypeID, TagIDs: q.TagIDs, Lifecycle: o.Lifecycle, CheckoutState: q.CheckoutState})
+	result, err := listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.SearchResult], error) {
+		return api.SearchAssets(ctx, scope, ports.SearchQuery{Page: page, Query: q.Query, Mode: q.Mode, TypeID: q.TypeID, TagIDs: q.TagIDs, Lifecycle: o.Lifecycle, CheckoutState: q.CheckoutState})
+	})
 	if err != nil {
 		return err
 	}

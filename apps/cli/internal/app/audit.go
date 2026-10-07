@@ -43,7 +43,10 @@ func (r Runner) auditCommand(ctx context.Context, o Options, token string) error
 		q.Level = ports.AssetAudit
 		q.AssetID = o.Command[2]
 	}
-	result, err := api.AuditRecords(ctx, q)
+	result, err := listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.AuditRecord], error) {
+		q.Page = page
+		return api.AuditRecords(ctx, q)
+	})
 	if err != nil {
 		return err
 	}

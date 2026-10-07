@@ -134,6 +134,9 @@ func commandHelpText(c commandHelp) string {
 	if output == "" {
 		output = "Human-readable results by default; --json emits JSON. Diagnostics go to stderr."
 	}
+	if app.SupportsAllPages(strings.Fields(c.Path + " " + c.Arguments)) {
+		output += " With --all, collect all remaining pages from --cursor before output. --limit is the page size. The result is not an atomic snapshot; metadata describes the final page."
+	}
 	confirmation := "Not required."
 	if c.Confirm {
 		confirmation = "Review and confirm in an interactive terminal, or supply --yes. JSON, redirected or --no-input runs require --yes."
@@ -157,6 +160,10 @@ func commandHelpText(c commandHelp) string {
 }
 func commandHelpOptions(c commandHelp) []string {
 	names := strings.Fields(c.Options)
+	command := strings.Fields(c.Path + " " + c.Arguments)
+	if app.SupportsAllPages(command) {
+		names = append(names, "all")
+	}
 	if c.Confirm {
 		names = append(names, "yes")
 	}

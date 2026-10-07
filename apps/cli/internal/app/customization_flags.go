@@ -35,7 +35,7 @@ func validateCustomizationFlags(f *flag.FlagSet, o Options) error {
 		switch v.Name {
 		case "scope", "server", "tenant", "inventory", "context", "json", "no-input", "color", "request-id", "help":
 			allowed = true
-		case "limit", "cursor", "lifecycle":
+		case "limit", "cursor", "all", "lifecycle":
 			allowed = customizationList(o)
 		case "yes":
 			allowed = len(o.Command) > 1 && o.Command[1] != "list" && o.Command[1] != "show"

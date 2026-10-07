@@ -30,7 +30,9 @@ func (r Runner) connectorInspection(ctx context.Context, o Options, token string
 	}
 	var result any
 	if o.Command[2] == "list" {
-		result, err = api.PrintConnectors(ctx, o.Scope, o.Page)
+		result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.PrintConnector], error) {
+			return api.PrintConnectors(ctx, o.Scope, page)
+		})
 	} else {
 		result, err = api.PrintConnector(ctx, o.Scope, o.Command[3])
 	}

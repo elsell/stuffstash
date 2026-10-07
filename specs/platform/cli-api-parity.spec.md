@@ -1075,3 +1075,17 @@ protected, and no inherited or broad access grant survives publication. Exercise
 creation inside a directory with an inheritable broad grant so the test proves
 private creation rather than relying on the runner's default directory ACL.
 Cross-compilation alone does not establish this native security property.
+
+## Complete traversal and binary-size evidence
+
+`--all` finite cursor traversal follows `cli-all-pages.spec.md`, including
+combined data, final-page metadata, cancellation, and explicit non-snapshot
+semantics. Unsupported commands reject the option rather than ignoring it.
+
+Same-toolchain comparison on Paul used Go 1.26.1, CGO_ENABLED=0, `-trimpath`, and
+`-ldflags='-s -w'`. From f52d693af to 21f088f98, Linux/amd64 grew from 8,966,306
+to 11,571,362 bytes; Darwin/arm64 grew from 7,858,066 to 10,286,930 bytes. This
+measures all intervening CLI features, not the picker or x/term alone. The pinned
+x/term dependency uses BSD-3-Clause; x/sys retains its existing pin. The release
+script includes THIRD_PARTY_LICENSES.txt. These measurements and packaging
+checks do not claim that a new release is complete.

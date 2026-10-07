@@ -45,3 +45,29 @@ func TestHelpCatalogCoversImplementedAPICommands(t *testing.T) {
 		}
 	}
 }
+
+func TestAllPagesHelpOptionsAreExecutable(t *testing.T) {
+	for _, entry := range helpCatalog() {
+		command := strings.Fields(entry.Path + " " + entry.Arguments)
+		if !app.SupportsAllPages(command) {
+			continue
+		}
+		args := append(command, "--all", "--no-input", "--json")
+		if entry.Scope == helpConnector {
+			args = append(args, "--connector", "connector")
+		}
+		parsed, err := app.Parse(args, func(string) string { return "" })
+		if err != nil || !parsed.AllPages {
+			t.Errorf("advertised traversal rejected for %s: %v", entry.Path, err)
+		}
+		found := false
+		for _, name := range commandHelpOptions(entry) {
+			if name == "all" {
+				found = true
+			}
+		}
+		if !found || !strings.Contains(commandHelpText(entry), "not an atomic snapshot") {
+			t.Errorf("missing traversal help for %s", entry.Path)
+		}
+	}
+}
