@@ -26,14 +26,14 @@ func decodePortability(body []byte, v any) error {
 	d := json.NewDecoder(bytes.NewReader(body))
 	d.DisallowUnknownFields()
 	if d.Decode(v) != nil {
-		return ports.Failure("usage", "Input has unknown fields or incorrect types. Use the JSON shape shown by this command's --help.")
+		return ports.Failure("usage", "The input has unknown fields or incorrect types. Use the JSON fields shown by this command's --help.")
 	}
 	return nil
 }
 func (r Runner) preparePortability(ctx context.Context, o Options) (Options, error) {
 	if o.InputPath != "" {
 		if r.InputFiles == nil {
-			return o, ports.Failure("configuration", "JSON input is unavailable. Update the CLI.")
+			return o, ports.Failure("configuration", "JSON input is not available. Update the CLI.")
 		}
 		var body []byte
 		var err error
@@ -72,10 +72,10 @@ func (r Runner) preparePortability(ctx context.Context, o Options) (Options, err
 			return o, err
 		}
 		if strings.TrimSpace(v.InventoryID) == "" || v.Photos == nil || v.OtherFiles == nil {
-			return o, ports.Failure("usage", "Archive creation requires inventoryId, photos and otherFiles. Supply both booleans explicitly.")
+			return o, ports.Failure("usage", "Supply inventoryId, photos and otherFiles. Use true or false for each of the two file options.")
 		}
 		if o.Scope.Inventory != "" && o.Scope.Inventory != v.InventoryID {
-			return o, ports.Failure("usage", "The JSON inventoryId differs from the explicit inventory selection. Choose one target consistently.")
+			return o, ports.Failure("usage", "The JSON inventoryId does not match the selected inventory. Use the same inventory ID in both places.")
 		}
 		o.Scope.Inventory = v.InventoryID
 		o.Selection.Inventory = v.InventoryID
@@ -85,7 +85,7 @@ func (r Runner) preparePortability(ctx context.Context, o Options) (Options, err
 			return o, err
 		}
 		if strings.TrimSpace(v.Name) == "" {
-			return o, ports.Failure("usage", "Restore approval requires a nonempty name for the new inventory.")
+			return o, ports.Failure("usage", "Supply a name for the new inventory in the restore approval input.")
 		}
 	}
 	return o, nil

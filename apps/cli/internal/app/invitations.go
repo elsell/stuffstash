@@ -19,14 +19,14 @@ func validateInvitations(o Options, scope bool) error {
 		switch o.InvitationStatus {
 		case "pending", "accepted", "cancelled", "expired", "revoked", "all":
 		default:
-			return ports.Failure("usage", "Choose pending, accepted, cancelled, expired, revoked, or all for --status.")
+			return ports.Failure("usage", "Select pending, accepted, cancelled, expired, revoked, or all for --status.")
 		}
 	}
 	if o.IdempotencyKey != "" || o.ConnectorName != "" || o.Title != "" || o.Kind != "" || o.Parent != "" || (o.Command[1] != "list" && (o.Page.Cursor != "" || o.InvitationStatus != "")) {
 		return ports.Failure("usage", "Invitation commands do not accept asset fields or retry keys. Use --status and --cursor only with invitations list.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved context.")
 	}
 	return nil
 }
@@ -52,7 +52,7 @@ func (r Runner) invitationCommand(ctx context.Context, o Options, token string) 
 	case "show":
 		result, err = api.Invitation(ctx, o.Scope, o.Command[2])
 	case "cancel", "delete":
-		if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; invitation: " + strconv.Quote(o.Command[2])); err != nil {
+		if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Invitation: " + strconv.Quote(o.Command[2])); err != nil {
 			return err
 		}
 		label := "Cancel invitation"

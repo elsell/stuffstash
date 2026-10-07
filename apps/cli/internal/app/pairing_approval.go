@@ -19,7 +19,7 @@ func (r Runner) pairingApprovalCommand(ctx context.Context, o Options, token str
 		return err
 	}
 	if r.PairingApprovalAPI == nil {
-		return ports.Failure("configuration", "Pairing approval is unavailable. Update the CLI.")
+		return ports.Failure("configuration", "Pairing approval is not available. Update the CLI.")
 	}
 	api, err := r.PairingApprovalAPI(o.Server, token)
 	if err != nil {
@@ -65,7 +65,7 @@ func (r Runner) pairingApprovalCommand(ctx context.Context, o Options, token str
 			}
 		}
 	} else {
-		if err := r.Output.Notice("Connector: " + strconv.Quote(o.Command[4]) + "; generation: " + strconv.FormatUint(input.Generation, 10) + ". Approval replaces this connector's credential."); err != nil {
+		if err := r.Output.Notice("Connector: " + strconv.Quote(o.Command[4]) + ". Generation: " + strconv.FormatUint(input.Generation, 10) + ". Approval replaces this connector's credential."); err != nil {
 			return err
 		}
 	}
@@ -97,9 +97,9 @@ func (r Runner) pairingApprovalCommand(ctx context.Context, o Options, token str
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "conflict":
-				return ports.Failure("conflict", "Approval conflicts with current state. Inspect the connector and review the pairing before retrying; keep the expected generation explicit.")
+				return ports.Failure("conflict", "Approval conflicts with current state. Examine the connector and review the pairing before you try again. Supply the expected generation.")
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "Approval outcome is unknown. Inspect connectors print list or show before attempting approval again.")
+				return ports.Failure(failure.Category, "Approval outcome is unknown. Examine connectors print list or show before attempting approval again.")
 			}
 		}
 		return err
@@ -108,11 +108,11 @@ func (r Runner) pairingApprovalCommand(ctx context.Context, o Options, token str
 	return r.Output.Result(result)
 }
 func (r Runner) describePairingReview(o Options, v ports.PairingReview) error {
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; pairing: " + strconv.Quote(v.ID) + "; name: " + strconv.Quote(v.Name) + "; fingerprint: " + strconv.Quote(v.PublicKeyFingerprint) + "; rotation: " + strconv.FormatBool(v.Rotation)); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Pairing: " + strconv.Quote(v.ID) + ". Name: " + strconv.Quote(v.Name) + ". Fingerprint: " + strconv.Quote(v.PublicKeyFingerprint) + ". Rotation: " + strconv.FormatBool(v.Rotation)); err != nil {
 		return err
 	}
 	for _, c := range v.Candidates {
-		if err := r.Output.Notice("Candidate: " + strconv.Quote(c.ID) + "; name: " + strconv.Quote(c.Name) + "; adapter: " + strconv.Quote(c.AdapterID)); err != nil {
+		if err := r.Output.Notice("Candidate: " + strconv.Quote(c.ID) + ". Name: " + strconv.Quote(c.Name) + ". Adapter: " + strconv.Quote(c.AdapterID)); err != nil {
 			return err
 		}
 	}

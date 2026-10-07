@@ -1,6 +1,6 @@
 # Roadmap Spec
 
-## Current focus — CLI delivery and acceptance, October 6, 2026
+## Current focus — CLI delivery and acceptance, October 7, 2026
 
 The [approved CLI parity implementation](cli-api-parity.spec.md) merged in
 [PR #461](https://github.com/elsell/stuffstash/pull/461) at `7211bf40c`.
@@ -29,10 +29,18 @@ protected, owner-only DACLs under a broadly inheritable parent. The run also
 passed no-overwrite/truncation checks, Credential Manager isolation,
 authenticated bootstrap, application/input/terminal contracts and the CLI build.
 
-Browser sign-in for this batch, real macOS/Windows console interaction and
-physical-printer acceptance remain unverified. Full ASD-STE100 Issue 9
-vocabulary/grammar conformance is also unverified: the official PDF is unavailable
-to this environment. Do not label plain-language review as formal conformance.
+Released v0.43.3 includes clearer recovery errors and preserves uncertainty
+after physical print submission. Its five platform assets and checksum sidecars
+were verified, and the Linux executable reported the expected release and commit.
+Isolated live Dex browser/device sign-in, saved terminal scope and cross-instance
+archive restoration also passed; details are recorded below.
+
+The official ASD-STE100 Issue 9 document is now available for review. The current
+batch corrects shared prompt guidance, Windows connector-store recovery and
+scoped attachment recovery, plus reviewed wording. Full vocabulary/grammar review
+remains open. A subsequent batch must handle failed output after a successful
+server mutation without implying that the mutation failed. Real macOS/Windows
+console interaction and physical-printer acceptance remain on the user test list.
 
 
 ## Labels, Printers, And CLI: Released — October 4, 2026

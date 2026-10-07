@@ -15,10 +15,10 @@ func (r Runner) directoryLifecycle(ctx context.Context, o Options, session ports
 		return ports.Failure("usage", "This API operation does not support --idempotency-key. Remove the option.")
 	}
 	resource := ports.HouseholdResource
-	target := "Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant)
+	target := "Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant)
 	if o.Command[0] == "inventories" {
 		resource = ports.InventoryResource
-		target += "; inventory: " + strconv.Quote(o.Scope.Inventory)
+		target += ". Inventory: " + strconv.Quote(o.Scope.Inventory)
 	}
 	if err := r.Output.Notice(target); err != nil {
 		return err

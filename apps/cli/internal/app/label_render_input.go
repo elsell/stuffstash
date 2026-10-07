@@ -24,7 +24,7 @@ func labelRenderFlags(o Options, flags *flag.FlagSet) error {
 		}
 	})
 	if invalid != "" {
-		return ports.Failure("usage", "This render does not accept --"+invalid+" with the chosen input. Use either structured --input or render selection flags.")
+		return ports.Failure("usage", "This render does not accept --"+invalid+" with the selected input. Use either structured --input or render selection flags.")
 	}
 	return nil
 }

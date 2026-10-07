@@ -26,11 +26,11 @@ func randomValue() string {
 }
 func (a Adapter) browser(ctx context.Context, c oauth2.Config, metadata ports.AuthConfig) (*oauth2.Token, string, error) {
 	if metadata.LoopbackHost != "127.0.0.1" || metadata.LoopbackPathPrefix != "/callback/" || !metadata.EphemeralPort {
-		return nil, "", ports.Failure("configuration", "The server sign-in settings do not support this CLI. Ask the administrator to check the CLI redirect settings.")
+		return nil, "", ports.Failure("configuration", "The server sign-in settings do not support this CLI. Ask the administrator to examine the CLI redirect settings.")
 	}
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		return nil, "", ports.Failure("authentication", "Cannot receive the browser sign-in response on this computer. Check local network restrictions. Run stuffstash login again.")
+		return nil, "", ports.Failure("authentication", "The CLI cannot receive the browser sign-in response on this computer. Examine the local network restrictions. Run stuffstash login again.")
 	}
 	defer listener.Close()
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
@@ -67,7 +67,7 @@ func (a Adapter) browser(ctx context.Context, c oauth2.Config, metadata ports.Au
 	go func() { _ = server.Serve(listener) }()
 	authURL := c.AuthCodeURL(state, oauth2.S256ChallengeOption(verifier), oauth2.SetAuthURLParam("nonce", nonce), oauth2.AccessTypeOffline)
 	if a.Browser == nil || a.Browser.Open(authURL) != nil {
-		return nil, "", ports.Failure("authentication", "Cannot open a browser. If your server supports device sign-in, run stuffstash login --device-code.")
+		return nil, "", ports.Failure("authentication", "The CLI cannot open a browser. If your server supports device sign-in, run stuffstash login --device-code.")
 	}
 	var code string
 	select {
@@ -80,7 +80,7 @@ func (a Adapter) browser(ctx context.Context, c oauth2.Config, metadata ports.Au
 	}
 	token, err := c.Exchange(ctx, code, oauth2.VerifierOption(verifier))
 	if err != nil {
-		return nil, "", ports.Failure("authentication", "Cannot complete browser sign-in. Run stuffstash login again. If the error continues, contact the server administrator.")
+		return nil, "", ports.Failure("authentication", "The CLI cannot complete browser sign-in. Run stuffstash login again. If the error continues, contact the server administrator.")
 	}
 	return token, nonce, nil
 }

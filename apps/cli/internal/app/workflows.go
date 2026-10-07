@@ -17,7 +17,7 @@ func validateWorkflows(o Options, scope bool) error {
 		return ports.Failure("usage", "Use workflows list, show WORKFLOW_ID, revisions list WORKFLOW_ID, revisions show WORKFLOW_ID REVISION_ID, selection show, create --input FILE, revisions create WORKFLOW_ID --input FILE, or activate WORKFLOW_ID --input FILE.")
 	}
 	if scope && o.Scope.Tenant == "" {
-		return ports.Failure("usage", "Supply --tenant, or choose a saved household context.")
+		return ports.Failure("usage", "Supply --tenant, or select a saved household context.")
 	}
 	return nil
 }

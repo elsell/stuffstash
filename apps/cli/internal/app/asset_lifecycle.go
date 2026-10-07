@@ -12,7 +12,7 @@ func (r Runner) confirmAssetLifecycle(ctx context.Context, o Options) error {
 	if !isAssetLifecycle(o) {
 		return nil
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; asset: " + strconv.Quote(o.Command[2])); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Asset: " + strconv.Quote(o.Command[2])); err != nil {
 		return err
 	}
 	switch o.Command[1] {

@@ -37,7 +37,7 @@ This spec does not introduce persistence, authentication, authorization, tenancy
 - Tests must verify the real health endpoint behavior.
 - Pre-commit Go test hooks must use an absolute `GOCACHE` path so Go accepts the build cache location in hook execution.
 - Pre-commit hooks must reject ad hoc Go print statements.
-- Pre-commit hooks must reject obvious raw SQL strings in Go application code.
+- Pre-commit hooks must reject obvious raw SQL strings in Go application code. Parse Go string literals, including raw multiline literals, instead of matching source lines. Literal message arguments directly passed to imported `errors.New`, `fmt.Errorf`, or project-owned `ports.Failure` are diagnostics and may contain ordinary instructions such as “Select a saved context.” This exemption does not apply to constants, variables, other arguments, or unrelated functions with the same name. SQL constants and query arguments remain prohibited regardless of keyword case.
 - Pre-commit hooks must reject direct Go imports from one domain package into another domain package.
 - Pre-commit hooks must reject non-generated Go files over 800 lines and direct contributors toward serious organization refactoring. The generated-file exemption applies only when the first line is the standard `// Code generated ... DO NOT EDIT.` marker.
 - Pre-commit checks that format or regenerate files must not run in parallel with checks that compile or test the same tree.

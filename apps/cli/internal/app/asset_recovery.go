@@ -34,7 +34,7 @@ func assetCreateFailure(o Options, err error) error {
 		if assetPrintRequested(o) {
 			return ports.Failure(failure.Category, "The create result is unknown. Retry with the same request key and unchanged print selection and asset fields.")
 		}
-		return ports.Failure(failure.Category, "The create result is unknown. Run assets list before you retry.")
+		return ports.Failure(failure.Category, "The create result is unknown. Run assets list before you try again.")
 	default:
 		return err
 	}

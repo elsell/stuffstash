@@ -47,7 +47,7 @@ func (Keyring) Delete(_ context.Context, server string) error {
 }
 
 func credentialStoreError(action string) error {
-	message := "Cannot " + action + " your session in the system credential store. Unlock the store and run stuffstash login again."
+	message := "The CLI cannot " + action + " your session in the system credential store. Unlock the store and run stuffstash login again."
 	if runtime.GOOS != "windows" {
 		message += " You can also set STUFF_STASH_CLI_CREDENTIAL_FILE to a private file path before login."
 	}

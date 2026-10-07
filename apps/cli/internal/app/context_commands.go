@@ -8,7 +8,7 @@ import (
 
 func (r Runner) contextCommand(ctx context.Context, command []string) error {
 	if r.Contexts == nil {
-		return ports.Failure("configuration", "Context storage is not available. Check the CLI configuration directory.")
+		return ports.Failure("configuration", "Context storage is not available. Examine the CLI configuration directory.")
 	}
 	manager := contexts.Manager{Store: r.Contexts}
 	if len(command) == 2 {

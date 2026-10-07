@@ -57,7 +57,7 @@ func (r Runner) updateVoiceProvider(ctx context.Context, o Options, token string
 	if err != nil {
 		return err
 	}
-	notice := "Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + ". Speech input: " + voiceSelectionDescription(input.SpeechToText) + "; language inference: " + voiceSelectionDescription(input.LanguageInference) + "; spoken output: " + voiceSelectionDescription(input.TextToSpeech) + ". Replace all three selections. Omitted, null or empty slots use automatic selection, not disabled voice. The API has no version check; this can replace another administrator's recent selections."
+	notice := "Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Speech input: " + voiceSelectionDescription(input.SpeechToText) + ". Language inference: " + voiceSelectionDescription(input.LanguageInference) + ". Spoken output: " + voiceSelectionDescription(input.TextToSpeech) + ". Replace all three selections. Omitted, null or empty slots use automatic selection, not disabled voice. The API has no version check; this can replace another administrator's recent selections."
 	if err := r.Output.Notice(notice); err != nil {
 		return err
 	}
@@ -73,9 +73,9 @@ func (r Runner) updateVoiceProvider(ctx context.Context, o Options, token string
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "conflict":
-				return ports.Failure("conflict", "The server rejected the voice selections. Run voice-provider show and review all three choices before retrying.")
+				return ports.Failure("conflict", "The server rejected the voice selections. Run voice-provider show and review all three choices before you try again.")
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "The selection update result is unknown. Run voice-provider show before retrying; do not assume the previous selections remain.")
+				return ports.Failure(failure.Category, "The selection update result is unknown. Run voice-provider show before you try again; do not assume the previous selections remain.")
 			}
 		}
 		return err

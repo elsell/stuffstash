@@ -16,7 +16,7 @@ func validatePrintSettings(o Options, scope bool) error {
 		return ports.Failure("usage", "Print settings inspection does not accept mutation fields or cursors. Remove those options.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved context.")
 	}
 	return nil
 }

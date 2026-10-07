@@ -17,10 +17,10 @@ const maxConfigBytes = 1024 * 1024
 type Store struct{ Path string }
 
 func configError() error {
-	return ports.Failure("configuration", "Cannot read the context file. Check its format and access permissions.")
+	return ports.Failure("configuration", "The CLI cannot read the context file. Examine its format and access permissions.")
 }
 func configSaveError() error {
-	return ports.Failure("configuration", "Cannot save the context file. Check directory permissions and available disk space.")
+	return ports.Failure("configuration", "The CLI cannot save the context file. Examine the directory permissions and available disk space.")
 }
 func (s Store) Load(ctx context.Context) (contexts.Config, error) {
 	if err := ctx.Err(); err != nil {

@@ -11,7 +11,7 @@ const maximumImportJSONBytes = 16 << 20
 
 func (r Runner) readImportFile(ctx context.Context, path string, limit int64) ([]byte, error) {
 	if r.StreamFiles == nil {
-		return nil, ports.Failure("configuration", "Streaming input is unavailable. Update the CLI.")
+		return nil, ports.Failure("configuration", "Streaming input is not available. Update the CLI.")
 	}
 	body, err := r.StreamFiles.OpenStream(ctx, path)
 	if err != nil {
@@ -23,7 +23,7 @@ func (r Runner) readImportFile(ctx context.Context, path string, limit int64) ([
 		return nil, ctx.Err()
 	}
 	if err != nil {
-		return nil, ports.Failure("input", "Cannot read import input. Check the file or pipe and try again.")
+		return nil, ports.Failure("input", "The CLI cannot read the import input. Examine the file or pipe and try again.")
 	}
 	if int64(len(data)) > limit {
 		return nil, ports.Failure("input", "Import input exceeds its supported limit: 10 MiB for CSV, 16 MiB for JSON.")

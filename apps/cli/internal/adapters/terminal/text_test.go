@@ -30,3 +30,17 @@ func TestTextPromptAcceptsPastedName(t *testing.T) {
 		t.Fatalf("paste failed: %q %v", got, err)
 	}
 }
+
+func TestSharedTextPromptRecoveryDoesNotInventFieldOptions(t *testing.T) {
+	for _, field := range []string{"Invitee email address", "Device revision", "Asset title"} {
+		var output bytes.Buffer
+		_, err := runText(context.Background(), strings.NewReader(""), &output, field, 120)
+		if err == nil || strings.Contains(err.Error(), "--name") || strings.Contains(err.Error(), "a name") || !strings.Contains(err.Error(), "--help") {
+			t.Fatalf("wrong recovery for %s: %v", field, err)
+		}
+		_, err = (Picker{}).ReadText(context.Background(), field, 120)
+		if err == nil || strings.Contains(err.Error(), "--name") || !strings.Contains(err.Error(), "--help") {
+			t.Fatalf("wrong nonterminal recovery for %s: %v", field, err)
+		}
+	}
+}

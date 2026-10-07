@@ -36,7 +36,7 @@ func validatePreferences(o Options, scope bool) error {
 		return ports.Failure("usage", "Preference commands do not accept asset fields, cursors, or retry keys. Remove those options.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved context.")
 	}
 	return nil
 }
@@ -79,7 +79,7 @@ func (r Runner) preferencesCommand(ctx context.Context, o Options, token string)
 		}
 		return r.Output.Result(result)
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory)); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory)); err != nil {
 		return err
 	}
 	id := ""
@@ -121,7 +121,7 @@ func (r Runner) preferencesCommand(ctx context.Context, o Options, token string)
 	if err != nil {
 		var failure *ports.Error
 		if errors.As(err, &failure) && failure.Category == "conflict" {
-			return ports.Failure("conflict", "Notification preferences changed. Run notification-preferences show and review the current settings before you retry.")
+			return ports.Failure("conflict", "Notification preferences changed. Run notification-preferences show and review the current settings before you try again.")
 		}
 		return err
 	}

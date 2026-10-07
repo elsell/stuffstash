@@ -49,11 +49,11 @@ func (r Runner) resolvePrint(ctx context.Context, o Options, api ports.HumanPrin
 			return nil, err
 		}
 		if job.Data.Revision == 0 || job.Data.Revision > uint64(1<<63-1) {
-			return nil, ports.Failure("protocol", "The job revision is not valid. Read the job again before you submit a resolution.")
+			return nil, ports.Failure("protocol", "The job revision is not correct. Read the job again before you submit a resolution.")
 		}
 		v.Revision = int64(job.Data.Revision)
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; job: " + strconv.Quote(o.Command[2]) + "; reported outcome: " + strconv.Quote(v.Outcome) + "; revision: " + strconv.FormatInt(v.Revision, 10)); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Job: " + strconv.Quote(o.Command[2]) + ". Reported outcome: " + strconv.Quote(v.Outcome) + ". Revision: " + strconv.FormatInt(v.Revision, 10)); err != nil {
 		return nil, err
 	}
 	if err := r.Output.Notice("This records your report. It does not verify physical output or print another label."); err != nil {

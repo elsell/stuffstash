@@ -52,7 +52,7 @@ type evaluationCancellationPicker struct {
 }
 
 func (p evaluationCancellationPicker) Pick(context.Context, string, []ports.Choice) (string, error) {
-	if *p.calls != 1 || !strings.Contains(p.notice.String(), "version: 7") || !strings.Contains(p.notice.String(), `household: "home"`) || !strings.Contains(p.notice.String(), `run: "run"`) {
+	if *p.calls != 1 || !strings.Contains(p.notice.String(), "Version: 7") || !strings.Contains(p.notice.String(), `Household: "home"`) || !strings.Contains(p.notice.String(), `Run: "run"`) {
 		p.t.Fatal("target/version not shown before confirmation")
 	}
 	return p.choice, nil

@@ -13,13 +13,13 @@ func validateActivity(o Options, scope bool) error {
 		return ports.Failure("usage", "Use assets activity ASSET_ID.")
 	}
 	if o.ActivityView != "" && o.ActivityView != ports.ActivityChanges && o.ActivityView != ports.ActivityAll {
-		return ports.Failure("usage", "Choose changes or all for --view.")
+		return ports.Failure("usage", "Select changes or all for --view.")
 	}
 	if o.IdempotencyKey != "" || o.Title != "" || o.Kind != "" || o.Parent != "" || o.ConnectorName != "" {
 		return ports.Failure("usage", "Activity reads do not accept asset fields or retry keys. Remove those options.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved context.")
 	}
 	return nil
 }

@@ -55,7 +55,7 @@ func (r Runner) cancelEvaluationRun(ctx context.Context, o Options, api ports.Ev
 		}
 		input.ExpectedVersion = result.Data.Version
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; run: " + strconv.Quote(o.Command[3]) + "; version: " + strconv.FormatInt(input.ExpectedVersion, 10)); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Run: " + strconv.Quote(o.Command[3]) + ". Version: " + strconv.FormatInt(input.ExpectedVersion, 10)); err != nil {
 		return err
 	}
 	if err := r.confirmAction(ctx, o, "Cancel evaluation run", "Cancel run", "Request cancellation of this evaluation run."); err != nil {
@@ -70,9 +70,9 @@ func (r Runner) cancelEvaluationRun(ctx context.Context, o Options, api ports.Ev
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "conflict":
-				return ports.Failure("conflict", "The server rejected the cancellation. Run evaluation runs show RUN_ID and review its version and state before you retry.")
+				return ports.Failure("conflict", "The server rejected the cancellation. Run evaluation runs show RUN_ID and review its version and state before you try again.")
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "The cancellation result is unknown. Run evaluation runs show RUN_ID before you retry.")
+				return ports.Failure(failure.Category, "The cancellation result is unknown. Run evaluation runs show RUN_ID before you try again.")
 			}
 		}
 		return err

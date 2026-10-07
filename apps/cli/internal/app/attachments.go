@@ -19,7 +19,7 @@ func validateAttachments(o Options, requireScope bool) error {
 		}
 	}
 	if !valid {
-		return ports.Failure("usage", "Use attachments list ASSET_ID; show, archive, restore, or delete ASSET_ID ATTACHMENT_ID; or complete-upload ASSET_ID UPLOAD_ID.")
+		return ports.Failure("usage", "Run attachments --help for the command and its asset, attachment, or upload IDs.")
 	}
 	if o.IdempotencyKey != "" {
 		return ports.Failure("usage", "Attachment commands do not support retry keys. Remove --idempotency-key.")
@@ -28,7 +28,7 @@ func validateAttachments(o Options, requireScope bool) error {
 		return ports.Failure("usage", "Attachment commands do not accept asset fields. Remove --title, --kind, --parent, and --name.")
 	}
 	if requireScope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved context.")
 	}
 	return nil
 }
@@ -59,7 +59,7 @@ func (r Runner) attachmentsCommand(ctx context.Context, o Options, token string)
 		}
 		return r.Output.Result(result)
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; asset: " + strconv.Quote(asset) + "; attachment: " + strconv.Quote(id)); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Asset: " + strconv.Quote(asset) + ". Attachment: " + strconv.Quote(id)); err != nil {
 		return err
 	}
 	switch action {

@@ -56,7 +56,7 @@ func (r Runner) telemetryCommand(ctx context.Context, o Options, token string) e
 	if r.TelemetryAPI == nil {
 		return ports.Failure("configuration", "Telemetry submission is not available. Update the CLI and try again.")
 	}
-	if err = r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; measurements: " + strconv.Itoa(len(input.Measurements)) + ". Send only measurements that you intend to record."); err != nil {
+	if err = r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Measurements: " + strconv.Itoa(len(input.Measurements)) + ". Send only measurements that you intend to record."); err != nil {
 		return err
 	}
 	if err = r.confirmAction(ctx, o, "Submit client measurements", "Submit measurements", "A repeated submission can count the same measurements again."); err != nil {
@@ -70,7 +70,7 @@ func (r Runner) telemetryCommand(ctx context.Context, o Options, token string) e
 	if err != nil {
 		var failure *ports.Error
 		if errors.As(err, &failure) && (failure.Category == "network" || failure.Category == "unavailable" || failure.Category == "api" || failure.Category == "protocol") {
-			return ports.Failure(failure.Category, "The submission result is unknown. Check server telemetry before repeating the batch; it can be counted twice.")
+			return ports.Failure(failure.Category, "The submission result is unknown. Examine server telemetry before repeating the batch; it can be counted twice.")
 		}
 		return err
 	}

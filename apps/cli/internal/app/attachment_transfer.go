@@ -14,7 +14,7 @@ import (
 
 func (r Runner) uploadAttachment(ctx context.Context, o Options, token string) error {
 	if r.UploadFiles == nil || r.AttachmentUploads == nil || r.UploadTransfer == nil {
-		return ports.Failure("configuration", "File uploads are unavailable. Update the CLI and try again.")
+		return ports.Failure("configuration", "File uploads are not available. Update the CLI and try again.")
 	}
 	file, err := r.UploadFiles.OpenUpload(ctx, o.FilePath)
 	if err != nil {
@@ -25,9 +25,11 @@ func (r Runner) uploadAttachment(ctx context.Context, o Options, token string) e
 	if err != nil {
 		return err
 	}
-	if err = r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; asset: " + strconv.Quote(o.Command[2])); err != nil {
+	if err = r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Asset: " + strconv.Quote(o.Command[2])); err != nil {
 		return err
 	}
+	recoveryCommand := "attachments list " + strconv.Quote(o.Command[2]) + " --server " + strconv.Quote(o.Server) +
+		" --tenant " + strconv.Quote(o.Scope.Tenant) + " --inventory " + strconv.Quote(o.Scope.Inventory)
 	var result ports.Result[ports.Attachment]
 	if o.Transfer == "api" {
 		reader, writer := io.Pipe()
@@ -55,7 +57,7 @@ func (r Runner) uploadAttachment(ctx context.Context, o Options, token string) e
 			return e
 		}
 		if started.Data.UploadID == "" {
-			return ports.Failure("protocol", "The server did not return an upload ID. Inspect attachments list before another upload.")
+			return ports.Failure("protocol", "The server did not return an upload ID. Run "+recoveryCommand+" before another upload.")
 		}
 		if started.Data.ExpiresAt != "" {
 			expires, e := time.Parse(time.RFC3339, started.Data.ExpiresAt)
@@ -76,7 +78,7 @@ func (r Runner) uploadAttachment(ctx context.Context, o Options, token string) e
 		if !errors.As(err, &failure) || (failure.Category != "network" && failure.Category != "protocol") {
 			return err
 		}
-		return ports.Failure(failure.Category, "Could not confirm the upload. Run attachments list for this asset before another upload. Do not retry automatically.")
+		return ports.Failure(failure.Category, "The upload result is unknown. Run "+recoveryCommand+" before another upload. Do not try again automatically.")
 	}
 	r.Observer.Event(ctx, "cli.attachment.upload.completed")
 	return r.Output.Result(result)

@@ -15,7 +15,7 @@ type voiceSelectionSlot struct {
 
 func (r Runner) guideVoiceProvider(ctx context.Context, o Options, token string, api ports.VoiceProviderAPI) (Options, error) {
 	if r.ProviderProfilesAPI == nil {
-		return o, ports.Failure("configuration", "Provider profile selection is unavailable. Supply --input FILE with explicit choices.")
+		return o, ports.Failure("configuration", "Provider profile selection is not available. Supply --input FILE with explicit choices.")
 	}
 	current, err := api.VoiceProviderConfiguration(ctx, o.Scope.Tenant)
 	if err != nil {
@@ -71,7 +71,7 @@ func (r Runner) guideVoiceProvider(ctx context.Context, o Options, token string,
 			key := "profile-" + strconv.Itoa(i)
 			id := p.ID
 			values[key] = &id
-			choices = append(choices, ports.Choice{ID: key, Label: strconv.Quote(p.DisplayName) + " (" + strconv.Quote(p.ID) + ")", Detail: "State: " + strconv.Quote(p.LifecycleState) + "; credentials: " + strconv.Quote(p.CredentialStatus)})
+			choices = append(choices, ports.Choice{ID: key, Label: strconv.Quote(p.DisplayName) + " (" + strconv.Quote(p.ID) + ")", Detail: "State: " + strconv.Quote(p.LifecycleState) + ". Credentials: " + strconv.Quote(p.CredentialStatus)})
 		}
 		selected, err := r.Picker.Pick(ctx, slot.label, choices)
 		if err != nil {
@@ -82,7 +82,7 @@ func (r Runner) guideVoiceProvider(ctx context.Context, o Options, token string,
 		}
 		value, ok := values[selected]
 		if !ok {
-			return o, ports.Failure("input", "The selected profile is unavailable. Run voice-provider update again.")
+			return o, ports.Failure("input", "The selected profile is not available. Run voice-provider update again.")
 		}
 		*slot.value = value
 	}

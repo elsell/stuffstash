@@ -15,7 +15,7 @@ func isProviderAction(action string) bool {
 }
 func (r Runner) providerAction(ctx context.Context, o Options, api ports.ProviderProfilesAPI) error {
 	action := o.Command[1]
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; provider profile: " + strconv.Quote(o.Command[2])); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Provider profile: " + strconv.Quote(o.Command[2])); err != nil {
 		return err
 	}
 	detail := "Change the provider profile state."

@@ -24,7 +24,7 @@ func validateNotificationDevices(o Options, scope bool) error {
 		return ports.Failure("usage", "Device commands do not accept asset fields, cursors, or retry keys. Remove those options.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved context.")
 	}
 	return nil
 }
@@ -57,10 +57,10 @@ func (r Runner) notificationDevicesCommand(ctx context.Context, o Options, token
 		}
 		revision, err = strconv.ParseInt(text, 10, 64)
 		if err != nil || revision < 1 {
-			return ports.Failure("usage", "The revision must be a positive integer. Check the device revision and try again.")
+			return ports.Failure("usage", "The revision must be a positive integer. Examine the device revision and try again.")
 		}
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; device: " + strconv.Quote(o.Command[2]) + "; revision: " + strconv.FormatInt(revision, 10)); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Device: " + strconv.Quote(o.Command[2]) + ". Revision: " + strconv.FormatInt(revision, 10)); err != nil {
 		return err
 	}
 	if err := r.confirmAction(ctx, o, "Remove notification device", "Remove", "Stop notifications for this device registration."); err != nil {
@@ -70,7 +70,7 @@ func (r Runner) notificationDevicesCommand(ctx context.Context, o Options, token
 	if err != nil {
 		var failure *ports.Error
 		if errors.As(err, &failure) && failure.Category == "conflict" {
-			return ports.Failure("conflict", "The device registration changed. Run notification-devices show INSTALLATION_ID and review the current revision before you retry.")
+			return ports.Failure("conflict", "The device registration changed. Run notification-devices show INSTALLATION_ID and review the current revision before you try again.")
 		}
 		return err
 	}

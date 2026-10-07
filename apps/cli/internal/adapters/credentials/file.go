@@ -19,7 +19,7 @@ func checkFile(path string) error {
 		return err
 	}
 	if !info.Mode().IsRegular() {
-		return errors.New("The credential path is not a regular file. Choose a private regular file for credential storage.")
+		return errors.New("The credential path is not a regular file. Select a private regular file for credential storage.")
 	}
 	if info.Mode().Perm()&0077 != 0 {
 		return errors.New("Other accounts can access the credential file. Set its permissions to 0600.")

@@ -51,7 +51,7 @@ func (r Runner) createGrant(ctx context.Context, o Options, api ports.AccessGran
 	if err != nil {
 		return err
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; principal: " + strconv.Quote(v.PrincipalID) + "; relationship: " + strconv.Quote(string(v.Relationship))); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Principal: " + strconv.Quote(v.PrincipalID) + ". Relationship: " + strconv.Quote(string(v.Relationship))); err != nil {
 		return err
 	}
 	if err := r.confirmAction(ctx, o, "Grant inventory access", "Grant access", "Add this relationship to the selected inventory."); err != nil {
@@ -66,7 +66,7 @@ func (r Runner) createGrant(ctx context.Context, o Options, api ports.AccessGran
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "The grant result is unknown. Run access-grants show PRINCIPAL_ID viewer|editor for this relationship before you retry.")
+				return ports.Failure(failure.Category, "The grant result is unknown. Run access-grants show PRINCIPAL_ID viewer|editor for this relationship before you try again.")
 			}
 		}
 		return err

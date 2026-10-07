@@ -16,7 +16,7 @@ func selectPrinter(ctx context.Context, api ports.PrintSelectionSource, o Option
 		selection.PrinterID = o.PrinterID
 	}
 	if selection.PrinterID == "" {
-		return selection, ports.Failure("usage", "choose --printer or configure an inventory default printer")
+		return selection, ports.Failure("usage", "Supply --printer or configure a default printer for the inventory.")
 	}
 	if o.TemplateID != "" {
 		selection.TemplateID = o.TemplateID
@@ -36,7 +36,7 @@ func selectPrinter(ctx context.Context, api ports.PrintSelectionSource, o Option
 		return selection, err
 	}
 	if printer.Retired {
-		return selection, ports.Failure("conflict", "printer is retired; choose another destination")
+		return selection, ports.Failure("conflict", "The printer is retired. Select another printer.")
 	}
 	selection.ExpectedMediaFingerprint = printer.MediaFingerprint
 	return selection, nil

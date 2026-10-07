@@ -106,7 +106,7 @@ func TestInvitationAcceptanceProtectsTokenAndScope(t *testing.T) {
 	out.Reset()
 	diagnostic.Reset()
 	beforeBroken := calls
-	if code := Run(context.Background(), command, getenv, &out, &diagnostic); code == 0 || calls != beforeBroken+2 || accepted != 2 || !strings.Contains(diagnostic.String(), "before you retry") {
+	if code := Run(context.Background(), command, getenv, &out, &diagnostic); code == 0 || calls != beforeBroken+2 || accepted != 2 || !strings.Contains(diagnostic.String(), "before you try again") {
 		t.Fatal("uncertain acceptance retried or not explained")
 	}
 	if strings.Contains(out.String()+diagnostic.String(), "private-token") {

@@ -34,7 +34,7 @@ func (c *Client) WriteDirectory(ctx context.Context, kind ports.DirectoryWrite, 
 		}
 		return ports.Result[ports.Inventory]{Schema: r.Schema, Meta: metadata(r.Meta), Data: inventory(r.Data)}, nil
 	default:
-		return nil, ports.Failure("usage", "Unknown directory action. Use --help to choose a command.")
+		return nil, ports.Failure("usage", "Unknown directory action. Use --help to select a command.")
 	}
 }
 func tenant(v generated.TenantResponse) ports.Tenant {

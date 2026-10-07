@@ -36,7 +36,7 @@ func (c *Client) Claim(ctx context.Context, printerID string, control printing.A
 		return nil, nil
 	}
 	if value.Artifact == nil || value.Media == nil || !value.LeaseValid || value.Status != "claimed" || value.Revision <= 0 {
-		return nil, ports.Failure("protocol", "The server returned invalid details for the claimed print job. Check the job status before further action.")
+		return nil, ports.Failure("protocol", "The server returned invalid details for the claimed print job. Examine the job status before further action.")
 	}
 	artifact := value.Artifact
 	control.AttemptID = value.AttemptID
@@ -114,7 +114,7 @@ func (c *Client) Unsettled(ctx context.Context, printerID string) ([]printing.At
 		}
 		for _, value := range response.Data {
 			if value.PrinterID != printerID {
-				return nil, ports.Failure("protocol", "The server returned recovery details for a different printer. Check the affected jobs with the server administrator.")
+				return nil, ports.Failure("protocol", "The server returned recovery details for a different printer. Examine the affected jobs with the server administrator.")
 			}
 			attempt, err := attemptStatus(value)
 			if err != nil {
@@ -130,7 +130,7 @@ func (c *Client) Unsettled(ctx context.Context, printerID string) ([]printing.At
 			return result, nil
 		}
 		if pagination.NextCursor == nil || *pagination.NextCursor == "" || seen[*pagination.NextCursor] {
-			return nil, ports.Failure("protocol", "The server returned an invalid next page of print recovery results. Check unresolved jobs with the server administrator.")
+			return nil, ports.Failure("protocol", "The server returned an invalid next page of print recovery results. Examine unresolved jobs with the server administrator.")
 		}
 		cursor = *pagination.NextCursor
 		seen[cursor] = true
@@ -146,23 +146,23 @@ func (c *Client) Artifact(ctx context.Context, control printing.AttemptControl, 
 		return nil
 	})
 	if err != nil {
-		return nil, "", ports.Failure("network", "Could not download the print file. Check your connection to the server.")
+		return nil, "", ports.Failure("network", "The CLI cannot download the print file. Make sure that the server is available.")
 	}
 	if response.StatusCode != http.StatusOK {
 		_, err = read[ports.Result[workerAttempt]](response, nil)
 		if err == nil {
-			err = ports.Failure("protocol", "The server did not return the requested print file. Check the job status with the server administrator.")
+			err = ports.Failure("protocol", "The server did not return the requested print file. Examine the job status with the server administrator.")
 		}
 		return nil, "", consumerError(err)
 	}
 	defer response.Body.Close()
 	contentType, _, err := mime.ParseMediaType(response.Header.Get("Content-Type"))
 	if err != nil || contentType != "image/png" || response.ContentLength > maximum {
-		return nil, "", ports.Failure("protocol", "The print file response has an unsupported type or size. Check the job with the server administrator.")
+		return nil, "", ports.Failure("protocol", "The print file response has an unsupported type or size. Examine the job with the server administrator.")
 	}
 	body, err := io.ReadAll(io.LimitReader(response.Body, maximum+1))
 	if err != nil || int64(len(body)) > maximum {
-		return nil, "", ports.Failure("protocol", "The print file download failed or exceeded its size limit. Check the connection and job details.")
+		return nil, "", ports.Failure("protocol", "The print file download failed or exceeded its size limit. Make sure that the server is available. Examine the job details.")
 	}
 	return body, contentType, nil
 }

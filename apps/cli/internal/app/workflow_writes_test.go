@@ -43,7 +43,7 @@ type workflowConfirmation struct {
 }
 
 func (p workflowConfirmation) Pick(_ context.Context, _ string, choices []ports.Choice) (string, error) {
-	for _, fragment := range []string{`household: "home"`, `workflow: "wf"`, "Change the selected workflow"} {
+	for _, fragment := range []string{`Household: "home"`, `Workflow: "wf"`, "Change the selected workflow"} {
 		if !strings.Contains(p.notice.String(), fragment) {
 			p.t.Fatalf("missing target/warning: %s", p.notice)
 		}

@@ -44,3 +44,34 @@ Invalid file-backed connector registration explains how to select a new private
 replace the invalid credential store automatically. System credential storage
 can replace an invalid entry through pairing, so its guidance asks users to pair
 again without recommending unsupported file credentials on Windows.
+
+## Issue 9 reference review
+
+The official Issue 9 reference is available for the October 7 review. Review
+ordinary prose against its rules and dictionary; retain literal commands,
+flags, IDs and JSON names. Project computer-process terms include sign in,
+save, open, enter, upload, download, update, delete, verify and run. Use these
+terms consistently for their software operations, not as general synonyms.
+Use complete error sentences with a subject, direct instructions, and approved
+ordinary verbs such as select and examine. Avoid semicolons and replace gerund
+recovery clauses with explicit instructions. Do not perform blind replacements
+inside commands, protocol values, generated code or user data.
+
+Three recovery gaps are included in this batch:
+
+- A shared text prompt must not recommend `--name` for an email, title or revision
+  prompt. Refer to the command's supported options in `--help` unless the actual
+  field option is known. An interrupted prompt must not describe every field as
+  a name. Scripted input continues to fail promptly without prompting.
+- Windows connector credential failures must recommend system credential storage.
+  Never recommend a private credential file on a platform that rejects it.
+  Unix private-file guidance retains ownership and permission requirements.
+- An uncertain attachment upload must identify the asset in its inspection
+  command. Preserve unknown-outcome categories, no automatic mutation retries,
+  and all existing secret redaction.
+
+Critical tests cover shared prompt guidance for different fields, platform-aware
+credential recovery, and an interrupted upload that identifies its asset without
+repeating transfer or completion. Existing suites cover copy changes; do not add
+one test per sentence. This batch is a bounded review, not a claim that every
+remaining message has been reviewed against the full dictionary.

@@ -42,7 +42,7 @@ func validatePairingCommand(o Options, scope bool) error {
 		return ports.Failure("usage", "Use connectors print pairings review|approve PAIRING_ID or connectors print rotations approve CONNECTOR_ID.")
 	}
 	if scope && (o.Scope.Tenant == "" || o.Scope.Inventory == "") {
-		return ports.Failure("usage", "Choose the household and inventory for this pairing.")
+		return ports.Failure("usage", "Select the household and inventory for this pairing.")
 	}
 	return nil
 }
@@ -149,7 +149,7 @@ func (r Runner) preparePairingApproval(ctx context.Context, o Options) (Options,
 		}
 		if rotationApproval(o) {
 			if r.TextInput == nil {
-				return o, ports.Failure("configuration", "Interactive text input is unavailable. Use --input FILE|-.")
+				return o, ports.Failure("configuration", "Interactive text input is not available. Use --input FILE|-.")
 			}
 			id, err := r.TextInput.ReadText(ctx, "Pairing ID", 4095)
 			if err != nil {
