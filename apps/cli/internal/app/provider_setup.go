@@ -22,7 +22,7 @@ func validateProviderWrite(o Options, scope bool) error {
 		return ports.Failure("usage", "Use provider-profiles create, update PROFILE_ID, or credential PROFILE_ID.")
 	}
 	if scope && o.Scope.Tenant == "" {
-		return ports.Failure("usage", "Supply --tenant or choose a saved household context.")
+		return ports.Failure("usage", "Supply --tenant or select a saved household context.")
 	}
 	return nil
 }
@@ -70,7 +70,7 @@ func validateProviderInput(action string, body []byte) error {
 	for key, value := range fields {
 		kind, ok := allowed[key]
 		if !ok {
-			return ports.Failure("usage", "The provider input has an unsupported field. Check this command's JSON fields in --help.")
+			return ports.Failure("usage", "The provider input has an unsupported field. Examine this command's JSON fields in --help.")
 		}
 		if bytes.Equal(bytes.TrimSpace(value), []byte("null")) {
 			continue
@@ -94,7 +94,7 @@ func validateProviderInput(action string, body []byte) error {
 	for _, key := range required {
 		var v string
 		if json.Unmarshal(fields[key], &v) != nil || strings.TrimSpace(v) == "" {
-			return ports.Failure("usage", "The provider input is missing a required value. Check the required fields in --help.")
+			return ports.Failure("usage", "The provider input is missing a required value. Examine the required fields in --help.")
 		}
 	}
 	if action == "update" && len(fields) == 0 {
@@ -129,13 +129,13 @@ func (r Runner) prepareProviderWrite(ctx context.Context, o Options) (Options, e
 }
 func (r Runner) writeProvider(ctx context.Context, o Options, token string) error {
 	if r.ProviderWrites == nil {
-		return ports.Failure("configuration", "Provider setup is unavailable. Update the CLI and try again.")
+		return ports.Failure("configuration", "Provider setup is not available. Update the CLI and try again.")
 	}
 	profile := "new"
 	if len(o.Command) > 2 {
 		profile = o.Command[2]
 	}
-	if err := r.Output.Notice("Provider profile: " + strconv.Quote(profile) + "; Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; action: " + o.Command[1]); err != nil {
+	if err := r.Output.Notice("Provider profile: " + strconv.Quote(profile) + "; Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Action: " + o.Command[1]); err != nil {
 		return err
 	}
 	if err := r.confirmAction(ctx, o, "Save provider settings", "Save", "Change this household's provider settings. Existing clients can use the updated settings. No provider test will run."); err != nil {

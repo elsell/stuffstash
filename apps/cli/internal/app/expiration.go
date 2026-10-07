@@ -55,7 +55,7 @@ func validateExpiration(o Options) error {
 	for _, v := range []string{q.FromDate, q.ThroughDate} {
 		if v != "" {
 			if _, err := time.Parse("2006-01-02", v); err != nil {
-				return ports.Failure("usage", "Use a valid date in YYYY-MM-DD format.")
+				return ports.Failure("usage", "Use a correct date in YYYY-MM-DD format.")
 			}
 		}
 	}

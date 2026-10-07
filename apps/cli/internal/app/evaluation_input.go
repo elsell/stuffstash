@@ -73,11 +73,11 @@ func prepareEvaluationWrite(o Options) (Options, error) {
 			return o, err
 		}
 		if strings.TrimSpace(v.WorkflowID) == "" || strings.TrimSpace(v.RevisionID) == "" || len(v.Cases) < 1 || len(v.Cases) > 100 {
-			return o, ports.Failure("usage", "Run input requires workflowId, revisionId, and 1 to 100 case references.")
+			return o, ports.Failure("usage", "Supply workflowId, revisionId, and 1 to 100 case references in the run input.")
 		}
 		for _, c := range v.Cases {
 			if strings.TrimSpace(c.CaseID) == "" || strings.TrimSpace(c.RevisionID) == "" {
-				return o, ports.Failure("usage", "Each run case requires caseId and revisionId.")
+				return o, ports.Failure("usage", "Supply caseId and revisionId for each run case.")
 			}
 		}
 		return o, nil
@@ -96,25 +96,25 @@ func prepareEvaluationWrite(o Options) (Options, error) {
 		}
 		definition = v.Definition
 		if v.ExpectedRevision <= 0 {
-			return o, ports.Failure("usage", "Revision input requires a positive integer expectedRevision. Inspect the case before retrying a conflict.")
+			return o, ports.Failure("usage", "Supply an integer greater than zero for expectedRevision. Examine the case before you try again.")
 		}
 	}
 	if definition == nil || strings.TrimSpace(definition.Title) == "" || strings.TrimSpace(definition.Utterance) == "" || definition.Expectations == nil || strings.TrimSpace(definition.Expectations.Kind) == "" {
-		return o, ports.Failure("usage", "Definition requires title, utterance, and expectations with kind.")
+		return o, ports.Failure("usage", "Supply title, utterance, and expectations with kind in the definition.")
 	}
 	for _, a := range definition.Assets {
 		if strings.TrimSpace(a.ID) == "" || strings.TrimSpace(a.Title) == "" || strings.TrimSpace(a.Kind) == "" {
-			return o, ports.Failure("usage", "Each fixture asset requires id, title, and kind.")
+			return o, ports.Failure("usage", "Supply id, title, and kind for each fixture asset.")
 		}
 	}
 	for _, l := range definition.Expectations.Locations {
 		if strings.TrimSpace(l.AssetID) == "" || strings.TrimSpace(l.AncestorID) == "" {
-			return o, ports.Failure("usage", "Each location expectation requires assetId and ancestorId.")
+			return o, ports.Failure("usage", "Supply assetId and ancestorId for each location expectation.")
 		}
 	}
 	for _, p := range definition.Expectations.Proposals {
 		if strings.TrimSpace(p.Operation) == "" {
-			return o, ports.Failure("usage", "Each proposal expectation requires operation.")
+			return o, ports.Failure("usage", "Supply operation for each proposal expectation.")
 		}
 	}
 	return o, nil

@@ -9,7 +9,7 @@ import (
 
 func (r Runner) choosePairingBindings(ctx context.Context, o Options, token string, review ports.PairingReview) ([]ports.PairingBinding, error) {
 	if r.PrintingAPI == nil {
-		return nil, ports.Failure("configuration", "Printer selection is unavailable. Use structured input with explicit bindings.")
+		return nil, ports.Failure("configuration", "Printer selection is not available. Use structured input with explicit bindings.")
 	}
 	api, err := r.PrintingAPI(o.Server, token)
 	if err != nil {
@@ -40,7 +40,7 @@ func (r Runner) choosePairingBindings(ctx context.Context, o Options, token stri
 		choices := []ports.Choice{{ID: "skip", Label: "Skip this candidate"}}
 		for _, printer := range printers {
 			if !printer.Retired && printer.AdapterID == candidate.AdapterID && !used[printer.ID] {
-				choices = append(choices, ports.Choice{ID: "printer:" + printer.ID, Label: strconv.Quote(printer.Name), Detail: "Printer " + strconv.Quote(printer.ID) + "; adapter " + strconv.Quote(printer.AdapterID)})
+				choices = append(choices, ports.Choice{ID: "printer:" + printer.ID, Label: strconv.Quote(printer.Name), Detail: "Printer " + strconv.Quote(printer.ID) + ". Adapter " + strconv.Quote(printer.AdapterID)})
 			}
 		}
 		selected, err := r.Picker.Pick(ctx, "Bind candidate "+strconv.Quote(candidate.ID)+" ("+strconv.Quote(candidate.Name)+")", choices)
@@ -58,7 +58,7 @@ func (r Runner) choosePairingBindings(ctx context.Context, o Options, token stri
 			}
 		}
 		if !valid {
-			return nil, ports.Failure("usage", "Choose one of the displayed printer bindings.")
+			return nil, ports.Failure("usage", "Select one of the displayed printer bindings.")
 		}
 		id := strings.TrimPrefix(selected, "printer:")
 		bindings = append(bindings, ports.PairingBinding{CandidateID: candidate.ID, PrinterID: id})

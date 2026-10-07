@@ -39,7 +39,7 @@ func (r Runner) cancelImport(ctx context.Context, o Options, api ports.ImportJob
 	if err != nil {
 		return err
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; import job: " + strconv.Quote(o.Command[2]) + "; mode: " + strconv.Quote(string(mode))); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Import job: " + strconv.Quote(o.Command[2]) + ". Mode: " + strconv.Quote(string(mode))); err != nil {
 		return err
 	}
 	detail := "Stop this import and keep imported records."
@@ -58,7 +58,7 @@ func (r Runner) cancelImport(ctx context.Context, o Options, api ports.ImportJob
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "The cancellation result is unknown. Run import-jobs show JOB_ID before you retry.")
+				return ports.Failure(failure.Category, "The cancellation result is unknown. Run import-jobs show JOB_ID before you try again.")
 			}
 		}
 		return err

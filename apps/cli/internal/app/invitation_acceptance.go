@@ -46,9 +46,9 @@ func (r Runner) invitationTokenCommand(ctx context.Context, o Options, api ports
 	}
 	v := preview.Data
 	if v.InventoryID != o.Scope.Inventory || (v.Relationship != ports.AccessViewer && v.Relationship != ports.AccessEditor) {
-		return ports.Failure("protocol", "The invitation preview is not valid. Check the invitation details and try again.")
+		return ports.Failure("protocol", "The invitation preview is not correct. Examine the invitation details and try again.")
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(v.InventoryName) + " (" + strconv.Quote(v.InventoryID) + "); invitation: " + strconv.Quote(o.Command[2]) + "; role: " + strconv.Quote(string(v.Relationship)) + "; status: " + strconv.Quote(v.Status) + "; expires: " + strconv.Quote(v.ExpiresAt) + "; expired: " + strconv.FormatBool(v.IsExpired)); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(v.InventoryName) + " (" + strconv.Quote(v.InventoryID) + "); invitation: " + strconv.Quote(o.Command[2]) + ". Role: " + strconv.Quote(string(v.Relationship)) + ". Status: " + strconv.Quote(v.Status) + ". Expires: " + strconv.Quote(v.ExpiresAt) + ". Expired: " + strconv.FormatBool(v.IsExpired)); err != nil {
 		return err
 	}
 	if err := r.confirmAction(ctx, o, "Accept invitation", "Accept", "Join the displayed inventory with the displayed role."); err != nil {
@@ -63,7 +63,7 @@ func (r Runner) invitationTokenCommand(ctx context.Context, o Options, api ports
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "The acceptance result is unknown. Run invitations preview INVITATION_ID with the same token before you retry.")
+				return ports.Failure(failure.Category, "The acceptance result is unknown. Run invitations preview INVITATION_ID with the same token before you try again.")
 			}
 		}
 		return err

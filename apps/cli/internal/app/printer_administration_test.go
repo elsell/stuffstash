@@ -87,7 +87,7 @@ func TestPrinterAdministrationDeclinedConfirmation(t *testing.T) {
 		var out, notice bytes.Buffer
 		r := Runner{PrinterAdministrationAPI: func(string, string) (ports.PrinterAdministrationAPI, error) { return api, nil }, Picker: firstScopeChoice{}, Output: presentation.Output{Stdout: &out, Stderr: &notice}}
 		err := r.printerAdministration(context.Background(), Options{Server: server.URL, Scope: ports.Scope{Tenant: "home", Inventory: "garage"}, Command: command}, "owner")
-		if !errors.Is(err, context.Canceled) || calls != 0 || !strings.Contains(notice.String(), `inventory: "garage"`) || !strings.Contains(notice.String(), `household: "home"`) {
+		if !errors.Is(err, context.Canceled) || calls != 0 || !strings.Contains(notice.String(), `Inventory: "garage"`) || !strings.Contains(notice.String(), `Household: "home"`) {
 			t.Fatalf("declined write: %v %s", err, &notice)
 		}
 	}

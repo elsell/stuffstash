@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 	"github.com/zalando/go-keyring"
@@ -137,7 +138,7 @@ func (ConnectorKeyring) Load(_ context.Context, server, id string) (ports.Connec
 		return ports.ConnectorRegistration{}, ports.ErrConnectorNotRegistered
 	}
 	if err != nil {
-		return ports.ConnectorRegistration{}, errors.New("OS connector store unavailable; explicitly configure STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE on headless hosts")
+		return ports.ConnectorRegistration{}, connectorStoreError("read", runtime.GOOS)
 	}
 	r, err := decodeRegistration([]byte(value))
 	if err != nil {
@@ -157,7 +158,7 @@ func (ConnectorKeyring) Save(_ context.Context, r ports.ConnectorRegistration) e
 		return err
 	}
 	if keyring.Set(connectorService, connectorKey(r.Server, r.ConnectorID), string(body)) != nil {
-		return errors.New("could not save connector to OS credential store")
+		return connectorStoreError("save", runtime.GOOS)
 	}
 	return nil
 }

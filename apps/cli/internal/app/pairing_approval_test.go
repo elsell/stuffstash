@@ -74,7 +74,7 @@ func (p pairingBindingPicker) Pick(_ context.Context, title string, choices []po
 		}
 		return "skip", nil
 	}
-	for _, fragment := range []string{`household: "home"`, `inventory: "garage"`, `Bind candidate "candidate" to printer "second"`} {
+	for _, fragment := range []string{`Household: "home"`, `Inventory: "garage"`, `Bind candidate "candidate" to printer "second"`} {
 		if !strings.Contains(p.notice.String(), fragment) {
 			p.t.Fatalf("missing displayed binding/scope: %s", p.notice)
 		}

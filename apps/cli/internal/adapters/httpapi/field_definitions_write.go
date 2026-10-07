@@ -24,7 +24,7 @@ func (c *Client) ChangeFieldDefinition(ctx context.Context, s ports.DefinitionSc
 		case ports.RestoreField:
 			response, err = c.sdk.PatchTenantsByTenantIdCustomFieldDefinitionsByDefinitionIdRestore(ctx, s.Scope.Tenant, id, nil)
 		default:
-			return ports.Result[ports.FieldDefinition]{}, ports.Failure("usage", "Unknown field definition action. Use --help to choose a command.")
+			return ports.Result[ports.FieldDefinition]{}, ports.Failure("usage", "Unknown field definition action. Use --help to select a command.")
 		}
 	} else {
 		switch action {
@@ -37,7 +37,7 @@ func (c *Client) ChangeFieldDefinition(ctx context.Context, s ports.DefinitionSc
 		case ports.RestoreField:
 			response, err = c.sdk.PatchTenantsByTenantIdInventoriesByInventoryIdCustomFieldDefinitionsByDefinitionIdRestore(ctx, s.Scope.Tenant, s.Scope.Inventory, id, nil)
 		default:
-			return ports.Result[ports.FieldDefinition]{}, ports.Failure("usage", "Unknown field definition action. Use --help to choose a command.")
+			return ports.Result[ports.FieldDefinition]{}, ports.Failure("usage", "Unknown field definition action. Use --help to select a command.")
 		}
 	}
 	return fieldDefinitionResult(response, err)

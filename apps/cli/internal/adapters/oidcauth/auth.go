@@ -29,7 +29,7 @@ type endpoints struct {
 func ValidateURL(raw string, allowLoopback bool) error {
 	u, err := url.Parse(raw)
 	if err != nil || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
-		return errors.New("a valid HTTPS URL without credentials, query or fragment is required")
+		return errors.New("Use an HTTPS URL without credentials, query parameters, or a fragment.")
 	}
 	if u.Scheme == "https" {
 		return nil
@@ -37,29 +37,29 @@ func ValidateURL(raw string, allowLoopback bool) error {
 	if allowLoopback && u.Scheme == "http" && (u.Hostname() == "127.0.0.1" || u.Hostname() == "localhost" || u.Hostname() == "::1") {
 		return nil
 	}
-	return errors.New("HTTPS is required; loopback HTTP needs explicit development configuration")
+	return errors.New("Use HTTPS. For local development, set STUFF_STASH_CLI_ALLOW_LOOPBACK_HTTP=true to permit loopback HTTP.")
 }
 func (a Adapter) provider(ctx context.Context, issuer, clientID string) (context.Context, *oidc.Provider, oauth2.Config, error) {
 	if ValidateURL(issuer, a.AllowLoopbackHTTP) != nil || clientID == "" {
-		return ctx, nil, oauth2.Config{}, ports.Failure("configuration", "The sign-in provider configuration is invalid. Ask the server administrator to check the OIDC issuer URL and CLI client ID.")
+		return ctx, nil, oauth2.Config{}, ports.Failure("configuration", "The sign-in provider configuration is invalid. Ask the server administrator to examine the OIDC issuer URL and CLI client ID.")
 	}
 	safe := *a.HTTP
 	safe.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	ctx = oidc.ClientContext(ctx, &safe)
 	provider, err := oidc.NewProvider(ctx, issuer)
 	if err != nil {
-		return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "Cannot get the sign-in provider configuration. Check your connection and run stuffstash login again. If the error continues, contact the server administrator.")
+		return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "The CLI cannot get the sign-in provider configuration. Do a check of your connection and run stuffstash login again. If the error continues, contact the server administrator.")
 	}
 	var extra endpoints
 	if provider.Claims(&extra) != nil {
-		return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "The sign-in provider returned invalid settings. Ask the server administrator to check the OIDC configuration.")
+		return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "The sign-in provider returned invalid settings. Ask the server administrator to examine the OIDC configuration.")
 	}
 	endpoint := provider.Endpoint()
 	endpoint.DeviceAuthURL = extra.Device
 	endpoint.AuthStyle = oauth2.AuthStyleInParams
 	for _, endpointURL := range []string{endpoint.AuthURL, endpoint.TokenURL, extra.JWKS, extra.Device} {
 		if endpointURL != "" && ValidateURL(endpointURL, a.AllowLoopbackHTTP) != nil {
-			return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "The sign-in provider returned an unsupported address. Ask the server administrator to check the provider URLs. Use HTTPS URLs without credentials, query parameters, or fragments.")
+			return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "The sign-in provider returned an unsupported address. Ask the server administrator to examine the provider URLs. Use HTTPS URLs without credentials, query parameters, or fragments.")
 		}
 	}
 	return ctx, provider, oauth2.Config{ClientID: clientID, Endpoint: endpoint}, nil
@@ -95,11 +95,11 @@ func (a Adapter) Login(ctx context.Context, server string, c ports.AuthConfig, d
 func (a Adapter) session(ctx context.Context, p *oidc.Provider, clientID, server string, token *oauth2.Token, nonce string) (ports.Session, error) {
 	raw, _ := token.Extra("id_token").(string)
 	if raw == "" {
-		return ports.Session{}, ports.Failure("authentication", "The sign-in provider did not return an ID token. Ask the server administrator to check OpenID Connect support.")
+		return ports.Session{}, ports.Failure("authentication", "The sign-in provider did not return an ID token. Ask the server administrator to examine OpenID Connect support.")
 	}
 	verified, err := p.Verifier(&oidc.Config{ClientID: clientID, Now: a.Clock.Now}).Verify(ctx, raw)
 	if err != nil || verified.Subject == "" || nonce != "" && verified.Nonce != nonce {
-		return ports.Session{}, ports.Failure("authentication", "Cannot verify the identity returned by the sign-in provider. Run stuffstash login again. If the error continues, contact the server administrator.")
+		return ports.Session{}, ports.Failure("authentication", "The CLI cannot verify the identity returned by the sign-in provider. Run stuffstash login again. If the error continues, contact the server administrator.")
 	}
 	return ports.Session{Server: server, Issuer: verified.Issuer, Subject: verified.Subject, ClientID: clientID, IDToken: raw, RefreshToken: token.RefreshToken, ExpiresAt: verified.Expiry}, nil
 }
@@ -113,11 +113,11 @@ func (a Adapter) Refresh(ctx context.Context, s ports.Session) (ports.Session, e
 	}
 	token, err := config.TokenSource(ctx, &oauth2.Token{RefreshToken: s.RefreshToken, Expiry: time.Unix(1, 0)}).Token()
 	if err != nil {
-		return ports.Session{}, ports.Failure("authentication", "Cannot renew your sign-in session. Run stuffstash login again.")
+		return ports.Session{}, ports.Failure("authentication", "The CLI cannot renew your sign-in session. Run stuffstash login again.")
 	}
 	result, err := a.session(ctx, p, s.ClientID, s.Server, token, "")
 	if err == nil && (result.Issuer != s.Issuer || s.Subject != "" && result.Subject != s.Subject) {
-		return ports.Session{}, ports.Failure("authentication", "The account changed during sign-in renewal. Run stuffstash login to choose the correct account.")
+		return ports.Session{}, ports.Failure("authentication", "The account changed during sign-in renewal. Run stuffstash login to select the correct account.")
 	}
 	if err == nil && result.RefreshToken == "" {
 		result.RefreshToken = s.RefreshToken
@@ -130,11 +130,11 @@ func (a Adapter) device(ctx context.Context, c oauth2.Config) (*oauth2.Token, er
 	}
 	response, err := c.DeviceAuth(ctx)
 	if err != nil {
-		return nil, ports.Failure("authentication", "Cannot start device sign-in. Check your connection. Run stuffstash login --device-code again.")
+		return nil, ports.Failure("authentication", "The CLI cannot start device sign-in. Do a check of your connection. Run stuffstash login --device-code again.")
 	}
 	defer func() { response.DeviceCode = "" }()
 	if response.DeviceCode == "" || response.UserCode == "" || !response.Expiry.After(a.Clock.Now()) || ValidateURL(response.VerificationURI, a.AllowLoopbackHTTP) != nil {
-		return nil, ports.Failure("authentication", "The sign-in provider returned an invalid device code response. Ask the server administrator to check device sign-in support.")
+		return nil, ports.Failure("authentication", "The sign-in provider returned an invalid device code response. Ask the server administrator to examine device sign-in support.")
 	}
 	if err := a.Output.Notice("Open " + response.VerificationURI + " and enter code " + response.UserCode); err != nil {
 		return nil, err
@@ -157,7 +157,7 @@ func (a Adapter) device(ctx context.Context, c oauth2.Config) (*oauth2.Token, er
 			case "expired_token":
 				return nil, ports.Failure("authentication", "The device sign-in code expired. Run stuffstash login --device-code to get a new code.")
 			}
-			return nil, ports.Failure("authentication", "Cannot complete device sign-in. Run stuffstash login --device-code again. If the error continues, contact the server administrator.")
+			return nil, ports.Failure("authentication", "The CLI cannot complete device sign-in. Run stuffstash login --device-code again. If the error continues, contact the server administrator.")
 		}
 		timer := time.NewTimer(time.Duration(attempt+1) * time.Second)
 		select {
@@ -167,6 +167,6 @@ func (a Adapter) device(ctx context.Context, c oauth2.Config) (*oauth2.Token, er
 		case <-timer.C:
 		}
 	}
-	return nil, ports.Failure("network", "Cannot connect to the device sign-in provider. Check your connection. Run stuffstash login --device-code again.")
+	return nil, ports.Failure("network", "The CLI cannot connect to the device sign-in provider. Do a check of your connection. Run stuffstash login --device-code again.")
 }
 func CanonicalServer(raw string) string { return strings.TrimRight(raw, "/") }

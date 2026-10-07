@@ -25,10 +25,10 @@ func decodeInvitationCreate(body []byte) (invitationCreateInput, error) {
 	}
 	parsed, err := mail.ParseAddress(v.Email)
 	if err != nil || parsed.Address != v.Email || strings.TrimSpace(v.Email) == "" {
-		return v, ports.Failure("usage", "Supply a valid email address without a display name.")
+		return v, ports.Failure("usage", "Supply a correct email address without a display name.")
 	}
 	if v.Relationship != "viewer" && v.Relationship != "editor" {
-		return v, ports.Failure("usage", "Choose viewer or editor for the invitation role.")
+		return v, ports.Failure("usage", "Select viewer or editor for the invitation role.")
 	}
 	return v, nil
 }
@@ -67,7 +67,7 @@ func (r Runner) createInvitation(ctx context.Context, o Options, token string) e
 	if r.InvitationWriter == nil {
 		return ports.Failure("configuration", "Invitation creation is not available. Update the CLI and try again.")
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; email: " + strconv.Quote(v.Email) + "; role: " + v.Relationship); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Email: " + strconv.Quote(v.Email) + ". Role: " + v.Relationship); err != nil {
 		return err
 	}
 	if err := r.confirmAction(ctx, o, "Create inventory invitation", "Create invitation", "Allow this email address to accept the selected inventory role."); err != nil {
@@ -84,7 +84,7 @@ func (r Runner) createInvitation(ctx context.Context, o Options, token string) e
 		}
 		var failure *ports.Error
 		if errors.As(err, &failure) && (failure.Category == "network" || failure.Category == "protocol" || failure.Category == "unavailable") {
-			return ports.Failure(failure.Category, "The invitation result is unknown. Run invitations list before you retry. A lost invitation link cannot be shown again.")
+			return ports.Failure(failure.Category, "The invitation result is unknown. Run invitations list before you try again. A lost invitation link cannot be shown again.")
 		}
 		return err
 	}

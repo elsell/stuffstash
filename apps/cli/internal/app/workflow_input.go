@@ -56,7 +56,7 @@ func prepareWorkflowInput(o Options) (Options, error) {
 			return o, err
 		}
 		if strings.TrimSpace(v.RevisionID) == "" || strings.TrimSpace(v.RunID) == "" || len(v.Cases) == 0 {
-			return o, ports.Failure("usage", "Activation input requires revisionId, runId and cases, with optional expected selection.")
+			return o, ports.Failure("usage", "Supply revisionId, runId and cases in the activation input. The expected selection is optional.")
 		}
 		var cases []struct {
 			CaseID     string `json:"caseId"`
@@ -67,11 +67,11 @@ func prepareWorkflowInput(o Options) (Options, error) {
 		}
 		for _, c := range cases {
 			if strings.TrimSpace(c.CaseID) == "" || strings.TrimSpace(c.RevisionID) == "" {
-				return o, ports.Failure("usage", "Each activation case requires caseId and revisionId.")
+				return o, ports.Failure("usage", "Supply caseId and revisionId for each activation case.")
 			}
 		}
 		if v.Expected != nil && (strings.TrimSpace(v.Expected.WorkflowId) == "" || strings.TrimSpace(v.Expected.RevisionId) == "") {
-			return o, ports.Failure("usage", "Expected selection requires workflowId and revisionId, or null when no selection is expected.")
+			return o, ports.Failure("usage", "Supply workflowId and revisionId in the expected selection. If you expect no selection, use null.")
 		}
 		return o, nil
 	}
@@ -89,15 +89,15 @@ func prepareWorkflowInput(o Options) (Options, error) {
 		}
 		definition = v.Definition
 		if v.ExpectedRevision <= 0 {
-			return o, ports.Failure("usage", "Revision input requires a positive integer expectedRevision. Inspect the workflow before retrying a conflict.")
+			return o, ports.Failure("usage", "Supply an integer greater than zero for expectedRevision. Examine the workflow before you try again.")
 		}
 	}
 	if definition == nil || strings.TrimSpace(definition.Name) == "" || definition.Budget == nil {
-		return o, ports.Failure("usage", "Input requires definition with name and budget. Supply all four budget fields shown by --help.")
+		return o, ports.Failure("usage", "Supply a definition with name and budget. Supply all four budget fields shown by --help.")
 	}
 	b := definition.Budget
 	if b.ElapsedSeconds == nil || b.FollowUpTurns == nil || b.ModelCalls == nil || b.ToolCalls == nil {
-		return o, ports.Failure("usage", "Budget requires integer elapsedSeconds, followUpTurns, modelCalls and toolCalls.")
+		return o, ports.Failure("usage", "Supply integers for elapsedSeconds, followUpTurns, modelCalls and toolCalls in the budget.")
 	}
 	return o, nil
 }

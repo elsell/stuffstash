@@ -16,7 +16,7 @@ func validateOperations(o Options, scope bool) error {
 		return ports.Failure("usage", "Undo and redo do not accept asset fields, cursors, or retry keys. Remove those options.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved context.")
 	}
 	return nil
 }
@@ -28,7 +28,7 @@ func (r Runner) operationCommand(ctx context.Context, o Options, token string) e
 	if err != nil {
 		return err
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; operation: " + strconv.Quote(o.Command[2])); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Operation: " + strconv.Quote(o.Command[2])); err != nil {
 		return err
 	}
 	label, detail := "Undo", "Reverse this recorded operation."
@@ -47,7 +47,7 @@ func (r Runner) operationCommand(ctx context.Context, o Options, token string) e
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "The operation result is unknown. Inspect the affected asset with assets show ASSET_ID before you retry.")
+				return ports.Failure(failure.Category, "The operation result is unknown. Examine the affected asset with assets show ASSET_ID before you try again.")
 			}
 		}
 		return err

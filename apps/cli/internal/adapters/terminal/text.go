@@ -15,7 +15,7 @@ import (
 
 func (p Picker) ReadText(ctx context.Context, title string, maximum int) (string, error) {
 	if p.Input == nil || p.Output == nil || !term.IsTerminal(int(p.Input.Fd())) || !term.IsTerminal(int(p.Output.Fd())) {
-		return "", ports.Failure("usage", "Interactive input is not available. Supply --name or --input.")
+		return "", ports.Failure("usage", "Interactive input is not available. Use this command's --help to find the required input options.")
 	}
 	restoreOutput, err := prepareOutput(p.Output)
 	if err != nil {
@@ -24,7 +24,7 @@ func (p Picker) ReadText(ctx context.Context, title string, maximum int) (string
 	defer restoreOutput()
 	state, err := term.MakeRaw(int(p.Input.Fd()))
 	if err != nil {
-		return "", ports.Failure("input", "Cannot start terminal input. Supply --name or --input.")
+		return "", ports.Failure("input", "The CLI cannot start terminal input. Use this command's --help to find the required input options.")
 	}
 	defer term.Restore(int(p.Input.Fd()), state)
 	width, height, err := term.GetSize(int(p.Output.Fd()))
@@ -79,7 +79,7 @@ func runText(ctx context.Context, input io.Reader, output io.Writer, title strin
 	for {
 		line, err := terminal.ReadLine()
 		if errors.Is(err, io.EOF) {
-			return "", ports.Failure("input", "Input ended before a name was entered. Supply --name or --input.")
+			return "", ports.Failure("input", "Input ended before you entered a value. Use this command's --help to find the required input options.")
 		}
 		if err != nil && !errors.Is(err, term.ErrPasteIndicator) {
 			return "", err
@@ -88,7 +88,7 @@ func runText(ctx context.Context, input io.Reader, output io.Writer, title strin
 		if line != "" && utf8.RuneCountInString(line) <= maximum {
 			return line, nil
 		}
-		if _, err := fmt.Fprintf(output, "Enter a name with 1 to %d characters.\r\n", maximum); err != nil {
+		if _, err := fmt.Fprintf(output, "Enter a value with 1 to %d characters.\r\n", maximum); err != nil {
 			return "", err
 		}
 	}

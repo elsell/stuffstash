@@ -9,6 +9,7 @@ mkdir -p "$workdir/scripts" "$workdir/apps/api/internal/app/assets" "$workdir/ap
 cp "$checker" "$workdir/scripts/check-go-structural-rules.sh"
 cp "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/check-asset-operation-facades.go" "$workdir/scripts/check-asset-operation-facades.go"
 cp "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/check-gorm-query-fragments.go" "$workdir/scripts/check-gorm-query-fragments.go"
+cp "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/check-go-sql-strings.go" "$workdir/scripts/check-go-sql-strings.go"
 cd "$workdir"
 
 cat > apps/api/internal/app/assets.go <<'EOF'
@@ -110,3 +111,47 @@ package search
 func filter(catalog Catalog) { catalog.Where("owner") }
 EOF
 scripts/check-go-structural-rules.sh apps/api/internal/domain/search/non_gorm_where.go
+
+mkdir -p fixtures
+cat > fixtures/diagnostic.go <<'EOF'
+package fixture
+import (
+ "errors"
+ f "fmt"
+ cliports "github.com/stuffstash/stuff-stash/cli/internal/ports"
+)
+func diagnostics() {
+ _ = errors.New("Select a saved context.")
+ _ = f.Errorf("Select an inventory: %s", "example")
+ _ = cliports.Failure("usage", "Select a saved context.")
+}
+EOF
+scripts/check-go-structural-rules.sh fixtures/diagnostic.go
+for source in 'const query = "sElEcT id FROM assets"' 'func query(db DB) { db.Query("SELECT 1") }' 'const query = `SELECT
+id FROM assets`' 'const query = `UPDATE assets
+SET name = ?`'  'func query(ports Other) { ports.Failure("usage", "SELECT id FROM assets") }'; do
+ printf 'package fixture\n%b\n' "$source" > fixtures/sql.go
+ if scripts/check-go-structural-rules.sh fixtures/sql.go >/dev/null 2>&1; then
+  echo "expected raw SQL to be rejected: $source" >&2
+  exit 1
+ fi
+done
+
+cat > fixtures/shadow.go <<'EOF'
+package fixture
+import ports "github.com/stuffstash/stuff-stash/cli/internal/ports"
+func query(ports Other) { ports.Failure("usage", "SELECT id FROM assets") }
+EOF
+if scripts/check-go-structural-rules.sh fixtures/shadow.go >/dev/null 2>&1; then
+ echo "expected shadowed diagnostic function SQL to be rejected" >&2
+ exit 1
+fi
+cat > fixtures/format_argument.go <<'EOF'
+package fixture
+import "fmt"
+func query() { _ = fmt.Errorf("failed: %s", "SELECT id FROM assets") }
+EOF
+if scripts/check-go-structural-rules.sh fixtures/format_argument.go >/dev/null 2>&1; then
+ echo "expected non-message SQL argument to be rejected" >&2
+ exit 1
+fi

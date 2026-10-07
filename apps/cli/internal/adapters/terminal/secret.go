@@ -22,7 +22,7 @@ func (p Picker) ReadSecret(ctx context.Context, title string, maximum int) (stri
 	defer restore()
 	state, err := term.MakeRaw(int(p.Input.Fd()))
 	if err != nil {
-		return "", ports.Failure("input", "Cannot start secret input. Supply --input FILE instead.")
+		return "", ports.Failure("input", "The CLI cannot start secret input. Supply --input FILE instead.")
 	}
 	defer term.Restore(int(p.Input.Fd()), state)
 	return runSecret(ctx, p.Input, p.Output, title, maximum)

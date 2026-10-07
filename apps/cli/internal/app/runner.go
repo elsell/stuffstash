@@ -73,7 +73,7 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return ports.Failure("usage", "This command does not accept --input. Remove the option.")
 	}
 	if len(o.Command) == 0 {
-		return ports.Failure("usage", "a command is required; use --help")
+		return ports.Failure("usage", "Supply a command. Run stuffstash --help for the commands.")
 	}
 	if o.Command[0] == "context" {
 		return r.contextCommand(ctx, o.Command)
@@ -83,7 +83,7 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return r.serverCommand(ctx, o)
 	case "login":
 		if len(o.Command) != 1 {
-			return ports.Failure("usage", "login takes no positional arguments")
+			return ports.Failure("usage", "Remove the positional arguments after login.")
 		}
 		api, err := r.API(o.Server, "")
 		if err != nil {
@@ -258,7 +258,7 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return r.directoryCommand(ctx, o, session.IDToken)
 	}
 	if isAssetWrite(o) || isCheckoutWrite(o) {
-		if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory)); err != nil {
+		if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory)); err != nil {
 			return err
 		}
 	}
@@ -270,7 +270,7 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 			}
 			o.IdempotencyKey = hex.EncodeToString(value[:])
 		}
-		if err := r.Output.Notice("Print request key: " + strconv.Quote(o.IdempotencyKey) + "; keep this key and the unchanged request for a retry."); err != nil {
+		if err := r.Output.Notice("Print request key: " + strconv.Quote(o.IdempotencyKey) + ". Keep this key and the unchanged request for a retry."); err != nil {
 			return err
 		}
 	}
@@ -287,14 +287,14 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 	var result any
 	if isLabelCommand(o) {
 		if r.LabelsAPI == nil {
-			return ports.Failure("configuration", "label API is unavailable")
+			return ports.Failure("configuration", "The label API is not available. Update the CLI and try again.")
 		}
 		labelAPI, labelErr := r.LabelsAPI(o.Server, session.IDToken)
 		if labelErr != nil {
 			return labelErr
 		}
 		if o.Command[1] == "assign" {
-			if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; asset: " + strconv.Quote(o.Command[2])); err != nil {
+			if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Asset: " + strconv.Quote(o.Command[2])); err != nil {
 				return err
 			}
 			if err := r.confirmAction(ctx, o, "Assign asset label", "Assign", "Assign a stable label identity without rendering or printing."); err != nil {
@@ -304,7 +304,7 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		result, err = executeLabels(ctx, labelAPI, r.LabelFiles, o)
 	} else if isPrintingCommand(o) {
 		if r.PrintingAPI == nil {
-			return ports.Failure("configuration", "printing API is unavailable")
+			return ports.Failure("configuration", "The printing API is not available. Update the CLI and try again.")
 		}
 		printingAPI, printErr := r.PrintingAPI(o.Server, session.IDToken)
 		if printErr != nil {
@@ -318,7 +318,7 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 			o.IdempotencyKey = hex.EncodeToString(token[:])
 		}
 		if o.IdempotencyKey != "" {
-			if err = r.Output.Notice("Print request key: " + o.IdempotencyKey + "; reuse this key and selection if the response is lost."); err != nil {
+			if err = r.Output.Notice("Print request key: " + o.IdempotencyKey + ". Reuse this key and selection if the response is lost."); err != nil {
 				return err
 			}
 		}
@@ -453,19 +453,19 @@ func validateCommandOptions(o Options, requireScope bool) error {
 		return nil
 	}
 	if len(o.Command) < 2 {
-		return ports.Failure("usage", "The command is incomplete. Run stuffstash --help to choose a command.")
+		return ports.Failure("usage", "The command is incomplete. Run stuffstash --help to select a command.")
 	}
 	if requireScope && o.Scope.Tenant == "" {
-		return ports.Failure("usage", "Choose a household with --tenant or STUFF_STASH_CLI_TENANT.")
+		return ports.Failure("usage", "Select a household with --tenant or STUFF_STASH_CLI_TENANT.")
 	}
 	if o.Command[0] == "inventories" && o.Command[1] == "list" && len(o.Command) == 2 {
 		return nil
 	}
 	if o.Command[0] != "assets" {
-		return ports.Failure("usage", "The command is not recognized. Run stuffstash --help to choose a command.")
+		return ports.Failure("usage", "The command is not recognized. Run stuffstash --help to select a command.")
 	}
 	if requireScope && o.Scope.Inventory == "" {
-		return ports.Failure("usage", "Choose an inventory with --inventory or STUFF_STASH_CLI_INVENTORY.")
+		return ports.Failure("usage", "Select an inventory with --inventory or STUFF_STASH_CLI_INVENTORY.")
 	}
 	switch o.Command[1] {
 	case "list", "checked-out", "expiration":
@@ -493,11 +493,11 @@ func validateCommandOptions(o Options, requireScope bool) error {
 			return nil
 		}
 	}
-	return ports.Failure("usage", "The asset command arguments are not valid. Run stuffstash assets --help for the command options.")
+	return ports.Failure("usage", "The asset command arguments are not correct. Run stuffstash assets --help for the command options.")
 }
 func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 	if len(o.Command) < 2 || (o.Command[0] != "assets" && !(o.Command[0] == "inventories" && o.Command[1] == "list")) {
-		return nil, ports.Failure("usage", "This command has no executor. Use --help to choose a supported command.")
+		return nil, ports.Failure("usage", "This command has no executor. Use --help to select a supported command.")
 	}
 	if o.Command[0] == "inventories" {
 		return api.Inventories(ctx, o.Scope, o.Page)
@@ -550,7 +550,7 @@ func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 	case "archive", "restore":
 		return api.SetArchived(ctx, o.Scope, id, action == "archive", key)
 	}
-	return nil, ports.Failure("usage", "unknown action")
+	return nil, ports.Failure("usage", "The action is not available. Run this command with --help for the permitted actions.")
 }
 
 func isTenantList(o Options) bool {

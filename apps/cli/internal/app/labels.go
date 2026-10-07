@@ -21,7 +21,7 @@ func validateLabelCommandOptions(o Options, requireScope bool) error {
 		return nil
 	}
 	if requireScope && (o.Scope.Tenant == "" || o.Scope.Inventory == "") {
-		return ports.Failure("usage", "Choose a household and inventory. Use --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Select a household and inventory. Use --tenant and --inventory, or select a saved context.")
 	}
 	if (o.Command[1] == "show" || o.Command[1] == "assign") && len(o.Command) == 3 && o.Command[2] != "" {
 		if o.IdempotencyKey != "" || o.Page.Cursor != "" || o.Title != "" || o.Kind != "" || o.Parent != "" || o.ConnectorName != "" {
@@ -40,7 +40,7 @@ func validateLabelCommandOptions(o Options, requireScope bool) error {
 		return ports.Failure("usage", "Set both --width-mm and --height-mm to positive, finite numbers in millimeters.")
 	}
 	if (o.PrinterID != "" && (o.MediaPreset != "" || dimensions)) || (o.MediaPreset != "" && dimensions) {
-		return ports.Failure("usage", "Choose one label size source: --printer, --media-preset, or both dimensions. Remove the other size options.")
+		return ports.Failure("usage", "Select one label size source: --printer, --media-preset, or both dimensions. Remove the other size options.")
 	}
 	return nil
 }
@@ -55,7 +55,7 @@ func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFi
 	case "resolve":
 		ref, err := labels.Parse(o.Command[2])
 		if err != nil {
-			return nil, ports.Failure("usage", "This label link is not valid. Scan the label again or copy its complete link.")
+			return nil, ports.Failure("usage", "This label link is not correct. Scan the label again or copy its complete link.")
 		}
 		return api.ResolveLabel(ctx, ref)
 	}
@@ -80,7 +80,7 @@ func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFi
 	if printer == "" && o.MediaPreset == "" && o.WidthMM == 0 {
 		printer = defaults.PrinterID
 		if printer == "" {
-			return nil, ports.Failure("usage", "choose --printer, --media-preset, or supported label dimensions")
+			return nil, ports.Failure("usage", "Supply --printer, --media-preset, or supported label dimensions.")
 		}
 	}
 	media, err := api.LabelMedia(ctx, o.Scope, printer)
@@ -103,7 +103,7 @@ func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFi
 		}
 	}
 	if len(selected) != 1 {
-		return nil, ports.Failure("usage", "media selection is unsupported or ambiguous; choose an authorized catalog preset")
+		return nil, ports.Failure("usage", "The media selection does not identify one permitted size. Select a permitted catalog preset.")
 	}
 	selection.Media = selected[0]
 	return publishRenderedLabel(ctx, api, files, o, selection)
@@ -114,7 +114,7 @@ func publishRenderedLabel(ctx context.Context, api ports.LabelsAPI, files ports.
 		return nil, err
 	}
 	if files == nil {
-		return nil, ports.Failure("configuration", "label file output is unavailable")
+		return nil, ports.Failure("configuration", "Label file output is not available. Update the CLI and try again.")
 	}
 	if err = files.Publish(ctx, o.OutputPath, artifact.Content); err != nil {
 		return nil, err

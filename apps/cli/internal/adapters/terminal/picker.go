@@ -25,7 +25,7 @@ func Available(input, output, diagnostics *os.File) bool {
 }
 func (p Picker) Pick(ctx context.Context, title string, choices []ports.Choice) (string, error) {
 	if p.Input == nil || p.Output == nil || !term.IsTerminal(int(p.Input.Fd())) || !term.IsTerminal(int(p.Output.Fd())) {
-		return "", ports.Failure("usage", "Interactive input is not available. Supply the required scope options.")
+		return "", ports.Failure("usage", "Interactive input is not available. Use this command's --help to find the required input options.")
 	}
 	restoreOutput, err := prepareOutput(p.Output)
 	if err != nil {
@@ -34,7 +34,7 @@ func (p Picker) Pick(ctx context.Context, title string, choices []ports.Choice) 
 	defer restoreOutput()
 	state, err := term.MakeRaw(int(p.Input.Fd()))
 	if err != nil {
-		return "", ports.Failure("input", "Cannot start terminal input. Supply the required scope options.")
+		return "", ports.Failure("input", "The CLI cannot start terminal input. Use this command's --help to find the required input options.")
 	}
 	defer term.Restore(int(p.Input.Fd()), state)
 	width, _, err := term.GetSize(int(p.Output.Fd()))
@@ -152,7 +152,7 @@ func readRune(ctx context.Context, reader *bufio.Reader) (rune, error) {
 		return 0, ctx.Err()
 	case got := <-ready:
 		if got.err != nil {
-			return 0, ports.Failure("input", "Input ended before the prompt was complete. Run the command again with explicit options.")
+			return 0, ports.Failure("input", "Input ended before you completed the prompt. Use this command's --help to find the required input options.")
 		}
 		return got.value, nil
 	}

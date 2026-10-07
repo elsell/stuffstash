@@ -84,7 +84,7 @@ func TestImportCancellationModeConfirmationAndScope(t *testing.T) {
 			out.Reset()
 			diagnostic.Reset()
 			before := calls
-			if code := Run(context.Background(), command, getenv, &out, &diagnostic); code == 0 || calls != before+1 || !strings.Contains(diagnostic.String(), "before you retry") {
+			if code := Run(context.Background(), command, getenv, &out, &diagnostic); code == 0 || calls != before+1 || !strings.Contains(diagnostic.String(), "before you try again") {
 				t.Fatalf("unsafe recovery: %d %d %s", code, calls, &diagnostic)
 			}
 			os.WriteFile(input, []byte(`{"mode":"guess"}`), 0600)

@@ -22,7 +22,7 @@ func validatePrinterAdministration(o Options, scope bool) error {
 		return ports.Failure("usage", "Use printers create, printers update PRINTER_ID, connectors print update CONNECTOR_ID, or print-settings update.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved inventory context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved inventory context.")
 	}
 	return nil
 }
@@ -62,7 +62,7 @@ func validatePrinterAdministrationFlags(o Options, flags *flag.FlagSet) error {
 }
 func (r Runner) printerAdministration(ctx context.Context, o Options, token string) error {
 	if r.PrinterAdministrationAPI == nil {
-		return ports.Failure("configuration", "Printer administration is unavailable. Update the CLI.")
+		return ports.Failure("configuration", "Printer administration is not available. Update the CLI.")
 	}
 	api, err := r.PrinterAdministrationAPI(o.Server, token)
 	if err != nil {
@@ -87,7 +87,7 @@ func (r Runner) printerAdministration(ctx context.Context, o Options, token stri
 		effect = "Replace print settings. These defaults can change automatic label printing."
 		inspect = "print-settings show"
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; target: " + strconv.Quote(target) + ". " + effect); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Target: " + strconv.Quote(target) + ". " + effect); err != nil {
 		return err
 	}
 	if err := r.confirmAction(ctx, o, "Printer administration", "Apply changes", effect); err != nil {
@@ -112,9 +112,9 @@ func (r Runner) printerAdministration(ctx context.Context, o Options, token stri
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "conflict":
-				return ports.Failure("conflict", "The server rejected the change. Run "+inspect+" and review its current state before retrying; do not overwrite a concurrent change.")
+				return ports.Failure("conflict", "The server rejected the change. Run "+inspect+" and review its current state before you try again. Do not overwrite another user's change.")
 			case "network", "protocol", "unavailable", "api":
-				advice := "The result is unknown. Run " + inspect + " before retrying."
+				advice := "The result is unknown. Run " + inspect + " before you try again."
 				if isPrinterCreation(o) {
 					advice += " Reuse the same idempotency key and unchanged request."
 				}

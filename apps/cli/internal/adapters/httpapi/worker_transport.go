@@ -49,7 +49,7 @@ type workerHeartbeat struct {
 func workerRequest(value any) (io.Reader, error) {
 	body, err := json.Marshal(value)
 	if err != nil {
-		return nil, ports.Failure("protocol", "Could not prepare the print worker request. Check the job status before further action.")
+		return nil, ports.Failure("protocol", "The CLI cannot prepare the print worker request. Examine the job status before further action.")
 	}
 	return bytes.NewReader(body), nil
 }

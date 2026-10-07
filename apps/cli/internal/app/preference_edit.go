@@ -79,7 +79,7 @@ func (r Runner) preferenceBool(ctx context.Context, title string, current bool) 
 	}
 	result, err := strconv.ParseBool(value)
 	if err != nil {
-		return false, ports.Failure("input", "The selected setting is invalid. Choose On or Off.")
+		return false, ports.Failure("input", "The selected setting is invalid. Select On or Off.")
 	}
 	return result, nil
 }

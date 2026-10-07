@@ -8,7 +8,7 @@ import (
 
 func (r ConnectorRegistrar) Rotate(ctx context.Context, server, connectorID string) error {
 	if strings.TrimSpace(connectorID) == "" {
-		return ports.Failure("usage", "rotation requires --connector ID")
+		return ports.Failure("usage", "Supply --connector ID for credential rotation.")
 	}
 	prior, err := r.Credentials.Load(ctx, server, connectorID)
 	if err != nil {

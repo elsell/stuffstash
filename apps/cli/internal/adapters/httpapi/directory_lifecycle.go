@@ -59,7 +59,7 @@ func (c *Client) ChangeDirectoryLifecycle(ctx context.Context, resource ports.Di
 	return ports.Result[ports.Inventory]{Data: inventory(r.Data), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }
 func invalidLifecycle() error {
-	return ports.Failure("usage", "Unknown lifecycle action. Use --help to choose a command.")
+	return ports.Failure("usage", "Unknown lifecycle action. Use --help to select a command.")
 }
 func noContent(response *http.Response, err error) error {
 	if err == nil && response.StatusCode == http.StatusNoContent {
@@ -70,5 +70,5 @@ func noContent(response *http.Response, err error) error {
 	if readErr != nil {
 		return readErr
 	}
-	return ports.Failure("protocol", "The server returned an unexpected delete response. Check the resource before you retry.")
+	return ports.Failure("protocol", "The server returned an unexpected delete response. Examine the resource before you try again.")
 }

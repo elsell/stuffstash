@@ -25,7 +25,7 @@ func checkoutFailure(err error) error {
 	if errors.As(err, &failure) {
 		switch failure.Category {
 		case "network", "protocol", "unavailable", "api":
-			return ports.Failure(failure.Category, "The checkout result is unknown. Run assets checkouts ASSET_ID before you retry.")
+			return ports.Failure(failure.Category, "The checkout result is unknown. Run assets checkouts ASSET_ID before you try again.")
 		}
 	}
 	return err

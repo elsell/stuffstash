@@ -48,7 +48,7 @@ type evaluationWriteConfirmation struct {
 }
 
 func (p evaluationWriteConfirmation) Pick(_ context.Context, _ string, choices []ports.Choice) (string, error) {
-	for _, fragment := range append([]string{`household: "home"`}, p.fragments...) {
+	for _, fragment := range append([]string{`Household: "home"`}, p.fragments...) {
 		if !strings.Contains(p.notice.String(), fragment) {
 			p.t.Fatalf("missing target/warning %q: %s", fragment, p.notice)
 		}
@@ -72,8 +72,8 @@ func TestEvaluationWritesDeclined(t *testing.T) {
 		fragments []string
 	}{
 		{[]string{"evaluation", "cases", "create"}, `{"definition":{"title":"Find","utterance":"where","expectations":{"kind":"answer"}}}`, []string{"Create an evaluation case"}},
-		{[]string{"evaluation", "revisions", "create", "case"}, `{"expectedRevision":9007199254740993,"definition":{"title":"Find","utterance":"where","expectations":{"kind":"answer"}}}`, []string{`case: "case"`, "9007199254740993"}},
-		{[]string{"evaluation", "runs", "create"}, `{"workflowId":"wf","revisionId":"wf-rev","cases":[{"caseId":"case","revisionId":"rev"}]}`, []string{`workflow: "wf"`, `revision: "wf-rev"`, "1 case", "model providers"}},
+		{[]string{"evaluation", "revisions", "create", "case"}, `{"expectedRevision":9007199254740993,"definition":{"title":"Find","utterance":"where","expectations":{"kind":"answer"}}}`, []string{`Case: "case"`, "9007199254740993"}},
+		{[]string{"evaluation", "runs", "create"}, `{"workflowId":"wf","revisionId":"wf-rev","cases":[{"caseId":"case","revisionId":"rev"}]}`, []string{`Workflow: "wf"`, `Revision: "wf-rev"`, "1 case", "model providers"}},
 	} {
 		var out, notice bytes.Buffer
 		runner := Runner{Output: presentation.Output{Stdout: &out, Stderr: &notice}, Observer: lifecycleObserver{}, Picker: evaluationWriteConfirmation{&notice, t, tc.fragments}}

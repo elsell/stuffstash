@@ -15,7 +15,7 @@ func validateImportJobs(o Options, scope bool) error {
 		return ports.Failure("usage", "Import job history does not accept asset fields, retry keys or cursors. Remove those options.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved context.")
 	}
 	return nil
 }
@@ -36,7 +36,7 @@ func (r Runner) importJobCommand(ctx context.Context, o Options, token string) e
 	case "show":
 		result, err = api.ImportJob(ctx, o.Scope, o.Command[2])
 	case "delete":
-		if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; import job: " + strconv.Quote(o.Command[2])); err != nil {
+		if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Import job: " + strconv.Quote(o.Command[2])); err != nil {
 			return err
 		}
 		if err := r.confirmAction(ctx, o, "Remove import job from history", "Remove", "Remove this job from history. Keep imported assets."); err != nil {

@@ -44,7 +44,7 @@ func (r Runner) updateInvitationExpiration(ctx context.Context, o Options, api p
 	if err != nil {
 		return err
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; invitation: " + strconv.Quote(o.Command[2]) + "; expiration: " + strconv.Quote(expires)); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Invitation: " + strconv.Quote(o.Command[2]) + ". Expiration: " + strconv.Quote(expires)); err != nil {
 		return err
 	}
 	if err := r.confirmAction(ctx, o, "Change invitation expiration", "Change expiration", expires); err != nil {
@@ -59,7 +59,7 @@ func (r Runner) updateInvitationExpiration(ctx context.Context, o Options, api p
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "The update result is unknown. Run invitations show INVITATION_ID before you retry.")
+				return ports.Failure(failure.Category, "The update result is unknown. Run invitations show INVITATION_ID before you try again.")
 			}
 		}
 		return err

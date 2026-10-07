@@ -13,7 +13,7 @@ func validateVoiceProvider(o Options, scope bool) error {
 		return ports.Failure("usage", "Use voice-provider show or update [--input FILE|-] for household voice selections.")
 	}
 	if scope && o.Scope.Tenant == "" {
-		return ports.Failure("usage", "Supply --tenant, or choose a saved household context.")
+		return ports.Failure("usage", "Supply --tenant, or select a saved household context.")
 	}
 	return nil
 }

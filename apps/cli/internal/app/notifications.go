@@ -40,7 +40,7 @@ func validateNotifications(o Options, scope bool) error {
 		return ports.Failure("usage", "Notification commands do not accept retry keys or asset fields. Remove those options.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved context.")
 	}
 	return nil
 }
@@ -54,7 +54,7 @@ func (r Runner) notificationsCommand(ctx context.Context, o Options, token strin
 	}
 	action := o.Command[1]
 	if action == "read" || action == "unread" || action == "read-all" {
-		if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory)); err != nil {
+		if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory)); err != nil {
 			return err
 		}
 	}

@@ -27,7 +27,7 @@ func validateBinary(o Options, scope bool) error {
 		return ports.Failure("usage", "Supply the required resource IDs. Run this command with --help.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved context.")
 	}
 	if o.Command[1] == "upload" {
 		if o.FilePath == "" || o.FilePath == "-" {
@@ -42,13 +42,13 @@ func validateBinary(o Options, scope bool) error {
 		return ports.Failure("usage", "Supply --output PATH or --output -.")
 	}
 	if o.OutputPath == "-" && o.JSON {
-		return ports.Failure("usage", "Binary stdout cannot include JSON results. Remove --json, or choose an output file.")
+		return ports.Failure("usage", "Binary stdout cannot include JSON results. Remove --json, or select an output file.")
 	}
 	if o.Command[1] == "thumbnail" && o.Variant != "" && o.Variant != "small" && o.Variant != "medium" && o.Variant != "large" {
 		return ports.Failure("usage", "Use --variant small, medium, or large.")
 	}
 	if o.Command[0] == "inventories" && o.Format != "json" && o.Format != "csv" {
-		return ports.Failure("usage", "Choose --format json for complete inventory data, or --format csv for a report.")
+		return ports.Failure("usage", "Select --format json for complete inventory data, or --format csv for a report.")
 	}
 	return nil
 }
@@ -57,7 +57,7 @@ func (r Runner) binaryCommand(ctx context.Context, o Options, token string) erro
 		return r.uploadAttachment(ctx, o, token)
 	}
 	if r.BinaryAPI == nil || r.BinaryFiles == nil {
-		return ports.Failure("configuration", "File downloads are unavailable. Update the CLI and try again.")
+		return ports.Failure("configuration", "File downloads are not available. Update the CLI and try again.")
 	}
 	api, err := r.BinaryAPI(o.Server, token)
 	if err != nil {

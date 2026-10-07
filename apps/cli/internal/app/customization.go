@@ -26,7 +26,7 @@ func validateCustomization(o Options, scoped bool) error {
 		return ports.Failure("usage", "Use --scope household or --scope inventory.")
 	}
 	if scoped && (o.Scope.Tenant == "" || o.DefinitionLevel == "inventory" && o.Scope.Inventory == "") {
-		return ports.Failure("usage", "Choose the household and, for inventory scope, an inventory. Use --tenant and --inventory or a saved context.")
+		return ports.Failure("usage", "Select the household and, for inventory scope, an inventory. Use --tenant and --inventory or a saved context.")
 	}
 	return nil
 }
@@ -35,7 +35,7 @@ func (r Runner) chooseDefinitionLevel(ctx context.Context, o Options) (Options, 
 		return o, nil
 	}
 	if r.Picker == nil || o.JSON || o.NoInput {
-		return o, ports.Failure("usage", "Supply --scope household or --scope inventory. Scripts must choose the definition scope explicitly.")
+		return o, ports.Failure("usage", "Supply --scope household or --scope inventory. Scripts must select the definition scope explicitly.")
 	}
 	level, err := r.Picker.Pick(ctx, "Definition scope", []ports.Choice{{ID: "household", Label: "Household", Detail: "Shared definitions for this household"}, {ID: "inventory", Label: "Inventory", Detail: "Definitions for one inventory"}})
 	if err != nil {
@@ -59,11 +59,11 @@ func (r Runner) customizationCommand(ctx context.Context, o Options, token strin
 		if target == "" {
 			target = "new definition"
 		}
-		detail := "Server: " + strconv.Quote(o.Server) + "; scope: " + o.DefinitionLevel + "; household: " + strconv.Quote(o.Scope.Tenant)
+		detail := "Server: " + strconv.Quote(o.Server) + ". Scope: " + o.DefinitionLevel + ". Household: " + strconv.Quote(o.Scope.Tenant)
 		if o.DefinitionLevel == "inventory" {
-			detail += "; inventory: " + strconv.Quote(o.Scope.Inventory)
+			detail += ". Inventory: " + strconv.Quote(o.Scope.Inventory)
 		}
-		detail += "; target: " + strconv.Quote(target) + "; action: " + action + "."
+		detail += ". Target: " + strconv.Quote(target) + ". Action: " + action + "."
 		if err := r.Output.Notice(detail); err != nil {
 			return err
 		}
@@ -75,7 +75,7 @@ func (r Runner) customizationCommand(ctx context.Context, o Options, token strin
 	var err error
 	if o.Command[0] == "asset-types" {
 		if r.AssetTypesAPI == nil {
-			return ports.Failure("configuration", "Asset type commands are unavailable. Update the CLI.")
+			return ports.Failure("configuration", "Asset type commands are not available. Update the CLI.")
 		}
 		api, e := r.AssetTypesAPI(o.Server, token)
 		if e != nil {
@@ -93,7 +93,7 @@ func (r Runner) customizationCommand(ctx context.Context, o Options, token strin
 		}
 	} else {
 		if r.FieldDefinitionsAPI == nil {
-			return ports.Failure("configuration", "Field definition commands are unavailable. Update the CLI.")
+			return ports.Failure("configuration", "Field definition commands are not available. Update the CLI.")
 		}
 		api, e := r.FieldDefinitionsAPI(o.Server, token)
 		if e != nil {
@@ -116,9 +116,9 @@ func (r Runner) customizationCommand(ctx context.Context, o Options, token strin
 			if errors.As(err, &failure) {
 				switch failure.Category {
 				case "conflict":
-					return ports.Failure("conflict", "The definition change conflicts with current state. Inspect the definition and review compatibility or deletion requirements before retrying.")
+					return ports.Failure("conflict", "The server rejected the definition change. Examine the definition and its change restrictions before you try again.")
 				case "network", "protocol", "unavailable", "api":
-					return ports.Failure(failure.Category, "The definition change result is unknown. Inspect definitions with list/show before retrying.")
+					return ports.Failure(failure.Category, "The definition change result is unknown. Use this command's list operation to examine definitions before you try again.")
 				}
 			}
 		}

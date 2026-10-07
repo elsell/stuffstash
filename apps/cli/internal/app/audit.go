@@ -23,7 +23,7 @@ func validateAudit(o Options, scope bool) error {
 		return ports.Failure("usage", "Audit reads do not accept asset fields or retry keys. Remove those options.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and, for inventory or asset history, --inventory; or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and, for inventory or asset history, --inventory; or select a saved context.")
 	}
 	return nil
 }

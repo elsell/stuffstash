@@ -33,7 +33,7 @@ func (c *Client) ChangeTag(ctx context.Context, s ports.Scope, action ports.TagA
 	case ports.DeleteTag:
 		response, err = c.sdk.DeleteTenantsByTenantIdInventoriesByInventoryIdTagsByTagId(ctx, s.Tenant, s.Inventory, id, nil)
 	default:
-		return ports.Result[ports.Tag]{}, ports.Failure("usage", "Unknown tag action. Use --help to choose a command.")
+		return ports.Result[ports.Tag]{}, ports.Failure("usage", "Unknown tag action. Use --help to select a command.")
 	}
 	r, err := read[generated.SuccessEnvelopeAssetTagResponse](response, err)
 	if err != nil {

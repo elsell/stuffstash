@@ -19,7 +19,7 @@ func (r Runner) writeWorkflow(ctx context.Context, o Options, api ports.Workflow
 		target = o.Command[2]
 		detail = "Change the selected workflow to this revision. The server must accept the supplied evaluation evidence and expected selection."
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; workflow: " + strconv.Quote(target) + ". " + detail); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Workflow: " + strconv.Quote(target) + ". " + detail); err != nil {
 		return err
 	}
 	if err := r.confirmAction(ctx, o, "Workflow: "+action, "Apply workflow change", detail); err != nil {
@@ -43,9 +43,9 @@ func (r Runner) writeWorkflow(ctx context.Context, o Options, api ports.Workflow
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "conflict":
-				return ports.Failure("conflict", "The server rejected the workflow change. Inspect workflows show and workflows selection show, then review the supplied revision or evaluation evidence before retrying.")
+				return ports.Failure("conflict", "The server rejected the workflow change. Examine workflows show and workflows selection show, then review the supplied revision or evaluation evidence before you try again.")
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "The workflow change result is unknown. Inspect workflows list, show and selection show before retrying.")
+				return ports.Failure(failure.Category, "The workflow change result is unknown. Examine workflows list, show and selection show before you try again.")
 			}
 		}
 		return err

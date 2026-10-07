@@ -23,10 +23,10 @@ func (r Runner) writeDirectory(ctx context.Context, o Options, token string) err
 	}
 	target := "Server: " + strconv.Quote(o.Server)
 	if !isTenantCreate(o) {
-		target += "; household: " + strconv.Quote(o.Scope.Tenant)
+		target += ". Household: " + strconv.Quote(o.Scope.Tenant)
 	}
 	if o.Command[0] == "inventories" && o.Command[1] == "update" {
-		target += "; inventory: " + strconv.Quote(o.Scope.Inventory)
+		target += ". Inventory: " + strconv.Quote(o.Scope.Inventory)
 	}
 	if err := r.Output.Notice(target); err != nil {
 		return err
@@ -46,7 +46,7 @@ func (r Runner) writeDirectory(ctx context.Context, o Options, token string) err
 	if err != nil {
 		var failure *ports.Error
 		if o.Command[1] == "create" && errors.As(err, &failure) && (failure.Category == "network" || failure.Category == "protocol" || failure.Category == "unavailable" || failure.Category == "api") {
-			return ports.Failure(failure.Category, "The create result is unknown. Run "+o.Command[0]+" list before you retry.")
+			return ports.Failure(failure.Category, "The create result is unknown. Run "+o.Command[0]+" list before you try again.")
 		}
 		return err
 	}

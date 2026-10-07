@@ -13,7 +13,7 @@ func parseOptionValues(flags *flag.FlagSet, args []string) error {
 	flags.SetOutput(io.Discard)
 	flags.VisitAll(func(f *flag.Flag) {
 		f.Value = &diagnosedFlagValue{Value: f.Value, name: f.Name, expected: flagValueType(f.Value), failed: func(name, expected string) {
-			failure = ports.Failure("usage", "The --"+name+" value is not valid. Supply "+expected+" and try again.")
+			failure = ports.Failure("usage", "The --"+name+" value is not correct. Supply "+expected+" and try again.")
 		}}
 	})
 	if err := flags.Parse(args); err != nil {

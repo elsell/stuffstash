@@ -53,7 +53,7 @@ func (p *voiceSelectionPicker) Pick(_ context.Context, title string, choices []p
 		}
 	}
 	if title == "Replace voice provider selections" {
-		for _, part := range []string{`household: "home"`, `explicit "old"`, "automatic (server selects a profile)", "Replace all three", "no version check"} {
+		for _, part := range []string{`Household: "home"`, `explicit "old"`, "automatic (server selects a profile)", "Replace all three", "no version check"} {
 			if !strings.Contains(p.notice.String(), part) {
 				p.t.Fatalf("missing review %s in %s", part, p.notice)
 			}

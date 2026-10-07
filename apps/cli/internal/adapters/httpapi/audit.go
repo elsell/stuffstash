@@ -18,7 +18,7 @@ func (c *Client) AuditRecords(ctx context.Context, q ports.AuditQuery) (ports.Re
 	case ports.AssetAudit:
 		response, err = c.sdk.GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdAuditRecords(ctx, q.Scope.Tenant, q.Scope.Inventory, q.AssetID, &generated.GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdAuditRecordsParams{Limit: &q.Page.Limit})
 	default:
-		return ports.Result[[]ports.AuditRecord]{}, ports.Failure("usage", "Choose household, inventory, or asset audit history.")
+		return ports.Result[[]ports.AuditRecord]{}, ports.Failure("usage", "Select household, inventory, or asset audit history.")
 	}
 	r, err := read[generated.SuccessEnvelopeListRecordResponse](response, err)
 	if err != nil {

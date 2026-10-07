@@ -110,7 +110,7 @@ func TestPortabilityDeclinedConfirmationNeverMutates(t *testing.T) {
 			t.Fatalf("declined mutation %v %d", err, calls)
 		}
 	}
-	if !strings.Contains(notice.String(), `household: "home"`) {
+	if !strings.Contains(notice.String(), `Household: "home"`) {
 		t.Fatal("missing target notice")
 	}
 }

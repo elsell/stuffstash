@@ -47,7 +47,7 @@ func (r Runner) prepareDeviceRegistration(ctx context.Context, o Options) (Optio
 	return o, err
 }
 func (r Runner) registerNotificationDevice(ctx context.Context, o Options, api ports.NotificationDevicesAPI) error {
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory)); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory)); err != nil {
 		return err
 	}
 	result, err := api.RegisterNotificationDevice(ctx, o.Scope, o.RequestBody)
@@ -59,7 +59,7 @@ func (r Runner) registerNotificationDevice(ctx context.Context, o Options, api p
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "The registration result is unknown. Run notification-devices show INSTALLATION_ID before you retry.")
+				return ports.Failure(failure.Category, "The registration result is unknown. Run notification-devices show INSTALLATION_ID before you try again.")
 			}
 		}
 		return err

@@ -21,7 +21,7 @@ func validateAccessGrants(o Options, scope bool) error {
 		return ports.Failure("usage", "Access grants do not accept asset fields or retry keys. Use --cursor only with access-grants list.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved context.")
 	}
 	return nil
 }
@@ -42,7 +42,7 @@ func (r Runner) accessGrantCommand(ctx context.Context, o Options, token string)
 	case "show":
 		result, err = api.AccessGrant(ctx, o.Scope, o.Command[2], ports.AccessRelationship(o.Command[3]))
 	case "remove":
-		target := "Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; principal: " + strconv.Quote(o.Command[2]) + "; relationship: " + strconv.Quote(o.Command[3])
+		target := "Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Principal: " + strconv.Quote(o.Command[2]) + ". Relationship: " + strconv.Quote(o.Command[3])
 		if err := r.Output.Notice(target); err != nil {
 			return err
 		}

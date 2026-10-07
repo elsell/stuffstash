@@ -15,7 +15,7 @@ func consumerMedia(value ports.ConsumerMedia) printing.Media {
 }
 func attemptStatus(value workerAttempt) (printing.AttemptStatus, error) {
 	if value.Revision <= 0 || value.AttemptID == "" || value.SessionID == "" || value.JobID == "" {
-		return printing.AttemptStatus{}, ports.Failure("protocol", "The server returned invalid print attempt details. Check the job status before further action.")
+		return printing.AttemptStatus{}, ports.Failure("protocol", "The server returned invalid print attempt details. Examine the job status before further action.")
 	}
 	result := printing.AttemptStatus{AttemptID: value.AttemptID, SessionID: value.SessionID, JobID: value.JobID, Revision: value.Revision, LeaseExpiresAt: value.LeaseExpiresAt, Outcome: printing.Outcome(value.Outcome.Kind), CompletedCopies: int(value.Outcome.CompletedCopies)}
 	// Attempt settlement takes precedence over the parent job, which may already
@@ -33,7 +33,7 @@ func attemptStatus(value workerAttempt) (printing.AttemptStatus, error) {
 		case printing.Uncertain:
 			result.Phase = printing.RemoteUncertain
 		default:
-			return printing.AttemptStatus{}, ports.Failure("protocol", "The server returned an unknown print result. Check the job status and printed output before further action.")
+			return printing.AttemptStatus{}, ports.Failure("protocol", "The server returned an unknown print result. Examine the job status and printed output before further action.")
 		}
 		return result, nil
 	}
@@ -45,7 +45,7 @@ func attemptStatus(value workerAttempt) (printing.AttemptStatus, error) {
 	case "uncertain":
 		result.Phase = printing.RemoteUncertain
 	default:
-		return printing.AttemptStatus{}, ports.Failure("protocol", "The server returned an unknown print attempt state. Check the job status before further action.")
+		return printing.AttemptStatus{}, ports.Failure("protocol", "The server returned an unknown print attempt state. Examine the job status before further action.")
 	}
 	if !value.LeaseValid {
 		result.LeaseExpiresAt = time.Time{}

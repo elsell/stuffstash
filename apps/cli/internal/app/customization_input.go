@@ -85,7 +85,7 @@ func (r Runner) prepareCustomization(ctx context.Context, o Options) (Options, e
 			return o, ports.Failure("usage", "Creating a field requires key, displayName, and type. Supply --key, --name and --field-type, or --input FILE|-.")
 		}
 		if create && !validFieldType(*v.Type) {
-			return o, ports.Failure("usage", "Choose field type text, number, boolean, date, url, or enum.")
+			return o, ports.Failure("usage", "Select field type text, number, boolean, date, url, or enum.")
 		}
 	}
 	return o, nil

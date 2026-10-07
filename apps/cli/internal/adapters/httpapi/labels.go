@@ -32,7 +32,7 @@ func (c *Client) ResolveLabel(ctx context.Context, ref labels.Reference) (ports.
 		return ports.Result[ports.ResolvedLabel]{}, err
 	}
 	if instance.Data.ProtocolVersion != 1 || instance.Data.InstanceId != ref.Instance {
-		return ports.Result[ports.ResolvedLabel]{}, ports.Failure("not_found", "This server cannot resolve the label reference. Check that you selected the server that issued the label.")
+		return ports.Result[ports.ResolvedLabel]{}, ports.Failure("not_found", "This server cannot resolve the label reference. Make sure that you selected the server that issued the label.")
 	}
 	r, err := read[generated.SuccessEnvelopeLabelResponse](c.sdk.GetLabelsV1ByInstanceIdByLabelId(ctx, ref.Instance, ref.Label, nil))
 	if err != nil {
@@ -72,7 +72,7 @@ func (c *Client) RenderLabel(ctx context.Context, s ports.Scope, asset string, s
 		var err error
 		body, err = json.Marshal(labelRenderBody{Media: selection.Media, Format: selection.Format, Template: labelRenderTemplate{ID: selection.TemplateID, Version: selection.TemplateVersion, Options: ports.LabelTemplateDefaults{ShowReference: selection.ShowReference}}})
 		if err != nil {
-			return ports.LabelArtifact{}, ports.Failure("input", "Could not prepare the label settings. Check the selected media, template, and format.")
+			return ports.LabelArtifact{}, ports.Failure("input", "The CLI cannot prepare the label settings. Examine the selected media, template, and format.")
 		}
 	}
 	if _, err := read[generated.SuccessEnvelopeLabelResponse](c.sdk.PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel(ctx, s.Tenant, s.Inventory, asset, nil)); err != nil {
@@ -93,7 +93,7 @@ func (c *Client) RenderLabel(ctx context.Context, s ports.Scope, asset string, s
 	}
 	response, err := c.sdk.ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent(ctx, s.Tenant, s.Inventory, rendered.Data.ID, nil)
 	if err != nil {
-		return ports.LabelArtifact{}, ports.Failure("network", "Could not download the label file. Check your connection to the server.")
+		return ports.LabelArtifact{}, ports.Failure("network", "The CLI cannot download the label file. Make sure that the server is available.")
 	}
 	if response.StatusCode != 200 {
 		_, err = read[struct{}](response, nil)
@@ -110,7 +110,7 @@ func (c *Client) RenderLabel(ctx context.Context, s ports.Scope, asset string, s
 	const maximumBytes = 16 << 20
 	content, err := io.ReadAll(io.LimitReader(response.Body, maximumBytes+1))
 	if err != nil {
-		return ports.LabelArtifact{}, ports.Failure("network", "The label download stopped before it finished. Check your connection to the server.")
+		return ports.LabelArtifact{}, ports.Failure("network", "The label download stopped before it finished. Make sure that the server is available.")
 	}
 	digest := sha256.Sum256(content)
 	checksum := hex.EncodeToString(digest[:])

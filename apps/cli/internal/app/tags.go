@@ -25,7 +25,7 @@ func validateTags(o Options, requireScope bool) error {
 	action := o.Command[1]
 	valid := (len(o.Command) == 2 && (action == "list" || action == "create")) || (len(o.Command) == 3 && (action == "update" || action == "delete") && o.Command[2] != "")
 	if !valid {
-		return ports.Failure("usage", "The tag command is invalid. Use --help to check the arguments.")
+		return ports.Failure("usage", "The tag command is invalid. Use --help to examine the arguments.")
 	}
 	if (action == "list" || action == "delete") && (o.ConnectorName != "" || o.TagColor != nil) {
 		return ports.Failure("usage", "Use --name and --tag-color only with tags create or tags update.")
@@ -34,7 +34,7 @@ func validateTags(o Options, requireScope bool) error {
 		return ports.Failure("usage", "Use --key only with tags create. A saved tag key cannot change.")
 	}
 	if requireScope && missingResourceScope(o) {
-		return ports.Failure("usage", "Supply --tenant and --inventory, or choose a saved context.")
+		return ports.Failure("usage", "Supply --tenant and --inventory, or select a saved context.")
 	}
 	if action != "list" && o.IdempotencyKey != "" {
 		return ports.Failure("usage", "This API operation does not support --idempotency-key. Remove the option.")
@@ -85,7 +85,7 @@ func (r Runner) tagsCommand(ctx context.Context, o Options, token string) error 
 	if len(o.Command) == 3 {
 		id = o.Command[2]
 	}
-	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + "; tag: " + strconv.Quote(id)); err != nil {
+	if err := r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". Tag: " + strconv.Quote(id)); err != nil {
 		return err
 	}
 	if o.Command[1] == "delete" {
@@ -97,7 +97,7 @@ func (r Runner) tagsCommand(ctx context.Context, o Options, token string) error 
 	if err != nil {
 		var failure *ports.Error
 		if o.Command[1] == "create" && errors.As(err, &failure) && (failure.Category == "network" || failure.Category == "protocol" || failure.Category == "unavailable" || failure.Category == "api") {
-			return ports.Failure(failure.Category, "The create result is unknown. Run tags list before you retry.")
+			return ports.Failure(failure.Category, "The create result is unknown. Run tags list before you try again.")
 		}
 		return err
 	}

@@ -10,7 +10,7 @@ func (c *Client) AssetActivity(ctx context.Context, scope ports.Scope, asset str
 	params := &generated.GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdActivityParams{Limit: &p.Limit, Cursor: &p.Cursor}
 	if view != "" {
 		if view != ports.ActivityChanges && view != ports.ActivityAll {
-			return ports.Result[[]ports.Activity]{}, ports.Failure("usage", "Choose changes or all for --view.")
+			return ports.Result[[]ports.Activity]{}, ports.Failure("usage", "Select changes or all for --view.")
 		}
 		v := generated.GetTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdActivityParamsView(view)
 		params.View = &v

@@ -20,7 +20,7 @@ func (r Runner) providerChoice(ctx context.Context, title string, choices []port
 			return v, nil
 		}
 	}
-	return "", ports.Failure("input", "The selected option is unavailable. Start provider setup again.")
+	return "", ports.Failure("input", "The selected option is not available. Start provider setup again.")
 }
 func (r Runner) guideProviderSetup(ctx context.Context, action string) ([]byte, error) {
 	fields := map[string]any{}
@@ -32,7 +32,7 @@ func (r Runner) guideProviderSetup(ctx context.Context, action string) ([]byte, 
 		fields["purpose"] = purpose
 		if purpose != "server_adc" {
 			if r.SecretInput == nil {
-				return nil, ports.Failure("configuration", "Masked credential input is unavailable. Supply --input FILE|- instead.")
+				return nil, ports.Failure("configuration", "Masked credential input is not available. Supply --input FILE|- instead.")
 			}
 			secret, err := r.SecretInput.ReadSecret(ctx, "Provider credential", 65536)
 			if err != nil {

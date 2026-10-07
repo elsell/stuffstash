@@ -101,13 +101,13 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "Supply --copies with an integer of at least 1.")
 	}
 	if o.TemplateVersion > uint(^uint32(0)) {
-		return o, ports.Failure("usage", "Supply --template-version with an integer from 0 through 4294967295; 0 uses the default.")
+		return o, ports.Failure("usage", "Supply --template-version with an integer from 0 through 4294967295. Use 0 for the default.")
 	}
 	if o.Color != "auto" && o.Color != "always" && o.Color != "never" {
 		return o, ports.Failure("usage", "Use --color auto, --color always, or --color never.")
 	}
 	if strings.IndexFunc(o.RequestID, func(r rune) bool { return r < 32 || r > 126 }) >= 0 {
-		return o, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
+		return o, ports.Failure("usage", "The request ID contains characters that are not permitted. Use printable ASCII characters.")
 	}
 	o.Command = positional
 	if (o.InvitationEmail != "" || o.InvitationRole != "") && !isInvitationCreate(o) {

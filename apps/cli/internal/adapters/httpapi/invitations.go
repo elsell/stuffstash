@@ -43,7 +43,7 @@ func (c *Client) ChangeInvitation(ctx context.Context, s ports.Scope, id string,
 	case ports.DeleteInvitation:
 		return noContent(c.sdk.DeleteTenantsByTenantIdInventoriesByInventoryIdAccessInvitationsByInvitationId(ctx, s.Tenant, s.Inventory, id, nil))
 	default:
-		return ports.Failure("usage", "Choose cancel or delete for the invitation.")
+		return ports.Failure("usage", "Select cancel or delete for the invitation.")
 	}
 }
 

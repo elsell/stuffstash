@@ -49,7 +49,7 @@ func validateSearch(o Options, scope bool) error {
 		return ports.Failure("usage", "Keep --type-id to 128 characters or fewer.")
 	}
 	if scope && missingResourceScope(o) {
-		return ports.Failure("usage", "Choose a saved context or supply --tenant and --inventory. Use --all-inventories to search the household.")
+		return ports.Failure("usage", "Select a saved context or supply --tenant and --inventory. Use --all-inventories to search the household.")
 	}
 	return nil
 }

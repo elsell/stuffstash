@@ -7,7 +7,7 @@ import (
 
 func binaryContent(response *http.Response, err error) (ports.BinaryContent, error) {
 	if err != nil {
-		return ports.BinaryContent{}, ports.Failure("network", "Could not download the file. Check your connection and try again.")
+		return ports.BinaryContent{}, ports.Failure("network", "The CLI cannot download the file. Make sure that the server is available. Then try again.")
 	}
 	if response.StatusCode != http.StatusOK {
 		if response.StatusCode < 200 || response.StatusCode >= 300 {

@@ -30,7 +30,7 @@ func validateArchive(o Options, scoped bool) error {
 		return ports.Failure("usage", "Use archive-jobs list, create, upload, or show|preview|approve|retry|delete|download JOB_ID.")
 	}
 	if scoped && missingResourceScope(o) {
-		return ports.Failure("usage", "Choose a household; archive creation also needs an inventory.")
+		return ports.Failure("usage", "Select a household. To create an archive, also select an inventory.")
 	}
 	if c[1] == "upload" && o.FilePath == "" {
 		return ports.Failure("usage", "Supply --file PATH or --file - with a ZIP stream.")
@@ -45,7 +45,7 @@ func validateArchive(o Options, scoped bool) error {
 }
 func (r Runner) archiveCommand(ctx context.Context, o Options, token string) error {
 	if r.ArchiveAPI == nil {
-		return ports.Failure("configuration", "Archive commands are unavailable. Update the CLI.")
+		return ports.Failure("configuration", "Archive commands are not available. Update the CLI.")
 	}
 	api, err := r.ArchiveAPI(o.Server, token)
 	if err != nil {
@@ -74,7 +74,7 @@ func (r Runner) archiveCommand(ctx context.Context, o Options, token string) err
 			_ = json.Unmarshal(o.RequestBody, &v)
 			detail += " New inventory: " + strconv.Quote(v.Name) + "."
 		}
-		if err = r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory filter: " + strconv.Quote(o.Scope.Inventory) + "; job: " + strconv.Quote(id) + ". " + detail); err != nil {
+		if err = r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory filter: " + strconv.Quote(o.Scope.Inventory) + ". Job: " + strconv.Quote(id) + ". " + detail); err != nil {
 			return err
 		}
 		if err = r.confirmAction(ctx, o, "Archive: "+action, "Continue", detail); err != nil {
@@ -89,7 +89,7 @@ func (r Runner) archiveCommand(ctx context.Context, o Options, token string) err
 			}
 			o.IdempotencyKey = hex.EncodeToString(key[:])
 		}
-		if err = r.Output.Notice("Archive request key: " + strconv.Quote(o.IdempotencyKey) + ". After an uncertain result, inspect archive-jobs list before retrying with this same key and input."); err != nil {
+		if err = r.Output.Notice("Archive request key: " + strconv.Quote(o.IdempotencyKey) + ". After an uncertain result, examine archive-jobs list before you try again with this same key and input."); err != nil {
 			return err
 		}
 	}
@@ -112,7 +112,7 @@ func (r Runner) archiveCommand(ctx context.Context, o Options, token string) err
 		result = map[string]string{"status": "deleted", "jobId": id, "tenantId": o.Scope.Tenant}
 	case "upload":
 		if r.StreamFiles == nil {
-			return ports.Failure("configuration", "Streaming input is unavailable. Update the CLI.")
+			return ports.Failure("configuration", "Streaming input is not available. Update the CLI.")
 		}
 		body, e := r.StreamFiles.OpenStream(ctx, o.FilePath)
 		if e != nil {
@@ -122,7 +122,7 @@ func (r Runner) archiveCommand(ctx context.Context, o Options, token string) err
 		result, err = api.UploadArchive(ctx, o.Scope.Tenant, o.IdempotencyKey, body)
 	case "download":
 		if r.BinaryFiles == nil {
-			return ports.Failure("configuration", "Binary output is unavailable. Update the CLI.")
+			return ports.Failure("configuration", "Binary output is not available. Update the CLI.")
 		}
 		content, e := api.DownloadArchive(ctx, o.Scope, id)
 		if e != nil {

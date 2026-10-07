@@ -16,7 +16,7 @@ func TestAPIRecoveryPreservesCategoriesAndHidesResponseBodies(t *testing.T) {
 		status           int
 		category, advice string
 	}{
-		{400, "validation", "Check the input"}, {422, "validation", "Check the input"},
+		{400, "validation", "Examine the input"}, {422, "validation", "Examine the input"},
 		{401, "authentication", "stuffstash login"}, {403, "forbidden", "owner"},
 		{404, "not_found", "household and inventory"}, {409, "conflict", "current state"},
 		{429, "api", "Wait"}, {503, "unavailable", "before you repeat"}, {500, "api", "before you repeat"},
@@ -43,7 +43,7 @@ func TestAPIRecoveryPreservesCategoriesAndHidesResponseBodies(t *testing.T) {
 	api, _ := New(server.URL, "token", client)
 	_, err := api.ServerInfo(context.Background())
 	var failure *ports.Error
-	if !errors.As(err, &failure) || failure.Category != "network" || !strings.Contains(failure.Message, "connection") || !strings.Contains(failure.Message, "before you repeat") || strings.Contains(failure.Message, server.URL) {
+	if !errors.As(err, &failure) || failure.Category != "network" || !strings.Contains(failure.Message, "server address") || !strings.Contains(failure.Message, "before you repeat") || strings.Contains(failure.Message, server.URL) {
 		t.Fatalf("network recovery: %v", err)
 	}
 }

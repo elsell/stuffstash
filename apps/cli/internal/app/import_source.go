@@ -60,7 +60,7 @@ func (r Runner) guidedImportSource(ctx context.Context) (importSourceInput, erro
 	v.SourceType = kind
 	if kind == "legacy_homebox_csv" {
 		if r.StreamFiles == nil {
-			return v, ports.Failure("configuration", "File input is unavailable. Update the CLI.")
+			return v, ports.Failure("configuration", "File input is not available. Update the CLI.")
 		}
 		path, e := r.TextInput.ReadText(ctx, "CSV file path", 4096)
 		if e != nil {
@@ -76,7 +76,7 @@ func (r Runner) guidedImportSource(ctx context.Context) (importSourceInput, erro
 		v.ContentBase64 = &encoded
 	} else {
 		if r.SecretInput == nil {
-			return v, ports.Failure("usage", "Masked credential input is unavailable. Use a protected JSON file with --input.")
+			return v, ports.Failure("usage", "Masked credential input is not available. Use a protected JSON file with --input.")
 		}
 		url, e := r.TextInput.ReadText(ctx, "Source base URL (no credentials in URL)", 2048)
 		if e != nil {
@@ -115,7 +115,7 @@ func (r Runner) guidedImportSource(ctx context.Context) (importSourceInput, erro
 }
 func (r Runner) importSourceCommand(ctx context.Context, o Options, token string) error {
 	if r.ImportSources == nil {
-		return ports.Failure("configuration", "Import source commands are unavailable. Update the CLI.")
+		return ports.Failure("configuration", "Import source commands are not available. Update the CLI.")
 	}
 	api, err := r.ImportSources(o.Server, token)
 	if err != nil {
@@ -134,7 +134,7 @@ func (r Runner) importSourceCommand(ctx context.Context, o Options, token string
 	if source.AllowInsecureTLS != nil && *source.AllowInsecureTLS {
 		detail += " Untrusted TLS certificates are explicitly allowed."
 	}
-	if err = r.Output.Notice("Server: " + strconv.Quote(o.Server) + "; household: " + strconv.Quote(o.Scope.Tenant) + "; inventory: " + strconv.Quote(o.Scope.Inventory) + ". " + detail); err != nil {
+	if err = r.Output.Notice("Server: " + strconv.Quote(o.Server) + ". Household: " + strconv.Quote(o.Scope.Tenant) + ". Inventory: " + strconv.Quote(o.Scope.Inventory) + ". " + detail); err != nil {
 		return err
 	}
 	if err = r.confirmAction(ctx, o, "Import: "+action, "Continue", detail); err != nil {

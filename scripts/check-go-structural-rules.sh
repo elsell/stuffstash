@@ -39,17 +39,13 @@ if [ "${#oversized_files[@]}" -gt 0 ]; then
 fi
 
 print_pattern='fmt\.Print(f|ln)?\(|(^|[^[:alnum:]_])println?\('
-sql_pattern='"[^"]*(SELECT|INSERT[[:space:]]+INTO|UPDATE[[:space:]]+[^"]+[[:space:]]+SET|DELETE[[:space:]]+FROM|CREATE[[:space:]]+TABLE|ALTER[[:space:]]+TABLE|DROP[[:space:]]+TABLE)[[:space:]]+'
 
 if grep -En "$print_pattern" "${go_files[@]}"; then
   echo "ad hoc print statements are not allowed; use injected observability ports" >&2
   exit 1
 fi
 
-if grep -Ein "$sql_pattern" "${go_files[@]}"; then
-	echo "raw SQL in Go application code is not allowed; use GORM behind repositories/adapters" >&2
-	exit 1
-fi
+go run scripts/check-go-sql-strings.go -- "${go_files[@]}"
 
 go run scripts/check-gorm-query-fragments.go -- "${go_files[@]}"
 

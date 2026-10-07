@@ -33,7 +33,7 @@ func (r ConnectorRegistrar) pair(ctx context.Context, server, name string, candi
 		return ports.Failure("usage", "registration needs --name and a discovered printer")
 	}
 	if r.Receipts != nil && r.ReceiptDrainTimeout <= 0 {
-		return ports.Failure("configuration", "Receipt drain timeout must be positive. Check the CLI configuration.")
+		return ports.Failure("configuration", "Receipt drain timeout must be positive. Examine the CLI configuration.")
 	}
 	if r.PollInterval <= 0 {
 		return ports.Failure("configuration", "pairing poll interval must be positive")
