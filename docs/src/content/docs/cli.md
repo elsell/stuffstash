@@ -148,6 +148,23 @@ unchanged; an empty color value clears the color. The stable key is set only whe
 you create the tag. Delete asks for confirmation; scripts must add `--yes`.
 `--tag-color` sets the tag color, while `--color` controls terminal presentation.
 
+## Read every page
+
+Supported list commands accept `--all` to fetch all remaining pages:
+
+```sh
+./stuffstash assets list --all --json --no-input
+```
+
+`--limit` sets each request's page size. Add `--cursor` to start at a saved
+position. Filters and scope stay the same across requests. The CLI prints one
+combined result after every page succeeds; cancellation or a failed request
+produces an error without partial output. Large lists use more memory.
+
+Data can change between requests, so the result is not a snapshot. JSON keeps
+its existing shape and the final page's metadata. Use the command's `--help`
+to check whether it supports `--all`.
+
 ## Work with assets
 
 Run `stuffstash account show` to check the signed-in account and
