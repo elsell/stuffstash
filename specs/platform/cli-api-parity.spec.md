@@ -4,8 +4,8 @@
 
 Approved October 5, 2026. This supersedes the limited command scope and
 explicit-only context selection in `cli.spec.md`. Existing commands remain
-compatible unless a security requirement prevents it. Implementation is not yet
-complete; an SDK method or a command name alone does not establish parity.
+compatible unless a security requirement prevents it. An SDK method or a command
+name alone does not establish parity.
 
 Provide a discoverable named command for every REST operation. The initial
 OpenAPI inventory at `a8183b048` has 192 operations on 145 paths. Track changes

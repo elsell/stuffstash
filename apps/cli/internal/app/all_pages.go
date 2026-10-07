@@ -75,5 +75,5 @@ func collectPages[T any](ctx context.Context, o Options, fetch func(ports.Page) 
 	}
 }
 func paginationFailure() error {
-	return ports.Failure("protocol", "The server did not provide a usable next page. No complete list was returned. Use --limit and --cursor to examine individual pages, or contact the server administrator.")
+	return ports.Failure("protocol", "The server page information is not correct. The CLI did not return a complete list. Use --limit and --cursor to read one page at a time. Contact the server administrator if this continues.")
 }

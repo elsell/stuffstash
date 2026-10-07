@@ -41,3 +41,9 @@ combined JSON and final-page metadata, malformed cursor failure without partial
 stdout, cancellation without further requests, filter preservation, and nested
 expiration items. Shared helper tests cover page-state boundaries. Existing
 security tests continue to apply to each generated SDK request.
+
+Pagination diagnostics use approved ordinary vocabulary and active sentences.
+Describe incorrect page information without the unapproved adjective “usable”;
+name an unavailable option without using “support” as an ordinary verb. Recovery
+uses explicit single-page flags. This wording change does not change categories,
+exit status, traversal, or output shape.

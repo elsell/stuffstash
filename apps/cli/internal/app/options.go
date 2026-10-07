@@ -118,7 +118,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		}
 	})
 	if allPresent && !SupportsAllPages(o.Command) {
-		return o, ports.Failure("usage", "This command does not support --all. Remove the option and use --help for its available options.")
+		return o, ports.Failure("usage", "The --all option is not available for this command. Remove --all. Use --help to see the available options.")
 	}
 	if (o.InvitationEmail != "" || o.InvitationRole != "") && !isInvitationCreate(o) {
 		return o, ports.Failure("usage", "Use --email and --role only with invitations create.")
