@@ -33,7 +33,7 @@ func (r Runner) prepareEvaluationCancellation(o Options) (Options, error) {
 		return o, err
 	}
 	if !interactive && !o.Yes {
-		return o, ports.Failure("usage", "Cancellation needs confirmation. Review the run and expectedVersion, then add --yes.")
+		return o, ports.Failure("usage", "Examine the run and expectedVersion. Add --yes to approve cancellation.")
 	}
 	return o, nil
 }
@@ -51,7 +51,7 @@ func (r Runner) cancelEvaluationRun(ctx context.Context, o Options, api ports.Ev
 			return err
 		}
 		if result.Data.Version <= 0 {
-			return ports.Failure("protocol", "The server returned an invalid run version. Run evaluation runs show RUN_ID before you cancel.")
+			return ports.Failure("protocol", "The server returned an incorrect run version. Run evaluation runs show RUN_ID before you cancel.")
 		}
 		input.ExpectedVersion = result.Data.Version
 	}
@@ -70,7 +70,7 @@ func (r Runner) cancelEvaluationRun(ctx context.Context, o Options, api ports.Ev
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "conflict":
-				return ports.Failure("conflict", "The server rejected the cancellation. Run evaluation runs show RUN_ID and review its version and state before you try again.")
+				return ports.Failure("conflict", "The server rejected the cancellation. Run evaluation runs show RUN_ID. Examine its version and state before you try again.")
 			case "network", "protocol", "unavailable", "api":
 				return ports.Failure(failure.Category, "The cancellation result is unknown. Run evaluation runs show RUN_ID before you try again.")
 			}

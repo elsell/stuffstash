@@ -44,11 +44,11 @@ func (a Adapter) browser(ctx context.Context, c oauth2.Config, metadata ports.Au
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Content-Security-Policy", "default-src 'none'")
 		if r.Method != "GET" || r.URL.Path != path || r.Host != listener.Addr().String() || subtle.ConstantTimeCompare([]byte(r.URL.Query().Get("state")), []byte(state)) != 1 {
-			http.Error(w, "Invalid login response", 400)
+			http.Error(w, "The sign-in response is not correct.", 400)
 			return
 		}
 		if !accepted.CompareAndSwap(false, true) {
-			http.Error(w, "Login response already received", 409)
+			http.Error(w, "The CLI already received the sign-in response.", 409)
 			return
 		}
 		code := r.URL.Query().Get("code")
@@ -59,7 +59,7 @@ func (a Adapter) browser(ctx context.Context, c oauth2.Config, metadata ports.Au
 		case result <- code:
 			io.WriteString(w, "Return to Stuff Stash CLI to finish signing in.")
 		default:
-			http.Error(w, "Login response already received", 409)
+			http.Error(w, "The CLI already received the sign-in response.", 409)
 		}
 	})
 	server := &http.Server{Handler: handler, ReadHeaderTimeout: 5 * time.Second}

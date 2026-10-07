@@ -36,7 +36,7 @@ func (Files) OpenUpload(ctx context.Context, path string) (ports.UploadFile, err
 	}
 	name := filepath.Base(path)
 	if !utf8.ValidString(name) || utf8.RuneCountInString(name) > 255 {
-		return ports.UploadFile{}, ports.Failure("file", "The file name is invalid or too long. Rename the file to use at most 255 characters.")
+		return ports.UploadFile{}, ports.Failure("file", "The file name contains unsupported characters or exceeds 255 characters. Rename the file with UTF-8 text of at most 255 characters.")
 	}
 	var prefix [512]byte
 	n, err := file.ReadAt(prefix[:], 0)

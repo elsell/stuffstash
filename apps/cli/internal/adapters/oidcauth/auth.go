@@ -29,7 +29,7 @@ type endpoints struct {
 func ValidateURL(raw string, allowLoopback bool) error {
 	u, err := url.Parse(raw)
 	if err != nil || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
-		return errors.New("Use an HTTPS URL without credentials, query parameters, or a fragment.")
+		return ports.Failure("configuration", "Use an HTTPS URL without credentials, query parameters, or a fragment.")
 	}
 	if u.Scheme == "https" {
 		return nil
@@ -37,11 +37,11 @@ func ValidateURL(raw string, allowLoopback bool) error {
 	if allowLoopback && u.Scheme == "http" && (u.Hostname() == "127.0.0.1" || u.Hostname() == "localhost" || u.Hostname() == "::1") {
 		return nil
 	}
-	return errors.New("Use HTTPS. For local development, set STUFF_STASH_CLI_ALLOW_LOOPBACK_HTTP=true to permit loopback HTTP.")
+	return ports.Failure("configuration", "Use HTTPS. For local development, set STUFF_STASH_CLI_ALLOW_LOOPBACK_HTTP=true to permit loopback HTTP.")
 }
 func (a Adapter) provider(ctx context.Context, issuer, clientID string) (context.Context, *oidc.Provider, oauth2.Config, error) {
 	if ValidateURL(issuer, a.AllowLoopbackHTTP) != nil || clientID == "" {
-		return ctx, nil, oauth2.Config{}, ports.Failure("configuration", "The sign-in provider configuration is invalid. Ask the server administrator to examine the OIDC issuer URL and CLI client ID.")
+		return ctx, nil, oauth2.Config{}, ports.Failure("configuration", "The sign-in provider configuration is not correct. Ask the server administrator to examine the OIDC issuer URL and CLI client ID.")
 	}
 	safe := *a.HTTP
 	safe.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
@@ -52,7 +52,7 @@ func (a Adapter) provider(ctx context.Context, issuer, clientID string) (context
 	}
 	var extra endpoints
 	if provider.Claims(&extra) != nil {
-		return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "The sign-in provider returned invalid settings. Ask the server administrator to examine the OIDC configuration.")
+		return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "The sign-in provider returned settings that are not correct. Ask the server administrator to examine the OIDC configuration.")
 	}
 	endpoint := provider.Endpoint()
 	endpoint.DeviceAuthURL = extra.Device
@@ -134,7 +134,7 @@ func (a Adapter) device(ctx context.Context, c oauth2.Config) (*oauth2.Token, er
 	}
 	defer func() { response.DeviceCode = "" }()
 	if response.DeviceCode == "" || response.UserCode == "" || !response.Expiry.After(a.Clock.Now()) || ValidateURL(response.VerificationURI, a.AllowLoopbackHTTP) != nil {
-		return nil, ports.Failure("authentication", "The sign-in provider returned an invalid device code response. Ask the server administrator to examine device sign-in support.")
+		return nil, ports.Failure("authentication", "The sign-in provider returned a device code response that is not correct. Ask the server administrator to examine device sign-in support.")
 	}
 	if err := a.Output.Notice("Open " + response.VerificationURI + " and enter code " + response.UserCode); err != nil {
 		return nil, err

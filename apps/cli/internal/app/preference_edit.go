@@ -10,7 +10,7 @@ import (
 
 func (r Runner) editPreferenceBody(ctx context.Context, o Options, current ports.NotificationPreferences) ([]byte, error) {
 	if current.Revision < 1 {
-		return nil, ports.Failure("usage", "Initialize notification preferences before editing them.")
+		return nil, ports.Failure("usage", "Initialize the notification preferences before you edit them.")
 	}
 	policy := current.Defaults
 	if o.Command[1] == "override" {
@@ -79,7 +79,7 @@ func (r Runner) preferenceBool(ctx context.Context, title string, current bool) 
 	}
 	result, err := strconv.ParseBool(value)
 	if err != nil {
-		return false, ports.Failure("input", "The selected setting is invalid. Select On or Off.")
+		return false, ports.Failure("input", "The selected setting is not correct. Select On or Off.")
 	}
 	return result, nil
 }

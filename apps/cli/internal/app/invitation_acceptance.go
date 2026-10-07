@@ -17,7 +17,7 @@ func validateInvitationToken(body []byte) error {
 		Token string `json:"acceptanceToken"`
 	}
 	if json.Unmarshal(body, &v) != nil || strings.TrimSpace(v.Token) == "" {
-		return ports.Failure("usage", "Supply a nonempty acceptanceToken in the input JSON.")
+		return ports.Failure("usage", "Supply acceptanceToken as a string that is not empty in the input JSON.")
 	}
 	return nil
 }

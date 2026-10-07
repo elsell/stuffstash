@@ -121,7 +121,7 @@ func (r Runner) preferencesCommand(ctx context.Context, o Options, token string)
 	if err != nil {
 		var failure *ports.Error
 		if errors.As(err, &failure) && failure.Category == "conflict" {
-			return ports.Failure("conflict", "Notification preferences changed. Run notification-preferences show and review the current settings before you try again.")
+			return ports.Failure("conflict", "The notification preferences changed. Run notification-preferences show. Examine the settings before you try again.")
 		}
 		return err
 	}

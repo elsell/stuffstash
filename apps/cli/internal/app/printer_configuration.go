@@ -27,12 +27,12 @@ func configurePrinter(ctx context.Context, api printerConfigurationAPI, o Option
 			continue
 		}
 		if selected.Version != 0 && selected != preset {
-			return ports.Result[ports.RegisteredPrinter]{}, ports.Failure("usage", "label size is ambiguous; refresh the supported printer catalog")
+			return ports.Result[ports.RegisteredPrinter]{}, ports.Failure("usage", "The label size does not identify one catalog entry. Read the printer catalog again and select a supported size.")
 		}
 		selected = preset
 	}
 	if selected.Version == 0 {
-		return ports.Result[ports.RegisteredPrinter]{}, ports.Failure("usage", "label size is not supported by this printer's adapter")
+		return ports.Result[ports.RegisteredPrinter]{}, ports.Failure("usage", "The printer's adapter does not support this label size. Select a size from the printer catalog.")
 	}
 	// A conflict is returned to the caller; never overwrite a concurrent change.
 	return api.ConfigurePrinterMedia(ctx, o.Scope, current.ID, current.Revision, selected)

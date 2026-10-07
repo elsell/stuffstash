@@ -41,7 +41,7 @@ func (c *Client) ChangeAttachment(ctx context.Context, s ports.Scope, asset, id 
 	case ports.RestoreAttachment:
 		return attachmentResult(c.sdk.PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdAttachmentsByAttachmentIdRestore(ctx, s.Tenant, s.Inventory, asset, id, nil))
 	default:
-		return ports.Result[ports.Attachment]{}, ports.Failure("usage", "Unknown attachment action. Use archive or restore.")
+		return ports.Result[ports.Attachment]{}, ports.Failure("usage", "The attachment action is not available. Use archive or restore.")
 	}
 }
 func (c *Client) DeleteAttachment(ctx context.Context, s ports.Scope, asset, id string) error {

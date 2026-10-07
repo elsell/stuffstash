@@ -19,10 +19,10 @@ func checkFile(path string) error {
 		return err
 	}
 	if !info.Mode().IsRegular() {
-		return errors.New("The credential path is not a regular file. Select a private regular file for credential storage.")
+		return ports.Failure("configuration", "The credential path is not a regular file. Select a private regular file for credential storage.")
 	}
 	if info.Mode().Perm()&0077 != 0 {
-		return errors.New("Other accounts can access the credential file. Set its permissions to 0600.")
+		return ports.Failure("configuration", "Other accounts can access the credential file. Set its permissions to 0600.")
 	}
 	return checkOwner(info)
 }
@@ -39,7 +39,7 @@ func (f File) Load(_ context.Context, server string) (ports.Session, error) {
 		return session, err
 	}
 	if json.Unmarshal(body, &session) != nil {
-		return session, errors.New("invalid credential file; log in again")
+		return session, ports.Failure("configuration", "The credential file format is not correct. Run stuffstash login again.")
 	}
 	if session.Server != server {
 		return ports.Session{}, ports.ErrNotLoggedIn
@@ -59,7 +59,7 @@ func (f File) Save(_ context.Context, session ports.Session) error {
 		return err
 	}
 	if !info.IsDir() || info.Mode().Perm()&0022 != 0 {
-		return errors.New("credential directory must not be writable by other users")
+		return ports.Failure("configuration", "The credential storage path must be a directory that other accounts cannot write to. Select a private directory.")
 	}
 	if err := checkOwner(info); err != nil {
 		return err

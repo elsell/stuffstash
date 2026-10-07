@@ -39,7 +39,7 @@ func providerWriteFlags(o Options, flags *flag.FlagSet) error {
 		}
 	})
 	if invalid != "" {
-		return ports.Failure("usage", "Provider setup does not accept --"+invalid+". Use --input FILE|- or interactive setup; never put credentials in command arguments.")
+		return ports.Failure("usage", "Provider setup does not accept --"+invalid+". Use --input FILE|- or interactive setup. Do not put credentials in command arguments.")
 	}
 	return nil
 }

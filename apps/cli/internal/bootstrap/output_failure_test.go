@@ -40,7 +40,7 @@ func TestResultFailureDoesNotRepeatCompletedMutation(t *testing.T) {
 			if code != 1 || calls != 1 {
 				t.Fatalf("output failure must not replay mutation: exit=%d calls=%d %s", code, calls, message)
 			}
-			if !strings.Contains(message, "before you repeat a change") || !strings.Contains(message, "already be complete") || strings.Contains(message, "private-writer") {
+			if !strings.Contains(message, "before you make the change again") || !strings.Contains(message, "already be complete") || strings.Contains(message, "private-writer") {
 				t.Fatalf("unsafe output recovery: %s", message)
 			}
 			if jsonOutput && !strings.Contains(message, `"category":"output"`) {

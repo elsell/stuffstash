@@ -24,7 +24,7 @@ type Access struct {
 
 func (a Access) Discover(ctx context.Context) ([]printing.Device, error) {
 	if runtime.GOOS != "linux" {
-		return nil, ports.Failure("unsupported", "USB printing is supported on Linux only")
+		return nil, ports.Failure("unsupported", "USB printer discovery requires Linux. Run stuffstash printers discover on Linux.")
 	}
 	entries, err := os.ReadDir(a.Roots.SysfsUSB)
 	if os.IsNotExist(err) {

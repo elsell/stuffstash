@@ -67,7 +67,7 @@ func catalogChoices(ctx context.Context, fetch func(ports.Page) ([]ports.Choice,
 			return choices, nil
 		}
 		if page.NextCursor == nil || *page.NextCursor == "" || seen[*page.NextCursor] {
-			return nil, ports.Failure("protocol", "The server returned an invalid page cursor. Try again or update the server.")
+			return nil, ports.Failure("protocol", "The server returned an incorrect page cursor. Try again or update the server.")
 		}
 		request.Cursor = *page.NextCursor
 		seen[request.Cursor] = true

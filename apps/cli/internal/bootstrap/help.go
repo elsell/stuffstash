@@ -76,7 +76,7 @@ func groupHelpText(command []string) (string, error) {
 		}
 	}
 	if len(children) == 0 {
-		return "", ports.Failure("usage", "Unknown command. Run stuffstash --help, or add --help to a supported group.")
+		return "", ports.Failure("usage", "The command is not available. Run stuffstash --help, or add --help to a supported group.")
 	}
 	var b strings.Builder
 	title := "Stuff Stash CLI"

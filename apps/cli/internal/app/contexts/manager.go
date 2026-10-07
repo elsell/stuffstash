@@ -55,7 +55,7 @@ func (m Manager) Delete(ctx context.Context, name string) error {
 func (m Manager) Remember(ctx context.Context, entry Entry) error {
 	entry.Server = ServerKey(entry.Server)
 	if entry.Principal == "" {
-		return ports.Failure("authentication", "Cannot save this selection without a verified account. Log in again.")
+		return ports.Failure("authentication", "The CLI cannot save this selection without a verified account. Sign in again.")
 	}
 	if err := Validate(Config{Version: Version, Current: entry.Name, Contexts: []Entry{entry}}); err != nil {
 		return err

@@ -25,7 +25,7 @@ func (r Runner) prepareInput(ctx context.Context, o Options) (Options, error) {
 	}
 	if o.InputPath != "" {
 		if r.InputFiles == nil {
-			return o, ports.Failure("configuration", "Input files are not available. Use field options instead.")
+			return o, ports.Failure("configuration", "File input is not available. Update the CLI. Use this command with --help for its input options.")
 		}
 		body, err := r.InputFiles.Read(ctx, o.InputPath)
 		if err != nil {

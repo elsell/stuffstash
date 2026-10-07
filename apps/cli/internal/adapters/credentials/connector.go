@@ -23,7 +23,7 @@ func validRegistration(r ports.ConnectorRegistration) bool {
 func decodeRegistration(body []byte) (ports.ConnectorRegistration, error) {
 	var r ports.ConnectorRegistration
 	if json.Unmarshal(body, &r) != nil || !validRegistration(r) {
-		return r, errors.New("The stored connector registration is invalid. Pair the connector again.")
+		return r, ports.Failure("configuration", "The stored connector registration is not correct. Pair the connector again.")
 	}
 	return r, nil
 }
@@ -40,7 +40,7 @@ func (f ConnectorFile) read() (ports.ConnectorRegistration, error) {
 	}
 	registration, err := decodeRegistration(body)
 	if err != nil {
-		return registration, errors.New("The stored connector registration is invalid. Set STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE to a new private file path. Pair the connector again.")
+		return registration, ports.Failure("configuration", "The stored connector registration is not correct. Set STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE to a new private file path. Pair the connector again.")
 	}
 	return registration, nil
 }
@@ -56,7 +56,7 @@ func (f ConnectorFile) Load(_ context.Context, server, id string) (ports.Connect
 }
 func (f ConnectorFile) Save(_ context.Context, r ports.ConnectorRegistration) error {
 	if !validRegistration(r) {
-		return errors.New("incomplete connector registration")
+		return ports.Failure("configuration", "The connector registration does not contain all required fields. Examine the connector registration with the administrator.")
 	}
 	dir := filepath.Dir(f.Path)
 	if err := os.MkdirAll(dir, 0700); err != nil {
@@ -67,7 +67,7 @@ func (f ConnectorFile) Save(_ context.Context, r ports.ConnectorRegistration) er
 		return err
 	}
 	if !info.IsDir() || info.Mode().Perm()&0022 != 0 {
-		return errors.New("credential directory must not be writable by other users")
+		return ports.Failure("configuration", "The credential storage path must be a directory that other accounts cannot write to. Select a private directory.")
 	}
 	if err := checkOwner(info); err != nil {
 		return err
@@ -82,7 +82,7 @@ func (f ConnectorFile) Save(_ context.Context, r ports.ConnectorRegistration) er
 		return err
 	}
 	if err == nil && (prior.Server != r.Server || prior.ConnectorID != r.ConnectorID) {
-		return errors.New("credential file belongs to another connector; configure a separate file")
+		return ports.Failure("configuration", "The credential file belongs to another connector. Set STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE to a new private file path.")
 	}
 	body, err := json.Marshal(r)
 	if err != nil {
@@ -151,7 +151,7 @@ func (ConnectorKeyring) Load(_ context.Context, server, id string) (ports.Connec
 }
 func (ConnectorKeyring) Save(_ context.Context, r ports.ConnectorRegistration) error {
 	if !validRegistration(r) {
-		return errors.New("incomplete connector registration")
+		return ports.Failure("configuration", "The connector registration does not contain all required fields. Examine the connector registration with the administrator.")
 	}
 	body, err := json.Marshal(r)
 	if err != nil {

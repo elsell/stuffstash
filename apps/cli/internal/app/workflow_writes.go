@@ -39,13 +39,20 @@ func (r Runner) writeWorkflow(ctx context.Context, o Options, api ports.Workflow
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+		readCommand := "workflows list"
+		if action == "activate" {
+			readCommand = "workflows selection show"
+		} else if action != "create" {
+			readCommand = "workflows show " + strconv.Quote(target)
+		}
+		readCommand += " --server " + strconv.Quote(o.Server) + " --tenant " + strconv.Quote(o.Scope.Tenant)
 		var failure *ports.Error
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "conflict":
-				return ports.Failure("conflict", "The server rejected the workflow change. Examine workflows show and workflows selection show, then review the supplied revision or evaluation evidence before you try again.")
+				return ports.Failure("conflict", "The server rejected the workflow change. Run "+readCommand+" before you try again. Examine the revision and evaluation evidence.")
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "The workflow change result is unknown. Examine workflows list, show and selection show before you try again.")
+				return ports.Failure(failure.Category, "The workflow change result is unknown. Run "+readCommand+" before you try again.")
 			}
 		}
 		return err

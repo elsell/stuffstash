@@ -285,7 +285,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 		return o, ports.Failure("usage", "This command does not accept --input. Remove the option.")
 	}
 	if o.Page.Limit < 0 || o.Page.Limit == 0 && !(len(o.Command) == 2 && o.Command[0] == "tags" && o.Command[1] == "list") {
-		return o, ports.Failure("usage", "--limit must be positive")
+		return o, ports.Failure("usage", "Supply --limit with an integer greater than zero.")
 	}
 	return o, nil
 }

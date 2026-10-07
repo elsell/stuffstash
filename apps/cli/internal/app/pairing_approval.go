@@ -97,9 +97,14 @@ func (r Runner) pairingApprovalCommand(ctx context.Context, o Options, token str
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "conflict":
-				return ports.Failure("conflict", "Approval conflicts with current state. Examine the connector and review the pairing before you try again. Supply the expected generation.")
+				return ports.Failure("conflict", "The approval conflicts with the server state. Examine the connector and pairing before you try again. Supply the expected generation.")
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "Approval outcome is unknown. Examine connectors print list or show before attempting approval again.")
+				readCommand := "connectors print list"
+				if rotationApproval(o) {
+					readCommand = "connectors print show " + strconv.Quote(o.Command[4])
+				}
+				readCommand += " --server " + strconv.Quote(o.Server) + " --tenant " + strconv.Quote(o.Scope.Tenant) + " --inventory " + strconv.Quote(o.Scope.Inventory)
+				return ports.Failure(failure.Category, "The approval result is unknown. Run "+readCommand+" before you try approval again.")
 			}
 		}
 		return err
@@ -125,13 +130,13 @@ func validateReviewedBindings(review ports.PairingReview, bindings []ports.Pairi
 	known := map[string]bool{}
 	for _, c := range review.Candidates {
 		if c.ID == "" || known[c.ID] {
-			return ports.Failure("protocol", "The pairing review has invalid candidate IDs. Review the pairing again.")
+			return ports.Failure("protocol", "The pairing review has incorrect candidate IDs. Examine the pairing again.")
 		}
 		known[c.ID] = true
 	}
 	for _, b := range bindings {
 		if !known[b.CandidateID] {
-			return ports.Failure("usage", "A binding names a candidate absent from the pairing review. Review the pairing and correct the input.")
+			return ports.Failure("usage", "A binding names a candidate that is not in the pairing review. Examine the pairing and correct the input.")
 		}
 	}
 	return nil

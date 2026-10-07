@@ -25,7 +25,7 @@ func validateTags(o Options, requireScope bool) error {
 	action := o.Command[1]
 	valid := (len(o.Command) == 2 && (action == "list" || action == "create")) || (len(o.Command) == 3 && (action == "update" || action == "delete") && o.Command[2] != "")
 	if !valid {
-		return ports.Failure("usage", "The tag command is invalid. Use --help to examine the arguments.")
+		return ports.Failure("usage", "The tag command is not correct. Use --help to examine the arguments.")
 	}
 	if (action == "list" || action == "delete") && (o.ConnectorName != "" || o.TagColor != nil) {
 		return ports.Failure("usage", "Use --name and --tag-color only with tags create or tags update.")

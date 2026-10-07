@@ -24,7 +24,7 @@ func (c *Client) ChangeAssetType(ctx context.Context, s ports.DefinitionScope, i
 		case ports.RestoreType:
 			response, err = c.sdk.PatchTenantsByTenantIdCustomAssetTypesByCustomAssetTypeIdRestore(ctx, s.Scope.Tenant, id, nil)
 		default:
-			return ports.Result[ports.AssetType]{}, ports.Failure("usage", "Unknown asset type action. Use --help to select a command.")
+			return ports.Result[ports.AssetType]{}, ports.Failure("usage", "The asset type action is not available. Use --help to select a command.")
 		}
 	} else {
 		switch action {
@@ -37,7 +37,7 @@ func (c *Client) ChangeAssetType(ctx context.Context, s ports.DefinitionScope, i
 		case ports.RestoreType:
 			response, err = c.sdk.PatchTenantsByTenantIdInventoriesByInventoryIdCustomAssetTypesByCustomAssetTypeIdRestore(ctx, s.Scope.Tenant, s.Scope.Inventory, id, nil)
 		default:
-			return ports.Result[ports.AssetType]{}, ports.Failure("usage", "Unknown asset type action. Use --help to select a command.")
+			return ports.Result[ports.AssetType]{}, ports.Failure("usage", "The asset type action is not available. Use --help to select a command.")
 		}
 	}
 	return assetTypeResult(response, err)

@@ -20,9 +20,9 @@ func validateJSONObject(body []byte) error {
 	if err := json.Unmarshal(body, &value); err != nil {
 		var syntax *json.SyntaxError
 		if errors.As(err, &syntax) {
-			return ports.Failure("input", "The JSON is invalid at byte "+strconv.FormatInt(syntax.Offset, 10)+". Correct the JSON and try again.")
+			return ports.Failure("input", "The JSON is not correct at byte "+strconv.FormatInt(syntax.Offset, 10)+". Correct the JSON and try again.")
 		}
-		return ports.Failure("input", "The JSON is invalid. Supply one complete JSON object.")
+		return ports.Failure("input", "The JSON is not correct. Supply one complete JSON object.")
 	}
 	if trimmed[0] != '{' {
 		return ports.Failure("input", "The input must be a JSON object. Use braces around the request fields.")

@@ -104,7 +104,7 @@ func (r Runner) Run(ctx context.Context, o Options) error {
 		return r.Output.Result(map[string]string{"status": "signed in", "server": o.Server})
 	case "logout":
 		if len(o.Command) != 1 {
-			return ports.Failure("usage", "logout takes no positional arguments")
+			return ports.Failure("usage", "Remove the positional arguments after logout.")
 		}
 		if err := r.Credentials.Delete(ctx, o.Server); err != nil {
 			return err
@@ -369,7 +369,7 @@ func validateCommandOptions(o Options, requireScope bool) error {
 		return ports.Failure("usage", "This asset action does not support retry keys. Remove --idempotency-key.")
 	}
 	if o.PrintLabel && (len(o.Command) != 2 || o.Command[0] != "assets" || o.Command[1] != "create") {
-		return ports.Failure("usage", "--print-label is only available for assets create")
+		return ports.Failure("usage", "Use --print-label only with assets create.")
 	}
 	if isSearch(o) {
 		return validateSearch(o, requireScope)

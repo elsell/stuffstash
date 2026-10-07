@@ -55,7 +55,7 @@ func decodePrinterAdministration(body []byte, v any) error {
 }
 func (r Runner) preparePrinterAdministration(ctx context.Context, o Options) (Options, error) {
 	if isPrinterCreation(o) && (strings.TrimSpace(o.IdempotencyKey) == "" || len(o.IdempotencyKey) > 200 || strings.ContainsAny(o.IdempotencyKey, "\r\n")) {
-		return o, ports.Failure("usage", "Printer creation requires --idempotency-key with 1 to 200 characters. Reuse the key only for the same unchanged request.")
+		return o, ports.Failure("usage", "Supply --idempotency-key with 1 to 200 characters to create a printer. Use the same key only for the same request.")
 	}
 	if o.InputPath == "" {
 		if !isPrinterCreation(o) {
@@ -89,7 +89,7 @@ func (r Runner) preparePrinterAdministration(ctx context.Context, o Options) (Op
 			return o, err
 		}
 		if strings.TrimSpace(v.Name) == "" || strings.TrimSpace(v.AdapterID) == "" || strings.TrimSpace(v.PresetID) == "" || v.PresetVersion == 0 {
-			return o, ports.Failure("usage", "Printer creation requires name, adapterId, presetId and a positive presetVersion. Supply JSON or --name, --adapter, --label-size and --preset-version.")
+			return o, ports.Failure("usage", "Supply name, adapterId, presetId and presetVersion greater than zero to create a printer. Use JSON or --name, --adapter, --label-size and --preset-version.")
 		}
 	case o.Command[0] == "printers":
 		var v printerUpdateInput
@@ -97,7 +97,7 @@ func (r Runner) preparePrinterAdministration(ctx context.Context, o Options) (Op
 			return o, err
 		}
 		if v.Revision == 0 {
-			return o, ports.Failure("usage", "Printer update requires a positive integer revision.")
+			return o, ports.Failure("usage", "Supply an integer greater than zero for the printer revision.")
 		}
 	case o.Command[0] == "connectors":
 		var v connectorUpdateInput
@@ -105,7 +105,7 @@ func (r Runner) preparePrinterAdministration(ctx context.Context, o Options) (Op
 			return o, err
 		}
 		if v.Generation == 0 {
-			return o, ports.Failure("usage", "Connector update requires a positive integer generation.")
+			return o, ports.Failure("usage", "Supply an integer greater than zero for the connector generation.")
 		}
 	default:
 		var v printSettingsInput
@@ -113,7 +113,7 @@ func (r Runner) preparePrinterAdministration(ctx context.Context, o Options) (Op
 			return o, err
 		}
 		if v.Revision == nil || len(v.DefaultPrinterID) == 0 || v.PrintOnCreateDefault == nil || v.Template == nil || v.Template.ID == "" || v.Template.Version == 0 || v.Template.Options == nil || v.Template.Options.ShowReference == nil {
-			return o, ports.Failure("usage", "Settings input requires revision, defaultPrinterId (string or null), printOnCreateDefault, and template with id, positive version, and options.showReference.")
+			return o, ports.Failure("usage", "Supply revision, defaultPrinterId (string or null), printOnCreateDefault, and template. In template, supply id, version greater than zero, and options.showReference.")
 		}
 		var printer *string
 		if err := decodePrinterAdministration(v.DefaultPrinterID, &printer); err != nil {

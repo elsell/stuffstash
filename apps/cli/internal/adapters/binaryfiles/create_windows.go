@@ -37,7 +37,7 @@ func createPrivate(path string) (*os.File, func() error, error) {
 	return f, func() error {
 		if err := os.Link(name, path); err != nil {
 			if os.IsExist(err) {
-				return ports.Failure("file", "The output path already exists. Select another --output path. The existing file was not changed.")
+				return ports.Failure("file", "The output path already exists. Select another --output path. The CLI did not change the existing file.")
 			}
 			return ports.Failure("file", "The CLI cannot publish the file. Select a new output path on a filesystem that supports hard links.")
 		}

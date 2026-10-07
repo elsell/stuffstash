@@ -10,7 +10,7 @@ func (r Runner) confirmAction(ctx context.Context, o Options, title, action, det
 		return nil
 	}
 	if r.Picker == nil || o.JSON || o.NoInput {
-		return ports.Failure("usage", "This action needs confirmation. Review the target and add --yes to continue.")
+		return ports.Failure("usage", "Examine the target. Add --yes to approve this action.")
 	}
 	selected, err := r.Picker.Pick(ctx, title, []ports.Choice{{ID: "cancel", Label: "Cancel", Detail: "Keep the resource unchanged"}, {ID: "confirm", Label: action, Detail: detail}})
 	if err != nil {

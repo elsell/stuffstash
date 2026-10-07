@@ -42,7 +42,7 @@ func decodeTelemetry(o Options) (telemetryInput, error) {
 	}
 	for _, m := range input.Measurements {
 		if !slices.Contains([]string{"ios", "android", "web"}, m.Platform) || !slices.Contains([]string{"request", "image"}, m.Operation) || !slices.Contains([]string{"application", "home", "list", "detail", "gallery", "fullscreen", "upload"}, m.Surface) || !slices.Contains([]string{"none", "small", "medium", "large", "original"}, m.Variant) || !slices.Contains([]string{"success", "failure", "cancelled"}, m.Outcome) || m.Duration == nil || *m.Duration < 0 || *m.Duration > 60000 {
-			return input, ports.Failure("usage", "A measurement has a missing or invalid field. Use telemetry submit --help for supported values and duration limits.")
+			return input, ports.Failure("usage", "A measurement has a missing or incorrect field. Use telemetry submit --help for supported values and duration limits.")
 		}
 	}
 	return input, nil
@@ -70,7 +70,7 @@ func (r Runner) telemetryCommand(ctx context.Context, o Options, token string) e
 	if err != nil {
 		var failure *ports.Error
 		if errors.As(err, &failure) && (failure.Category == "network" || failure.Category == "unavailable" || failure.Category == "api" || failure.Category == "protocol") {
-			return ports.Failure(failure.Category, "The submission result is unknown. Examine server telemetry before repeating the batch; it can be counted twice.")
+			return ports.Failure(failure.Category, "The submission result is unknown. Examine server telemetry before you send the batch again. The server can count it twice.")
 		}
 		return err
 	}

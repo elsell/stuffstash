@@ -2,6 +2,7 @@ package credentials
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -54,7 +55,8 @@ func TestCredentialFailuresDistinguishFileTypeFromPermissions(t *testing.T) {
 	if err := os.Chmod(path, 0644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := (File{Path: path}).Load(context.Background(), "https://stash.example"); err == nil || !strings.Contains(err.Error(), "0600") || strings.Contains(err.Error(), "private-session") {
+	var safe *ports.Error
+	if _, err := (File{Path: path}).Load(context.Background(), "https://stash.example"); !errors.As(err, &safe) || safe.Category != "configuration" || !strings.Contains(err.Error(), "0600") || strings.Contains(err.Error(), "private-session") {
 		t.Fatalf("permission guidance: %v", err)
 	}
 	content, err := os.ReadFile(path)

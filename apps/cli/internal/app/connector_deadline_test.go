@@ -55,6 +55,15 @@ func TestPairingDeadlineProtectsStoredCredentials(t *testing.T) {
 				} else if !errors.As(err, &failure) || failure.Category != tc.category {
 					t.Fatalf("category: %v", err)
 				}
+				if tc.category == "pairing" || tc.category == "activation" {
+					command := `connectors print register --name "Garage"`
+					if rotate || tc.saved {
+						command = `connectors print rotate --connector "connector"`
+					}
+					if !strings.Contains(failure.Message, command) || !strings.Contains(failure.Message, `--server "https://stash.example"`) {
+						t.Fatalf("deadline recovery lost identity or scope: %s", failure.Message)
+					}
+				}
 				if f.active != tc.active {
 					t.Fatalf("activation=%v", f.active)
 				}

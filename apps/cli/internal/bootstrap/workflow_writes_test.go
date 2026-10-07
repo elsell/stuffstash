@@ -101,6 +101,13 @@ func TestWorkflowWritesContractAndDenials(t *testing.T) {
 				if code := Run(context.Background(), args, getenv, &out, &diag); code == 0 || calls != before+1 || strings.Contains(out.String()+diag.String(), "private-denial") {
 					t.Fatalf("unsafe denial/retry: %d %s", code, &diag)
 				}
+				if tc.command[0] == "activate" && (denial == 409 || denial == 500) {
+					for _, fragment := range []string{"workflows selection show", `--server \"` + server.URL + `\"`, `--tenant \"home\"`} {
+						if !strings.Contains(diag.String(), fragment) {
+							t.Fatalf("activation recovery lacks selected-workflow state: %s", &diag)
+						}
+					}
+				}
 			}
 			status = 200
 			before := calls

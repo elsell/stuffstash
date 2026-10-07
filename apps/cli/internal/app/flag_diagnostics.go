@@ -51,7 +51,7 @@ func (v *diagnosedFlagValue) Get() any {
 func flagValueType(value flag.Value) string {
 	getter, ok := value.(flag.Getter)
 	if !ok {
-		return "a valid value (see this command's --help)"
+		return "a correct value (see this command's --help)"
 	}
 	switch getter.Get().(type) {
 	case bool:
@@ -65,6 +65,6 @@ func flagValueType(value flag.Value) string {
 	case string:
 		return "a text value"
 	default:
-		return "a valid value (see this command's --help)"
+		return "a correct value (see this command's --help)"
 	}
 }

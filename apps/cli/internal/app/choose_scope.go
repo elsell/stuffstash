@@ -16,7 +16,7 @@ func (r Runner) chooseMissingScope(ctx context.Context, o Options, session ports
 	}
 	principal := contexts.Principal(session)
 	if principal == "" {
-		return o, ports.Failure("authentication", "Cannot verify the account for this selection. Log in again.")
+		return o, ports.Failure("authentication", "The CLI cannot verify the account for this selection. Sign in again.")
 	}
 	api, err := r.ScopeAPI(o.Server, session.IDToken)
 	if err != nil {

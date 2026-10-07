@@ -27,7 +27,7 @@ func New(server, token string, httpClient *http.Client, options ...Options) (*Cl
 		requestID = options[0].RequestID
 	}
 	if strings.IndexFunc(requestID, func(r rune) bool { return r < 32 || r > 126 }) >= 0 {
-		return nil, ports.Failure("usage", "The request ID contains invalid characters. Use printable ASCII characters.")
+		return nil, ports.Failure("usage", "The request ID contains characters outside printable ASCII. Use printable ASCII characters.")
 	}
 
 	// API credentials must never follow a server redirect to another origin.
@@ -54,11 +54,11 @@ func New(server, token string, httpClient *http.Client, options ...Options) (*Cl
 func read[T any](response *http.Response, err error) (T, error) {
 	var zero T
 	if err != nil {
-		return zero, ports.Failure("network", "The CLI cannot connect to Stuff Stash. Make sure that the server address is correct. Examine the current state before you repeat a change.")
+		return zero, ports.Failure("network", "The CLI cannot connect to Stuff Stash. Make sure that the server address is correct. Examine the current state before you make the change again.")
 	}
 	defer response.Body.Close()
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		category, message := "api", "Stuff Stash did not return a successful result. Examine the current state before you repeat a change."
+		category, message := "api", "Stuff Stash did not return a successful result. Examine the current state before you make the change again."
 		switch response.StatusCode {
 		case 401:
 			category, message = "authentication", "The server did not accept your session. Run stuffstash login and try again."
@@ -71,16 +71,16 @@ func read[T any](response *http.Response, err error) (T, error) {
 		case 400, 422:
 			category, message = "validation", "The server did not accept the request. Examine the input values against the command help and API requirements."
 		case 429:
-			category, message = "api", "Too many requests were sent. Wait before you send another request. Examine the current state before you repeat a change."
+			category, message = "api", "Too many requests were sent. Wait before you send another request. Examine the current state before you make the change again."
 		case 503:
-			category, message = "unavailable", "The service is not available. Wait for it to recover. Examine the current state before you repeat a change."
+			category, message = "unavailable", "The service is not available. Wait for it to recover. Examine the current state before you make the change again."
 		}
 		return zero, ports.Failure(category, message)
 	}
 	decoder := json.NewDecoder(io.LimitReader(response.Body, 16<<20))
 	decoder.UseNumber()
 	if err := decoder.Decode(&zero); err != nil {
-		return zero, ports.Failure("protocol", "The server response is not correct. Examine the current state before you repeat a change. Contact the server operator if this continues.")
+		return zero, ports.Failure("protocol", "The server response is not correct. Examine the current state before you make the change again. Contact the server operator if this continues.")
 	}
 	return zero, nil
 }
