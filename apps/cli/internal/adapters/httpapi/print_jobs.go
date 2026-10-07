@@ -17,10 +17,10 @@ func consumerError(err error) error {
 	var failure *ports.Error
 	if errors.As(err, &failure) {
 		if failure.Category == "authentication" {
-			return ports.Failure("authentication", "connector credential expired or revoked; pair this connector again")
+			return ports.Failure("authentication", "The server did not accept the connector credential. Pair this connector again.")
 		}
 		if failure.Category == "forbidden" {
-			return ports.Failure("authorization", "connector access was removed; review its printer assignments before pairing again")
+			return ports.Failure("authorization", "The server denied connector access. Review the connector permissions and printer assignments.")
 		}
 	}
 	return err
@@ -36,7 +36,7 @@ func (c *Client) Claim(ctx context.Context, printerID string, control printing.A
 		return nil, nil
 	}
 	if value.Artifact == nil || value.Media == nil || !value.LeaseValid || value.Status != "claimed" || value.Revision <= 0 {
-		return nil, ports.Failure("protocol", "invalid claimed print job")
+		return nil, ports.Failure("protocol", "The server returned invalid details for the claimed print job. Check the job status before further action.")
 	}
 	artifact := value.Artifact
 	control.AttemptID = value.AttemptID
@@ -114,7 +114,7 @@ func (c *Client) Unsettled(ctx context.Context, printerID string) ([]printing.At
 		}
 		for _, value := range response.Data {
 			if value.PrinterID != printerID {
-				return nil, ports.Failure("protocol", "unexpected printer in recovery response")
+				return nil, ports.Failure("protocol", "The server returned recovery details for a different printer. Check the affected jobs with the server administrator.")
 			}
 			attempt, err := attemptStatus(value)
 			if err != nil {
@@ -130,7 +130,7 @@ func (c *Client) Unsettled(ctx context.Context, printerID string) ([]printing.At
 			return result, nil
 		}
 		if pagination.NextCursor == nil || *pagination.NextCursor == "" || seen[*pagination.NextCursor] {
-			return nil, ports.Failure("protocol", "invalid print recovery pagination")
+			return nil, ports.Failure("protocol", "The server returned an invalid next page of print recovery results. Check unresolved jobs with the server administrator.")
 		}
 		cursor = *pagination.NextCursor
 		seen[cursor] = true
@@ -138,7 +138,7 @@ func (c *Client) Unsettled(ctx context.Context, printerID string) ([]printing.At
 }
 func (c *Client) Artifact(ctx context.Context, control printing.AttemptControl, maximum int64) ([]byte, string, error) {
 	if maximum <= 0 || maximum >= 1<<30 {
-		return nil, "", ports.Failure("configuration", "invalid print artifact byte limit")
+		return nil, "", ports.Failure("configuration", "The print file size limit is invalid. Use a limit from 1 through 1073741823 bytes.")
 	}
 	response, err := c.sdk.ListPrintConsumerClaimsByAttemptIdContent(ctx, control.AttemptID, &generated.ListPrintConsumerClaimsByAttemptIdContentParams{XPrintSessionID: control.SessionID, XPrintClaimToken: control.ClaimToken, XPrintRevision: 0}, func(_ context.Context, request *http.Request) error {
 		// The generated header parameter is signed; overwrite it before transport.
@@ -146,23 +146,23 @@ func (c *Client) Artifact(ctx context.Context, control printing.AttemptControl, 
 		return nil
 	})
 	if err != nil {
-		return nil, "", ports.Failure("network", "could not fetch print artifact")
+		return nil, "", ports.Failure("network", "Could not download the print file. Check your connection to the server.")
 	}
 	if response.StatusCode != http.StatusOK {
 		_, err = read[ports.Result[workerAttempt]](response, nil)
 		if err == nil {
-			err = ports.Failure("protocol", "unexpected print artifact status")
+			err = ports.Failure("protocol", "The server did not return the requested print file. Check the job status with the server administrator.")
 		}
 		return nil, "", consumerError(err)
 	}
 	defer response.Body.Close()
 	contentType, _, err := mime.ParseMediaType(response.Header.Get("Content-Type"))
 	if err != nil || contentType != "image/png" || response.ContentLength > maximum {
-		return nil, "", ports.Failure("protocol", "unsupported print artifact response")
+		return nil, "", ports.Failure("protocol", "The print file response has an unsupported type or size. Check the job with the server administrator.")
 	}
 	body, err := io.ReadAll(io.LimitReader(response.Body, maximum+1))
 	if err != nil || int64(len(body)) > maximum {
-		return nil, "", ports.Failure("protocol", "print artifact exceeds its byte limit or was interrupted")
+		return nil, "", ports.Failure("protocol", "The print file download failed or exceeded its size limit. Check the connection and job details.")
 	}
 	return body, contentType, nil
 }

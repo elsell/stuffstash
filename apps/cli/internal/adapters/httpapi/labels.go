@@ -32,14 +32,14 @@ func (c *Client) ResolveLabel(ctx context.Context, ref labels.Reference) (ports.
 		return ports.Result[ports.ResolvedLabel]{}, err
 	}
 	if instance.Data.ProtocolVersion != 1 || instance.Data.InstanceId != ref.Instance {
-		return ports.Result[ports.ResolvedLabel]{}, ports.Failure("not_found", "label does not belong to this instance")
+		return ports.Result[ports.ResolvedLabel]{}, ports.Failure("not_found", "This server cannot resolve the label reference. Check that you selected the server that issued the label.")
 	}
 	r, err := read[generated.SuccessEnvelopeLabelResponse](c.sdk.GetLabelsV1ByInstanceIdByLabelId(ctx, ref.Instance, ref.Label, nil))
 	if err != nil {
 		return ports.Result[ports.ResolvedLabel]{}, err
 	}
 	if r.Data.InstanceId != ref.Instance || r.Data.LabelId != ref.Label {
-		return ports.Result[ports.ResolvedLabel]{}, ports.Failure("protocol", "label identity did not match")
+		return ports.Result[ports.ResolvedLabel]{}, ports.Failure("protocol", "The server returned a different label. Do not use this response. Contact the server administrator.")
 	}
 	return labelResult(r), nil
 }
@@ -72,7 +72,7 @@ func (c *Client) RenderLabel(ctx context.Context, s ports.Scope, asset string, s
 		var err error
 		body, err = json.Marshal(labelRenderBody{Media: selection.Media, Format: selection.Format, Template: labelRenderTemplate{ID: selection.TemplateID, Version: selection.TemplateVersion, Options: ports.LabelTemplateDefaults{ShowReference: selection.ShowReference}}})
 		if err != nil {
-			return ports.LabelArtifact{}, ports.Failure("input", "The render selection could not be encoded.")
+			return ports.LabelArtifact{}, ports.Failure("input", "Could not prepare the label settings. Check the selected media, template, and format.")
 		}
 	}
 	if _, err := read[generated.SuccessEnvelopeLabelResponse](c.sdk.PostTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdLabel(ctx, s.Tenant, s.Inventory, asset, nil)); err != nil {
@@ -89,33 +89,33 @@ func (c *Client) RenderLabel(ctx context.Context, s ports.Scope, asset string, s
 		signature = []byte("%PDF-")
 	}
 	if rendered.Data.ContentType != expectedType {
-		return ports.LabelArtifact{}, ports.Failure("protocol", "unexpected label format")
+		return ports.LabelArtifact{}, ports.Failure("protocol", "The server returned a different label format. Contact the server administrator.")
 	}
 	response, err := c.sdk.ListTenantsByTenantIdInventoriesByInventoryIdLabelRendersByRenderIdContent(ctx, s.Tenant, s.Inventory, rendered.Data.ID, nil)
 	if err != nil {
-		return ports.LabelArtifact{}, ports.Failure("network", "label download failed")
+		return ports.LabelArtifact{}, ports.Failure("network", "Could not download the label file. Check your connection to the server.")
 	}
 	if response.StatusCode != 200 {
 		_, err = read[struct{}](response, nil)
 		if err == nil {
-			err = ports.Failure("protocol", "unexpected label response")
+			err = ports.Failure("protocol", "The server did not return the requested label file. Contact the server administrator.")
 		}
 		return ports.LabelArtifact{}, err
 	}
 	defer response.Body.Close()
 	contentType, _, err := mime.ParseMediaType(response.Header.Get("Content-Type"))
 	if err != nil || contentType != expectedType {
-		return ports.LabelArtifact{}, ports.Failure("protocol", "unexpected label content type")
+		return ports.LabelArtifact{}, ports.Failure("protocol", "The downloaded label has an unexpected file type. Contact the server administrator.")
 	}
 	const maximumBytes = 16 << 20
 	content, err := io.ReadAll(io.LimitReader(response.Body, maximumBytes+1))
 	if err != nil {
-		return ports.LabelArtifact{}, ports.Failure("network", "label download interrupted")
+		return ports.LabelArtifact{}, ports.Failure("network", "The label download stopped before it finished. Check your connection to the server.")
 	}
 	digest := sha256.Sum256(content)
 	checksum := hex.EncodeToString(digest[:])
 	if len(content) > maximumBytes || !bytes.HasPrefix(content, signature) || !strings.EqualFold(checksum, rendered.Data.SHA256) {
-		return ports.LabelArtifact{}, ports.Failure("protocol", "label content integrity check failed")
+		return ports.LabelArtifact{}, ports.Failure("protocol", "The downloaded label failed validation. Do not use the file. Contact the server administrator.")
 	}
 	return ports.LabelArtifact{Content: content, Format: selection.Format, SHA256: checksum, Render: ports.Result[ports.LabelRenderMetadata]{Data: rendered.Data, Schema: rendered.Schema, Meta: metadata(rendered.Meta)}}, nil
 }

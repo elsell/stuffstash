@@ -31,7 +31,7 @@ func (c *Client) Printers(ctx context.Context) ([]printing.RegisteredPrinter, er
 	printers := make([]printing.RegisteredPrinter, 0, len(result.Data))
 	for _, value := range result.Data {
 		if value.BindingGeneration <= 0 || value.Printer.ID == "" || value.DeviceID == "" {
-			return nil, ports.Failure("protocol", "invalid registered printer response")
+			return nil, ports.Failure("protocol", "The server returned invalid printer details. Check the printer settings with the server administrator.")
 		}
 		printers = append(printers, printing.RegisteredPrinter{ID: value.Printer.ID, AdapterID: value.Printer.AdapterID, DeviceID: value.DeviceID, MediaFingerprint: value.Printer.MediaFingerprint, BindingGeneration: value.BindingGeneration, Retired: value.Printer.Retired, Media: consumerMedia(value.Printer.Media.ConsumerMedia)})
 	}
@@ -81,7 +81,7 @@ func connectorReport(report *printing.ConnectorReport) (*ports.PrintConnectorRep
 		media := []ports.PrintConnectorMedia{}
 		for _, v := range a.ContractVersions {
 			if v < 0 || uint64(v) > math.MaxUint32 {
-				return nil, ports.Failure("configuration", "Print adapter contract version exceeds the uint32 range.")
+				return nil, ports.Failure("configuration", "The print adapter version is outside the supported range. Contact the connector administrator.")
 			}
 			versions = append(versions, uint32(v))
 		}

@@ -99,7 +99,7 @@ func (w *Worker) Step(ctx context.Context, journal ports.LockedPrintState, print
 func (w *Worker) callContext(ctx context.Context, expires time.Time) (context.Context, context.CancelFunc, error) {
 	remaining := expires.Sub(w.Clock.Now()) - w.Config.LeaseSafety
 	if remaining <= 0 {
-		return nil, nil, ports.Failure("lease_expired", "print lease is not current; no output was started")
+		return nil, nil, ports.Failure("lease_expired", "The print lease is no longer safe to use. Inspect the print job and printer before further action.")
 	}
 	next, cancel := context.WithTimeout(ctx, remaining)
 	return next, cancel, nil

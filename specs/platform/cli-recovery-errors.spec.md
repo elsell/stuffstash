@@ -10,6 +10,28 @@ CLI errors explain the failed operation and a concrete next action when known. T
 
 Authored guidance uses short sentences and direct instructions consistent with the CLI's ASD-STE100 writing goal. This bounded review is not a complete dictionary audit or certification.
 
+The available-reference review applies clear, complete sentences, active voice,
+one recovery instruction per sentence, and consistent technical names. Prefer
+instructions of at most 20 words. Preserve literal command and flag spelling.
+Review a message in its failure context: do not invent a cause, promise a safe
+retry after an uncertain mutation, or tell a user to repeat a physical print.
+Sign-in failures identify the sign-in step and give an available recovery action;
+invalid provider responses direct persistent failures to the server administrator.
+Print protocol failures direct users to inspect the job or connection before
+retrying. Error categories, exit codes, security checks, and redaction remain
+unchanged. This review uses the publicly available STE writing-rule summary;
+full Issue 9 dictionary and grammar conformance remains a separate unverified
+requirement, not a claim made by these copy changes.
+
+A lease timeout can occur after physical print submission. Its shared error must
+not claim that no output started. It must tell the user to inspect the job and
+printer before any retry. Critical verification expires the lease after a device
+submission and preserves the uncertain outcome and journal without a second
+submission. The safety margin can stop work before the nominal expiry, so the
+message must not assert that the lease has already expired.
+
+Reference: [Simplified Technical English writing rules](https://en.wikipedia.org/wiki/Simplified_Technical_English#Writing_rules).
+
 Critical verification covers classification of context read/save failures, distinct credential type/permission errors with unchanged rejection, and existing label destinations remaining intact. Existing authentication, file security, and CLI tests remain required. Do not add copy-only tests for every reworded message.
 
 Streaming input guidance must be valid for both `--file` transfers and `--input`

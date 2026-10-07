@@ -16,12 +16,12 @@ func validateLabelCommand(o Options) error { return validateLabelCommandOptions(
 func validateLabelCommandOptions(o Options, requireScope bool) error {
 	if o.Command[1] == "resolve" && len(o.Command) == 3 {
 		if _, err := labels.Parse(o.Command[2]); err != nil {
-			return ports.Failure("usage", "invalid or unsupported label link")
+			return ports.Failure("usage", "This label link is not supported. Scan a Stuff Stash label or copy its complete link.")
 		}
 		return nil
 	}
 	if requireScope && (o.Scope.Tenant == "" || o.Scope.Inventory == "") {
-		return ports.Failure("usage", "label commands require --tenant and --inventory")
+		return ports.Failure("usage", "Choose a household and inventory. Use --tenant and --inventory, or choose a saved context.")
 	}
 	if (o.Command[1] == "show" || o.Command[1] == "assign") && len(o.Command) == 3 && o.Command[2] != "" {
 		if o.IdempotencyKey != "" || o.Page.Cursor != "" || o.Title != "" || o.Kind != "" || o.Parent != "" || o.ConnectorName != "" {
@@ -33,14 +33,14 @@ func validateLabelCommandOptions(o Options, requireScope bool) error {
 		return nil
 	}
 	if o.Command[1] != "render" || len(o.Command) != 3 || o.OutputPath == "" || o.OutputPath == "-" || (o.Format != "png" && o.Format != "pdf") {
-		return ports.Failure("usage", "use labels render ASSET --format png|pdf --output PATH")
+		return ports.Failure("usage", "Use labels render ASSET --format png|pdf --output PATH. Set --output to a file path. Label rendering does not support --output -.")
 	}
 	dimensions := o.WidthMM != 0 || o.HeightMM != 0
 	if dimensions && (o.WidthMM <= 0 || o.HeightMM <= 0 || math.IsNaN(o.WidthMM) || math.IsNaN(o.HeightMM) || math.IsInf(o.WidthMM, 0) || math.IsInf(o.HeightMM, 0)) {
-		return ports.Failure("usage", "label dimensions must both be positive finite millimeters")
+		return ports.Failure("usage", "Set both --width-mm and --height-mm to positive, finite numbers in millimeters.")
 	}
 	if (o.PrinterID != "" && (o.MediaPreset != "" || dimensions)) || (o.MediaPreset != "" && dimensions) {
-		return ports.Failure("usage", "choose one media selector: --printer, --media-preset, or dimensions")
+		return ports.Failure("usage", "Choose one label size source: --printer, --media-preset, or both dimensions. Remove the other size options.")
 	}
 	return nil
 }
@@ -55,7 +55,7 @@ func executeLabels(ctx context.Context, api ports.LabelsAPI, files ports.LabelFi
 	case "resolve":
 		ref, err := labels.Parse(o.Command[2])
 		if err != nil {
-			return nil, ports.Failure("usage", "invalid label link")
+			return nil, ports.Failure("usage", "This label link is not valid. Scan the label again or copy its complete link.")
 		}
 		return api.ResolveLabel(ctx, ref)
 	}

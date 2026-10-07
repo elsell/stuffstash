@@ -453,19 +453,19 @@ func validateCommandOptions(o Options, requireScope bool) error {
 		return nil
 	}
 	if len(o.Command) < 2 {
-		return ports.Failure("usage", "expected inventories list or assets <action>")
+		return ports.Failure("usage", "The command is incomplete. Run stuffstash --help to choose a command.")
 	}
 	if requireScope && o.Scope.Tenant == "" {
-		return ports.Failure("usage", "choose a tenant with --tenant or STUFF_STASH_CLI_TENANT")
+		return ports.Failure("usage", "Choose a household with --tenant or STUFF_STASH_CLI_TENANT.")
 	}
 	if o.Command[0] == "inventories" && o.Command[1] == "list" && len(o.Command) == 2 {
 		return nil
 	}
 	if o.Command[0] != "assets" {
-		return ports.Failure("usage", "unknown command; use --help")
+		return ports.Failure("usage", "The command is not recognized. Run stuffstash --help to choose a command.")
 	}
 	if requireScope && o.Scope.Inventory == "" {
-		return ports.Failure("usage", "choose an inventory with --inventory or STUFF_STASH_CLI_INVENTORY")
+		return ports.Failure("usage", "Choose an inventory with --inventory or STUFF_STASH_CLI_INVENTORY.")
 	}
 	switch o.Command[1] {
 	case "list", "checked-out", "expiration":
@@ -493,7 +493,7 @@ func validateCommandOptions(o Options, requireScope bool) error {
 			return nil
 		}
 	}
-	return ports.Failure("usage", "invalid asset command arguments; use --help")
+	return ports.Failure("usage", "The asset command arguments are not valid. Run stuffstash assets --help for the command options.")
 }
 func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 	if len(o.Command) < 2 || (o.Command[0] != "assets" && !(o.Command[0] == "inventories" && o.Command[1] == "list")) {
