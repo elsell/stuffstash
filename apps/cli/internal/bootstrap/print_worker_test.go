@@ -65,7 +65,7 @@ func TestForegroundWorkerUsesSeparateCredentialAndStopsOnRevocation(t *testing.T
 	defer cancel()
 	var out, errors bytes.Buffer
 	code := Run(ctx, []string{"connectors", "print", "run", "--connector", "connector"}, func(key string) string { return env[key] }, &out, &errors)
-	if code != 1 || !strings.Contains(errors.String(), "pair this connector again") {
+	if code != 1 || !strings.Contains(errors.String(), "Pair this connector again") {
 		t.Fatalf("revoked connector did not terminate clearly: %d %s", code, errors.String())
 	}
 	peer.mu.Lock()

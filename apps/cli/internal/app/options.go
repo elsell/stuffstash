@@ -57,7 +57,7 @@ func Parse(args []string, getenv func(string) string) (Options, error) {
 	if raw := getenv("STUFF_STASH_CLI_ALLOW_LOOPBACK_HTTP"); raw != "" {
 		v, err := strconv.ParseBool(raw)
 		if err != nil {
-			return o, ports.Failure("configuration", "invalid STUFF_STASH_CLI_ALLOW_LOOPBACK_HTTP")
+			return o, ports.Failure("configuration", "Set STUFF_STASH_CLI_ALLOW_LOOPBACK_HTTP to true or false. Remove the variable to use the default.")
 		}
 		o.AllowLoopbackHTTP = v
 	}

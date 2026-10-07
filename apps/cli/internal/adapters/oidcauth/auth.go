@@ -52,14 +52,14 @@ func (a Adapter) provider(ctx context.Context, issuer, clientID string) (context
 	}
 	var extra endpoints
 	if provider.Claims(&extra) != nil {
-		return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "invalid OIDC metadata")
+		return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "The sign-in provider returned invalid settings. Ask the server administrator to check the OIDC configuration.")
 	}
 	endpoint := provider.Endpoint()
 	endpoint.DeviceAuthURL = extra.Device
 	endpoint.AuthStyle = oauth2.AuthStyleInParams
 	for _, endpointURL := range []string{endpoint.AuthURL, endpoint.TokenURL, extra.JWKS, extra.Device} {
 		if endpointURL != "" && ValidateURL(endpointURL, a.AllowLoopbackHTTP) != nil {
-			return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "OIDC metadata contains an insecure endpoint")
+			return ctx, nil, oauth2.Config{}, ports.Failure("authentication", "The sign-in provider returned an unsupported address. Ask the server administrator to check the provider URLs. Use HTTPS URLs without credentials, query parameters, or fragments.")
 		}
 	}
 	return ctx, provider, oauth2.Config{ClientID: clientID, Endpoint: endpoint}, nil
@@ -70,7 +70,7 @@ func (a Adapter) Login(ctx context.Context, server string, c ports.AuthConfig, d
 		method = "device_code"
 	}
 	if !slices.Contains(c.LoginMethods, method) {
-		return ports.Session{}, ports.Failure("unsupported", "requested login method is unavailable; check the CLI client configuration")
+		return ports.Session{}, ports.Failure("unsupported", "The server does not support this sign-in method. Ask the server administrator which CLI sign-in methods are available.")
 	}
 	ctx, provider, config, err := a.provider(ctx, c.Issuer, c.ClientID)
 	if err != nil {
@@ -78,7 +78,7 @@ func (a Adapter) Login(ctx context.Context, server string, c ports.AuthConfig, d
 	}
 	config.Scopes = c.Scopes
 	if !slices.Contains(c.Scopes, "openid") {
-		return ports.Session{}, ports.Failure("configuration", "CLI login requires the openid scope")
+		return ports.Session{}, ports.Failure("configuration", "The server sign-in settings omit the openid scope. Ask the server administrator to add it to the CLI scopes.")
 	}
 	var token *oauth2.Token
 	nonce := ""
@@ -95,11 +95,11 @@ func (a Adapter) Login(ctx context.Context, server string, c ports.AuthConfig, d
 func (a Adapter) session(ctx context.Context, p *oidc.Provider, clientID, server string, token *oauth2.Token, nonce string) (ports.Session, error) {
 	raw, _ := token.Extra("id_token").(string)
 	if raw == "" {
-		return ports.Session{}, ports.Failure("authentication", "provider did not return an OIDC ID token; configure openid support for this grant")
+		return ports.Session{}, ports.Failure("authentication", "The sign-in provider did not return an ID token. Ask the server administrator to check OpenID Connect support.")
 	}
 	verified, err := p.Verifier(&oidc.Config{ClientID: clientID, Now: a.Clock.Now}).Verify(ctx, raw)
 	if err != nil || verified.Subject == "" || nonce != "" && verified.Nonce != nonce {
-		return ports.Session{}, ports.Failure("authentication", "provider identity token failed verification")
+		return ports.Session{}, ports.Failure("authentication", "Cannot verify the identity returned by the sign-in provider. Run stuffstash login again. If the error continues, contact the server administrator.")
 	}
 	return ports.Session{Server: server, Issuer: verified.Issuer, Subject: verified.Subject, ClientID: clientID, IDToken: raw, RefreshToken: token.RefreshToken, ExpiresAt: verified.Expiry}, nil
 }
@@ -113,11 +113,11 @@ func (a Adapter) Refresh(ctx context.Context, s ports.Session) (ports.Session, e
 	}
 	token, err := config.TokenSource(ctx, &oauth2.Token{RefreshToken: s.RefreshToken, Expiry: time.Unix(1, 0)}).Token()
 	if err != nil {
-		return ports.Session{}, ports.Failure("authentication", "session refresh failed; log in again")
+		return ports.Session{}, ports.Failure("authentication", "Cannot renew your sign-in session. Run stuffstash login again.")
 	}
 	result, err := a.session(ctx, p, s.ClientID, s.Server, token, "")
 	if err == nil && (result.Issuer != s.Issuer || s.Subject != "" && result.Subject != s.Subject) {
-		return ports.Session{}, ports.Failure("authentication", "The account changed during sign-in renewal. Log in again.")
+		return ports.Session{}, ports.Failure("authentication", "The account changed during sign-in renewal. Run stuffstash login to choose the correct account.")
 	}
 	if err == nil && result.RefreshToken == "" {
 		result.RefreshToken = s.RefreshToken
@@ -126,15 +126,15 @@ func (a Adapter) Refresh(ctx context.Context, s ports.Session) (ports.Session, e
 }
 func (a Adapter) device(ctx context.Context, c oauth2.Config) (*oauth2.Token, error) {
 	if c.Endpoint.DeviceAuthURL == "" {
-		return nil, ports.Failure("unsupported", "provider does not advertise device authorization; use browser login where available")
+		return nil, ports.Failure("unsupported", "The sign-in provider does not support device codes. Run stuffstash login on a computer with a browser.")
 	}
 	response, err := c.DeviceAuth(ctx)
 	if err != nil {
-		return nil, ports.Failure("authentication", "could not begin device authorization")
+		return nil, ports.Failure("authentication", "Cannot start device sign-in. Check your connection. Run stuffstash login --device-code again.")
 	}
 	defer func() { response.DeviceCode = "" }()
 	if response.DeviceCode == "" || response.UserCode == "" || !response.Expiry.After(a.Clock.Now()) || ValidateURL(response.VerificationURI, a.AllowLoopbackHTTP) != nil {
-		return nil, ports.Failure("authentication", "invalid device authorization response")
+		return nil, ports.Failure("authentication", "The sign-in provider returned an invalid device code response. Ask the server administrator to check device sign-in support.")
 	}
 	if err := a.Output.Notice("Open " + response.VerificationURI + " and enter code " + response.UserCode); err != nil {
 		return nil, err
@@ -147,26 +147,26 @@ func (a Adapter) device(ctx context.Context, c oauth2.Config) (*oauth2.Token, er
 			return token, nil
 		}
 		if ctx.Err() != nil {
-			return nil, ports.Failure("authentication", "device authorization expired or was cancelled")
+			return nil, ports.Failure("authentication", "Device sign-in expired or stopped. Run stuffstash login --device-code to get a new code.")
 		}
 		var rejection *oauth2.RetrieveError
 		if errors.As(err, &rejection) {
 			switch rejection.ErrorCode {
 			case "access_denied":
-				return nil, ports.Failure("authentication", "device authorization denied")
+				return nil, ports.Failure("authentication", "The sign-in provider did not approve device access. Run stuffstash login --device-code if you want to try again.")
 			case "expired_token":
-				return nil, ports.Failure("authentication", "device authorization expired")
+				return nil, ports.Failure("authentication", "The device sign-in code expired. Run stuffstash login --device-code to get a new code.")
 			}
-			return nil, ports.Failure("authentication", "device authorization failed")
+			return nil, ports.Failure("authentication", "Cannot complete device sign-in. Run stuffstash login --device-code again. If the error continues, contact the server administrator.")
 		}
 		timer := time.NewTimer(time.Duration(attempt+1) * time.Second)
 		select {
 		case <-ctx.Done():
 			timer.Stop()
-			return nil, ports.Failure("authentication", "device authorization cancelled")
+			return nil, ports.Failure("authentication", "Device sign-in stopped. Run stuffstash login --device-code when you are ready.")
 		case <-timer.C:
 		}
 	}
-	return nil, ports.Failure("network", "device authorization connection failed; retry login")
+	return nil, ports.Failure("network", "Cannot connect to the device sign-in provider. Check your connection. Run stuffstash login --device-code again.")
 }
 func CanonicalServer(raw string) string { return strings.TrimRight(raw, "/") }
