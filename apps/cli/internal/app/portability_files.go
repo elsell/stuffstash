@@ -26,7 +26,7 @@ func (r Runner) readImportFile(ctx context.Context, path string, limit int64) ([
 		return nil, ports.Failure("input", "The CLI cannot read the import input. Examine the file or pipe and try again.")
 	}
 	if int64(len(data)) > limit {
-		return nil, ports.Failure("input", "Import input exceeds its supported limit: 10 MiB for CSV, 16 MiB for JSON.")
+		return nil, ports.Failure("input", "The import input is more than the supported size. Use a maximum of 10 MiB for CSV or 16 MiB for JSON.")
 	}
 	return data, nil
 }

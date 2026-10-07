@@ -59,7 +59,7 @@ func decodeEvaluationWrite(body []byte, target any) error {
 	decoder := json.NewDecoder(bytes.NewReader(body))
 	decoder.DisallowUnknownFields()
 	if !json.Valid(body) || decoder.Decode(target) != nil {
-		return ports.Failure("usage", "Evaluation input has unknown fields or incorrect field types. Use the request shape shown by this command's --help.")
+		return ports.Failure("usage", "The evaluation input has unknown fields or incorrect field types. Use the request fields shown by this command's --help.")
 	}
 	return nil
 }

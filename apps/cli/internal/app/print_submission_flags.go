@@ -33,7 +33,7 @@ func validatePrintSubmissionFlags(flags *flag.FlagSet, o Options) error {
 				return
 			}
 			if (f.Name == "printer" && o.PrinterID == "") || (f.Name == "template" && o.TemplateID == "") || (f.Name == "expected-media-fingerprint" && o.ExpectedMediaFingerprint == "") {
-				problem = ports.Failure("usage", "Supply a nonempty value for --"+f.Name+" or remove the option.")
+				problem = ports.Failure("usage", "Supply a value that is not empty for --"+f.Name+" or remove the option.")
 			}
 		default:
 			problem = ports.Failure("usage", "Print submission does not accept --"+f.Name+". Remove the option.")

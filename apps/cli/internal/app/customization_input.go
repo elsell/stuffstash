@@ -29,7 +29,7 @@ func decodeDefinitionInput(body []byte, v any) error {
 	d := json.NewDecoder(bytes.NewReader(body))
 	d.DisallowUnknownFields()
 	if err := d.Decode(v); err != nil {
-		return ports.Failure("usage", "Definition JSON has unknown fields or incorrect types. Use the request fields shown by this command's --help.")
+		return ports.Failure("usage", "The definition JSON has unknown fields or incorrect types. Use the request fields shown by this command's --help.")
 	}
 	return nil
 }
@@ -67,7 +67,7 @@ func (r Runner) prepareCustomization(ctx context.Context, o Options) (Options, e
 			return o, err
 		}
 		if create && (!nonemptyDefinition(v.Key) || !nonemptyDefinition(v.DisplayName)) {
-			return o, ports.Failure("usage", "Creating an asset type requires key and displayName. Supply --key and --name, or --input FILE|-.")
+			return o, ports.Failure("usage", "Supply key and displayName to create an asset type. Use --key and --name, or --input FILE|-.")
 		}
 		if !create {
 			var keys map[string]json.RawMessage
@@ -82,7 +82,7 @@ func (r Runner) prepareCustomization(ctx context.Context, o Options) (Options, e
 			return o, err
 		}
 		if create && (!nonemptyDefinition(v.Key) || !nonemptyDefinition(v.DisplayName) || !nonemptyDefinition(v.Type)) {
-			return o, ports.Failure("usage", "Creating a field requires key, displayName, and type. Supply --key, --name and --field-type, or --input FILE|-.")
+			return o, ports.Failure("usage", "Supply key, displayName, and type to create a field. Use --key, --name and --field-type, or --input FILE|-.")
 		}
 		if create && !validFieldType(*v.Type) {
 			return o, ports.Failure("usage", "Select field type text, number, boolean, date, url, or enum.")
@@ -136,7 +136,7 @@ func (r Runner) guideDefinition(ctx context.Context, o *Options) error {
 }
 func (r Runner) guideEnumOptions(ctx context.Context, o Options) ([]string, error) {
 	if r.TextInput == nil || o.JSON || o.NoInput {
-		return nil, ports.Failure("usage", "An enum field needs options. Supply --input FILE|- with enumOptions as an array of strings.")
+		return nil, ports.Failure("usage", "Supply the enum field options. Use --input FILE|- with enumOptions as an array of strings.")
 	}
 	var options []string
 	for {

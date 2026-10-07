@@ -36,7 +36,7 @@ func (c *Client) ChangeCheckout(ctx context.Context, s ports.Scope, id, checkout
 	case ports.UpdateReturnDetails:
 		response, err = c.sdk.PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdCheckoutsByCheckoutIdReturnDetailsWithBody(ctx, s.Tenant, s.Inventory, id, checkoutID, nil, "application/json", bytes.NewReader(body))
 	default:
-		return ports.Result[ports.Checkout]{}, ports.Failure("usage", "Unknown checkout action. Use --help to select a command.")
+		return ports.Result[ports.Checkout]{}, ports.Failure("usage", "The checkout action is not available. Use --help to select a command.")
 	}
 	r, err := read[generated.SuccessEnvelopeAssetCheckoutResponse](response, err)
 	if err != nil {

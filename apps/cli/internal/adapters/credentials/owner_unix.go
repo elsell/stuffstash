@@ -3,15 +3,16 @@
 package credentials
 
 import (
-	"errors"
 	"os"
 	"syscall"
+
+	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 )
 
 func checkOwner(info os.FileInfo) error {
 	s, ok := info.Sys().(*syscall.Stat_t)
 	if !ok || s.Uid != uint32(os.Geteuid()) {
-		return errors.New("credential storage must belong to the current user")
+		return ports.Failure("configuration", "The credential storage must belong to your account. Select a private path that your account owns.")
 	}
 	return nil
 }

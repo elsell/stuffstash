@@ -18,7 +18,7 @@ func validateNotificationDevices(o Options, scope bool) error {
 		return ports.Failure("usage", "Use --revision with notification-devices remove.")
 	}
 	if o.Revision != -1 && o.Revision < 1 {
-		return ports.Failure("usage", "The revision must be positive. Use the device revision from notification-devices show.")
+		return ports.Failure("usage", "Supply a revision greater than zero. Run notification-devices show INSTALLATION_ID to get the device revision.")
 	}
 	if o.IdempotencyKey != "" || o.ConnectorName != "" || o.Title != "" || o.Kind != "" || o.Parent != "" || o.Page.Cursor != "" {
 		return ports.Failure("usage", "Device commands do not accept asset fields, cursors, or retry keys. Remove those options.")
@@ -70,7 +70,7 @@ func (r Runner) notificationDevicesCommand(ctx context.Context, o Options, token
 	if err != nil {
 		var failure *ports.Error
 		if errors.As(err, &failure) && failure.Category == "conflict" {
-			return ports.Failure("conflict", "The device registration changed. Run notification-devices show INSTALLATION_ID and review the current revision before you try again.")
+			return ports.Failure("conflict", "The device registration changed. Run notification-devices show INSTALLATION_ID. Examine the revision before you try again.")
 		}
 		return err
 	}

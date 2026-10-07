@@ -23,7 +23,7 @@ func validateEvaluation(o Options, scope bool) error {
 		valid = true
 	}
 	if !valid {
-		return ports.Failure("usage", "Use evaluation cases|runs create, list or show ID; evaluation runs cancel RUN_ID; or evaluation revisions create CASE_ID, list CASE_ID or show CASE_ID REVISION_ID.")
+		return ports.Failure("usage", "Run evaluation --help for the case, run, and revision commands and their IDs.")
 	}
 	if scope && o.Scope.Tenant == "" {
 		return ports.Failure("usage", "Supply --tenant, or select a saved household context.")

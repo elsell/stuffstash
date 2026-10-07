@@ -74,13 +74,13 @@ func decodePairing(body []byte, target any) error {
 	d := json.NewDecoder(bytes.NewReader(body))
 	d.DisallowUnknownFields()
 	if !json.Valid(body) || d.Decode(target) != nil {
-		return ports.Failure("usage", "Pairing input has unknown fields or incorrect field types. Use the request shape in --help.")
+		return ports.Failure("usage", "The pairing input has unknown fields or incorrect field types. Use the request fields in --help.")
 	}
 	return nil
 }
 func pairingScopeMatches(o Options, v pairingReviewInput) error {
 	if o.Scope.Tenant != "" && v.TenantID != o.Scope.Tenant || o.Scope.Inventory != "" && v.InventoryID != o.Scope.Inventory {
-		return ports.Failure("usage", "Pairing input scope differs from the selected household or inventory. Review the scope and correct the input.")
+		return ports.Failure("usage", "The pairing input scope does not match the selected household or inventory. Examine the scope and correct the input.")
 	}
 	return nil
 }
@@ -93,7 +93,7 @@ func readPairingInput(o Options) (pairingInput, error) {
 		}
 		v = pairingInput{Review: pairingReviewInput{Schema: input.Schema, UserCode: input.UserCode}, Generation: input.Generation, PairingID: input.PairingID}
 		if input.Generation == 0 || strings.TrimSpace(input.PairingID) == "" {
-			return v, ports.Failure("usage", "Rotation approval requires pairingId and a positive uint64 generation.")
+			return v, ports.Failure("usage", "Supply pairingId and a uint64 generation greater than zero for rotation approval.")
 		}
 	} else if o.Command[3] == "approve" {
 		var input pairingApprovalInput
@@ -113,11 +113,11 @@ func readPairingInput(o Options) (pairingInput, error) {
 		v.PairingID = o.Command[4]
 	}
 	if strings.TrimSpace(v.Review.UserCode) == "" {
-		return v, ports.Failure("usage", "Pairing input requires userCode. Use --input FILE|- or an interactive terminal.")
+		return v, ports.Failure("usage", "Supply userCode in the pairing input. Use --input FILE|- or an interactive terminal.")
 	}
 	if !rotationApproval(o) && o.InputPath != "" {
 		if strings.TrimSpace(v.Review.TenantID) == "" || strings.TrimSpace(v.Review.InventoryID) == "" {
-			return v, ports.Failure("usage", "Pairing input requires tenantId and inventoryId.")
+			return v, ports.Failure("usage", "Supply tenantId and inventoryId in the pairing input.")
 		}
 		if err := pairingScopeMatches(o, v.Review); err != nil {
 			return v, err
@@ -132,7 +132,7 @@ func validatePairingBindings(bindings []ports.PairingBinding) error {
 	candidates, printers := map[string]bool{}, map[string]bool{}
 	for _, b := range bindings {
 		if strings.TrimSpace(b.CandidateID) == "" || strings.TrimSpace(b.PrinterID) == "" || candidates[b.CandidateID] || printers[b.PrinterID] {
-			return ports.Failure("usage", "Each binding needs a unique candidateId and a unique printerId.")
+			return ports.Failure("usage", "Supply a different candidateId and printerId for each binding.")
 		}
 		candidates[b.CandidateID], printers[b.PrinterID] = true, true
 	}
@@ -161,7 +161,7 @@ func (r Runner) preparePairingApproval(ctx context.Context, o Options) (Options,
 			}
 			generation, err := strconv.ParseUint(raw, 10, 64)
 			if err != nil || generation == 0 {
-				return o, ports.Failure("usage", "Enter the exact positive connector generation from connectors print show.")
+				return o, ports.Failure("usage", "Run connectors print show "+strconv.Quote(o.Command[4])+" --server "+strconv.Quote(o.Server)+" --tenant "+strconv.Quote(o.Scope.Tenant)+" --inventory "+strconv.Quote(o.Scope.Inventory)+". Enter the generation shown in the result.")
 			}
 			o.RequestBody, _ = json.Marshal(pairingRotationInput{UserCode: code, PairingID: id, Generation: generation})
 		} else {
@@ -175,7 +175,7 @@ func (r Runner) preparePairingApproval(ctx context.Context, o Options) (Options,
 		return o, err
 	}
 	if o.Command[3] == "approve" && !o.Yes && (o.NoInput || o.JSON || r.Picker == nil) {
-		return o, ports.Failure("usage", "Approval needs confirmation. Review the pairing and add --yes.")
+		return o, ports.Failure("usage", "Examine the pairing. Add --yes to approve the pairing.")
 	}
 	return o, nil
 }

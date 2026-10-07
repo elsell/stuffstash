@@ -60,13 +60,13 @@ func (r ConsumerInspector) Run(ctx context.Context, o Options) error {
 		return err
 	}
 	if registration.Server != o.Server || registration.ConnectorID != o.ConnectorID || registration.TenantID == "" || registration.InventoryID == "" || registration.Credential == "" {
-		return ports.Failure("authentication", "Stored connector identity does not match. Select the registered server and connector.")
+		return ports.Failure("authentication", "The stored connector identity does not match. Select the registered server and connector.")
 	}
 	if (o.Scope.Tenant != "" && o.Scope.Tenant != registration.TenantID) || (o.Scope.Inventory != "" && o.Scope.Inventory != registration.InventoryID) {
 		return ports.Failure("usage", "Household or inventory scope conflicts with the stored connector. Remove the scope override or select the matching connector.")
 	}
 	if !registration.ExpiresAt.After(r.Clock.Now()) {
-		return ports.Failure("authentication", "Connector credential expired; pair this connector again.")
+		return ports.Failure("authentication", "The connector credential expired. Pair this connector again.")
 	}
 	api, err := r.API(registration.Server, registration.Credential)
 	if err != nil {

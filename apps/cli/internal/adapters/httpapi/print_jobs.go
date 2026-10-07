@@ -36,7 +36,7 @@ func (c *Client) Claim(ctx context.Context, printerID string, control printing.A
 		return nil, nil
 	}
 	if value.Artifact == nil || value.Media == nil || !value.LeaseValid || value.Status != "claimed" || value.Revision <= 0 {
-		return nil, ports.Failure("protocol", "The server returned invalid details for the claimed print job. Examine the job status before further action.")
+		return nil, ports.Failure("protocol", "The server returned details that are not correct for the claimed print job. Examine the job status before further action.")
 	}
 	artifact := value.Artifact
 	control.AttemptID = value.AttemptID
@@ -130,7 +130,7 @@ func (c *Client) Unsettled(ctx context.Context, printerID string) ([]printing.At
 			return result, nil
 		}
 		if pagination.NextCursor == nil || *pagination.NextCursor == "" || seen[*pagination.NextCursor] {
-			return nil, ports.Failure("protocol", "The server returned an invalid next page of print recovery results. Examine unresolved jobs with the server administrator.")
+			return nil, ports.Failure("protocol", "The server returned a next page of print recovery results that is not correct. Examine unresolved jobs with the server administrator.")
 		}
 		cursor = *pagination.NextCursor
 		seen[cursor] = true
@@ -138,7 +138,7 @@ func (c *Client) Unsettled(ctx context.Context, printerID string) ([]printing.At
 }
 func (c *Client) Artifact(ctx context.Context, control printing.AttemptControl, maximum int64) ([]byte, string, error) {
 	if maximum <= 0 || maximum >= 1<<30 {
-		return nil, "", ports.Failure("configuration", "The print file size limit is invalid. Use a limit from 1 through 1073741823 bytes.")
+		return nil, "", ports.Failure("configuration", "The print file size limit is outside the supported range. Use a limit from 1 through 1073741823 bytes.")
 	}
 	response, err := c.sdk.ListPrintConsumerClaimsByAttemptIdContent(ctx, control.AttemptID, &generated.ListPrintConsumerClaimsByAttemptIdContentParams{XPrintSessionID: control.SessionID, XPrintClaimToken: control.ClaimToken, XPrintRevision: 0}, func(_ context.Context, request *http.Request) error {
 		// The generated header parameter is signed; overwrite it before transport.

@@ -47,7 +47,7 @@ func isPrintingCommand(o Options) bool {
 func validatePrintingCommand(o Options) error { return validatePrintingCommandOptions(o, true) }
 func validatePrintingCommandOptions(o Options, requireScope bool) error {
 	if len(o.Command) < 2 || requireScope && (o.Scope.Tenant == "" || o.Scope.Inventory == "") {
-		return ports.Failure("usage", "printing requires --tenant and --inventory")
+		return ports.Failure("usage", "Supply --tenant and --inventory for the print command.")
 	}
 	n := len(o.Command)
 	switch o.Command[0] + " " + o.Command[1] {
@@ -64,7 +64,7 @@ func validatePrintingCommandOptions(o Options, requireScope bool) error {
 			return nil
 		}
 	}
-	return ports.Failure("usage", "invalid printing command; use --help")
+	return ports.Failure("usage", "The print command is not correct. Run stuffstash --help for the print commands.")
 }
 func executePrinting(ctx context.Context, api ports.HumanPrintingAPI, o Options) (any, error) {
 	switch o.Command[0] + " " + o.Command[1] {
@@ -108,5 +108,5 @@ func executePrinting(ctx context.Context, api ports.HumanPrintingAPI, o Options)
 	case "print-jobs reprint":
 		return api.Reprint(ctx, o.Scope, o.Command[2], selection, o.IdempotencyKey)
 	}
-	return nil, ports.Failure("usage", "unknown printing action")
+	return nil, ports.Failure("usage", "The print action is not available. Run stuffstash --help for the print commands.")
 }

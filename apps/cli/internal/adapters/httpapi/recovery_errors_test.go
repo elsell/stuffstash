@@ -19,8 +19,8 @@ func TestAPIRecoveryPreservesCategoriesAndHidesResponseBodies(t *testing.T) {
 		{400, "validation", "Examine the input"}, {422, "validation", "Examine the input"},
 		{401, "authentication", "stuffstash login"}, {403, "forbidden", "owner"},
 		{404, "not_found", "household and inventory"}, {409, "conflict", "current state"},
-		{429, "api", "Wait"}, {503, "unavailable", "before you repeat"}, {500, "api", "before you repeat"},
-		{200, "protocol", "before you repeat"},
+		{429, "api", "Wait"}, {503, "unavailable", "before you make the change again"}, {500, "api", "before you make the change again"},
+		{200, "protocol", "before you make the change again"},
 	}
 	for _, test := range cases {
 		t.Run(http.StatusText(test.status), func(t *testing.T) {
@@ -43,7 +43,7 @@ func TestAPIRecoveryPreservesCategoriesAndHidesResponseBodies(t *testing.T) {
 	api, _ := New(server.URL, "token", client)
 	_, err := api.ServerInfo(context.Background())
 	var failure *ports.Error
-	if !errors.As(err, &failure) || failure.Category != "network" || !strings.Contains(failure.Message, "server address") || !strings.Contains(failure.Message, "before you repeat") || strings.Contains(failure.Message, server.URL) {
+	if !errors.As(err, &failure) || failure.Category != "network" || !strings.Contains(failure.Message, "server address") || !strings.Contains(failure.Message, "before you make the change again") || strings.Contains(failure.Message, server.URL) {
 		t.Fatalf("network recovery: %v", err)
 	}
 }

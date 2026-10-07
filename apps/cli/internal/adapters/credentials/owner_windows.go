@@ -3,10 +3,11 @@
 package credentials
 
 import (
-	"errors"
 	"os"
+
+	"github.com/stuffstash/stuff-stash/cli/internal/ports"
 )
 
 func checkOwner(os.FileInfo) error {
-	return errors.New("file credentials are supported on Unix only; use the OS credential store on Windows")
+	return ports.Failure("configuration", "The CLI supports file credentials on Unix only. Use the OS credential store on Windows.")
 }

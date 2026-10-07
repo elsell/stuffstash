@@ -112,7 +112,7 @@ func (r Runner) printerAdministration(ctx context.Context, o Options, token stri
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "conflict":
-				return ports.Failure("conflict", "The server rejected the change. Run "+inspect+" and review its current state before you try again. Do not overwrite another user's change.")
+				return ports.Failure("conflict", "The server rejected the change. Run "+inspect+" before you try again. Examine the server state. Do not overwrite another user's change.")
 			case "network", "protocol", "unavailable", "api":
 				advice := "The result is unknown. Run " + inspect + " before you try again."
 				if isPrinterCreation(o) {

@@ -249,13 +249,13 @@ func exit(output ports.Output, err error) int {
 		output.Error("canceled", "The command was canceled. No further actions will run.")
 		return 130
 	}
-	category, message := "configuration", err.Error()
+	category, message := "configuration", fallbackErrorMessage(err)
 	var typed *ports.Error
 	if errors.As(err, &typed) {
 		category, message = typed.Category, typed.Message
 	}
 	if errors.Is(err, ports.ErrNotLoggedIn) {
-		category = "authentication"
+		category, message = "authentication", "Run stuffstash login to sign in."
 	}
 	output.Error(category, message)
 	if category == "usage" || category == "configuration" {

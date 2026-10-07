@@ -62,10 +62,17 @@ func (r Runner) uploadAttachment(ctx context.Context, o Options, token string) e
 		if started.Data.ExpiresAt != "" {
 			expires, e := time.Parse(time.RFC3339, started.Data.ExpiresAt)
 			if e != nil || !expires.After(r.Clock.Now()) {
-				return ports.Failure("protocol", "The upload instructions have expired or are invalid. Start a new upload.")
+				return ports.Failure("protocol", "The upload instructions are expired or not correct. Start a new upload.")
 			}
 		}
 		if err = r.UploadTransfer.Send(ctx, started.Data, file.FileName, file.ContentType, file.SizeBytes, file.Body); err != nil {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			var failure *ports.Error
+			if errors.As(err, &failure) && (failure.Category == "network" || failure.Category == "api") {
+				return ports.Failure(failure.Category, "The file transfer result is unknown. Run "+recoveryCommand+" before another upload. Do not try again automatically.")
+			}
 			return err
 		}
 		result, err = api.CompleteAttachmentUpload(ctx, o.Scope, o.Command[2], started.Data.UploadID)

@@ -30,7 +30,7 @@ func (Files) Publish(ctx context.Context, path string, content []byte) error {
 		err = file.Close()
 	}
 	if err != nil {
-		return ports.Failure("file", "The CLI cannot save the label file. Examine the available disk space and write access to the output directory. Then repeat the command.")
+		return ports.Failure("file", "The CLI cannot save the label file. Examine the available disk space and write access to the output directory. Then run the command again.")
 	}
 	if err = ctx.Err(); err != nil {
 		return err

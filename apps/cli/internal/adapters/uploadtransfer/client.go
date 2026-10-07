@@ -61,7 +61,7 @@ func (c Client) Send(ctx context.Context, in ports.DirectUpload, name, contentTy
 	tracked := &uploadBody{Reader: body, closed: make(chan struct{})}
 	request, err := http.NewRequestWithContext(ctx, in.Method, in.URL, tracked)
 	if err != nil {
-		return ports.Failure("protocol", "The upload address is invalid. Start a new upload.")
+		return ports.Failure("protocol", "The upload address is not correct. Start a new upload.")
 	}
 	request.ContentLength = length
 	for name, value := range in.Headers {
@@ -79,11 +79,11 @@ func (c Client) Send(ctx context.Context, in ports.DirectUpload, name, contentTy
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
-		return ports.Failure("network", "The file transfer failed. Examine the upload status before you try again.")
+		return ports.Failure("network", "The file transfer result is unknown.")
 	}
 	defer response.Body.Close()
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return ports.Failure("api", "Storage did not accept the file. Examine the upload status before you try again.")
+		return ports.Failure("api", "The file store did not accept the transfer.")
 	}
 	select {
 	case <-tracked.closed:
@@ -97,7 +97,7 @@ func (c Client) Send(ctx context.Context, in ports.DirectUpload, name, contentTy
 }
 func (c Client) validate(in ports.DirectUpload) error {
 	invalid := func() error {
-		return ports.Failure("protocol", "The storage upload instructions are invalid. Start a new upload.")
+		return ports.Failure("protocol", "The storage upload instructions are not correct. Start a new upload.")
 	}
 	u, err := url.Parse(in.URL)
 	if err != nil || u.Hostname() == "" || u.User != nil || u.Fragment != "" {

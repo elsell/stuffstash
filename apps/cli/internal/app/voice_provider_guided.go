@@ -47,7 +47,7 @@ func (r Runner) guideVoiceProvider(ctx context.Context, o Options, token string,
 						}
 					}
 					if v.Readiness == "invalid_selection" && (existing == nil || strings.TrimSpace(*existing) == "") {
-						return o, ports.Failure("usage", "The server did not return an unavailable explicit profile ID. Use --input FILE to specify all three intended choices; guided replacement cannot safely preserve the missing ID.")
+						return o, ports.Failure("usage", "The server omitted a selected profile ID. Supply all three selections with --input FILE. Guided setup cannot keep the omitted ID.")
 					}
 				}
 			}

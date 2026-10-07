@@ -36,7 +36,7 @@ func validateArchive(o Options, scoped bool) error {
 		return ports.Failure("usage", "Supply --file PATH or --file - with a ZIP stream.")
 	}
 	if c[1] == "download" && o.OutputPath == "-" && o.JSON {
-		return ports.Failure("usage", "Do not combine --output - with --json. Use a file path for JSON status or omit --json for binary stdout.")
+		return ports.Failure("usage", "Use --output PATH to save the ZIP file and --json for its status. For ZIP bytes on stdout, remove --json.")
 	}
 	if c[1] == "download" && o.OutputPath == "" {
 		return ports.Failure("usage", "Supply --output PATH or --output - for archive bytes.")

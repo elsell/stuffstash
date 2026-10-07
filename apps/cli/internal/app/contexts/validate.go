@@ -8,7 +8,7 @@ import (
 
 func Validate(config Config) error {
 	invalid := func() error {
-		return ports.Failure("configuration", "The context file is not valid. Check its version, context names and server addresses.")
+		return ports.Failure("configuration", "The context file is not correct. Examine its version, context names and server addresses.")
 	}
 	if config.Version != Version {
 		return invalid()

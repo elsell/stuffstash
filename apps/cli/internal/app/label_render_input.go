@@ -31,11 +31,11 @@ func labelRenderFlags(o Options, flags *flag.FlagSet) error {
 func renderFields(body []byte, required ...string) (map[string]json.RawMessage, error) {
 	var fields map[string]json.RawMessage
 	if json.Unmarshal(body, &fields) != nil || fields == nil {
-		return nil, ports.Failure("usage", "Render input requires JSON objects for media, margins, template and options.")
+		return nil, ports.Failure("usage", "Supply JSON objects for media, margins, template and options in the render input.")
 	}
 	for _, key := range required {
 		if raw, ok := fields[key]; !ok || bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
-			return nil, ports.Failure("usage", "Render input is missing a required field: "+key+". See labels render --help.")
+			return nil, ports.Failure("usage", "The render input is missing this field: "+key+". See labels render --help.")
 		}
 	}
 	return fields, nil
@@ -44,7 +44,7 @@ func decodeRenderObject(body []byte, target any) error {
 	d := json.NewDecoder(bytes.NewReader(body))
 	d.DisallowUnknownFields()
 	if !json.Valid(body) || d.Decode(target) != nil {
-		return ports.Failure("usage", "Render input has unknown fields, incorrect types or versions outside 0 through 4294967295. Use snake_case media and template option names.")
+		return ports.Failure("usage", "The render input has unknown fields, incorrect types, or versions outside 0 through 4294967295. Use snake_case media and template option names.")
 	}
 	return nil
 }
@@ -62,7 +62,7 @@ func prepareLabelRender(o Options) (Options, error) {
 		return o, err
 	}
 	if input.Format != "png" && input.Format != "pdf" {
-		return o, ports.Failure("usage", "Render input format must be png or pdf.")
+		return o, ports.Failure("usage", "Use png or pdf for the render input format.")
 	}
 	media, err := renderFields(input.Media, "width_micrometers", "height_micrometers", "margins_micrometers", "resolution_dpi", "raster_width", "raster_height", "orientation", "color_mode", "cut_policy", "display_rotation")
 	if err != nil {
@@ -77,7 +77,7 @@ func prepareLabelRender(o Options) (Options, error) {
 	}
 	for _, key := range []string{"preset_id", "version"} {
 		if raw, ok := media[key]; ok && bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
-			return o, ports.Failure("usage", "Optional media preset_id and version must have the declared type when present. Omit them instead of null.")
+			return o, ports.Failure("usage", "Supply the declared type for optional media preset_id and version fields. Omit them instead of null.")
 		}
 	}
 	template, err := renderFields(input.Template, "id", "version", "options")

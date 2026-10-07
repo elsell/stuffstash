@@ -76,5 +76,5 @@ func (s *protocolReceipts) write() {
 	}
 }
 func (s *protocolReceipts) warn() {
-	_ = s.output.Notice("Protocol receipt output failed or fell behind. Receipt output is disabled; do not repeat operations based on missing output.")
+	_ = s.output.Notice("The CLI could not write protocol receipts, or the receipt queue is full. The CLI stopped receipt output. Do not run operations again because receipts are missing.")
 }

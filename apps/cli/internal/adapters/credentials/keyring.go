@@ -51,5 +51,5 @@ func credentialStoreError(action string) error {
 	if runtime.GOOS != "windows" {
 		message += " You can also set STUFF_STASH_CLI_CREDENTIAL_FILE to a private file path before login."
 	}
-	return errors.New(message)
+	return ports.Failure("configuration", message)
 }

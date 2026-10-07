@@ -59,7 +59,7 @@ func (c *Client) ChangeDirectoryLifecycle(ctx context.Context, resource ports.Di
 	return ports.Result[ports.Inventory]{Data: inventory(r.Data), Schema: r.Schema, Meta: metadata(r.Meta)}, nil
 }
 func invalidLifecycle() error {
-	return ports.Failure("usage", "Unknown lifecycle action. Use --help to select a command.")
+	return ports.Failure("usage", "The lifecycle action is not available. Use --help to select a command.")
 }
 func noContent(response *http.Response, err error) error {
 	if err == nil && response.StatusCode == http.StatusNoContent {

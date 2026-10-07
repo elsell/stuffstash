@@ -15,7 +15,7 @@ func (r ConnectorRegistrar) Rotate(ctx context.Context, server, connectorID stri
 		return err
 	}
 	if prior.Server != server || prior.ConnectorID != connectorID || prior.TenantID == "" || prior.InventoryID == "" {
-		return ports.Failure("configuration", "stored connector identity does not match rotation target")
+		return ports.Failure("configuration", "The stored connector identity does not match the rotation target. Select the server and connector from the stored registration.")
 	}
 	return r.pair(ctx, server, connectorID, nil, &prior)
 }

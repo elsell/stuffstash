@@ -19,9 +19,9 @@ Sign-in failures identify the sign-in step and give an available recovery action
 invalid provider responses direct persistent failures to the server administrator.
 Print protocol failures direct users to inspect the job or connection before
 retrying. Error categories, exit codes, security checks, and redaction remain
-unchanged. This review uses the publicly available STE writing-rule summary;
-full Issue 9 dictionary and grammar conformance remains a separate unverified
-requirement, not a claim made by these copy changes.
+unchanged. The initial review used the public STE writing-rule summary. The final
+authored-error review below supersedes that limited reference review with the
+official Issue 9 rules and dictionary.
 
 A lease timeout can occur after physical print submission. Its shared error must
 not claim that no output started. It must tell the user to inspect the job and
@@ -109,3 +109,48 @@ configuration failures before credentials, network requests, or physical output.
 File adapter guidance uses complete sentences and approved ordinary verbs while
 preserving technical file operations, private publication, no-overwrite behavior,
 and error categories. A missing stdout writer directs users to --output PATH.
+
+## Direct-transfer recovery
+
+A storage transfer error must not direct users to a nonexistent upload-status
+command. The upload application boundary adds an executable attachment-list
+command with the effective server, household, inventory and asset. Preserve the
+storage adapter's network/API error category, hide upload credentials and response
+bodies, and explain that the transfer result is unknown. Do not claim that
+storage received no bytes. Never send upload completion after transfer failure,
+and never retry the transfer automatically. Cancellation and pre-transfer file
+validation retain their existing behavior.
+
+Critical verification covers a storage response lost after receiving the file and
+an explicit storage error response. Both must issue one transfer, no completion,
+no retry, and scoped recovery without secret disclosure. The existing lost
+completion-response case continues to issue exactly one completion request.
+
+## Final authored-error review
+
+Review every authored application, adapter and bootstrap diagnostic against the
+actual Issue 9 rules and dictionary. Exclude only messages demonstrably consumed
+as internal printer state rather than shown to users. Preserve literal command
+names and protocol values. Record the source scope and remaining exceptions.
+
+Shared connector pairing failures must direct registration callers to register
+and rotation callers to rotate the existing connector. Recovery for workflow and
+pairing commands must identify a supported read command; include known IDs and
+effective scope where required. Do not encourage credential replacement after an
+unknown activation result.
+
+Unknown option names are untrusted input and must not be copied into diagnostics.
+Give a complete usage error with the available help action. Registered option
+names can still appear in validation guidance, because the CLI owns those names.
+Unexpected untyped errors must not expose raw OS, writer or third-party strings.
+Preserve the existing fallback category and exit status for compatibility, but
+provide safe general recovery that does not invite blind mutation retries.
+Authentication-required and cancellation sentinels retain their specific guidance
+and exit semantics. Typed errors retain their category and reviewed message.
+Critical tests verify unknown option secret/control-character redaction and the
+fallback/sentinel boundary. Pairing tests verify rotation does not recommend a
+new registration after expiry or rejection.
+Known connector-registration and printer-recovery sentinels also retain specific
+safe instructions at the fallback boundary. Missing or corrupt print journals
+must never prompt deletion or a repeat print. Keep their existing fallback exit
+status; this change does not reclassify printer protocol outcomes.

@@ -15,7 +15,7 @@ func consumerMedia(value ports.ConsumerMedia) printing.Media {
 }
 func attemptStatus(value workerAttempt) (printing.AttemptStatus, error) {
 	if value.Revision <= 0 || value.AttemptID == "" || value.SessionID == "" || value.JobID == "" {
-		return printing.AttemptStatus{}, ports.Failure("protocol", "The server returned invalid print attempt details. Examine the job status before further action.")
+		return printing.AttemptStatus{}, ports.Failure("protocol", "The server returned print attempt details that are not correct. Examine the job status before further action.")
 	}
 	result := printing.AttemptStatus{AttemptID: value.AttemptID, SessionID: value.SessionID, JobID: value.JobID, Revision: value.Revision, LeaseExpiresAt: value.LeaseExpiresAt, Outcome: printing.Outcome(value.Outcome.Kind), CompletedCopies: int(value.Outcome.CompletedCopies)}
 	// Attempt settlement takes precedence over the parent job, which may already

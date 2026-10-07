@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,7 +31,7 @@ func (r ConnectorRegistrar) Register(ctx context.Context, server, name string, c
 
 func (r ConnectorRegistrar) pair(ctx context.Context, server, name string, candidates []ports.PairingCandidate, target *ports.ConnectorRegistration) error {
 	if strings.TrimSpace(name) == "" || (target == nil && len(candidates) == 0) {
-		return ports.Failure("usage", "registration needs --name and a discovered printer")
+		return ports.Failure("usage", "Supply --name and a discovered printer to register the connector.")
 	}
 	if r.Receipts != nil && r.ReceiptDrainTimeout <= 0 {
 		return ports.Failure("configuration", "Receipt drain timeout must be positive. Examine the CLI configuration.")
@@ -38,9 +39,14 @@ func (r ConnectorRegistrar) pair(ctx context.Context, server, name string, candi
 	if r.PollInterval <= 0 {
 		return ports.Failure("configuration", "pairing poll interval must be positive")
 	}
+	recovery := "connectors print register --name " + strconv.Quote(name)
+	if target != nil {
+		recovery = "connectors print rotate --connector " + strconv.Quote(target.ConnectorID)
+	}
+	recovery += " --server " + strconv.Quote(server)
 	key, err := r.Keys.NewKey()
 	if err != nil {
-		return ports.Failure("configuration", "could not create pairing key")
+		return ports.Failure("configuration", "The CLI could not create a pairing key. Examine the system security configuration before you try again.")
 	}
 	challenge, err := r.API.Start(ctx, ports.PairingRequest{Rotation: target != nil, Name: name, PublicKey: key.PublicKey(), Candidates: candidates})
 	if err != nil {
@@ -48,7 +54,7 @@ func (r ConnectorRegistrar) pair(ctx context.Context, server, name string, candi
 	}
 	verification, err := url.Parse(challenge.VerificationURL)
 	if err != nil || verification.Scheme != "https" || verification.Host == "" || verification.User != nil || verification.RawQuery != "" || verification.Fragment != "" || challenge.ID == "" || challenge.PollToken == "" || challenge.UserCode == "" || !challenge.ExpiresAt.After(r.Clock.Now()) {
-		return ports.Failure("protocol", "invalid pairing challenge")
+		return ports.Failure("protocol", "The server returned an incorrect pairing challenge. Examine the server configuration before you start pairing again.")
 	}
 	if target != nil {
 		query := verification.Query()
@@ -77,25 +83,25 @@ func (r ConnectorRegistrar) pair(ctx context.Context, server, name string, candi
 				return err
 			}
 			if registration.Server != server || registration.ConnectorID == "" || registration.TenantID == "" || registration.InventoryID == "" || registration.Credential == "" || registration.ActivationDeadline.IsZero() || !registration.ExpiresAt.After(r.Clock.Now()) {
-				return ports.Failure("protocol", "invalid connector registration")
+				return ports.Failure("protocol", "The server returned an incorrect connector registration. Examine the connector state before you start pairing again.")
 			}
 			if target != nil && (registration.Server != target.Server || registration.TenantID != target.TenantID || registration.InventoryID != target.InventoryID || registration.ConnectorID != target.ConnectorID) {
-				return ports.Failure("protocol", "rotation approval belongs to a different connector; existing credential preserved")
+				return ports.Failure("protocol", "The rotation approval belongs to a different connector. The CLI kept the existing credential. Examine the selected connector before you try again.")
 			}
 			if !registration.ActivationDeadline.After(r.Clock.Now()) {
 				if target != nil {
-					return ports.Failure("pairing", fmt.Sprintf("The activation deadline passed. The stored credential was not changed. Run connectors print rotate --connector %q again.", target.ConnectorID))
+					return ports.Failure("pairing", "The activation deadline passed. The stored credential was not changed. Run "+recovery+" to pair again.")
 				}
-				return ports.Failure("pairing", "The activation deadline passed. No credential was saved. Run connectors print register again.")
+				return ports.Failure("pairing", "The activation deadline passed. No credential was saved. Run "+recovery+" to pair again.")
 			}
 			if err := r.Credentials.Save(ctx, registration); err != nil {
 				return err
 			}
 			if !registration.ActivationDeadline.After(r.Clock.Now()) {
-				return ports.Failure("activation", fmt.Sprintf("The registration was saved, but the activation deadline passed. Run connectors print rotate --connector %q to pair again.", registration.ConnectorID))
+				return ports.Failure("activation", "The registration was saved, but the activation deadline passed. Run connectors print rotate --connector "+strconv.Quote(registration.ConnectorID)+" --server "+strconv.Quote(server)+" to pair again.")
 			}
 			if err := r.API.Activate(ctx, registration, challenge.ID); err != nil {
-				return ports.Failure("activation", "registration saved; run connectors print run --connector "+registration.ConnectorID+" to retry activation")
+				return ports.Failure("activation", "The registration was saved. Run connectors print run --connector "+strconv.Quote(registration.ConnectorID)+" --server "+strconv.Quote(server)+" to try activation again.")
 			}
 			if r.Receipts != nil {
 				drainCtx, cancel := context.WithTimeout(context.Background(), r.ReceiptDrainTimeout)
@@ -111,7 +117,7 @@ func (r ConnectorRegistrar) pair(ctx context.Context, server, name string, candi
 				InventoryID string `json:"inventoryId"`
 			}{registration.ConnectorID, registration.TenantID, registration.InventoryID})
 		default:
-			return ports.Failure("pairing", "pairing is no longer available; register again")
+			return ports.Failure("pairing", "The pairing is no longer available. Run "+recovery+" to start pairing again.")
 		}
 		remaining := challenge.ExpiresAt.Sub(r.Clock.Now())
 		if remaining <= 0 {
@@ -122,5 +128,5 @@ func (r ConnectorRegistrar) pair(ctx context.Context, server, name string, candi
 			return err
 		}
 	}
-	return ports.Failure("pairing", "pairing expired; register again")
+	return ports.Failure("pairing", "The pairing expired. Run "+recovery+" to start pairing again.")
 }

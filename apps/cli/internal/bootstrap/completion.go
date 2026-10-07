@@ -15,7 +15,7 @@ func writeCompletion(w io.Writer, command []string) error {
 	}
 	script, ok := completionScript(command[1])
 	if !ok {
-		return ports.Failure("usage", "Choose bash, zsh or fish for shell completion.")
+		return ports.Failure("usage", "Select bash, zsh or fish for shell completion.")
 	}
 	_, err := io.WriteString(w, script)
 	return err
@@ -25,10 +25,10 @@ func writeCompletion(w io.Writer, command []string) error {
 // for execution, consults runtime state, or emits supplied argument values.
 func completionQuery(w io.Writer, args []string) error {
 	if len(args) < 4 || args[2] != "--" {
-		return ports.Failure("usage", "Invalid local completion request.")
+		return ports.Failure("usage", "The local completion request is not correct. Generate a new script with stuffstash completion bash, zsh, or fish.")
 	}
 	if _, ok := completionScript(args[1]); !ok {
-		return ports.Failure("usage", "Invalid local completion shell.")
+		return ports.Failure("usage", "The local completion shell is not supported. Generate a new script with stuffstash completion bash, zsh, or fish.")
 	}
 	candidates := completionCandidates(args[1], args[3], args[4:])
 	if len(candidates) == 0 {

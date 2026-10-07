@@ -23,7 +23,7 @@ func partitionOptions(args []string, flags *flag.FlagSet) (flagArgs, positional 
 		definition := flags.Lookup(name)
 		if definition == nil {
 			if err == nil {
-				err = ports.Failure("usage", "unknown option: "+name)
+				err = ports.Failure("usage", "The command has an unsupported option. Run the command with --help for its options.")
 			}
 			continue
 		}
@@ -41,7 +41,7 @@ func partitionOptions(args []string, flags *flag.FlagSet) (flagArgs, positional 
 			i++
 			if i == len(args) {
 				if err == nil {
-					err = ports.Failure("usage", "missing value for --"+name)
+					err = ports.Failure("usage", "Supply a value for --"+name+". Run the command with --help for its options.")
 				}
 				break
 			}

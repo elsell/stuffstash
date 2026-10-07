@@ -29,7 +29,7 @@ func decodePrintSubmission(o Options) (ports.LabelPrintSelection, error) {
 		Schema             *string `json:"$schema"`
 	}
 	if json.Unmarshal(o.RequestBody, &input) != nil || input.PrinterID == "" || input.ExpectedMediaFingerprint == "" || input.TemplateID == nil || input.TemplateVersion == nil || *input.TemplateVersion == 0 || input.TemplateOptions == nil || input.TemplateOptions.ShowReference == nil || input.Copies == nil || *input.Copies <= 0 {
-		return ports.LabelPrintSelection{}, ports.Failure("usage", "The print selection is invalid. Supply printerId, expectedMediaFingerprint, templateId, templateVersion (1 to 4294967295), templateOptions.showReference (true or false), and positive integer copies.")
+		return ports.LabelPrintSelection{}, ports.Failure("usage", "The print selection is not correct. Supply printerId, expectedMediaFingerprint, templateId, templateVersion (1 to 4294967295), templateOptions.showReference (true or false), and integer copies greater than zero.")
 	}
 	if o.Command[0] == "printers" && input.PrinterID != o.Command[2] {
 		return ports.LabelPrintSelection{}, ports.Failure("usage", "The input printerId does not match PRINTER_ID. Use the same printer in the command and input.")

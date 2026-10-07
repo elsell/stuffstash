@@ -40,6 +40,6 @@ func (c *Client) ChangeNotificationPreferences(ctx context.Context, s ports.Scop
 	case ports.RemovePreferenceOverride:
 		return preferenceResult(c.sdk.DeleteTenantsByTenantIdInventoriesByInventoryIdNotificationPreferencesTypesByCustomAssetTypeId(ctx, s.Tenant, s.Inventory, id, &generated.DeleteTenantsByTenantIdInventoriesByInventoryIdNotificationPreferencesTypesByCustomAssetTypeIdParams{Revision: revision}))
 	default:
-		return ports.Result[ports.NotificationPreferences]{}, ports.Failure("usage", "Unknown preference action. Use --help to select a command.")
+		return ports.Result[ports.NotificationPreferences]{}, ports.Failure("usage", "The preference action is not available. Use --help to select a command.")
 	}
 }

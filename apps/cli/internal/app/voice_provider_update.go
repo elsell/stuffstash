@@ -73,9 +73,9 @@ func (r Runner) updateVoiceProvider(ctx context.Context, o Options, token string
 		if errors.As(err, &failure) {
 			switch failure.Category {
 			case "conflict":
-				return ports.Failure("conflict", "The server rejected the voice selections. Run voice-provider show and review all three choices before you try again.")
+				return ports.Failure("conflict", "The server rejected the voice selections. Run voice-provider show. Examine all three choices before you try again.")
 			case "network", "protocol", "unavailable", "api":
-				return ports.Failure(failure.Category, "The selection update result is unknown. Run voice-provider show before you try again; do not assume the previous selections remain.")
+				return ports.Failure(failure.Category, "The selection update result is unknown. Run voice-provider show before you try again. Do not assume the previous selections remain.")
 			}
 		}
 		return err

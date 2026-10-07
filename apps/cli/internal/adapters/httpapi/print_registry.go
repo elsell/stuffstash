@@ -31,7 +31,7 @@ func (c *Client) Printers(ctx context.Context) ([]printing.RegisteredPrinter, er
 	printers := make([]printing.RegisteredPrinter, 0, len(result.Data))
 	for _, value := range result.Data {
 		if value.BindingGeneration <= 0 || value.Printer.ID == "" || value.DeviceID == "" {
-			return nil, ports.Failure("protocol", "The server returned invalid printer details. Examine the printer settings with the server administrator.")
+			return nil, ports.Failure("protocol", "The server returned printer details that are not correct. Examine the printer settings with the server administrator.")
 		}
 		printers = append(printers, printing.RegisteredPrinter{ID: value.Printer.ID, AdapterID: value.Printer.AdapterID, DeviceID: value.DeviceID, MediaFingerprint: value.Printer.MediaFingerprint, BindingGeneration: value.BindingGeneration, Retired: value.Printer.Retired, Media: consumerMedia(value.Printer.Media.ConsumerMedia)})
 	}
