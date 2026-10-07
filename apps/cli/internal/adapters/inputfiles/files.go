@@ -27,22 +27,22 @@ func (f Files) Read(ctx context.Context, path string) ([]byte, error) {
 		var err error
 		reader, cleanup, err = prepareStdin(f.Stdin)
 		if err != nil {
-			return nil, ports.Failure("input", "Cannot open stdin. Use --input FILE instead.")
+			return nil, ports.Failure("input", "The CLI cannot open stdin. Use --input FILE instead.")
 		}
 		defer cleanup()
 	} else {
 		info, err := os.Stat(path)
 		if err != nil || !info.Mode().IsRegular() {
-			return nil, ports.Failure("input", "Cannot read the input file. Use a readable regular file.")
+			return nil, ports.Failure("input", "The CLI cannot read the input file. Use a readable regular file.")
 		}
 		file, err := openInput(path)
 		if err != nil {
-			return nil, ports.Failure("input", "Cannot open the input file. Check the path and file permissions.")
+			return nil, ports.Failure("input", "The CLI cannot open the input file. Examine the path and file permissions.")
 		}
 		defer file.Close()
 		info, err = file.Stat()
 		if err != nil || !info.Mode().IsRegular() {
-			return nil, ports.Failure("input", "The input path is not a regular file. Choose another file.")
+			return nil, ports.Failure("input", "The input path is not a regular file. Select another file.")
 		}
 		reader = file
 	}
@@ -57,7 +57,7 @@ func (f Files) Read(ctx context.Context, path string) ([]byte, error) {
 		return nil, ctx.Err()
 	}
 	if err != nil {
-		return nil, ports.Failure("input", "Cannot read the input. Check the file or pipe and try again.")
+		return nil, ports.Failure("input", "The CLI cannot read the input. Examine the file or pipe and try again.")
 	}
 	if len(data) > maximumBytes {
 		return nil, ports.Failure("input", "The input exceeds 1 MiB. Use a smaller JSON request.")

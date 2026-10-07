@@ -13,7 +13,7 @@ import (
 
 func createPrivate(path string) (*os.File, func() error, error) {
 	fail := func() (*os.File, func() error, error) {
-		return nil, nil, ports.Failure("file", "Cannot create a private file. Check the output directory and permissions.")
+		return nil, nil, ports.Failure("file", "The CLI cannot create a private file. Examine the output directory and permissions.")
 	}
 	user, err := windows.GetCurrentProcessToken().GetTokenUser()
 	if err != nil {
@@ -37,9 +37,9 @@ func createPrivate(path string) (*os.File, func() error, error) {
 	return f, func() error {
 		if err := os.Link(name, path); err != nil {
 			if os.IsExist(err) {
-				return ports.Failure("file", "The output path already exists. Choose another --output path. The existing file was not changed.")
+				return ports.Failure("file", "The output path already exists. Select another --output path. The existing file was not changed.")
 			}
-			return ports.Failure("file", "Cannot publish the file. Choose a new output path on a filesystem that supports hard links.")
+			return ports.Failure("file", "The CLI cannot publish the file. Select a new output path on a filesystem that supports hard links.")
 		}
 		return nil
 	}, nil

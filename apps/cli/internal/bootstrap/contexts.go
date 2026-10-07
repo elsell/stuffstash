@@ -18,7 +18,7 @@ func configuredContexts(getenv func(string) string, required bool) (contexts.Sto
 			if !required {
 				return nil, nil
 			}
-			return nil, ports.Failure("configuration", "Cannot find the configuration directory. Set STUFF_STASH_CLI_CONFIG_FILE to a private file path.")
+			return nil, ports.Failure("configuration", "The CLI cannot find the configuration directory. Set STUFF_STASH_CLI_CONFIG_FILE to a private file path.")
 		}
 		path = filepath.Join(directory, "stuffstash", "contexts.json")
 	}

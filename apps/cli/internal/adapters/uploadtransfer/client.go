@@ -31,10 +31,10 @@ func (c Client) Send(ctx context.Context, in ports.DirectUpload, name, contentTy
 		return err
 	}
 	if size <= 0 || source == nil || strings.ContainsAny(contentType, "\r\n") {
-		return ports.Failure("file", "The file size or type is invalid. Choose a non-empty file with a valid media type.")
+		return ports.Failure("file", "The file size or type is not correct. Select a file that is not empty and has a correct media type.")
 	}
 	if _, _, err := mime.ParseMediaType(contentType); err != nil {
-		return ports.Failure("file", "The file type is invalid. Supply a valid media type.")
+		return ports.Failure("file", "The file type is not correct. Supply a correct media type.")
 	}
 	for name, value := range in.Headers {
 		if strings.EqualFold(name, "Content-Type") && (in.Method != "PUT" || value != contentType) {
@@ -52,7 +52,7 @@ func (c Client) Send(ctx context.Context, in ports.DirectUpload, name, contentTy
 		}
 		overhead := int64(len(prefix)) + int64(len(suffix))
 		if size > math.MaxInt64-overhead {
-			return ports.Failure("file", "The file is too large. Choose a smaller file.")
+			return ports.Failure("file", "The file is too large. Select a smaller file.")
 		}
 		length += overhead
 		requestType = kind
@@ -79,11 +79,11 @@ func (c Client) Send(ctx context.Context, in ports.DirectUpload, name, contentTy
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
-		return ports.Failure("network", "The file transfer failed. Check the upload status before you retry.")
+		return ports.Failure("network", "The file transfer failed. Examine the upload status before you try again.")
 	}
 	defer response.Body.Close()
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return ports.Failure("api", "Storage did not accept the file. Check the upload status before you retry.")
+		return ports.Failure("api", "Storage did not accept the file. Examine the upload status before you try again.")
 	}
 	select {
 	case <-tracked.closed:
