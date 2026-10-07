@@ -14,8 +14,9 @@ administration, sharing, customization, assets, search, media, audit/undo,
 notifications, expiration, portability jobs, conversation administration,
 provider administration, printing and connector REST operations. Chat, microphone
 voice, WebSocket sessions and MCP protocol interaction are excluded. Public
-health and mobile-auth discovery routes outside OpenAPI must also be inventoried;
-the HTML API index and schema documents are documentation, not resource commands.
+health and mobile-auth discovery routes outside OpenAPI are inventoried in
+`cli-public-route-coverage.spec.md` and excluded from CLI command scope by user
+decision on October 7, 2026. The HTML API index and schema documents are documentation, not resource commands.
 
 Use the generated SDK behind adapters. Do not replace named commands with an
 arbitrary method/path request command and call that parity. A low-level escape
