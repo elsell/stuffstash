@@ -11,7 +11,7 @@ inventory public.
 
 The source build includes label previews and scanning, web connector approval,
 printer settings, and print controls in web and mobile. A foreground CLI worker
-runs registered printer queues. See [connector setup](../../cli/#register-a-printer-connector).
+runs registered printer queues. See [connector setup](../../cli-printing/#register-a-printer-connector).
 Initialize label identities once using the [self-host instructions](../../self-host-operations/#set-up-labels-and-printing).
 These instructions describe the current source build. An older downloadable CLI
 may not include every command; check [versioned downloads](../../cli-downloads/)

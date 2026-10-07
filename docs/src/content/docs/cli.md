@@ -1,22 +1,22 @@
 ---
 title: Use the CLI
-description: Sign in and work with your inventory from a terminal.
+description: Sign in, choose an inventory, and work from a terminal or script.
 ---
 
-The Stuff Stash CLI uses the same permissions as the web and mobile apps. You can
-list inventories, find assets, and create, move, archive, or restore them.
+[Download the CLI](../cli-downloads/) for your computer. The commands below use
+`stuffstash` on your `PATH`. If you keep it in the current directory, use
+`./stuffstash` on Linux/macOS or `.\stuffstash.exe` in PowerShell instead.
 
-See [versioned downloads](../cli-downloads/) for published binaries and checksum
-verification.
+The CLI uses the same permissions as the web and mobile apps. Start by signing
+in and selecting an inventory, then create, find, or update your items.
 
-## Install from source
+- [Sign in](#sign-in) and [choose an inventory](#work-with-assets).
+- [Run scripts and read every page](#read-every-page).
+- [Set up printers and labels](../cli-printing/).
+- [Manage access, backups, imports, and providers](../cli-administration/).
 
-With Go 1.25.8 installed, build from the repository root:
-
-```sh
-go build -buildvcs=false -o ./stuffstash ./apps/cli/cmd/stuffstash
-./stuffstash version
-```
+Shell examples use a POSIX shell unless marked PowerShell. Replace uppercase
+placeholders such as `ASSET_ID` with IDs from command results.
 
 ## Help and shell completion
 
@@ -28,7 +28,7 @@ With `stuffstash` on your `PATH`, enable completion for the current Bash session
 
 ```sh
 stuffstash completion bash > stuffstash.bash
-source ./stuffstash.bash
+source stuffstash.bash
 ```
 
 For Zsh, use `completion zsh` and source the generated file after `compinit`.
@@ -47,14 +47,21 @@ and set `STUFF_STASH_OIDC_CLI_CLIENT_ID` on the API. See the
 
 ```sh
 export STUFF_STASH_CLI_SERVER=https://api.example.com
-./stuffstash login
+stuffstash login
+```
+
+In PowerShell, set the server with:
+
+```powershell
+$env:STUFF_STASH_CLI_SERVER = 'https://api.example.com'
+stuffstash login
 ```
 
 Browser sign-in opens your provider's login page. On a computer without a browser,
 use device-code sign-in if your provider and administrator enable it:
 
 ```sh
-./stuffstash login --device-code
+stuffstash login --device-code
 ```
 
 Open the displayed verification address on your phone or another computer, enter
@@ -70,100 +77,8 @@ export STUFF_STASH_CLI_CREDENTIAL_FILE="$HOME/.config/stuffstash/session.json"
 
 Windows uses Credential Manager and does not support credential files.
 
-The file must remain accessible only to your account. `./stuffstash logout`
+The file must remain accessible only to your account. `stuffstash logout`
 removes the locally stored session for the selected server.
-
-## Create and rename households or inventories
-
-```sh
-./stuffstash tenants create --name 'Home'
-./stuffstash inventories create --tenant HOUSEHOLD_ID --name 'Garage'
-./stuffstash inventories update --name 'Workshop'
-```
-
-Omit `--name` in an interactive terminal to enter the name in a prompt. Use
-arrow keys to edit and Ctrl-C to cancel. Scripts must supply a name or JSON.
-
-Use `--input request.json` instead of `--name` to send a JSON object, or pipe it
-with `--input -`. The limit is 1 MiB. The CLI prints the target scope to stderr
-before a write; `--json` keeps the result on stdout. New resources do not change
-your current context.
-
-These four create/update operations do not support idempotency keys. If a create
-response is lost, check `tenants list` or `inventories list` before retrying.
-
-## Custom asset types and fields
-
-Use `asset-types` and `field-definitions` to list, show, create, update, archive,
-restore, or delete definitions. Choose `--scope household` to share a definition
-across the household, or `--scope inventory` for one inventory. Terminals offer a
-scope picker; scripts must supply the scope. Inventory lists include inherited
-household definitions.
-
-```sh
-./stuffstash asset-types create --scope household --tenant HOME --key appliance --name Appliance
-./stuffstash field-definitions create --scope inventory --tenant HOME --inventory GARAGE --key warranty --name Warranty --field-type date
-./stuffstash asset-types list --scope inventory --tenant HOME --inventory GARAGE --lifecycle all
-```
-
-Omit common required fields in a terminal to enter them through prompts. Enum
-fields prompt for options. For full control, use `--input definition.json` or
-`--input -` instead of field flags. Each command's `--help` lists its JSON fields.
-An asset type update can explicitly disable expiration with
-`--expiration-enabled=false`. Complex field updates, such as appending enum
-options or applicable asset types, use JSON; the server checks compatibility.
-
-Changes require confirmation; scripts add `--yes`. Delete permanently removes
-an eligible definition. There are no automatic retries: inspect `list` or `show`
-if a change's result is uncertain. Lists accept `--limit` and `--cursor`; JSON
-includes complete definition fields and response metadata.
-
-## Archive, restore, or delete a household or inventory
-
-Use `tenants archive`, `tenants restore`, or `tenants delete` for the selected
-household. Use the equivalent `inventories` commands for the selected inventory.
-Each command shows its target before it runs. Archive and delete ask for
-confirmation with Cancel selected first. Scripts must supply `--yes`; restore
-does not need confirmation. Delete permanently removes the selected resource.
-After deletion, matching saved scope is cleared for your account.
-
-```sh
-./stuffstash inventories archive --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
-./stuffstash inventories restore --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
-```
-
-## Manage tags
-
-```sh
-./stuffstash tags list
-./stuffstash tags create --name 'Tools' --key tools --tag-color '#247BA0'
-./stuffstash tags update TAG_ID --name 'Hand tools'
-./stuffstash tags update TAG_ID --tag-color ''
-./stuffstash tags delete TAG_ID
-```
-
-Tags use the current household and inventory. Omit a required name to enter it
-interactively, or use `--input FILE` for JSON. A color-only update leaves the name
-unchanged; an empty color value clears the color. The stable key is set only when
-you create the tag. Delete asks for confirmation; scripts must add `--yes`.
-`--tag-color` sets the tag color, while `--color` controls terminal presentation.
-
-## Read every page
-
-Supported list commands accept `--all` to fetch all remaining pages:
-
-```sh
-./stuffstash assets list --all --json --no-input
-```
-
-`--limit` sets each request's page size. Add `--cursor` to start at a saved
-position. Filters and scope stay the same across requests. The CLI prints one
-combined result after every page succeeds; cancellation or a failed request
-produces an error without partial output. Large lists use more memory.
-
-Data can change between requests, so the result is not a snapshot. JSON keeps
-its existing shape and the final page's metadata. Use the command's `--help`
-to check whether it supports `--all`.
 
 ## Work with assets
 
@@ -189,14 +104,14 @@ Listing inventories requires a tenant; asset commands also require an inventory:
 
 ```sh
 export STUFF_STASH_CLI_TENANT=YOUR_TENANT_ID
-./stuffstash inventories list
+stuffstash inventories list
 export STUFF_STASH_CLI_INVENTORY=YOUR_INVENTORY_ID
-./stuffstash assets list --limit 20
-./stuffstash assets create --kind item --title 'Cordless drill'
-./stuffstash assets show ASSET_ID
-./stuffstash assets move ASSET_ID --parent CONTAINER_ID
-./stuffstash assets archive ASSET_ID
-./stuffstash assets restore ASSET_ID
+stuffstash assets list --limit 20
+stuffstash assets create --kind item --title 'Cordless drill'
+stuffstash assets show ASSET_ID
+stuffstash assets move ASSET_ID --parent CONTAINER_ID
+stuffstash assets archive ASSET_ID
+stuffstash assets restore ASSET_ID
 ```
 
 Create or update an asset with a complete JSON request using `--input FILE` or
@@ -274,256 +189,97 @@ Repeat `--tag-id` for multiple tags. Lists include counts, the inventory timezon
 and item locations. Use `--limit` (1–100) and `--cursor` to page through results,
 or `--json` for complete items and metadata.
 
-## Release operations
+## Read every page
 
-The normal Release workflow attaches five portable CLI archives, individual
-SHA-256 files, and `stuffstash-cli-release.json` to the project tag. The archive
-includes third-party notices; `stuffstash version` reports its tag and source
-commit. `version --json` reports whether that build includes a USB printer adapter;
-this is separate from whether a printer is connected or ready. USB printer support
-remains limited to Linux and the supported Brother
-profile, even when ordinary inventory commands run on another platform.
-
-If publication stops after staging its assets, run **Release → Run workflow**
-on **main**, with `repair_run_id` set to the original Release workflow run ID.
-Repair uses its retained `release-publication` artifact and exact tag/commit.
-Draft-creation failures include the GitHub error status and validation details.
-A lost response may still leave a draft behind; repair finds that draft and resumes
-from the original assets.
-It uploads missing assets and verifies existing bytes; it never overwrites a
-mismatch. Investigate a mismatch or an expired artifact rather than rebuilding
-an old tag with new source or dependencies.
-
-Verified stable publication opens a maintenance PR for download links and
-self-host image digests. The docs deploy after that PR merges. If its checks or
-merge require attention, fix the PR; then run **Docs Pages** on **main** to refresh
-the site. A draft, failed publication, or older repaired release cannot replace
-newer stable download instructions.
-
-## Register a printer connector
-
-Connect the Brother QL-800 to a Linux computer by USB, then discover it:
+Supported list commands accept `--all` to fetch all remaining pages:
 
 ```sh
-./stuffstash printers discover
-./stuffstash connectors print register --name 'Garage computer'
+stuffstash assets list --all --json --no-input
 ```
 
-Open the displayed approval address on your phone or computer and enter the
-short code. Confirm the inventory, printer, and **29 × 90 mm** label size. The
-CLI waits for approval and saves a separate, restricted connector credential.
-Keep the connector ID printed when registration completes.
+`--limit` sets each request's page size. Add `--cursor` to start at a saved
+position. Filters and scope stay the same across requests. The CLI prints one
+combined result after every page succeeds; cancellation or a failed request
+produces an error without partial output. Large lists use more memory.
 
-The connector uses its own keyring entry. For a headless computer, explicitly
-choose a different credential file from your human login session:
+Data can change between requests, so the result is not a snapshot. JSON keeps
+its existing shape and the final page's metadata. Use the command's `--help`
+to check whether it supports `--all`.
+
+## Create and rename households or inventories
 
 ```sh
-mkdir -m 700 -p "$HOME/.config/stuffstash"
-export STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE="$HOME/.config/stuffstash/garage-connector.json"
+stuffstash tenants create --name 'Home'
+stuffstash inventories create --tenant HOUSEHOLD_ID --name 'Garage'
+stuffstash inventories update --name 'Workshop'
 ```
 
-Set this before registering. Keep the file private and persistent across restarts.
-Use a separate file for each connector. Registration never prints the connector
-credential. If approval expires or an exchange response is lost, register again.
-If activation fails after saving, retain the saved credential; the print worker
-can retry activation.
+Omit `--name` in an interactive terminal to enter the name in a prompt. Use
+arrow keys to edit and Ctrl-C to cancel. Scripts must supply a name or JSON.
 
-## Run the print worker
+Use `--input request.json` instead of `--name` to send a JSON object, or pipe it
+with `--input -`. The limit is 1 MiB. The CLI prints the target scope to stderr
+before a write; `--json` keeps the result on stdout. New resources do not change
+your current context.
 
-Use the same Linux account and connector credential store used during registration:
+These four create/update operations do not support idempotency keys. If a create
+response is lost, check `tenants list` or `inventories list` before retrying.
+
+## Custom asset types and fields
+
+Use `asset-types` and `field-definitions` to list, show, create, update, archive,
+restore, or delete definitions. Choose `--scope household` to share a definition
+across the household, or `--scope inventory` for one inventory. Terminals offer a
+scope picker; scripts must supply the scope. Inventory lists include inherited
+household definitions.
 
 ```sh
-export STUFF_STASH_CLI_CONNECTOR_ID=YOUR_CONNECTOR_ID
-export STUFF_STASH_CLI_PRINT_STATE_DIRECTORY="$HOME/.config/stuffstash/print-state"
-./stuffstash connectors print run
+stuffstash asset-types create --scope household --tenant HOME --key appliance --name Appliance
+stuffstash field-definitions create --scope inventory --tenant HOME --inventory GARAGE --key warranty --name Warranty --field-type date
+stuffstash asset-types list --scope inventory --tenant HOME --inventory GARAGE --lifecycle all
 ```
 
-Leave this command running. It handles every printer assigned to the connector;
-one disconnected printer does not stop the others. Each device has one active
-worker, even if another process uses a different journal directory.
+Omit common required fields in a terminal to enter them through prompts. Enum
+fields prompt for options. For full control, use `--input definition.json` or
+`--input -` instead of field flags. Each command's `--help` lists its JSON fields.
+An asset type update can explicitly disable expiration with
+`--expiration-enabled=false`. Complex field updates, such as appending enum
+options or applicable asset types, use JSON; the server checks compatibility.
 
-Only the **Brother QL-800 over USB on Linux with 29 × 90 mm stock** is supported
-initially. Keep Editor Lite off. The Linux `usblp` driver must expose a writable
-bidirectional device, usually `/dev/usb/lp0`. Your administrator can grant a
-printer group access using a persistent udev rule; run the worker as a regular
-user with that group, not as root. Discovery reads device information but does
-not prove that the account can print.
+Changes require confirmation; scripts add `--yes`. Delete permanently removes
+an eligible definition. There are no automatic retries: inspect `list` or `show`
+if a change's result is uncertain. Lists accept `--limit` and `--cursor`; JSON
+includes complete definition fields and response metadata.
 
-If your distribution uses the `lp` group, this is an example rule for
-`/etc/udev/rules.d/70-stuffstash-ql800.rules`:
+## Archive, restore, or delete a household or inventory
 
-```text
-SUBSYSTEM=="usb", KERNEL=="lp[0-9]*", ATTRS{idVendor}=="04f9", ATTRS{idProduct}=="209b", GROUP="lp", MODE="0660"
-```
-
-An administrator must load `usblp` if necessary, install the rule, and add the
-worker account to the selected printer group. Reconnect the printer and start a
-new login session after permission changes. Group names and driver packaging
-vary by distribution.
-
-### Check status and recover
-
-Stuff Stash shows connector availability separately from printer readiness. A
-powered-off printer needs attention even while the connector is online. Wake it
-or resolve the paper/cover error, then leave the worker running. The first adapter
-does not provide remote wake or change the printer's power settings.
-
-Keep the private journal directory across restarts. The worker records output
-before sending it and reconciles API status before taking another job, even if
-the printer is now unplugged. A lost USB or API response may leave an **uncertain**
-job. Check the physical label before explicitly resolving or reprinting it;
-restarting the worker never automatically repeats uncertain output. Retiring a
-printer stops new claims while an already-started attempt can finish.
-
-Ctrl-C stops the worker and preserves recovery evidence. Invalid or revoked
-connector credentials stop it with re-pair guidance. Revoke the old connector
-before pairing a replacement, use a separate credential file, and retain the old
-journal until its attempts are settled.
-
-### Run as a service
-
-A user service can run the same foreground command. Put the binary at
-`~/.local/bin/stuffstash`, then create
-`~/.config/systemd/user/stuffstash-print.service`:
-
-```ini
-[Unit]
-Description=Stuff Stash print connector
-
-[Service]
-Type=simple
-Environment=STUFF_STASH_CLI_SERVER=https://api.example.com
-Environment=STUFF_STASH_CLI_CONNECTOR_ID=YOUR_CONNECTOR_ID
-Environment=STUFF_STASH_CLI_CONNECTOR_CREDENTIAL_FILE=%h/.config/stuffstash/garage-connector.json
-Environment=STUFF_STASH_CLI_PRINT_STATE_DIRECTORY=%h/.config/stuffstash/print-state
-ExecStart=%h/.local/bin/stuffstash connectors print run
-Restart=on-abnormal
-
-[Install]
-WantedBy=default.target
-```
-
-Replace the server and connector ID, then run:
+Use `tenants archive`, `tenants restore`, or `tenants delete` for the selected
+household. Use the equivalent `inventories` commands for the selected inventory.
+Each command shows its target before it runs. Archive and delete ask for
+confirmation with Cancel selected first. Scripts must supply `--yes`; restore
+does not need confirmation. Delete permanently removes the selected resource.
+After deletion, matching saved scope is cleared for your account.
 
 ```sh
-systemctl --user daemon-reload
-systemctl --user enable --now stuffstash-print.service
-systemctl --user status stuffstash-print.service
-journalctl --user -u stuffstash-print.service
+stuffstash inventories archive --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
+stuffstash inventories restore --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
 ```
 
-A dedicated service account needs persistent configuration and USB group access.
-An administrator can enable user lingering when the worker must survive logout.
-To uninstall, stop and disable the service, remove its unit and binary, and revoke
-the connector in Stuff Stash. Retain journal and credential files until pending
-attempts have been reconciled.
-
-The worker and recovery flows have stateful API and USB protocol checks, plus
-[scoped physical-print evidence](../printing/setup/#what-is-available) for a
-candidate USB status fix. The example udev rule and service operation still need
-verification on your host.
-
-## Request and inspect labels
-
-Set your server, tenant, and inventory context, then use your human login:
+## Manage tags
 
 ```sh
-stuffstash printers list
-stuffstash labels print ASSET_ID --printer PRINTER_ID
-stuffstash printers test PRINTER_ID
-stuffstash print-jobs list --printer PRINTER_ID
-stuffstash print-jobs show JOB_ID
-stuffstash print-jobs cancel JOB_ID
-stuffstash print-jobs reprint JOB_ID --printer PRINTER_ID
+stuffstash tags list
+stuffstash tags create --name 'Tools' --key tools --tag-color '#247BA0'
+stuffstash tags update TAG_ID --name 'Hand tools'
+stuffstash tags update TAG_ID --tag-color ''
+stuffstash tags delete TAG_ID
 ```
 
-These commands enqueue work for the connector; they do not send USB output from
-the computer running the command. A test prints one diagnostic label. A reprint
-creates a new job linked to the original; unresolved uncertain jobs require
-explicit resolution first. Use inventory printing settings in the web or mobile
-app to resolve an uncertain outcome after checking the physical printer.
-
-Omit `--printer` to use the inventory's configured default. Template selection
-also uses inventory defaults; override it with `--template qr-title
---template-version 1 --show-reference=true`. The destination determines the size.
-Offline destinations still accept queued work.
-
-Scripts create assets without printing unless requested:
-
-```sh
-stuffstash assets create --kind item --title "Spare batteries" \
-  --print-label --printer PRINTER_ID --idempotency-key batteries-label-1
-```
-
-A failed label validation leaves no new asset behind. The response includes the
-label job ID. Each print request writes its request key to stderr before sending.
-If the response is lost, retry the same command with that key using
-`--idempotency-key`; keep its arguments unchanged. A changed request conflicts
-instead of silently printing another label. Use `--json` for structured output.
-
-To replace a connector credential, use the same server and connector credential
-store as the worker:
-
-```sh
-stuffstash connectors print rotate --connector CONNECTOR_ID
-```
-
-Open the printed link and approve replacement for that existing connector. The
-CLI keeps its current credential until a matching replacement is received and
-saved. If activation fails after saving, run `connectors print run` with the same
-connector to retry activation. A rotation does not create a new printer or change
-its label size. Stop the old worker and restart it after rotation so it loads the
-new credential; existing uncertain jobs still require their normal recovery.
-
-### Save or resolve a label
-
-You can save labels without running a USB connector:
-
-```sh
-stuffstash labels templates
-stuffstash labels render ASSET_ID --printer PRINTER_ID --format png --output label.png
-stuffstash labels render ASSET_ID --media-preset brother-ql800-29x90 --format pdf --output label.pdf
-stuffstash labels resolve 'https://old.example.com/l/v1/INSTANCE_ID/LABEL_ID'
-```
-
-Rendering uses the inventory's template defaults, with the same template options
-as `labels print`. Omit the media selector to use the default printer. Choose a
-catalog media preset to render without registering a printer. Paired `--width-mm`
-and `--height-mm` also select an exact supported profile; the nominal 29 × 90 mm
-Brother preset has a physical profile of 29 × 89.8 mm. Unsupported sizes are
-rejected instead of being resized. See [supported label sizes](../printing/label-sizes/)
-for available templates and stock.
-
-PNG and PDF downloads are checked against the server's checksum before saving.
-The output path must be new: an existing file or symlink is never overwritten.
-Saving label files currently requires Linux or macOS. Windows refuses file output
-until a private Windows file adapter is available; listing templates, resolving
-labels, and requesting prints still work.
-`--json` reports the path, format, and checksum without mixing image bytes into
-terminal output. Saving a label does not enqueue a print job.
-
-Resolution uses your configured server and login, even when the scanned label
-contains an old hostname. It checks the instance identity and access before
-returning the asset, tenant, and inventory IDs. It never sends your credentials
-to the hostname printed in the QR code. Unlike scoped rendering, resolution does
-not require a selected tenant or inventory.
-
-### Update the loaded label size
-
-Use your human login with permission to configure the inventory:
-
-```sh
-stuffstash printers configure PRINTER_ID --label-size brother-ql800-29x90
-```
-
-The command selects a supported preset for the registered printer. Initially,
-only the Brother QL-800's 29 × 90 mm stock is supported. It preserves the printer's
-name and other settings and works while the printer is offline. The connector
-reads the updated setting from the server; its restricted credential cannot edit it.
-
-If another person changes the registration meanwhile, the command reports a
-conflict. Inspect the current printer before trying again. Updating stock never
-resizes labels already queued: jobs keep their original media requirements.
+Tags use the current household and inventory. Omit a required name to enter it
+interactively, or use `--input FILE` for JSON. A color-only update leaves the name
+unchanged; an empty color value clears the color. The stable key is set only when
+you create the tag. Delete asks for confirmation; scripts must add `--yes`.
+`--tag-color` sets the tag color, while `--color` controls terminal presentation.
 
 ## Manage attachments
 
@@ -545,6 +301,26 @@ If a direct upload has transferred its bytes but still needs completion, run
 `stuffstash attachments complete-upload ASSET_ID UPLOAD_ID`. Keep the upload ID
 private. This command does not resend the file. If completion returns an
 uncertain result, use `attachments list ASSET_ID` to check before retrying.
+
+## Upload and download files
+
+Upload a JPEG, PNG, WebP, or PDF attachment with
+`stuffstash attachments upload ASSET_ID --file receipt.pdf`. The CLI sends the
+file directly to storage and completes the attachment after the transfer. Use
+`--transfer api` when direct storage is unavailable. Uploads do not retry
+automatically. After an uncertain result, inspect `attachments list ASSET_ID`
+before starting another upload.
+
+Download an attachment with `attachments download ASSET_ID ATTACHMENT_ID
+--output receipt.pdf`, or use `attachments thumbnail` with optional
+`--variant small|medium|large`. `labels download RENDER_ID --output label.pdf`
+downloads an existing label render. Existing files are never replaced; a failed
+download does not publish a partial file. `--output -` writes only file bytes to
+stdout; do not combine it with `--json`.
+
+`inventories export --format json --output inventory.json` preserves inventory
+data and referenced names. `--format csv` creates a report, not a full backup.
+Neither export includes photo or file contents; use an archive for those.
 
 ## Review notifications
 
@@ -607,446 +383,16 @@ These commands require confirmation; scripts add `--yes`. Use an operation ID,
 not an asset ID. The server checks whether the change can still be reversed or
 reapplied. If the result is uncertain, inspect the affected asset before retrying.
 
-## Read audit history
+## Install from source
+
+With Go 1.25.8 installed, build from the repository root and check the local binary:
 
 ```sh
-stuffstash tenants audit
-stuffstash inventories audit --limit 20
-stuffstash assets activity ASSET_ID --view changes
-stuffstash assets audit ASSET_ID
+go build -buildvcs=false -o ./stuffstash ./apps/cli/cmd/stuffstash
+./stuffstash version
 ```
 
-Household history uses the selected household; inventory and asset history also
-use the selected inventory. Add `--json` for complete records and metadata.
-Household and inventory history accept the returned `--cursor` for another page.
-Asset history supports `--limit` but has no cursor in the current API.
+## Register a printer connector
 
-Use `assets activity ASSET_ID --view all` to include technical events. Activity
-shows changed values and available undo operation IDs. It does not undo changes.
-Use `--cursor` with the returned cursor to read the next page.
-
-### Inspect inventory access
-
-```sh
-stuffstash access-grants list
-stuffstash access-grants show PRINCIPAL_ID editor
-stuffstash access-grants remove PRINCIPAL_ID editor
-```
-
-Removal asks for confirmation. In scripts, review the target and add `--yes`.
-It removes that relationship only; another grant can still provide access.
-
-Use `stuffstash access-grants create` to choose a principal ID and access level.
-For scripts, put `{"principalId":"USER_ID","relationship":"viewer"}` in a JSON
-file and run `stuffstash access-grants create --input grant.json --yes`.
-Use `editor` to allow changes. Check the displayed household and inventory
-before you confirm.
-
-### Manage invitations
-
-```sh
-stuffstash invitations create --email friend@example.test --role viewer --yes
-stuffstash invitations list --status pending
-stuffstash invitations show INVITATION_ID
-stuffstash invitations cancel INVITATION_ID
-stuffstash invitations delete INVITATION_ID
-```
-
-Creation shows a one-time invitation link. Save or share it before closing the
-terminal; list and show cannot retrieve it later. Use `--input FILE|-` with
-`email` and `relationship` for scripts, or omit missing fields on a terminal
-to choose them interactively.
-
-Cancel stops a pending invitation. Delete removes its stored metadata.
-Both ask for confirmation; scripts require `--yes`. These actions do not remove
-an accepted user's access grant. Use `access-grants` to manage that access.
-
-Use `stuffstash invitations expiration INVITATION_ID` to change a pending
-invitation's deadline. Enter a timestamp with a timezone, such as
-`2030-01-01T12:00:00Z`. Scripts can supply a JSON file containing
-`{"expiresAt":"2030-01-01T12:00:00Z"}` with `--input FILE --yes`.
-
-### Accept an invitation
-
-Use the household, inventory and invitation IDs from the invitation. The inventory
-may not appear in your picker until you accept it.
-
-```sh
-stuffstash invitations preview INVITATION_ID --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
-stuffstash invitations accept INVITATION_ID --tenant HOUSEHOLD_ID --inventory INVENTORY_ID
-```
-
-The terminal asks for the acceptance token without showing it. Acceptance shows
-the destination and role before confirmation. Scripts use `--input FILE --yes`,
-with `{"acceptanceToken":"TOKEN"}` in the file. Use `--input -` for JSON on stdin.
-Keep the token private. If the acceptance result is unknown, preview the same
-invitation before retrying.
-
-### Inspect your server
-
-`stuffstash server show` displays the instance ID and protocol version.
-`stuffstash server auth-config` shows the server's CLI login configuration.
-Neither command requires a login or inventory selection. Add `--json` for the
-complete API response, or `--server URL` to inspect another server.
-
-### Inspect import jobs
-
-```sh
-stuffstash import-jobs list
-stuffstash import-jobs show JOB_ID
-stuffstash import-jobs show JOB_ID --json
-stuffstash import-jobs delete JOB_ID
-```
-
-JSON includes the full preview, counts, messages, progress history and created
-resources. Delete removes a job from history; it does not remove imported assets.
-It asks for confirmation, or requires `--yes` in scripts. These commands do not
-poll or retry automatically.
-
-Use `stuffstash import-jobs cancel JOB_ID` to stop a job. Choose whether to keep
-or discard partial progress, then confirm. Scripts use `--input FILE --yes`
-with `{"mode":"keep_partial_progress"}` or
-`{"mode":"discard_partial_progress"}`. Discarding can remove imported records.
-Cancellation can continue in the background; use `import-jobs show JOB_ID` to
-inspect its current state.
-
-### Create and restore archives
-
-Archive history is household-wide by default. Add `--inventory INVENTORY_ID`
-to filter it; your saved inventory does not narrow the list automatically.
-
-```sh
-stuffstash archive-jobs list
-stuffstash archive-jobs create
-stuffstash archive-jobs show JOB_ID
-stuffstash archive-jobs download JOB_ID --output backup.zip
-stuffstash archive-jobs upload --file backup.zip
-stuffstash archive-jobs preview RESTORE_JOB_ID
-stuffstash archive-jobs approve RESTORE_JOB_ID
-```
-
-Creation asks which inventory and attachments to include. Upload sends ZIP bytes
-without extracting them. Review the preview before approving a restore into a
-new inventory. Scripts use `--input FILE --yes`: creation requires `inventoryId`,
-`photos` and `otherFiles`; approval requires `name`. Save the reported request
-key when creating or uploading. After an uncertain response, inspect job history
-before repeating the same request with `--idempotency-key KEY`.
-
-Downloads never overwrite a path. `--output -` writes only archive bytes to
-stdout; omit `--json` in this mode. `--file -` uploads bytes from stdin. `archive-jobs retry JOB_ID` asks the
-server to retry a job once. `archive-jobs delete JOB_ID` removes its retained
-content. Mutations require confirmation; jobs are not polled automatically.
-
-### Preview and start imports
-
-Run `stuffstash import-jobs preview` for guided legacy Homebox or CSV input.
-Credentials are masked. Private networks and untrusted TLS stay blocked unless
-you explicitly enable them. The server reads the source; the CLI does not connect
-to it. Preview creates a review job without importing inventory records.
-
-Scripts can pass protected JSON with `--input source.json --yes`. See
-`import-jobs preview --help` for all fields. Keep credentials out of arguments and
-shell history. After reviewing `import-jobs show JOB_ID`, run
-`import-jobs start JOB_ID --input source.json --yes` with the same source and
-security choices. The server checks that they match the preview. CSV files may
-be up to 10 MiB; JSON input may be up to 16 MiB. Server deployment limits also apply.
-
-### Inspect model providers
-
-Use `stuffstash provider-profiles list` to see model providers in the selected
-household. Use `stuffstash provider-profiles show PROFILE_ID` to inspect a
-provider's configuration, credential status and last test time. These commands
-do not require an inventory and do not test or change the provider.
-
-Use `--json --no-input` for scripts. JSON includes all profile configuration
-and response metadata. Credential values are never returned.
-
-Use `provider-profiles enable PROFILE_ID`, `disable PROFILE_ID`, or
-`archive PROFILE_ID` to change a provider's state. Use
-`provider-profiles test PROFILE_ID` to contact the configured provider and
-record a test result. Each action asks for confirmation; scripts need `--yes`.
-
-Inspect the test's `status` and `message`: a completed request can report a
-failed provider test. The CLI does not retry these actions automatically. If a
-request is interrupted, read the profile before repeating it.
-
-Use `stuffstash voice-provider show` to inspect the household's voice provider
-configuration and selected profiles. It does not start a voice session or change
-settings. Use `--json` for all configuration fields and response metadata;
-credential values are not returned.
-
-### Investigate a print job
-
-Use `stuffstash print-jobs list` to find a job, then
-`stuffstash print-jobs show JOB_ID` to inspect its status, attempts and resolution.
-The detail view includes attempt timing and the number of completed copies.
-Inspect uncertain outcomes before printing again to avoid duplicate labels.
-Add `--json` to retain the full job and response metadata in a script.
-
-Use `stuffstash print-settings show` to inspect the selected inventory's default
-printer, print-on-create setting and label template options. An unset printer is
-shown as **Not set**. Use `--json` for the complete settings and revision.
-
-Use `stuffstash printers show PRINTER_ID` for a printer's readiness reason,
-last report time and complete media configuration. `printers list` gives a
-compact overview; both commands retain all printer fields with `--json`.
-
-Use `stuffstash labels templates` to see supported label options, defaults and
-font coverage. Use `stuffstash printers profiles` for the server's printer
-adapters, supported platforms and media presets. This differs from
-`printers catalog`, which inspects the local CLI catalog without login.
-Both server catalogs support `--json` for their complete configuration.
-
-`stuffstash labels resolve LABEL_URL` shows the label's full identity, canonical
-URL and inventory destination. It checks the instance against your configured
-server and does not send your credentials to the link's host.
-
-Use `stuffstash labels show ASSET_ID` to read an asset's existing label.
-Use `stuffstash labels assign ASSET_ID` to obtain its stable label identity
-without rendering or printing. Assignment asks for confirmation; scripts use
-`--yes`. Both commands use the selected household and inventory.
-
-Use `stuffstash connectors print list` or
-`stuffstash connectors print show CONNECTOR_ID` to inspect connector availability,
-assigned printers, heartbeat times and reported capabilities. These commands use
-your normal sign-in and saved inventory context; they do not read connector secrets.
-
-On a registered connector computer, use `stuffstash connectors print printers
---connector CONNECTOR_ID` to inspect its printer bindings. Use
-`stuffstash connectors print attempts list --connector CONNECTOR_ID` or
-`stuffstash connectors print attempts show ATTEMPT_ID --connector CONNECTOR_ID`
-to inspect delivery attempts. These commands use the stored connector credential
-and its registered scope. They do not access printer hardware or change attempts.
-The list accepts `--printer`, `--status unsettled`, `--limit` and `--cursor`;
-`--json` preserves the complete declared response and pagination metadata.
-
-`stuffstash print-jobs cancel JOB_ID` asks for confirmation before reading and
-cancelling the job. Scripts must add `--yes`. Cancellation uses the current job
-revision and does not retry conflicts. A label might already have printed;
-inspect the returned job before submitting another print.
-
-Use `stuffstash print-jobs resolve JOB_ID` to record what you observed after an
-uncertain print: printed, not printed, or unknown. This does not print again.
-The interactive command asks for an outcome and confirmation. For scripts, pass
-`--input FILE|- --yes` with `reportedOutcome` (`printed`, `not_printed`, or
-`unknown`), the current positive `revision`, and
-`acknowledgeUncertainty: true`. A stale revision fails without retrying.
-
-### Inspect workflows and evaluations
-
-These administration commands use the selected household without requiring an
-inventory. They read configuration and evidence; they do not start conversations
-or run evaluations.
-
-| Task | Command |
-| --- | --- |
-| List workflows | `workflows list` |
-| Read the latest workflow revision | `workflows show WORKFLOW_ID` |
-| List workflow revisions | `workflows revisions list WORKFLOW_ID` |
-| Read a workflow revision | `workflows revisions show WORKFLOW_ID REVISION_ID` |
-| Read the selected workflow | `workflows selection show` |
-| List evaluation cases | `evaluation cases list` |
-| Read the latest case revision | `evaluation cases show CASE_ID` |
-| List case revisions | `evaluation revisions list CASE_ID` |
-| Read a case revision | `evaluation revisions show CASE_ID REVISION_ID` |
-| List evaluation runs | `evaluation runs list` |
-| Read run results | `evaluation runs show RUN_ID` |
-
-Prefix each command with `stuffstash`. Lists support `--limit` and `--cursor`.
-Use `--json --no-input` for complete configuration, evidence and response
-metadata in scripts.
-
-To stop an evaluation, run `stuffstash evaluation runs cancel RUN_ID` and
-confirm the displayed version. Scripts must supply `--input FILE --yes` with
-`{"expectedVersion":3}`, using the version from `evaluation runs show RUN_ID`.
-A conflict requires a new review of the run. The CLI does not retry cancellation
-or silently replace your version check.
-
-### Create evaluation cases and queue runs
-
-Use `stuffstash evaluation cases create --input FILE` with a `definition` that
-contains `title`, `utterance` and `expectations`. Optional fixture `assets` describe
-the inventory used by the case. To revise a case, use
-`stuffstash evaluation revisions create CASE_ID --input FILE` and include its
-current `expectedRevision`. Command help lists the supported expectation fields.
-
-`stuffstash evaluation runs create --input FILE` queues a background text-only
-evaluation. Supply `workflowId`, `revisionId` and one to 100 case/revision pairs in
-`cases`. This can make provider calls; it does not activate the workflow. Review
-the displayed household and target before confirming. Scripts must add `--yes`;
-`--input -` reads standard input. Use `evaluation runs show RUN_ID` for results.
-The CLI preserves your versions and does not retry writes automatically.
-
-### Create and activate workflows
-
-Use `stuffstash workflows create --input FILE` to create a workflow, or
-`stuffstash workflows revisions create WORKFLOW_ID --input FILE` to add a revision.
-The JSON must contain `definition`; a new revision also requires the current
-`expectedRevision`. Use `--input -` to read JSON from standard input.
-
-To select an evaluated revision, run
-`stuffstash workflows activate WORKFLOW_ID --input FILE`. Supply `revisionId`,
-`runId` and `cases`, plus an expected selection when needed. The server checks the
-evaluation evidence before activation. These commands show the household and
-ask for confirmation; scripts must add `--yes`.
-
-Requests retain your exact values and concurrency checks. A conflict requires
-review of current state. If a reply is lost, inspect the workflow before trying
-again; the CLI does not retry writes automatically.
-
-### Submit a reviewed print request
-
-`labels print ASSET_ID`, `printers test PRINTER_ID`, and
-`print-jobs reprint JOB_ID` accept `--input FILE` or `--input -`. The JSON supplies
-the full selection: printer, media fingerprint, template and version, template
-options, copies, and optional preview fingerprint. This form preserves your
-reviewed request without looking up or replacing its values. Do not combine it
-with selection flags. A test request's printer ID must match the command target.
-
-For the usual flag-based workflow, `--expected-media-fingerprint` and
-`--preview-fingerprint` let you retain values from a prior review. The server
-rejects changed media or previews. It also enforces template and copy limits;
-a printer test permits one copy.
-
-Keep the printed request key and the exact request. If a reply is lost, inspect
-the print job before repeating anything. Reuse `--idempotency-key` with the same
-request for a retry; a new key can print another label. The CLI does not retry
-a submission automatically.
-
-### Manage printer configuration
-
-`printers create` accepts `--input FILE|-` or `--name`, `--adapter`, `--label-size`
-and `--preset-version`. A terminal can ask for missing fields. Supply an explicit
-`--idempotency-key`; retain it with the unchanged request if a reply is lost.
-
-Use `printers update PRINTER_ID`, `connectors print update CONNECTOR_ID`, or
-`print-settings update` with `--input FILE|-` for configuration changes. Printer
-and settings updates require the current `revision`; connector updates require
-`generation`. Inspect the resource first and retain those exact values. Command
-help lists supported fields. False, null and omitted fields remain distinct.
-
-These commands show the selected household, inventory and effect before asking
-for confirmation. Scripts add `--yes`. Connector changes can revoke access or
-change printer bindings; print settings can change automatic label printing.
-The CLI does not retry updates or replace a stale revision automatically.
-
-### Submit existing client measurements
-
-`stuffstash telemetry submit --input measurements.json --yes` records an explicit
-batch of one to 50 measurements from iOS, Android or web clients. Command help
-lists the required fields. This account-level command does not collect CLI usage
-automatically. Without `--yes`, a terminal asks for confirmation. Do not repeat an
-uncertain submission without checking server telemetry; the batch can be counted
-twice. Use `--json` for the accepted count and response metadata.
-
-### Approve a connector from the CLI
-
-On the administrator's computer, use `connectors print pairings review PAIRING_ID`
-to inspect the connector name, public-key fingerprint and discovered candidates.
-`connectors print pairings approve PAIRING_ID` asks for the short code privately,
-then lets you choose compatible printers with the keyboard. Review the household,
-inventory and bindings before confirmation. These commands use your normal sign-in.
-
-Scripts use `--input FILE|-` containing `userCode`, `tenantId` and `inventoryId`;
-approval also needs `bindings` with `candidateId` and `printerId` pairs, and
-`--yes`. Input scope must match the selected scope. The code never belongs in a
-command argument. Approval does not reserve scope or bypass server checks.
-
-Use `connectors print rotations approve CONNECTOR_ID` for a rotation pairing.
-It requires `generation`, `pairingId` and `userCode` in JSON, or asks for those
-values privately where appropriate. Review the fingerprint and replacement
-warning before confirmation. Scripts add `--yes`. The CLI never substitutes a
-new generation after a conflict or retries approval automatically.
-
-### Choose household voice providers
-
-`stuffstash voice-provider update` offers keyboard choices for each capability:
-keep the current explicit profile, use automatic selection, or choose an existing
-compatible profile. Review all three choices before confirming. This does not
-create provider profiles or start a voice session.
-
-Scripts use `--input FILE|- --yes`. Supported fields are
-`languageInferenceProfileId`, `speechToTextProfileId` and `textToSpeechProfileId`.
-This API replaces all three selections: omitted, null or empty IDs reset that
-capability to automatic selection. They do not disable voice. The command shows
-each resulting choice before writing. There is no revision check on this API;
-concurrent edits can replace one another. The CLI never retries the update.
-
-### Render a complete JSON selection
-
-`stuffstash labels render ASSET_ID --input selection.json --output label.png`
-uses the complete `media`, `template` and `format` from your JSON. It does not
-look up or replace your selection with saved defaults. Do not combine `--input`
-with media, template or format flags. Use the label API's snake_case field names,
-such as `width_micrometers` and `show_reference`; command help lists the fields.
-
-Add `--json` to include the complete render response under `render`, alongside
-the saved path, format and checksum. This includes fingerprints, expiry and
-response metadata. PNG/PDF validation, scoped downloads and private file
-publication still apply. Existing files are never overwritten.
-
-## Upload and download files
-
-Upload a JPEG, PNG, WebP, or PDF attachment with
-`stuffstash attachments upload ASSET_ID --file receipt.pdf`. The CLI sends the
-file directly to storage and completes the attachment after the transfer. Use
-`--transfer api` when direct storage is unavailable. Uploads do not retry
-automatically. After an uncertain result, inspect `attachments list ASSET_ID`
-before starting another upload.
-
-Download an attachment with `attachments download ASSET_ID ATTACHMENT_ID
---output receipt.pdf`, or use `attachments thumbnail` with optional
-`--variant small|medium|large`. `labels download RENDER_ID --output label.pdf`
-downloads an existing label render. Existing files are never replaced; a failed
-download does not publish a partial file. `--output -` writes only file bytes to
-stdout; do not combine it with `--json`.
-
-`inventories export --format json --output inventory.json` preserves inventory
-data and referenced names. `--format csv` creates a report, not a full backup.
-Neither export includes photo or file contents; use an archive for those.
-
-## Set up a provider
-
-Run `provider-profiles create` in a terminal to choose the provider and capability,
-name the profile, and configure optional fields. The CLI does not guess an
-endpoint or model. Use your provider's documented values.
-
-`provider-profiles update PROFILE_ID` changes only the fields you choose.
-`provider-profiles credential PROFILE_ID` asks for a credential purpose and reads
-keys or tokens without displaying them. Server ADC uses the server's Google
-credentials and does not ask for a secret.
-
-For scripts, each command accepts `--input FILE|- --yes`. A create request can be:
-
-```json
-{
-  "displayName": "Local inference",
-  "providerKind": "local_http",
-  "capability": "language_inference",
-  "endpointUrl": "https://model.example",
-  "modelName": "your-model",
-  "enable": false
-}
-```
-
-Update JSON can include displayName, endpointUrl, modelName, promptTemplate,
-runtimeOptions, and capabilityMetadata. Omitted fields stay unchanged. JSON
-values, including explicit null and false, are sent without rewriting them.
-Credential JSON uses purpose (`api_key`, `oauth_bearer`, or `server_adc`) and
-credential for keys or tokens. Keep credential files private, or pipe them through
-stdin. Never put credentials in command arguments or runtimeOptions.
-
-All three commands show the household and ask for confirmation; scripts use
-`--yes`. They do not test providers or retry changes automatically. Use
-`provider-profiles test PROFILE_ID` separately to check the configuration.
-
-Pairing registration and rotation emit safe protocol receipts as they progress.
-With `--json`, each receipt is a JSON line containing its operation name and
-response envelope. Receipts include pairing expiry and the new credential's
-activation deadline, but never polling tokens, machine credentials, signatures,
-or private keys. A credential-exchange receipt confirms the server step; the
-final registration result confirms local storage and activation also succeeded.
-
-Receipt display is best effort. If output stalls after successful registration,
-the CLI keeps the stored credential and returns success without a final display
-message. Do not repeat registration or rotation because receipt output is missing.
+Printer setup, worker operation, and label commands now have a dedicated
+[CLI printing guide](../cli-printing/#register-a-printer-connector).
