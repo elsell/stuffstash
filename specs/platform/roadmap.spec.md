@@ -1,6 +1,6 @@
 # Roadmap Spec
 
-## Current focus — CLI delivery and acceptance, October 7, 2026
+## Current status — CLI parity delivered, October 7, 2026
 
 The [approved CLI parity implementation](cli-api-parity.spec.md) merged in
 [PR #461](https://github.com/elsell/stuffstash/pull/461) at `7211bf40c`.
@@ -9,7 +9,7 @@ The coverage manifest closes the known command workflow and field gaps for all
 [v0.43.0](https://github.com/elsell/stuffstash/releases/tag/v0.43.0), built from
 `7211bf40ca1791440f92991e3e09c892f998a2e7`. All five platform archives are available;
 the Linux archive checksum and executable version/commit were verified. Release
-does not establish the remaining acceptance or formal STE requirements below.
+was followed by the recovery, pagination and wording releases summarized below.
 
 The implementation includes remembered per-server contexts, keyboard scope
 selection, interactive and scripted workflows, complete media/portability and
@@ -35,14 +35,15 @@ were verified, and the Linux executable reported the expected release and commit
 Isolated live Dex browser/device sign-in, saved terminal scope and cross-instance
 archive restoration also passed; details are recorded below.
 
-The official ASD-STE100 Issue 9 document is now available for review. Following
-the shared-prompt, Windows credential and scoped-upload corrections, the current
-batch adds safe failed-output handling, precise provider-field validation and
-print configuration recovery. Critical tests verify no repeated mutation and no
-secret disclosure. Full vocabulary/grammar review remains open. Direct transfer
-errors still need caller-level recovery guidance instead of referring to an
-unavailable upload-status command. Real macOS/Windows console interaction and
-physical-printer acceptance remain on the user test list.
+CLI delivery is complete through [v0.44.1](https://github.com/elsell/stuffstash/releases/tag/v0.44.1)
+at `99a995fb9b59895a96c8d9db4dd176f992dda51c`. The authored error review against
+ASD-STE100 Issue 9 and direct-transfer recovery corrections are complete.
+The final published binary passed pagination and error-recovery checks; the
+exact release contract has 192 operations with no recorded coverage gaps.
+Public health and mobile-auth discovery handlers remain inventoried but are
+excluded from CLI command scope by the user's October 7 decision.
+Real macOS/Windows console interaction and physical-printer acceptance remain
+explicitly unverified user followups, not release blockers.
 
 
 ## Labels, Printers, And CLI: Released — October 4, 2026
@@ -703,6 +704,6 @@ GitHub alert is closed. Native acceptance and current release rollout remain
 separate evidence from dependency checks.
 Per-alert evidence lives in `docs/reports/2026-10-04-dependency-security/`.
 
-CLI live acceptance on 2026-10-06 verified released v0.43.0 browser PKCE and device-code sign-in against isolated Dex, logout credential/scope clearing, Linux terminal scope selection and saved non-interactive JSON reuse, and cross-instance archive restore with retained tag names, fresh IDs, identical PNG/PDF bytes and private downloaded files. Evidence: `/tmp/stuffstash-cli-live-20261006/result.json`. Household-wide archive discovery exposed an API/CLI scope mismatch; current fix preserves creator isolation and rechecks source access before pagination. Remaining manual acceptance includes macOS/Windows launchers and consoles, physical printer behavior, and full simplified technical English review.
+CLI live acceptance on 2026-10-06 verified released v0.43.0 browser PKCE and device-code sign-in against isolated Dex, logout credential/scope clearing, Linux terminal scope selection and saved non-interactive JSON reuse, and cross-instance archive restore with retained tag names, fresh IDs, identical PNG/PDF bytes and private downloaded files. Evidence: `/tmp/stuffstash-cli-live-20261006/result.json`. The household-wide archive discovery scope mismatch was fixed and verified in v0.43.2, preserving creator isolation and rechecking source access before pagination. macOS/Windows launchers and consoles and physical printer behavior remain user-deferred manual followups, not release blockers.
 
-CLI final recovery review (2026-10-07) covers the authored application, adapter and bootstrap error paths against the official ASD-STE100 Issue 9 reference. Internal printer-state errors and generated transport code are excluded from user-message claims. The final batch adds scoped direct-transfer recovery, safe unexpected-error fallback, and correct workflow-selection/connector-deadline recovery; it preserves machine categories and prevents automatic mutation replay. Full CLI tests, vet, build and changed-file structural checks passed on Paul. Separate pending release batches retain their own CI and publication gates; this source review does not replace the remaining macOS/Windows console and physical-printer acceptance.
+CLI final recovery review (2026-10-07) covers the authored application, adapter and bootstrap error paths against the official ASD-STE100 Issue 9 reference. Internal printer-state errors and generated transport code are excluded from user-message claims. The final batch adds scoped direct-transfer recovery, safe unexpected-error fallback, and correct workflow-selection/connector-deadline recovery; it preserves machine categories and prevents automatic mutation replay. Full CLI tests, vet, build and changed-file structural checks passed on Paul. All CLI delivery batches are merged and released through v0.44.1 (`99a995fb9b59895a96c8d9db4dd176f992dda51c`). The final contract check covers all 192 OpenAPI operations with no recorded gaps; published-binary checks verified automatic pagination and its error recovery. The user excluded the separately inventoried public health and mobile-auth discovery handlers from CLI command scope on October 7, 2026. CLI parity delivery is complete; the remaining macOS/Windows console and physical-printer acceptance stays explicitly unverified as a followup.

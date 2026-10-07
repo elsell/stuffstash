@@ -6,8 +6,8 @@ This inventory is based on `httpserver/server.go` at 21f088f98.
 
 | Route | Purpose | CLI disposition |
 | --- | --- | --- |
-| `GET /healthz` | Public service/status health response, without an envelope | No CLI command yet; command inclusion awaits the user's decision. |
-| `GET /.well-known/stuff-stash/mobile-auth` | Public issuer, client ID, redirect URI and scopes; unavailable configuration returns 503 | No CLI command yet; command inclusion awaits the user's decision. |
+| `GET /healthz` | Public service/status health response, without an envelope | Excluded from CLI commands by user decision on October 7, 2026. |
+| `GET /.well-known/stuff-stash/mobile-auth` | Public issuer, client ID, redirect URI and scopes; unavailable configuration returns 503 | Excluded from CLI commands by user decision on October 7, 2026. |
 | `GET /` | API index/documentation links | Documentation, not a resource command. |
 | `/docs`, `/openapi.*` | Generated API reference and schema documents | Documentation, not resource commands. |
 | Realtime voice WebSocket handler | Microphone/conversation transport | Excluded by approved CLI scope. |
