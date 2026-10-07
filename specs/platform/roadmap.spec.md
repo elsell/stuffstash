@@ -35,12 +35,14 @@ were verified, and the Linux executable reported the expected release and commit
 Isolated live Dex browser/device sign-in, saved terminal scope and cross-instance
 archive restoration also passed; details are recorded below.
 
-The official ASD-STE100 Issue 9 document is now available for review. The current
-batch corrects shared prompt guidance, Windows connector-store recovery and
-scoped attachment recovery, plus reviewed wording. Full vocabulary/grammar review
-remains open. A subsequent batch must handle failed output after a successful
-server mutation without implying that the mutation failed. Real macOS/Windows
-console interaction and physical-printer acceptance remain on the user test list.
+The official ASD-STE100 Issue 9 document is now available for review. Following
+the shared-prompt, Windows credential and scoped-upload corrections, the current
+batch adds safe failed-output handling, precise provider-field validation and
+print configuration recovery. Critical tests verify no repeated mutation and no
+secret disclosure. Full vocabulary/grammar review remains open. Direct transfer
+errors still need caller-level recovery guidance instead of referring to an
+unavailable upload-status command. Real macOS/Windows console interaction and
+physical-printer acceptance remain on the user test list.
 
 
 ## Labels, Printers, And CLI: Released — October 4, 2026

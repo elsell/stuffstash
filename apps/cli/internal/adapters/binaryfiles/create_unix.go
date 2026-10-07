@@ -11,14 +11,14 @@ import (
 func createPrivate(path string) (*os.File, func() error, error) {
 	f, err := os.CreateTemp(filepath.Dir(path), ".stuffstash-download-*")
 	if err != nil {
-		return nil, nil, ports.Failure("file", "Cannot create the file. Check the output directory and write permissions.")
+		return nil, nil, ports.Failure("file", "The CLI cannot create the file. Examine the output directory and write permissions.")
 	}
 	return f, func() error {
 		if err := os.Link(f.Name(), path); err != nil {
 			if os.IsExist(err) {
-				return ports.Failure("file", "The output path already exists. Choose another --output path. The existing file was not changed.")
+				return ports.Failure("file", "The output path already exists. Select another --output path. The existing file was not changed.")
 			}
-			return ports.Failure("file", "Cannot publish the file. Choose a new output path on a filesystem that supports hard links.")
+			return ports.Failure("file", "The CLI cannot publish the file. Select a new output path on a filesystem that supports hard links.")
 		}
 		return nil
 	}, nil

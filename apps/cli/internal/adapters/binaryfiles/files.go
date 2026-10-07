@@ -31,7 +31,7 @@ func (f Files) PublishContent(ctx context.Context, path string, content ports.Bi
 		out = file
 	}
 	if out == nil {
-		return ports.Failure("configuration", "File output is unavailable. Try the command again.")
+		return ports.Failure("configuration", "File output is not available. Use --output PATH to save the file.")
 	}
 	reader := io.Reader(content.Body)
 	if content.ContentLength >= 0 && content.ContentLength < math.MaxInt64 {
@@ -39,7 +39,7 @@ func (f Files) PublishContent(ctx context.Context, path string, content ports.Bi
 	}
 	n, err := io.Copy(out, contextReader{ctx, reader})
 	if err != nil {
-		return ports.Failure("file", "Could not write the complete file. Check the connection, disk space, and output permissions. Try again with a new output path.")
+		return ports.Failure("file", "The CLI could not write the complete file. Examine the connection, disk space, and output permissions. Try again with a new output path.")
 	}
 	if content.ContentLength >= 0 && n != content.ContentLength {
 		return ports.Failure("protocol", "The file size does not match the server response. Try the download again.")
@@ -49,7 +49,7 @@ func (f Files) PublishContent(ctx context.Context, path string, content ports.Bi
 	}
 	if file != nil {
 		if err = file.Sync(); err != nil {
-			return ports.Failure("file", "Could not save the file. Check available disk space and try again.")
+			return ports.Failure("file", "The CLI could not save the file. Examine the available disk space and try again.")
 		}
 		return finish()
 	}

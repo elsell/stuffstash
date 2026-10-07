@@ -17,7 +17,7 @@ func (f Files) OpenStream(ctx context.Context, path string) (io.ReadCloser, erro
 		}
 		r, close, err := prepareStdin(f.Stdin)
 		if err != nil {
-			return nil, ports.Failure("file", "Cannot read stdin. Use a file path instead of -.")
+			return nil, ports.Failure("file", "The CLI cannot read stdin. Use a file path instead of -.")
 		}
 		var once sync.Once
 		cleanup := func() { once.Do(close) }
@@ -26,12 +26,12 @@ func (f Files) OpenStream(ctx context.Context, path string) (io.ReadCloser, erro
 	}
 	file, err := openInput(path)
 	if err != nil {
-		return nil, ports.Failure("file", "Cannot open the file. Check the path and read permissions.")
+		return nil, ports.Failure("file", "The CLI cannot open the file. Examine the path and read permissions.")
 	}
 	info, err := file.Stat()
 	if err != nil || !info.Mode().IsRegular() {
 		file.Close()
-		return nil, ports.Failure("file", "Choose a readable regular file.")
+		return nil, ports.Failure("file", "Select a readable regular file.")
 	}
 	stop := context.AfterFunc(ctx, func() { file.Close() })
 	return &uploadReader{ctx: ctx, file: file, stop: stop}, nil

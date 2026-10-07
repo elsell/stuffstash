@@ -75,3 +75,37 @@ credential recovery, and an interrupted upload that identifies its asset without
 repeating transfer or completion. Existing suites cover copy changes; do not add
 one test per sentence. This batch is a bounded review, not a claim that every
 remaining message has been reviewed against the full dictionary.
+
+## Output and field recovery
+
+A failed result write is an operation failure (`output`, exit 1), not a
+configuration error. Presentation must explain that the CLI could not write the
+result and that a server change can already be complete. Tell users to examine
+server state before they repeat a change. Never include the underlying writer
+error, which can contain environment details, in user output. Do not retry the
+server operation or promise that a mutation failed. Apply the same boundary to
+human and JSON result rendering, including nested result renderers. Error
+reporting remains best effort if stderr itself cannot accept output.
+
+A failed diagnostic notice is also an `output` failure, but it must not assert
+that a server change occurred: notices can precede confirmation or mutation.
+Existing print-receipt best-effort delivery and no-replay rules remain unchanged.
+Critical verification uses a real command with an accepted server mutation and
+a failing stdout writer: exactly one mutation, exit 1, safe JSON error on stderr,
+and no raw writer error. Cover a human result and an early notice failure through
+the shared presentation boundary rather than duplicating every command.
+
+Provider JSON validation names known schema fields and their expected types or
+missing values. It never includes supplied values or unknown field names because
+either can contain secrets. Preserve validation categories and no-request behavior
+for invalid input. Critical checks include a credential value of the wrong type,
+a missing required field, and an unknown secret-bearing field name.
+
+Print configuration failures name the environment variables that control the
+rejected setting. Backoff guidance names both minimum and maximum and their
+required ordering. Artifact limits use integer bytes (1 through 67108864), and
+pairing poll intervals use durations (1s through 1m). These errors remain local
+configuration failures before credentials, network requests, or physical output.
+File adapter guidance uses complete sentences and approved ordinary verbs while
+preserving technical file operations, private publication, no-overwrite behavior,
+and error categories. A missing stdout writer directs users to --output PATH.

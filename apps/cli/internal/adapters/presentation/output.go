@@ -14,7 +14,7 @@ type Output struct {
 	JSON           bool
 }
 
-func (o Output) Result(value any) error {
+func (o Output) result(value any) error {
 	if o.JSON {
 		return json.NewEncoder(o.Stdout).Encode(value)
 	}
@@ -328,7 +328,6 @@ func (o Output) pagination(p *ports.Pagination) error {
 	}
 	return nil
 }
-func (o Output) Notice(message string) error { _, err := fmt.Fprintln(o.Stderr, message); return err }
 func (o Output) Error(category, message string) {
 	if o.JSON {
 		_ = json.NewEncoder(o.Stderr).Encode(map[string]any{"error": map[string]string{"category": category, "message": message}})

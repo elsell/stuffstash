@@ -88,13 +88,18 @@ func validateProviderInput(action string, body []byte) error {
 			valid = json.Unmarshal(value, &v) == nil
 		}
 		if !valid {
-			return ports.Failure("usage", "A provider field has the wrong JSON type. Use strings, objects, and booleans as documented in --help.")
+			// Only schema-approved field names can reach this message. Never include input values.
+			expected := "a JSON " + kind
+			if kind == "bool" {
+				expected = "true or false"
+			}
+			return ports.Failure("usage", "Supply "+expected+" for "+key+".")
 		}
 	}
 	for _, key := range required {
 		var v string
 		if json.Unmarshal(fields[key], &v) != nil || strings.TrimSpace(v) == "" {
-			return ports.Failure("usage", "The provider input is missing a required value. Examine the required fields in --help.")
+			return ports.Failure("usage", "Supply "+key+" as a JSON string that is not empty.")
 		}
 	}
 	if action == "update" && len(fields) == 0 {

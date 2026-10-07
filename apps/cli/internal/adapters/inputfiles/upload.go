@@ -16,11 +16,11 @@ func (Files) OpenUpload(ctx context.Context, path string) (ports.UploadFile, err
 	}
 	info, err := os.Stat(path)
 	if err != nil || !info.Mode().IsRegular() {
-		return ports.UploadFile{}, ports.Failure("file", "Cannot read the upload file. Choose a readable regular file.")
+		return ports.UploadFile{}, ports.Failure("file", "The CLI cannot read the upload file. Select a readable regular file.")
 	}
 	file, err := openInput(path)
 	if err != nil {
-		return ports.UploadFile{}, ports.Failure("file", "Cannot open the upload file. Check the path and file permissions.")
+		return ports.UploadFile{}, ports.Failure("file", "The CLI cannot open the upload file. Examine the path and file permissions.")
 	}
 	stop := context.AfterFunc(ctx, func() { file.Close() })
 	keep := false
@@ -32,7 +32,7 @@ func (Files) OpenUpload(ctx context.Context, path string) (ports.UploadFile, err
 	}()
 	info, err = file.Stat()
 	if err != nil || !info.Mode().IsRegular() || info.Size() <= 0 {
-		return ports.UploadFile{}, ports.Failure("file", "The upload file is empty or is not a regular file. Choose another file.")
+		return ports.UploadFile{}, ports.Failure("file", "The upload file is empty or is not a regular file. Select another file.")
 	}
 	name := filepath.Base(path)
 	if !utf8.ValidString(name) || utf8.RuneCountInString(name) > 255 {
@@ -44,13 +44,13 @@ func (Files) OpenUpload(ctx context.Context, path string) (ports.UploadFile, err
 		return ports.UploadFile{}, ctx.Err()
 	}
 	if err != nil && err != io.EOF {
-		return ports.UploadFile{}, ports.Failure("file", "Cannot read the upload file. Check the file and try again.")
+		return ports.UploadFile{}, ports.Failure("file", "The CLI cannot read the upload file. Examine the file and try again.")
 	}
 	kind := http.DetectContentType(prefix[:n])
 	switch kind {
 	case "image/jpeg", "image/png", "image/webp", "application/pdf":
 	default:
-		return ports.UploadFile{}, ports.Failure("file", "This file type is not supported. Choose a JPEG, PNG, WebP, or PDF file.")
+		return ports.UploadFile{}, ports.Failure("file", "This file type is not supported. Select a JPEG, PNG, WebP, or PDF file.")
 	}
 	keep = true
 	return ports.UploadFile{Body: &uploadReader{ctx: ctx, file: file, stop: stop}, FileName: name, ContentType: kind, SizeBytes: info.Size()}, nil

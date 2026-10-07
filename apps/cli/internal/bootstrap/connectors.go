@@ -56,7 +56,7 @@ func registerPrintConnector(ctx context.Context, options app.Options, getenv fun
 	if raw := getenv("STUFF_STASH_CLI_PAIRING_POLL_INTERVAL"); raw != "" {
 		interval, err = time.ParseDuration(raw)
 		if err != nil || interval < time.Second || interval > time.Minute {
-			return ports.Failure("configuration", "pairing poll interval must be between 1s and 1m")
+			return ports.Failure("configuration", "Set STUFF_STASH_CLI_PAIRING_POLL_INTERVAL to a duration from 1s through 1m.")
 		}
 	}
 	registrar := app.ConnectorRegistrar{Receipts: receipts, ReceiptDrainTimeout: time.Second, API: api, Credentials: connectorCredentialStore(options), Keys: pairingkeys.Keys{}, Clock: systemClock{}, Waiter: timerWaiter{}, Output: output, PollInterval: interval}

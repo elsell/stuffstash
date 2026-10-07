@@ -79,3 +79,46 @@ func TestProviderSetupExactInputAndSafeDenials(t *testing.T) {
 		})
 	}
 }
+
+func TestProviderValidationNamesKnownFieldsWithoutSendingSecrets(t *testing.T) {
+	for _, tc := range []struct {
+		name, action, body string
+		guidance           []string
+	}{
+		{"credential type", "credential", `{"purpose":"api_key","credential":{"secret-value":"do-not-display"}}`, []string{"credential", "JSON string"}},
+		{"required name", "create", `{"capability":"language_inference","providerKind":"local_http"}`, []string{"displayName", "not empty"}},
+		{"unknown secret field", "credential", `{"purpose":"api_key","credential":"do-not-display","secret-field-name":"secret-value"}`, []string{"unsupported field", "--help"}},
+		{"object type", "update", `{"runtimeOptions":"do-not-display"}`, []string{"runtimeOptions", "JSON object"}},
+		{"boolean type", "create", `{"displayName":"Local","capability":"language_inference","providerKind":"local_http","enable":"do-not-display"}`, []string{"enable", "true or false"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			calls := 0
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { calls++; w.WriteHeader(http.StatusInternalServerError) }))
+			defer server.Close()
+			path := filepath.Join(t.TempDir(), "request.json")
+			if err := os.WriteFile(path, []byte(tc.body), 0600); err != nil {
+				t.Fatal(err)
+			}
+			args := []string{"provider-profiles", tc.action}
+			if tc.action != "create" {
+				args = append(args, "profile")
+			}
+			args = append(args, "--tenant", "home", "--input", path, "--json", "--no-input", "--yes")
+			var out, diagnostic bytes.Buffer
+			code := Run(context.Background(), args, binaryEnvironment(t, server.URL), &out, &diagnostic)
+			if code != 2 || calls != 0 || !strings.Contains(diagnostic.String(), `"category":"usage"`) {
+				t.Fatalf("validation sent request or lost usage category: code=%d calls=%d %s", code, calls, &diagnostic)
+			}
+			for _, fragment := range tc.guidance {
+				if !strings.Contains(diagnostic.String(), fragment) {
+					t.Errorf("missing safe field guidance %q: %s", fragment, &diagnostic)
+				}
+			}
+			for _, secret := range []string{"do-not-display", "secret-field-name", "secret-value"} {
+				if strings.Contains(out.String()+diagnostic.String(), secret) {
+					t.Errorf("output exposed supplied secret %q", secret)
+				}
+			}
+		})
+	}
+}

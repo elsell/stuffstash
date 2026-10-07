@@ -21,10 +21,10 @@ import (
 
 func runPrintConnector(ctx context.Context, options app.Options, getenv func(string) string, output ports.Output) error {
 	if runtime.GOOS != "linux" {
-		return ports.Failure("configuration", "USB print workers currently require Linux")
+		return ports.Failure("configuration", "USB print workers require Linux. Run the worker on Linux.")
 	}
 	if options.ConnectorID == "" {
-		return ports.Failure("usage", "choose the registered connector with --connector")
+		return ports.Failure("usage", "Select the registered connector with --connector.")
 	}
 	config, err := printConfig(options, getenv)
 	if err != nil {
@@ -36,7 +36,7 @@ func runPrintConnector(ctx context.Context, options app.Options, getenv func(str
 	}
 	clock := systemClock{}
 	if !registration.ExpiresAt.After(clock.Now()) {
-		return ports.Failure("authentication", "connector credential expired; pair this connector again")
+		return ports.Failure("authentication", "The connector credential expired. Pair this connector again.")
 	}
 	receipts := presentation.NewProtocolReceipts(output)
 	defer func() {
@@ -67,7 +67,7 @@ func runPrintConnector(ctx context.Context, options app.Options, getenv func(str
 		return nil
 	}
 	if errors.Is(err, context.DeadlineExceeded) && !registration.ExpiresAt.After(clock.Now()) {
-		return ports.Failure("authentication", "connector credential expired; pair this connector again")
+		return ports.Failure("authentication", "The connector credential expired. Pair this connector again.")
 	}
 	return err
 }
