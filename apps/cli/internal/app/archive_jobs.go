@@ -96,7 +96,9 @@ func (r Runner) archiveCommand(ctx context.Context, o Options, token string) err
 	var result any
 	switch action {
 	case "list":
-		result, err = api.ArchiveJobs(ctx, o.Scope, o.Page)
+		result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.ArchiveJob], error) {
+			return api.ArchiveJobs(ctx, o.Scope, page)
+		})
 	case "show":
 		result, err = api.ArchiveJob(ctx, o.Scope, id)
 	case "preview":

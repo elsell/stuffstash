@@ -35,14 +35,18 @@ func (r Runner) workflowCommand(ctx context.Context, o Options, token string) er
 	var result any
 	switch o.Command[1] {
 	case "list":
-		result, err = api.Workflows(ctx, o.Scope.Tenant, o.Page)
+		result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.WorkflowHead], error) {
+			return api.Workflows(ctx, o.Scope.Tenant, page)
+		})
 	case "show":
 		result, err = api.Workflow(ctx, o.Scope.Tenant, o.Command[2])
 	case "selection":
 		result, err = api.WorkflowSelection(ctx, o.Scope.Tenant)
 	case "revisions":
 		if o.Command[2] == "list" {
-			result, err = api.WorkflowRevisions(ctx, o.Scope.Tenant, o.Command[3], o.Page)
+			result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.WorkflowRevision], error) {
+				return api.WorkflowRevisions(ctx, o.Scope.Tenant, o.Command[3], page)
+			})
 		} else {
 			result, err = api.WorkflowRevision(ctx, o.Scope.Tenant, o.Command[3], o.Command[4])
 		}

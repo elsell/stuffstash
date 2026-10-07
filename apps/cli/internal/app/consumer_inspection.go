@@ -23,7 +23,7 @@ func validateConsumerInspection(flags *flag.FlagSet, o Options) error {
 	flags.Visit(func(f *flag.Flag) {
 		switch f.Name {
 		case "server", "connector", "tenant", "inventory", "allow-loopback-http", "json", "no-input", "request-id", "color", "help":
-		case "printer", "status", "limit", "cursor":
+		case "printer", "status", "limit", "cursor", "all":
 			if !consumerAttemptsList(o) {
 				invalid = f.Name
 			}
@@ -83,7 +83,9 @@ func (r ConsumerInspector) Run(ctx context.Context, o Options) error {
 		if status == "" {
 			status = "unsettled"
 		}
-		result, err = api.ConsumerAttempts(active, o.Page, o.PrinterID, status)
+		result, err = listPages(active, o, func(page ports.Page) (ports.Result[[]ports.ConsumerAttempt], error) {
+			return api.ConsumerAttempts(active, page, o.PrinterID, status)
+		})
 	default:
 		result, err = api.ConsumerAttempt(active, o.Command[4])
 	}

@@ -45,7 +45,9 @@ func (r Runner) attachmentsCommand(ctx context.Context, o Options, token string)
 	}
 	action, asset := o.Command[1], o.Command[2]
 	if action == "list" {
-		result, err := api.Attachments(ctx, o.Scope, asset, o.Page)
+		result, err := listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.Attachment], error) {
+			return api.Attachments(ctx, o.Scope, asset, page)
+		})
 		if err != nil {
 			return err
 		}

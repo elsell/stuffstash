@@ -31,7 +31,9 @@ func (r Runner) activityCommand(ctx context.Context, o Options, token string) er
 	if err != nil {
 		return err
 	}
-	result, err := api.AssetActivity(ctx, o.Scope, o.Command[2], o.ActivityView, o.Page)
+	result, err := listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.Activity], error) {
+		return api.AssetActivity(ctx, o.Scope, o.Command[2], o.ActivityView, page)
+	})
 	if err != nil {
 		return err
 	}

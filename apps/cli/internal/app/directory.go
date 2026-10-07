@@ -37,7 +37,7 @@ func (r Runner) directoryCommand(ctx context.Context, o Options, token string) e
 	var result any
 	switch {
 	case isTenantList(o):
-		result, err = api.Tenants(ctx, o.Page)
+		result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.Tenant], error) { return api.Tenants(ctx, page) })
 	case o.Command[0] == "account":
 		result, err = api.Principal(ctx)
 	case o.Command[0] == "tenants":

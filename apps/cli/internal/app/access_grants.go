@@ -38,7 +38,9 @@ func (r Runner) accessGrantCommand(ctx context.Context, o Options, token string)
 	case "create":
 		return r.createGrant(ctx, o, api)
 	case "list":
-		result, err = api.AccessGrants(ctx, o.Scope, o.Page)
+		result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.AccessGrant], error) {
+			return api.AccessGrants(ctx, o.Scope, page)
+		})
 	case "show":
 		result, err = api.AccessGrant(ctx, o.Scope, o.Command[2], ports.AccessRelationship(o.Command[3]))
 	case "remove":

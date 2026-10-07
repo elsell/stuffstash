@@ -48,19 +48,25 @@ func (r Runner) evaluationCommand(ctx context.Context, o Options, token string) 
 	switch o.Command[1] {
 	case "cases":
 		if o.Command[2] == "list" {
-			result, err = api.EvaluationCases(ctx, o.Scope.Tenant, o.Page)
+			result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.EvaluationCaseHead], error) {
+				return api.EvaluationCases(ctx, o.Scope.Tenant, page)
+			})
 		} else {
 			result, err = api.EvaluationCase(ctx, o.Scope.Tenant, o.Command[3])
 		}
 	case "revisions":
 		if o.Command[2] == "list" {
-			result, err = api.EvaluationRevisions(ctx, o.Scope.Tenant, o.Command[3], o.Page)
+			result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.EvaluationCaseRevision], error) {
+				return api.EvaluationRevisions(ctx, o.Scope.Tenant, o.Command[3], page)
+			})
 		} else {
 			result, err = api.EvaluationRevision(ctx, o.Scope.Tenant, o.Command[3], o.Command[4])
 		}
 	case "runs":
 		if o.Command[2] == "list" {
-			result, err = api.EvaluationRuns(ctx, o.Scope.Tenant, o.Page)
+			result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.EvaluationRunHead], error) {
+				return api.EvaluationRuns(ctx, o.Scope.Tenant, page)
+			})
 		} else {
 			result, err = api.EvaluationRun(ctx, o.Scope.Tenant, o.Command[3])
 		}

@@ -48,7 +48,9 @@ func (r Runner) invitationCommand(ctx context.Context, o Options, token string) 
 	case "expiration":
 		return r.updateInvitationExpiration(ctx, o, api)
 	case "list":
-		result, err = api.Invitations(ctx, o.Scope, o.Page, o.InvitationStatus)
+		result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.Invitation], error) {
+			return api.Invitations(ctx, o.Scope, page, o.InvitationStatus)
+		})
 	case "show":
 		result, err = api.Invitation(ctx, o.Scope, o.Command[2])
 	case "cancel", "delete":

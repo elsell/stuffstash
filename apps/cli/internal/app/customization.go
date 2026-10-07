@@ -83,7 +83,9 @@ func (r Runner) customizationCommand(ctx context.Context, o Options, token strin
 		}
 		switch action {
 		case "list":
-			result, err = api.AssetTypes(ctx, scope, o.Page, o.Lifecycle)
+			result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.AssetType], error) {
+				return api.AssetTypes(ctx, scope, page, o.Lifecycle)
+			})
 		case "show":
 			result, err = api.AssetType(ctx, scope, id)
 		case "delete":
@@ -101,7 +103,9 @@ func (r Runner) customizationCommand(ctx context.Context, o Options, token strin
 		}
 		switch action {
 		case "list":
-			result, err = api.FieldDefinitions(ctx, scope, o.Page, o.Lifecycle)
+			result, err = listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.FieldDefinition], error) {
+				return api.FieldDefinitions(ctx, scope, page, o.Lifecycle)
+			})
 		case "show":
 			result, err = api.FieldDefinition(ctx, scope, id)
 		case "delete":

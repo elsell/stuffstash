@@ -500,20 +500,32 @@ func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 		return nil, ports.Failure("usage", "This command has no executor. Use --help to select a supported command.")
 	}
 	if o.Command[0] == "inventories" {
-		return api.Inventories(ctx, o.Scope, o.Page)
+		return listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.Inventory], error) {
+			return api.Inventories(ctx, o.Scope, page)
+		})
 	}
 	action := o.Command[1]
 	if action == "expiration" {
 		q := o.Expiration
 		q.Page = o.Page
 		q.Kind = o.Kind
-		return api.ExpirationAssets(ctx, o.Scope, q)
+		return collectPages(ctx, o, func(page ports.Page) (ports.Result[ports.ExpirationWorkspace], error) {
+			q.Page = page
+			return api.ExpirationAssets(ctx, o.Scope, q)
+		}, func(prior, next ports.ExpirationWorkspace) ports.ExpirationWorkspace {
+			next.Items = append(prior.Items, next.Items...)
+			return next
+		})
 	}
 	if action == "checked-out" {
-		return api.CheckedOutAssets(ctx, o.Scope, o.Page)
+		return listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.CheckedOutAsset], error) {
+			return api.CheckedOutAssets(ctx, o.Scope, page)
+		})
 	}
 	if action == "list" {
-		return api.Assets(ctx, o.Scope, ports.AssetQuery{Page: o.Page, Lifecycle: o.Lifecycle, Sort: o.Sort})
+		return listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.Asset], error) {
+			return api.Assets(ctx, o.Scope, ports.AssetQuery{Page: page, Lifecycle: o.Lifecycle, Sort: o.Sort})
+		})
 	}
 	id := ""
 	if len(o.Command) > 2 {
@@ -535,7 +547,9 @@ func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 		}
 		return api.UpdateAsset(ctx, o.Scope, id, change, "")
 	case "checkouts":
-		return api.Checkouts(ctx, o.Scope, id, o.Page)
+		return listPages(ctx, o, func(page ports.Page) (ports.Result[[]ports.Checkout], error) {
+			return api.Checkouts(ctx, o.Scope, id, page)
+		})
 	case "checkout", "return", "return-details":
 		checkoutID := ""
 		if len(o.Command) == 4 {
