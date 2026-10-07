@@ -90,3 +90,29 @@ the locale. Check that controls remain reachable and user-entered names stay int
 The migration is still in progress. `node scripts/inventory-client-messages.mjs`
 lists remaining literal candidates for review; it also finds technical errors and
 constants, so its counts are not a list of confirmed UI defects.
+
+## Publish CLI releases
+
+The normal Release workflow attaches five portable CLI archives, individual
+SHA-256 files, and `stuffstash-cli-release.json` to the project tag. The archive
+includes third-party notices; `stuffstash version` reports its tag and source
+commit. `version --json` reports whether that build includes a USB printer adapter;
+this is separate from whether a printer is connected or ready. USB printer support
+remains limited to Linux and the supported Brother
+profile, even when ordinary inventory commands run on another platform.
+
+If publication stops after staging its assets, run **Release → Run workflow**
+on **main**, with `repair_run_id` set to the original Release workflow run ID.
+Repair uses its retained `release-publication` artifact and exact tag/commit.
+Draft-creation failures include the GitHub error status and validation details.
+A lost response may still leave a draft behind; repair finds that draft and resumes
+from the original assets.
+It uploads missing assets and verifies existing bytes; it never overwrites a
+mismatch. Investigate a mismatch or an expired artifact rather than rebuilding
+an old tag with new source or dependencies.
+
+Verified stable publication opens a maintenance PR for download links and
+self-host image digests. The docs deploy after that PR merges. If its checks or
+merge require attention, fix the PR; then run **Docs Pages** on **main** to refresh
+the site. A draft, failed publication, or older repaired release cannot replace
+newer stable download instructions.

@@ -54,8 +54,15 @@ export default defineConfig({
           items: [
             { label: 'Architecture', slug: 'architecture' },
             { label: 'Development Setup', slug: 'local-development' },
-            { label: 'Use the CLI', slug: 'cli' },
-            { label: 'Download the CLI', slug: 'cli-downloads' },
+            {
+              label: 'Command line',
+              items: [
+                { label: 'Download and verify', slug: 'cli-downloads' },
+                { label: 'Sign in and use inventories', slug: 'cli' },
+                { label: 'Printers and labels', slug: 'cli-printing' },
+                { label: 'Administration and backups', slug: 'cli-administration' },
+              ],
+            },
             { label: 'Connect An Inventory Agent', slug: 'mcp' },
             { label: 'Compatible Language Providers', slug: 'compatible-providers' },
             { label: 'Release To TestFlight', slug: 'testflight' },
