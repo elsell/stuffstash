@@ -98,7 +98,7 @@ function ThemedApp() {
           name="assets/[assetId]/checkouts"
           options={sheetOptions.checkoutHistory}
         />
-        <Stack.Screen name="inventory-archive" options={inventorySwitcherNativeOptions(palette)} />
+        <Stack.Screen name="inventory-archive" options={{ presentation: 'card', title: t('archive.workspaceTitle') }} />
         <Stack.Screen name="tenant-switcher" options={inventorySwitcherNativeOptions(palette)} />
       </Stack>
       <PushNotificationNavigation /><PendingLabelNavigation />

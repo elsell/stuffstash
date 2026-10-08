@@ -6,9 +6,9 @@ import { ExpoExportTemporaryFiles } from '../src/adapters/exports/ExpoExportTemp
 import { ExpoExportFileShare } from '../src/adapters/exports/ExpoExportFileShare';
 import { NativeExportFileDelivery } from '../src/adapters/exports/NativeExportFileDelivery';
 import { ExportInventoryCommand } from '../src/application/exports/InventoryExport';
-import { SettingsQuery } from '../src/application/settings/SettingsQuery';
 import { MobileServerStateProvider } from '../src/ui/navigation/MobileServerStateProvider';
-import { InventorySettingsScreen } from '../src/ui/screens/ScopedSettingsScreens';
+import { InventoryArchiveScreen } from '../src/ui/screens/InventoryArchiveScreen';
+import type { InventoryArchiveWorkspace } from '../src/application/archives/InventoryArchive';
 
 // Real settings, cache files and system share sheet; only the network repository is fake.
 export function InventoryExportFixture() {
@@ -17,11 +17,6 @@ export function InventoryExportFixture() {
     const observer = { record: () => setEvidence('Cleanup failed') };
     const files = new ExpoExportTemporaryFiles(observer);
     const sheet = new ExpoExportFileShare();
-    const query = new SettingsQuery(
-      { getCurrentPrincipal: async () => ({ id: 'export-owner', email: 'owner@example.invalid' }) },
-      { getDiagnostics: () => ({ apiBaseUrl: 'https://inventory.example.invalid', appVersion: 'export-audit', authenticationMode: 'oidc-sso' }) },
-      { getSelectedScope: async () => ({ tenant: { id: 'household', name: 'Household', permissions: ['configure'] }, inventory: { id: 'inventory', name: 'Main Inventory', permissions: ['view', 'share', 'configure'] } }) }
-    );
     const command = new ExportInventoryCommand({ download: async (scope, format) => {
       if (scope.tenantId !== 'household' || scope.inventoryId !== 'inventory') throw new Error('Incorrect export scope');
       return format === 'json' ? '{"schemaVersion":1,"assets":[{"title":"Drill"}]}' : 'title\r\nDrill\r\n';
@@ -37,10 +32,11 @@ export function InventoryExportFixture() {
         } };
       }
     }, sheet, 'ios', observer));
-    return { query, command, client: createMobileQueryClient() };
+    const workspace = { newRequestKey: () => 'export-audit-request', files: {}, repository: { list: async () => ({ jobs: [] }) } } as unknown as InventoryArchiveWorkspace;
+    return { workspace, command, client: createMobileQueryClient() };
   });
   useEffect(() => () => fixture.client.clear(), [fixture]);
   return <MobileServerStateProvider client={fixture.client} scopeId="export-audit" loadInventoryScope={async () => ({ tenantId: 'household', inventoryId: 'inventory' })}>
-    <View style={{ flex: 1 }}><InventorySettingsScreen settingsQuery={fixture.query} exportCommand={fixture.command} onNavigate={() => {}} /><Text accessibilityLabel={evidence}>{evidence}</Text></View>
+    <View style={{ flex: 1 }}><InventoryArchiveScreen workspace={fixture.workspace} exportCommand={fixture.command} scope={{ tenantId: 'household', inventoryId: 'inventory' }} onClose={() => {}} onOpen={async () => {}} /><Text accessibilityLabel={evidence}>{evidence}</Text></View>
   </MobileServerStateProvider>;
 }

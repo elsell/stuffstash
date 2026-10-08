@@ -11,6 +11,8 @@ export function InventoryArchiveFixture() {
   const [evidence, setEvidence] = useState('Nothing restored');
   const [workspace] = useState<InventoryArchiveWorkspace>(() => {
     let job: ArchiveJob | undefined;
+    const history: ArchiveJob[] = Array.from({ length: 12 }, (_, index) => ({ id: `history-${index}`, kind: index % 2 ? 'restore' : 'export', state: 'cancelled', phase: 'cancelled', createdAt: `2026-09-${String(20 - index).padStart(2, '0')}T00:00:00Z`, expiresAt: '2100-01-01T00:00:00Z', photos: true, otherFiles: true }));
+    history.push({ id: 'oldest-export', kind: 'export', state: 'ready', phase: 'complete', createdAt: '2026-09-01T00:00:00Z', expiresAt: '2100-01-01T00:00:00Z', photos: true, otherFiles: true });
     return {
       newRequestKey: () => 'archive-audit-request',
       files: {
@@ -18,7 +20,10 @@ export function InventoryArchiveFixture() {
         share: async () => { throw new Error('Not an export fixture'); }
       },
       repository: {
-        list: async () => ({ jobs: job ? [job] : [] }),
+        list: async scope => {
+          if (scope.inventoryId) throw new Error('Activity must use household scope');
+          return { jobs: job ? [job, ...history] : history };
+        },
         get: async () => { if (!job) throw new Error('Missing job'); return job; },
         create: async () => { throw new Error('Not an export fixture'); },
         upload: async () => {
@@ -38,7 +43,7 @@ export function InventoryArchiveFixture() {
     };
   });
   return <View style={{ flex: 1 }}>
-    <Stack.Screen options={{ title: 'Restore inventory' }} />
-    {closed ? <Text accessibilityLabel={evidence}>{evidence}</Text> : <InventoryArchiveScreen workspace={workspace} scope={{ tenantId: 'empty-household' }} onClose={() => setClosed(true)} onOpen={async () => setClosed(true)} />}
+    <Stack.Screen options={{ title: 'Import and export' }} />
+    {closed ? <Text accessibilityLabel={evidence}>{evidence}</Text> : <InventoryArchiveScreen workspace={workspace} scope={{ tenantId: 'household', inventoryId: 'inventory' }} onClose={() => setClosed(true)} onOpen={async () => setClosed(true)} />}
   </View>;
 }

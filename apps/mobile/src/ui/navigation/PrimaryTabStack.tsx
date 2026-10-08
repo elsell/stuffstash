@@ -31,6 +31,7 @@ export function PrimaryTabStack({ root }: { readonly root: 'index' | 'search' })
       <Stack.Screen name="notifications" options={{ title: t('mobile.PrimaryTabStack.notifications') }} />
       <Stack.Screen name="settings/inventory/notification-editor" options={{ title: t('mobile.PrimaryTabStack.reminders') }} />
       <Stack.Screen name="settings/inventory/notifications" options={{ title: t('mobile.PrimaryTabStack.notifications') }} />
+      <Stack.Screen name="settings/inventory/transfer" options={{ title: t('archive.workspaceTitle') }} />
       <Stack.Screen name="settings/inventory/index" options={{ title: t('mobile.PrimaryTabStack.inventorySettings') }} />
       <Stack.Screen name="settings/household/index" options={{ title: t('mobile.PrimaryTabStack.householdSettings') }} />
       <Stack.Screen name="settings/inventory/tags/index" options={{ title: t('mobile.PrimaryTabStack.tags') }} />
