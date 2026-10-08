@@ -94,3 +94,39 @@ x/net 0.58.0, x/crypto 0.55.0 and x/text 0.41.0 graph updates (and x/tools 0.48.
 checksum resolution). Keep API/CLI workspace builds consistent and retain real
 SpiceDB authorization and required-check coverage. No new application endpoint or
 authentication behavior is introduced. Verify GitHub closure after merge.
+
+## October 7 follow-up
+
+The current inventory has eight open alerts. Pin source-map-js 1.2.2 in both
+JavaScript workspaces and compression 1.8.2 in the application workspace.
+Replace the selector-parser 6.1.3 override with 7.1.6 in both workspaces; verify
+Astro/CSS output because this crosses a major boundary. Regenerate locks with
+pnpm 11.0.7, without unrelated dependency refreshes. Retain existing reviewed
+braces, node-forge and http-cache-semantics mitigations until upstream fixed
+versions exist. Investigate the newly reported sprintf-js precision exhaustion
+path and record its actual consumer and disposition. Do not suppress an alert
+because a local patch exists. Verify affected build/installed-library checks and
+recheck the default-branch alert inventory after merge.
+
+Source-map-js 1.2.2 requires a temporary 14-day dependency-age exception for
+GHSA-68fv-2mgg-jv7q. Retain the age policy for all other dependencies and verify
+its consumers through web and documentation builds.
+
+### Remove the sprintf-js formatter chain
+
+The React Native development dependency chain passes through babel-jest,
+babel-plugin-istanbul, @istanbuljs/load-nyc-config 1.1.0, js-yaml 3.15.2 and
+argparse 1.0.10 to sprintf-js 1.0.3. The formatter has no published fixed version.
+The configuration loader uses only js-yaml's `load` API; it does not need the old
+argparse formatter. Override only `@istanbuljs/load-nyc-config>js-yaml` to the
+already reviewed 4.3.2 pin. Preserve the other overrides and mitigations.
+
+Verify the actual installed loader can read ordinary YAML coverage settings,
+including booleans, numeric thresholds and include/exclude arrays, and that the
+result drives real Babel coverage instrumentation without changing the code's
+return value. Verify this loader's YAML command-line dependency no longer pulls
+sprintf-js, and confirm the regenerated lock has no remaining sprintf-js entry.
+This intentionally drops js-yaml 3's nonstandard JavaScript YAML tags, which are
+not required for project coverage configuration. Do not replace affected packages
+with renamed copies or suppress the alert. Root dependency regeneration and
+existing installed-library security tests provide integration validation.

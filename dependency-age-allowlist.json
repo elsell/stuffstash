@@ -152,5 +152,12 @@
     "version": "1.9.0",
     "reason": "Reviewed security remediation: Astro 7.3.5 requires its matched compiler/Markdown pipeline; smol-toml 1.9.0 is the published security fix. See specs/platform/dependency-security-remediation.spec.md.",
     "compensatingVerification": "Exact pinned versions and lockfile integrity, actual-library security regressions, generated table/PNG checks, custom-domain and project-path documentation builds."
+  },
+  {
+    "kind": "npm",
+    "name": "source-map-js",
+    "version": "1.2.2",
+    "reason": "Reviewed fix for GHSA-68fv-2mgg-jv7q; removes affected source-map parsing in both JavaScript workspaces.",
+    "compensatingVerification": "Exact lockfile integrity review, web and documentation builds, and required checks."
   }
 ]
