@@ -59,6 +59,8 @@ describe('mobile navigation contract', () => {
     expect(nativeTabTriggerNames(tabLayoutSource)).not.toContain('settings');
     expect(rootLayoutSource).not.toMatch(/<Stack\.Screen\s+name=["']settings\/index["']/);
     expect(appSources).toHaveProperty('../../app/(tabs)/(home,search)/settings/account.tsx');
+    expect(appSources).toHaveProperty('../../app/(tabs)/(home,search)/settings/inventory/transfer.tsx');
+    expect(rootLayoutSource).not.toContain('name="inventory-archive" options={inventorySwitcherNativeOptions');
     expect(appSources).toHaveProperty('../../app/(tabs)/(home,search)/settings/appearance.tsx');
     expect(appSources).toHaveProperty('../../app/(tabs)/(home,search)/settings/connection.tsx');
     expect(appSources).toHaveProperty('../../app/(tabs)/(home,search)/settings/voice/index.tsx');

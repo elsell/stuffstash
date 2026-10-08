@@ -9,6 +9,24 @@ version. “Passed” is enough for a successful check. For a failure, describe 
 last action and what happened; a screenshot or recording helps when convenient.
 Use a small test inventory for changes. Do not remove your original inventory.
 
+## Import and export workspace
+
+Status: unverified on a physical device; October 8 implementation candidate.
+Record the TestFlight build used. Automated behavior tests are separate evidence.
+
+- [ ] Open Inventory Settings → Import and export. Switch Export/Import and the
+  export format. **Expected:** one normal screen, familiar back navigation, tabs
+  still available, no export starts merely from selecting a format.
+- [ ] Create a backup archive, leave after it appears in activity, and return.
+  **Expected:** the same job remains with current status; no duplicate is created.
+  Activity labels exports/imports and includes your jobs across this household.
+- [ ] Import a small test archive, wait for upload to finish, leave, then return
+  and review it before restoring. **Expected:** upload asks you to stay; accepted
+  validation continues away from this screen; restore creates a new inventory.
+- [ ] Scroll through activity and open the last action; try JSON/CSV and dismiss
+  the share sheet. **Expected:** controls remain above tabs/voice accessory,
+  errors can be retried, and JSON/CSV never promise saved background-job history.
+
 ## 1. Save and restore an archive on iPhone
 
 Status: pending. Archive support shipped in v0.28.0, TestFlight build 162.1;

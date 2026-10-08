@@ -5,8 +5,9 @@ description: Move inventories between instances, or download data for other tool
 
 ## Back up or move an inventory
 
-In inventory settings, choose **Export archive**. Inventory data is always
-included. Leave **Photos** and **Other files** selected for a complete inventory
+On mobile, open **Inventory Settings → Import and export** and select
+**Backup archive** under Export. On the web, choose **Export archive** in
+inventory settings. Inventory data is always included. Leave **Photos** and **Other files** selected for a complete inventory
 backup, then choose **Create archive**. The server prepares a ZIP in the background;
 you can leave the screen and return to download it. Mobile opens the system share
 sheet so you can save the ZIP to Files or another app.
@@ -15,9 +16,10 @@ The ZIP contains a JSON inventory document and the original attachments you
 selected. Turning off either attachment option makes a partial backup. CSV is for
 spreadsheets, not backup or restore.
 
-To restore on another Stuff Stash instance, sign in there first. On mobile, open
-the household/inventory switcher and choose **Restore inventory** beside
-**New inventory**. On the web, open the destination household's settings. You must
+To restore on another Stuff Stash instance, sign in there first. On mobile,
+choose **Import** on the **Import and export** screen. You can also open
+**Restore inventory** from the household/inventory switcher, including when the
+household has no inventory. On the web, open the destination household's settings. You must
 have permission to create inventories in that household; it can be empty.
 
 1. Choose the ZIP and select **Upload and validate**.
@@ -29,6 +31,11 @@ Restore creates a new inventory with new IDs and reconnects its internal
 relationships. It never overwrites an existing inventory. Conflicting custom
 definition keys are renamed and reported in the review. Selecting or validating a
 file alone does not create an inventory.
+
+On mobile, the activity list shows your archive imports and exports across the
+current household. Work in progress and archives waiting for review appear first,
+followed by past jobs. Return to this screen to review, download or open the
+result; accepted jobs continue even if you leave or restart the app.
 
 Jobs are private to the person who started them. Leaving the screen cancels a
 local file transfer, but does not cancel work already accepted by the server.
@@ -50,8 +57,10 @@ disk space for archive preparation and validation.
 
 ## Download JSON or CSV
 
-In the web or mobile app, open **Settings**, choose your inventory, then choose
-**Export inventory**. Anyone who can view the inventory can export it.
+On mobile, open **Inventory Settings → Import and export**, select Export, then
+choose **JSON data** or **CSV spreadsheet** and start the export. On the web,
+choose **Export inventory** in inventory settings. Anyone who can view the
+inventory can export it.
 
 - **JSON** keeps the complete inventory document, including field definitions and
   asset types. Choose this when you need structured data for another tool.
@@ -71,14 +80,15 @@ CSV protects against spreadsheet formulas by prefixing formula-like text with a
 single quote. JSON preserves the original text. Both formats preserve Unicode,
 commas, quotes, and multiline descriptions.
 
-On mobile, choose a format and use the system share sheet to save or send the
-file. On iPhone and iPad, **Save to Files** keeps a copy in your chosen folder.
+On mobile, stay on the screen while a JSON or CSV file is prepared, then use
+the system share sheet to save or send it. These direct downloads do not appear
+in archive activity; use a backup archive for a saved background job. On iPhone and iPad, **Save to Files** keeps a copy in your chosen folder.
 Canceling preparation prevents the share sheet from opening. Once you send a
 copy to another app, canceling cannot take it back.
 
 ## If a download fails
 
-The app keeps you in Settings and offers **Retry export**. If your session has
+The app keeps you on the export screen with an error and a way to try again. If your session has
 expired, sign in again. If access was removed, ask the inventory owner to restore
 it. A failed request does not produce a partial inventory file.
 

@@ -53,6 +53,17 @@ async function mount(element: React.ReactElement) {
 function settingsQuery(permissions: readonly string[] = ['view', 'configure'], getScope?: () => Promise<Awaited<ReturnType<SettingsQuery['getSelectedScope']>>>) {
   return new SettingsQuery({ getCurrentPrincipal: async () => ({ id: 'principal', email: 'john@example.com' }) }, { getDiagnostics: () => ({ apiBaseUrl: 'https://stash.home.test/api', appVersion: 'test', authenticationMode: 'oidc-sso' }) }, { getSelectedScope: getScope ?? (async () => ({ tenant: { id: 'tenant-home', name: 'Home', permissions }, inventory: { id: 'inventory-home', name: 'Household', permissions: ['view', 'share'] } })) });
 }
+it('opens one import and export destination with the selected inventory scope', async () => {
+  const scopes: unknown[] = [];
+  const { harness } = await mount(<InventorySettingsScreen settingsQuery={settingsQuery()} onNavigate={() => {}} onArchive={scope => scopes.push(scope)} />);
+  try {
+    await harness.press(harness.byLabel('Import and export'));
+    expect(scopes).toEqual([{ tenantId: 'tenant-home', inventoryId: 'inventory-home' }]);
+    expect(harness.allText().join(' ')).not.toContain('Export archive');
+    expect(harness.allText().join(' ')).not.toContain('Export inventory');
+  } finally { await harness.unmount(); }
+});
+
 const textButton = (harness: MobileRenderHarness, label: string) => harness.allByType('Pressable').find((node) => node.queryAll((child) => child.type === 'Text' && child.children.includes(label)).length > 0);
 
 describe('mounted Settings behavior', () => {

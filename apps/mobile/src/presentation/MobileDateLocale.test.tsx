@@ -34,11 +34,11 @@ it('formats checkout metadata without changing availability or invalid-date reco
 });
 it('renders archive expiry in the configured locale', async () => {
   const workspace = { newRequestKey: () => 'key', files: {}, repository: {
-    list: async () => ({ jobs: [{ id: 'job', kind: 'export', state: 'queued', phase: 'export', createdAt: timestamp, expiresAt: timestamp, photos: true, otherFiles: true }] })
+    list: async () => ({ jobs: [{ id: 'job', kind: 'export', state: 'ready', phase: 'export', createdAt: timestamp, expiresAt: timestamp, photos: true, otherFiles: true }] })
   } } as unknown as InventoryArchiveWorkspace;
   const h = new MobileRenderHarness();
   try {
     await h.render(<InventoryArchiveScreen workspace={workspace} scope={{ tenantId: 'test' }} onClose={() => {}} onOpen={async () => {}} />);
-    expect(h.allText().join(' ')).toContain(new Date(timestamp).toLocaleString('de'));
+    expect(h.allText().join(' ')).toContain('Available until ' + new Date(timestamp).toLocaleString('de'));
   } finally { await h.unmount(); }
 });

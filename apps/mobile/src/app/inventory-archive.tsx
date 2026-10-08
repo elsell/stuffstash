@@ -12,8 +12,8 @@ export default function InventoryArchiveRoute() {
   const inventoryId = typeof params.inventoryId === 'string' ? params.inventoryId : undefined;
   if (!tenantId) return <DeniedSettingsState message={t('archive.denied')} />;
   return <>
-    <Stack.Screen options={{ title: t(inventoryId ? 'archive.export' : 'archive.restore') }} />
-    <InventoryArchiveScreen key={`${tenantId}:${inventoryId ?? ''}`} workspace={services.inventoryArchive} scope={{ tenantId, inventoryId }}
+    <Stack.Screen options={{ title: t('archive.workspaceTitle') }} />
+    <InventoryArchiveScreen key={`${tenantId}:${inventoryId ?? ''}`} workspace={services.inventoryArchive} exportCommand={services.exportInventoryCommand} scope={{ tenantId, inventoryId }}
       onClose={() => returnToPreviousOrHome(router)} onOpen={async (id, signal) => {
         await services.selectInventoryCommand.execute(id, { signal });
         if (signal.aborted) return;

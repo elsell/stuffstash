@@ -3809,6 +3809,14 @@ final class FixtureAuditTests: XCTestCase {
 
   func testArchiveRestoreRequiresReviewAndKeepsCompletionReachable() {
     guard openFixtureURL("audit-inventory-archive") else { return }
+    let lastDownload = app.buttons["Download"].firstMatch
+    XCTAssertTrue(lastDownload.waitForExistence(timeout: 10))
+    for _ in 0..<16 where !lastDownload.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(lastDownload.isHittable, "The final household activity action must remain reachable")
+    capture("archive-household-activity-final-row")
+    let importMode = app.buttons["Import"].firstMatch
+    for _ in 0..<16 where !importMode.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(importMode.isHittable); importMode.tap()
     let choose = app.buttons["Choose archive"].firstMatch
     XCTAssertTrue(choose.waitForExistence(timeout: 10)); choose.tap()
     let upload = app.buttons["Upload and validate"].firstMatch
@@ -3821,6 +3829,12 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(name.waitForExistence(timeout: 5))
     XCTAssertEqual(name.value as? String, "Camping equipment")
     capture("archive-restore-review")
+    let backToActivity = app.buttons["Back to activity"].firstMatch
+    XCTAssertTrue(backToActivity.isHittable); backToActivity.tap()
+    XCTAssertTrue(review.waitForExistence(timeout: 5))
+    for _ in 0..<4 where !review.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(review.isHittable); review.tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 5))
     let restore = app.buttons["Restore inventory"].firstMatch
     XCTAssertTrue(restore.isHittable); XCTAssertTrue(restore.isEnabled)
     name.tap()
@@ -3838,13 +3852,19 @@ final class FixtureAuditTests: XCTestCase {
 
   func testInventoryExportUsesSystemShareAndRemovesTemporaryFiles() {
     guard openFixtureURL("audit-inventory-export") else { return }
-    let export = app.buttons["Export inventory"].firstMatch
-    XCTAssertTrue(export.waitForExistence(timeout: 10))
-    for (format, label) in [("json", "JSON — complete inventory data"), ("csv", "CSV — spreadsheet rows")] {
-      for _ in 0..<4 where !export.isHittable { app.scrollViews.firstMatch.swipeUp() }
-      XCTAssertTrue(export.isHittable); export.tap()
+    let formatPicker = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Format")).firstMatch
+    XCTAssertTrue(formatPicker.waitForExistence(timeout: 10))
+    for (format, label, action) in [("json", "JSON data", "Export JSON"), ("csv", "CSV spreadsheet", "Export CSV")] {
+      for _ in 0..<4 where !formatPicker.isHittable { app.scrollViews.firstMatch.swipeDown() }
+      XCTAssertTrue(formatPicker.isHittable); formatPicker.tap()
       let choice = app.buttons[label].firstMatch
       XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.tap()
+      let export = app.buttons[action].firstMatch
+      XCTAssertTrue(export.waitForExistence(timeout: 5))
+      let evidence = format == "json" ? "No export yet" : "json: file removed"
+      XCTAssertTrue(app.staticTexts[evidence].exists, "Choosing a format must not submit an export")
+      for _ in 0..<4 where !export.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      XCTAssertTrue(export.isHittable); XCTAssertTrue(export.isEnabled); export.tap()
       let file = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "stuff-stash-inventory")).firstMatch
       XCTAssertTrue(file.waitForExistence(timeout: 10), "The native share sheet must receive the inventory file")
       capture("inventory-export-\(format)-system-share")
@@ -3859,7 +3879,7 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(app.staticTexts["\(format): file removed"].waitForExistence(timeout: 10))
       XCTAssertTrue(export.isEnabled)
     }
-    capture("inventory-export-return-to-settings")
+    capture("inventory-export-return-to-workspace")
   }
 
   func testSettingsCommandsRecoverReminderDraft() {
