@@ -76,6 +76,7 @@ describe('mobile archive tasks', () => {
       await h.press(h.byLabel('Format')); await h.press(h.byLabel('CSV spreadsheet'));
       await h.press(h.byLabel('Export CSV'));
       expect(h.allText().join(' ')).toContain('export limit');
+      expect(h.byLabel('Retry')).toBeUndefined();
       await h.press(h.byLabel('Export CSV')); await h.press(h.byLabel('Export CSV'));
       expect(formats).toEqual(['csv', 'csv']);
       await h.press(h.byLabel('Cancel export')); await h.run(() => finish('private content'));

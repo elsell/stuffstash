@@ -28,6 +28,7 @@ export function InventoryArchiveScreen({ workspace, scope, exportCommand, onOpen
   const [photos, setPhotos] = useState(true), [otherFiles, setOtherFiles] = useState(true);
   const [jobs, setJobs] = useState<ArchiveJob[]>([]), [cursor, setCursor] = useState<string>();
   const [busy, setBusy] = useState(false), [loading, setLoading] = useState(true), [error, setError] = useState('');
+  const [errorIsActivity, setErrorIsActivity] = useState(false);
   const [fileName, setFileName] = useState<string>();
   const [review, setReview] = useState<{ job: ArchiveJob; preview: ArchivePreview }>();
   const [name, setName] = useState('');
@@ -39,7 +40,8 @@ export function InventoryArchiveScreen({ workspace, scope, exportCommand, onOpen
     values.forEach(job => byId.set(job.id, job));
     store([...byId.values()].sort((a, b) => Number(isActive(b)) - Number(isActive(a)) || b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id)));
   };
-  const report = (caught: unknown) => {
+  const report = (caught: unknown, activity = false) => {
+    setErrorIsActivity(activity);
     const status = (caught as { status?: number }).status;
     if (status === 401 || status === 403) { store([]); setReview(undefined); setCursor(undefined); }
     setError(t(status === 401 ? 'archive.signIn' : status === 403 ? 'archive.denied' : (status === 413 || status === 422) ? 'archive.tooLarge' : 'archive.error'));
@@ -65,7 +67,7 @@ export function InventoryArchiveScreen({ workspace, scope, exportCommand, onOpen
           merge([...page.jobs, ...older]); if (initial) setCursor(page.nextCursor);
           initialized = true; setLoading(false);
         }
-      } catch (caught) { if (!visit.signal.aborted && started === revision.current) { initialized = true; report(caught); setLoading(false); } }
+      } catch (caught) { if (!visit.signal.aborted && started === revision.current) { initialized = true; report(caught, true); setLoading(false); } }
       finally { fetching = false; }
     };
     const tick = async () => {
@@ -76,11 +78,11 @@ export function InventoryArchiveScreen({ workspace, scope, exportCommand, onOpen
     const subscription = AppState.addEventListener('change', state => { if (state === 'active') void refresh(true); });
     return () => { visit.close(); clearTimeout(timer); subscription.remove(); if (task.current === visit) task.current = undefined; };
   }, [workspace, exportCommand, scope.tenantId, scope.inventoryId]));
-  const run = async (operation: (visit: ArchiveTask) => Promise<void>) => {
+  const run = async (operation: (visit: ArchiveTask) => Promise<void>, activity = false) => {
     const visit = task.current; if (!focused || !visit || visit.signal.aborted || working.current) return;
     working.current = true; revision.current++; setBusy(true); setError('');
     try { await operation(visit); }
-    catch (caught) { if (!visit.signal.aborted) report(caught); }
+    catch (caught) { if (!visit.signal.aborted) report(caught, activity); }
     finally { if (task.current === visit) { revision.current++; working.current = false; setBusy(false); setExporting(false); } }
   };
   const saveJob = (visit: ArchiveTask, job: ArchiveJob) => { if (!visit.signal.aborted) merge([job]); };
@@ -95,7 +97,7 @@ export function InventoryArchiveScreen({ workspace, scope, exportCommand, onOpen
         try { await exportCommand.execute({ tenantId: scope.tenantId, inventoryId: scope.inventoryId }, format, request.signal); }
         catch (caught) {
           if (!request.signal.aborted) {
-            if ((caught as { status?: number }).status === 422) setError(t('mobile.InventoryExportAction.thisInventoryExceedsTheServerSExportLimitAsk'));
+            if ((caught as { status?: number }).status === 422) { setErrorIsActivity(false); setError(t('mobile.InventoryExportAction.thisInventoryExceedsTheServerSExportLimitAsk')); }
             else throw caught;
           }
         }
@@ -131,10 +133,10 @@ export function InventoryArchiveScreen({ workspace, scope, exportCommand, onOpen
         {exporting ? <NativeCommandButton label={t('mobile.InventoryExportAction.cancelExport')} onPress={() => direct.current?.abort()} /> : null}
       </View>
       {busy ? <SettingsLoadingRow label={t('archive.localBusy')} /> : null}
-      {error ? <><Text accessibilityRole="alert" style={styles.errorMessage}>{error}</Text><SettingsActionRow label={t('archive.retry')} disabled={busy} onPress={() => void run(async visit => {
+      {error ? <><Text accessibilityRole="alert" style={styles.errorMessage}>{error}</Text>{errorIsActivity ? <SettingsActionRow label={t('archive.retry')} disabled={busy} onPress={() => void run(async visit => {
         const page = await workspace.repository.list(household, undefined, visit.signal);
         if (!visit.signal.aborted) { merge(page.jobs); setCursor(page.nextCursor); setLoading(false); }
-      })} /></> : null}
+      }, true)} /> : null}</> : null}
       {!review ? <SettingsSection title={t('archive.householdActivity')} footer={t(jobs.length ? 'archive.activityLeave' : 'archive.activityEmpty')}>
         {loading ? <SettingsLoadingRow label={t('archive.loading')} /> : null}
         {!loading && !jobs.length ? <Text style={styles.navigationRow}>{t('archive.noJobs')}</Text> : null}
