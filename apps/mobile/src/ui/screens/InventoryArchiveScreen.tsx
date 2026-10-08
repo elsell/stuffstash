@@ -8,6 +8,7 @@ import { localization, t } from '../../presentation/localization';
 import { useIsFocused } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ExportInventoryCommand } from '../../application/exports/InventoryExport';
+import { spacing } from '../theme/tokens';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeChoicePicker } from '../components/NativeChoicePicker';
 import { SettingsSegmentedControl } from '../components/SettingsSegmentedControl';
@@ -108,12 +109,12 @@ export function InventoryArchiveScreen({ workspace, scope, exportCommand, onOpen
   });
   const reviewCopy = review ? formatArchiveReview(t, review.preview) : undefined;
   return <ScrollView style={styles.shell} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 20) }]}>
-      {!review && scope.inventoryId ? <View style={[styles.contentBlock, { marginTop: 16 }]}><SettingsSegmentedControl disabled={busy} value={mode} onChange={setMode} segments={[{ value: 'export', label: t('archive.exportMode') }, { value: 'import', label: t('archive.importMode') }]} /></View> : null}
+      {!review && scope.inventoryId ? <View style={[styles.contentBlock, { marginTop: spacing.md }]}><SettingsSegmentedControl disabled={busy} value={mode} onChange={setMode} segments={[{ value: 'export', label: t('archive.exportMode') }, { value: 'import', label: t('archive.importMode') }]} /></View> : null}
       {!review && mode === 'export' ? <SettingsSection footer={t(format === 'archive' ? 'archive.description' : format === 'json' ? 'archive.jsonDescription' : 'archive.csvDescription')}>
         <View style={styles.navigationRow}><NativeChoicePicker label={t('archive.format')} includeEmptyOption={false} disabled={busy} value={format} onChange={setFormat} options={[{ value: 'archive', label: t('archive.backup') }, ...(exportCommand ? [{ value: 'json', label: t('archive.json') }, { value: 'csv', label: t('archive.csv') }] : [])]} /></View>
       </SettingsSection> : <Text style={[styles.detailSubtitle, styles.contentBlock]}>{t(review ? 'archive.newInventory' : 'archive.restoreDescription')}</Text>}
       {review ? <SettingsSection footer={reviewCopy?.omitted}>
-        <View style={styles.navigationRow}>
+        <View style={[styles.navigationRow, { gap: spacing.sm, paddingVertical: spacing.md }]}>
           <Text style={styles.rowLabel}>{t('archive.name')}</Text>
           <DraftTextField style={[styles.rowLabel, { minHeight: 48 }]} accessibilityLabel={t('archive.name')} value={name} onChangeText={setName} editable={!busy} />
           <Text style={styles.rowContext}>{reviewCopy?.content}</Text>
@@ -126,10 +127,10 @@ export function InventoryArchiveScreen({ workspace, scope, exportCommand, onOpen
       </SettingsSection> : null : <SettingsSection footer={fileName}>
         <SettingsActionRow label={t('archive.chooseFile')} disabled={busy} onPress={() => void run(async visit => { const selected = await visit.pick(); if (!visit.signal.aborted) setFileName(selected); })} />
       </SettingsSection>}
-      <View testID="archive-task-actions" style={styles.contentBlock}>
+      <View testID="archive-task-actions" style={[styles.contentBlock, { marginTop: spacing.md, gap: spacing.sm }]}>
         <NativeCommandButton prominence="primary" label={t(review ? 'archive.restore' : mode === 'import' ? 'archive.upload' : format === 'archive' ? 'archive.create' : format === 'json' ? 'archive.exportJSON' : 'archive.exportCSV')} disabled={busy || !focused || (review ? !name.trim() : mode === 'import' && !fileName)} onPress={primary} />
         {review ? <NativeCommandButton label={t('archive.backToActivity')} disabled={busy} onPress={() => setReview(undefined)} /> : null}
-        <Text style={styles.sectionFooter}>{t(review ? 'archive.newInventory' : mode === 'import' ? 'archive.localTransfer' : format === 'archive' ? 'archive.acceptedLeave' : 'archive.directTransfer')}</Text>
+        {!review ? <Text style={styles.sectionFooter}>{t(mode === 'import' ? 'archive.localTransfer' : format === 'archive' ? 'archive.acceptedLeave' : 'archive.directTransfer')}</Text> : null}
         {exporting ? <NativeCommandButton label={t('mobile.InventoryExportAction.cancelExport')} onPress={() => direct.current?.abort()} /> : null}
       </View>
       {busy ? <SettingsLoadingRow label={t('archive.localBusy')} /> : null}

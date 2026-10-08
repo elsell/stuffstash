@@ -12,7 +12,13 @@ Use a small test inventory for changes. Do not remove your original inventory.
 ## Import and export workspace
 
 Status: unverified on a physical device; October 8 implementation candidate.
-Record the TestFlight build used. Automated behavior tests are separate evidence.
+Native run 37855656040 passed all three iPhone journeys and the iPad upload-safety
+and direct-export sharing checks. The iPad restore journey stopped at a premature
+enabled-state assertion after file selection; its final screenshot shows the
+selected file and enabled button. A bounded readiness wait replaces that immediate
+assertion; the remaining iPad restore steps are not claimed as verified. Screenshot
+review also prompted small action-spacing and duplicate-copy corrections, not yet
+re-rendered natively. Record the TestFlight build used.
 
 - [ ] Open Inventory Settings → Import and export. Switch Export/Import and the
   export format. **Expected:** one normal screen, familiar back navigation, tabs

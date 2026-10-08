@@ -3820,7 +3820,10 @@ final class FixtureAuditTests: XCTestCase {
     let choose = app.buttons["Choose archive"].firstMatch
     XCTAssertTrue(choose.waitForExistence(timeout: 10)); choose.tap()
     let upload = app.buttons["Upload and validate"].firstMatch
-    XCTAssertTrue(upload.isHittable); XCTAssertTrue(upload.isEnabled); upload.tap()
+    let uploadReady = NSPredicate { _, _ in upload.exists && upload.isEnabled && upload.isHittable }
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: uploadReady, object: nil)], timeout: 5), .completed)
+    capture("archive-import-file-selected")
+    upload.tap()
     let review = app.buttons["Review restore"].firstMatch
     XCTAssertTrue(review.waitForExistence(timeout: 5))
     for _ in 0..<4 where !review.isHittable { app.scrollViews.firstMatch.swipeUp() }
