@@ -74,3 +74,43 @@ test('Metro reads PNG asset dimensions through image-size 2', async () => {
     assert.equal(data.height, 1);
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
+
+
+test('coverage YAML loading and instrumentation work without the vulnerable sprintf dependency', async () => {
+  const { mkdtempSync, writeFileSync, rmSync } = require('node:fs');
+  const { tmpdir } = require('node:os');
+  const { runInNewContext } = require('node:vm');
+  const native = createRequire(mobile.resolve('react-native/package.json'));
+  const babelJest = createRequire(native.resolve('babel-jest/package.json'));
+  const istanbul = createRequire(babelJest.resolve('babel-plugin-istanbul/package.json'));
+  const nyc = createRequire(istanbul.resolve('@istanbuljs/load-nyc-config/package.json'));
+  const yaml = createRequire(nyc.resolve('js-yaml/package.json'));
+  const argumentParser = yaml('argparse/package.json');
+  assert.equal(argumentParser.dependencies?.['sprintf-js'], undefined,
+    'coverage configuration still brings the vulnerable formatter into the installed graph');
+
+  const directory = mkdtempSync(resolve(tmpdir(), 'stuffstash-coverage-security-'));
+  try {
+    writeFileSync(resolve(directory, 'package.json'), '{"name":"coverage-security-fixture"}');
+    writeFileSync(resolve(directory, '.nycrc.yaml'),
+      'all: true\ncheck-coverage: true\nlines: 80\ninclude:\n  - "subject.js"\nexclude:\n  - "ignored.js"\n');
+    const config = await istanbul('@istanbuljs/load-nyc-config').loadNycConfig({ cwd: directory });
+    assert.equal(config.all, true);
+    assert.equal(config.checkCoverage, true);
+    assert.equal(config.lines, 80);
+    assert.deepEqual(config.include, ['subject.js']);
+    assert.deepEqual(config.exclude, ['ignored.js']);
+
+    const filename = resolve(directory, 'subject.js');
+    const result = babelJest('@babel/core').transformSync('module.exports = value => value + 1;', {
+      filename, cwd: directory, configFile: false, babelrc: false,
+      plugins: [[babelJest('babel-plugin-istanbul'), config]],
+    });
+    const sandbox = { module: { exports: {} } };
+    runInNewContext(result.code, sandbox);
+    assert.equal(sandbox.module.exports(41), 42);
+    const coverage = sandbox.__coverage__[filename];
+    assert.ok(coverage && Object.values(coverage.s).some(count => count > 0),
+      'real Babel instrumentation did not record the executed code');
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});

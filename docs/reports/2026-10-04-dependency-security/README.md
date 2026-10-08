@@ -63,3 +63,49 @@ The vulnerable path is an xDS gRPC server interceptor. Stuff Stash's adapter
 constructs a SpiceDB client; no application xDS server entry point was found.
 The patch removes the vulnerable library version without changing product or
 permission behavior. The original JSON matrix remains the historical baseline.
+
+## October 7: remaining formatter and patched dependencies
+
+Alert #185 adds `sprintf-js` through React Native → babel-jest →
+babel-plugin-istanbul → @istanbuljs/load-nyc-config → js-yaml 3 → argparse 1.
+The upstream formatter's latest 1.1.3 remains affected by
+[unbounded numeric precision](https://github.com/alexei/sprintf.js/issues/237).
+The loader calls js-yaml `load`, which the already pinned 4.3.2 supports. A scoped
+`@istanbuljs/load-nyc-config>js-yaml` override removes the legacy formatter chain;
+the installed-library regression reads YAML coverage settings and executes actual
+Babel-instrumented code. The regenerated lock contains no sprintf-js entry, and all five installed-library
+security regressions pass, including the new YAML/instrumentation check. The formatter is development tooling here;
+that exposure assessment does not dismiss the dependency alert.
+
+The other three alerts retain their existing patches and installed-library
+regressions. Registry and upstream source checks on October 7 found:
+
+- Braces remains at 3.0.3 and micromatch at 4.0.8. Metro and Jest still use that
+  chain. [PR #72](https://github.com/micromatch/braces/pull/72) is closed without
+  merge; retain the bounded-nesting patch rather than remove its protection.
+- Node-forge remains at 1.4.0. Expo code-signing-certificates 0.0.7 still depends
+  on it; updating Expo tooling does not itself remove the RSA verification risk.
+  [PR #1152](https://github.com/digitalbazaar/forge/pull/1152) remains open.
+- Http-cache-semantics 4.3.0 exists, but its published source changes response
+  status and Vary handling, not the max-stale reuse guard. It retains the same
+  vulnerable branch addressed by [issue #56](https://github.com/kornelski/http-cache-semantics/issues/56).
+  Do not replace patched 4.2.0 with unpatched 4.3.0 merely because 4.3.0 is outside
+  the advisory's current version range. Astro's use remains build-time image
+  cache lifetime calculation; retain the cache-revalidation patch.
+
+These are explicit upstream blockers, not closed alerts. No alert is dismissed
+and no package identity is changed to hide a finding.
+
+### Patched releases in this batch
+
+| Alerts | Dependency | Exact update |
+| --- | --- | --- |
+| #182, #184 | source-map-js | 1.2.2 in both workspaces |
+| #183 | compression | 1.8.2 in the application workspace |
+| #181 | postcss-selector-parser | 7.1.6 in the documentation graph and shared override |
+| #185 | sprintf-js | Removed through the scoped YAML loader update above |
+
+Web and documentation builds passed locally. Native exports and type checks were
+interrupted; repository CI provides the remaining checks before merge. Independent
+code review found no confirmed issues. GitHub closure must be checked after merge;
+no remaining alert is dismissed.
