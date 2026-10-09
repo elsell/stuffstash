@@ -206,8 +206,8 @@ The stored YYYY-MM period uses Gregorian month boundaries. A locale's calendar
 must not relabel that period by converting only its first day: lunar-calendar
 months have different boundaries. Mobile month choices and month-only summaries
 therefore use localized Gregorian month names and years, retaining the user's
-language and number formatting. When the locale's calendar differs, show a short
-Gregorian-calendar clarification in month entry and beside month-only summaries.
+language and number formatting. Do not show calendar-system names or explanatory
+calendar notices in month entry or date summaries, regardless of the device calendar.
 Exact-day values retain their existing localized calendar presentation. Native
 date controls and exact-day labels retain their existing calendar behavior; the
 stored value is a calendar date, not an instant.

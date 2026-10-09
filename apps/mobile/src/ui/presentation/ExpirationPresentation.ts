@@ -12,7 +12,7 @@ export function formatAssetExpiration(value: AssetExpiration, locale?: string): 
     timeZone: 'UTC', year: 'numeric', month: 'long',
     ...(monthOnly ? { calendar: 'gregory' } : { day: 'numeric' as const })
   }).format(new Date(`${calendarDate}T00:00:00Z`));
-  return monthOnly && hasAlternativeCalendar(locale) ? t('mobile.ExpirationPresentation.gregorian', { formatted: String(formatted) }) : formatted;
+  return formatted;
 }
 
 export function formatExpirationChange(value?: AssetExpiration, cleared?: boolean): string | undefined {
@@ -47,12 +47,4 @@ export function expirationMonthOptions(locale?: string): readonly { value: strin
     value: String(index + 1),
     label: formatter.format(new Date(Date.UTC(2000, index, 1)))
   }));
-}
-
-export function expirationMonthCalendarNotice(locale?: string): string | undefined {
-  return hasAlternativeCalendar(locale) ? t('mobile.ExpirationPresentation.monthAndYearUseTheGregorianCalendar') : undefined;
-}
-
-function hasAlternativeCalendar(locale?: string): boolean {
-  return new Intl.DateTimeFormat(locale).resolvedOptions().calendar !== 'gregory';
 }

@@ -2,7 +2,7 @@ import { t } from '../../presentation/localization';
 import { NativeCommandButton } from './NativeCommandButton';
 import { NativeChoicePicker } from './NativeChoicePicker';
 import { SelectionRow } from './SelectionRow';
-import { expirationMonthCalendarNotice, expirationMonthOptions, formatAssetExpiration } from '../presentation/ExpirationPresentation';
+import { expirationMonthOptions, formatAssetExpiration } from '../presentation/ExpirationPresentation';
 import { useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -27,7 +27,6 @@ export function ExpirationField({ initialValue, initialPickerDate, disabled = fa
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerDate, setPickerDate] = useState(initialPickerDate);
   const monthValid = validMonthInput(month, year);
-  const monthCalendarNotice = expirationMonthCalendarNotice();
 
   function publishMonth(nextMonth: string, nextYear: string) {
     const empty = !nextMonth && !nextYear;
@@ -82,7 +81,6 @@ export function ExpirationField({ initialValue, initialPickerDate, disabled = fa
     <NativeSegmentedControl colors={colors} disabled={disabled} value={precision} onChange={selectPrecision}
       segments={[{ value: 'day', label: t('mobile.ExpirationField.exactDate') }, { value: 'month', label: t('mobile.ExpirationField.monthAndYear') }]} />
     {precision === 'month' ? <>
-      {monthCalendarNotice ? <Text style={{ color: colors.textMuted }}>{monthCalendarNotice}</Text> : null}
       <NativeChoicePicker label={t('mobile.ExpirationField.month')} accessibilityLabel={t('mobile.ExpirationField.expirationMonth')} value={month ? String(Number(month)) : ''} disabled={disabled} options={expirationMonthOptions()} onChange={value => { setMonth(value); publishMonth(value, year); }} />
       <Text style={{ color: colors.text }}>{t('mobile.ExpirationField.year')}</Text>
       <AppTextInput accessibilityLabel={t('mobile.ExpirationField.expirationYear')} editable={!disabled} keyboardType="number-pad" value={year} placeholder={t('mobile.ExpirationField.yYYY')} style={[styles.input, { color: colors.text, borderColor: colors.controlBorder }]} onChangeText={(value) => { if (disabled) return; setYear(value); publishMonth(month, value); }} />
