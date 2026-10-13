@@ -1,13 +1,13 @@
 # Roadmap Spec
 
-## Current focus — mobile import and export, October 8, 2026
+## Current focus — QR scan workflow, October 13, 2026
 
-Deliver the [unified portability workspace](../data-portability/mobile-import-export.spec.md):
-one normal settings destination, clear backup/data/report choices, and persistent
-household archive activity with truthful local-transfer and background-job status.
-Preserve existing security and restore review boundaries. Focus tests on navigation,
-format dispatch, returning to jobs and approval; retain physical-device checks as
-explicit followups rather than release blockers.
+Deliver the camera-first mobile scanner and direct external label entry specified
+in [asset labels](../printing/asset-labels.spec.md). Prioritize capture hierarchy,
+one-step authorized opening, draft-safe handoff and relevant recovery. Preserve
+existing origin, identity and authorization checks. The scoped audit lives in
+`docs/reports/qr-scan-interaction-audit.md`; physical camera and OS link checks stay
+in the consolidated user checklist, distinct from automated acceptance.
 
 ## Current status — CLI parity delivered, October 7, 2026
 

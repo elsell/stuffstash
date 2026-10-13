@@ -15,6 +15,7 @@ export default defineConfig({
       { find: /^@expo\/ui\/swift-ui\/modifiers$/, replacement: support('expo-swift-ui-modifiers.ts') },
       { find: /^expo-notifications$/, replacement: support('expo-notifications.ts') },
       { find: /^expo-camera$/, replacement: support('expo-camera.ts') },
+      { find: /^expo-linking$/, replacement: support('expo-linking.ts') },
       { find: /^expo-image-picker$/, replacement: support('expo-image-picker.ts') },
       { find: /^expo-crypto$/, replacement: support('expo-crypto.ts') },
       { find: /^expo-sharing$/, replacement: support('expo-sharing.ts') },
