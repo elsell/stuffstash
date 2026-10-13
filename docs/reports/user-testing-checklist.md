@@ -316,3 +316,11 @@ Both real-user checks remain pending; no release version is assumed here.
 - Review phone/iPad normal-size light/dark layout and keyboard clearance. Confirm
   the camera is the main content and the paste form appears only when requested
   or needed. Physical-camera and OS-handoff results remain unverified.
+
+### Scanned-item tab return
+
+After the next build containing the scan handoff fix, scan a label from Browse
+and from the iPhone Camera app (both with Stuff Stash already open and closed).
+The item should open. Tap Home: the Home screen should appear. Tap Browse and
+confirm browsing still works. This checks native tab reselection; local router
+state tests do not establish the device result.
