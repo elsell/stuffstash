@@ -1,43 +1,43 @@
 {
-  "version": "v0.45.1",
-  "commit": "c0bc978d46a3c6e8af5fd467693d611089762fe2",
+  "version": "v0.45.2",
+  "commit": "cc22877a823e8bbf57fb365e1ad1dd50ea0d10c7",
   "assets": [
     {
       "os": "linux",
       "architecture": "amd64",
-      "name": "stuffstash_v0.45.1_linux_amd64.tar.gz",
-      "sha256": "514693442de25c9dd5d43b209e9be190c223f0e8d3acd9a088fb869c0312e43e",
+      "name": "stuffstash_v0.45.2_linux_amd64.tar.gz",
+      "sha256": "2ae4826c7409f0c9efd53c3604604a09dcdcb299edf68e56b4952e644a1f367b",
       "usbPrinting": true
     },
     {
       "os": "linux",
       "architecture": "arm64",
-      "name": "stuffstash_v0.45.1_linux_arm64.tar.gz",
-      "sha256": "e5e8fac448e70bf3a81ee41d3aeed3ebc1ba125dd124f169c4526f4f5a3e7654",
+      "name": "stuffstash_v0.45.2_linux_arm64.tar.gz",
+      "sha256": "cd7087dffd6ffe589ed6004213dba0a5070a0c20e01f860020af814b225d06ee",
       "usbPrinting": true
     },
     {
       "os": "darwin",
       "architecture": "amd64",
-      "name": "stuffstash_v0.45.1_darwin_amd64.tar.gz",
-      "sha256": "737266b677ac13be767e5239ee4f0ef85f570ae2e5c482743dfe92e8860a344e",
+      "name": "stuffstash_v0.45.2_darwin_amd64.tar.gz",
+      "sha256": "bb141fbc2940f42a3c1e58a1be9a9363407ae6fb4c795e3a90583b14ad5beaaf",
       "usbPrinting": false
     },
     {
       "os": "darwin",
       "architecture": "arm64",
-      "name": "stuffstash_v0.45.1_darwin_arm64.tar.gz",
-      "sha256": "95d0482be2d47b732b5e4a804dbe305a24575cea9e1b575ec4105edb7bdb9977",
+      "name": "stuffstash_v0.45.2_darwin_arm64.tar.gz",
+      "sha256": "c5040bf59c725da19a52a8c3bbf5ae1d4cb00b36f877ac47c523b2ea967e1c1d",
       "usbPrinting": false
     },
     {
       "os": "windows",
       "architecture": "amd64",
-      "name": "stuffstash_v0.45.1_windows_amd64.zip",
-      "sha256": "60c74fff67133a7376138932ba774c967ce625e69d090842ba9b53cca0d46785",
+      "name": "stuffstash_v0.45.2_windows_amd64.zip",
+      "sha256": "fb2c1a52e6766841a2b29ec9499de281298f0f01608feea64884d5584ace60fc",
       "usbPrinting": false
     }
   ],
   "repository": "elsell/stuffstash",
-  "publishedAt": "2026-10-09T16:08:03Z"
+  "publishedAt": "2026-10-13T04:40:43Z"
 }
