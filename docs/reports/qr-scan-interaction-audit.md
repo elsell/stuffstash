@@ -86,3 +86,14 @@ record its terminal result; do not repeat unchanged runner failures.
 Physical printed-label scans, real Camera-to-app association and visual acceptance
 are consolidated in `docs/reports/user-testing-checklist.md`. Missing user checks
 do not block delivery, but they are never reported as passed.
+
+### Named native evidence
+
+[Run 38339579818](https://github.com/elsell/stuffstash/actions/runs/38339579818),
+revision `ff806568`, passed four scanner journeys each on iPhone 17 and iPad mini.
+The screenshots were inspected: denial/manual entry, lookup retry and foreign
+instance recovery show contextual native toolbar actions and a single content
+action without overlap. The iPad manual form stretched across the window; a
+follow-up caps non-camera content at 640 points. This width refinement requires
+its own screenshot confirmation and does not invalidate the passed behaviors.
+The fixture cannot exercise a physical camera preview or torch.

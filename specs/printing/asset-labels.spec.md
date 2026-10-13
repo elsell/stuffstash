@@ -690,7 +690,9 @@ action: submit the link or recover the lookup. Less frequent recovery commands
 use contextual header actions. No automatic clipboard reads are allowed.
 The preview uses the existing Expo camera adapter; a decorative framing guide
 must not claim to constrain recognition. Controls stay outside the preview and
-within safe-area/keyboard-aware scrolling content.
+within safe-area/keyboard-aware scrolling content. Manual entry, loading and
+recovery content use a centered maximum width of 640 points on larger windows;
+the camera preview may fill the available width.
 
 A valid external link has already expressed intent to open its asset. On Home,
 Browse, or a cold launch, navigate to the bounded resolving task and resolve once

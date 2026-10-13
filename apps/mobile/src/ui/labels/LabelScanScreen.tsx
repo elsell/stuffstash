@@ -80,7 +80,7 @@ export function LabelScanScreen({ open, parse, pending, revision = 0, retain, in
   const title = t(busy ? 'labels.mobile.open' : manual ? 'labels.mobile.enterLink' : message ? 'labels.mobile.open' : 'labels.mobile.scan');
   const headerOptions = useMemo(() => ({ ...header, title }), [header, title]);
   return <><Stack.Screen options={headerOptions} /><ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets
-    contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content} style={{ backgroundColor: colors.background }}>
+    contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.content, !camera && styles.readableContent]} style={{ backgroundColor: colors.background }}>
     {busy ? <View style={styles.status}>
       <ActivityIndicator color={colors.action} />
       <Text accessibilityLiveRegion="polite" style={[styles.body, { color: colors.text }]}>{t('labels.mobile.resolving')}</Text>
@@ -107,6 +107,7 @@ export function LabelScanScreen({ open, parse, pending, revision = 0, retain, in
 }
 const styles = StyleSheet.create({
   content: { flexGrow: 1, padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xl },
+  readableContent: { width: '100%', maxWidth: 640, alignSelf: 'center' },
   preview: { flexGrow: 1, minHeight: 280, borderRadius: radius.lg, overflow: 'hidden' },
   status: { gap: spacing.md, paddingVertical: spacing.md },
   body: { fontSize: 17 },
