@@ -47,7 +47,7 @@ pre-commit:
       glob: "{**/go.mod,**/go.sum,**/package.json,**/pnpm-lock.yaml}"
       run: make dependency-age-check
     scripts-test:
-      glob: "{scripts/**,compose.selfhost.yaml,.env.example,docs/src/content/docs/self-hosting.md,specs/platform/local-development-topology.spec.md}"
+      glob: "{scripts/**,.github/workflows/release.yml,compose.selfhost.yaml,.env.example,docs/src/content/docs/self-hosting.md,specs/platform/local-development-topology.spec.md}"
       run: make scripts-test
     dependency-security:
       glob: "{pnpm-lock.yaml,pnpm-workspace.yaml,docs/pnpm-lock.yaml,docs/pnpm-workspace.yaml,patches/**,docs/patches/**,scripts/test-dependency-security.cjs}"

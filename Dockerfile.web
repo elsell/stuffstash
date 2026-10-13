@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
-ARG NODE_BUILDER_IMAGE=registry.access.redhat.com/ubi9/nodejs-24@sha256:27dbb10d06365cc4627e4abb589780b3603feaac2577a231f95c193abfa0c04b
-ARG WEB_RUNTIME_IMAGE=registry.access.redhat.com/ubi9/nginx-124@sha256:da5615d3613867c87aefc2cfdfcc8bb5e3c5e1f778d91e26ef72ae5a7824e386
+ARG NODE_BUILDER_IMAGE=registry.access.redhat.com/ubi9/nodejs-24:1-1781731595@sha256:09ec365eac116f996dd07507784d06f648401c949eb48c40fe2d961341edd3fb
+ARG WEB_RUNTIME_IMAGE=registry.access.redhat.com/ubi9/nginx-124:1-1781729662@sha256:fc282f9fc249d9b9606d1d93769e1b6e1c042221fdae285b53032b59ba9690d0
 ARG PNPM_VERSION=11.0.7
 
 FROM ${NODE_BUILDER_IMAGE} AS builder
