@@ -103,10 +103,6 @@ final class LabelScannerAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Simulated sign-in required"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["Pending label retained"].exists)
     app.buttons["Complete simulated sign-in"].tap()
-    let offer = app.buttons["Open label"].firstMatch
-    XCTAssertTrue(offer.waitForExistence(timeout: 10)); offer.tap()
-    XCTAssertTrue(app.navigationBars.buttons["Cancel"].waitForExistence(timeout: 10))
-    app.buttons["Open label"].firstMatch.tap()
     XCTAssertTrue(app.staticTexts["Cordless drill resolved"].waitForExistence(timeout: 10))
     capture("scanner-simulated-sign-in-return")
   }

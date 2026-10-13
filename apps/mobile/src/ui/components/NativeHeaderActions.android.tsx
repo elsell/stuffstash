@@ -5,6 +5,8 @@ import { View } from 'react-native';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import type { HeaderOptions, NativeHeaderAction } from './NativeHeaderActions.types';
 const icons = {
+  flashlight: require('./android-icons/header-flashlight.xml'),
+  link: require('./android-icons/header-link.xml'),
   scan: require('./android-icons/header-scan.xml'),
   filter: require('./android-icons/filter-list.xml'),
   notifications: require('./android-icons/header-notifications.xml'),

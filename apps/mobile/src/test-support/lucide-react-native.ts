@@ -56,3 +56,5 @@ export const SendHorizontal = 'SendHorizontalIcon';
 export const ListFilter = 'ListFilterIcon';
 
 export const ScanLine = 'ScanLineIcon';
+export const Flashlight = 'FlashlightIcon';
+export const Link = 'LinkIcon';

@@ -1,5 +1,10 @@
 export const labelMobileMessages = {
   'labels.mobile.title': 'Label options',
+  'labels.mobile.aim': 'Point your camera at a Stuff Stash QR label.',
+  'labels.mobile.enterLink': 'Enter label link',
+  'labels.mobile.settings': 'Open Settings',
+  'labels.mobile.lightOn': 'Turn on flashlight',
+  'labels.mobile.lightOff': 'Turn off flashlight',
   'labels.mobile.scan': 'Scan label',
   'labels.mobile.cancel': 'Cancel',
   'labels.mobile.template': 'Layout',

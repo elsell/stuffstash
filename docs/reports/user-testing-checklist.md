@@ -299,3 +299,20 @@ correction has not run natively. Full largest-text acceptance remains unverified
   job actions. Confirm controls remain reachable without clipped content.
 
 Both real-user checks remain pending; no release version is assumed here.
+
+## QR scanner refresh (October 13; build pending)
+
+- From Browse List and Map, open Scan label. Aim at a printed Stuff Stash label;
+  expect one asset opening and normal Back navigation. Try the flashlight in dim
+  light. Cancel while resolving; no asset should open afterward.
+- Deny camera access. Expect a usable label-link field and Open Settings. Paste an
+  invalid link, then a valid link; recovery should not require changing accounts.
+- Scan with the iPhone/Android Camera, both with Stuff Stash closed and already on
+  Home/Browse. Expect the target to open without another Open label tap or camera
+  permission request. Repeat signed out, then sign in.
+- Open an external label while editing an item. The draft must remain intact;
+  navigation should be offered rather than forced. Test a label from another
+  server; it must never switch servers automatically.
+- Review phone/iPad normal-size light/dark layout and keyboard clearance. Confirm
+  the camera is the main content and the paste form appears only when requested
+  or needed. Physical-camera and OS-handoff results remain unverified.

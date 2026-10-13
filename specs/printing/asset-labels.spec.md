@@ -676,3 +676,40 @@ change the image. Failures expose one explicit retry and never create a retry lo
 Exports independently render/authorize the currently visible media and layout.
 Explain Show reference beside the choice: it shows the label ID as readable text alongside
 the QR code. Never imply it is a serial number or promise lookup behavior.
+
+## Camera-first scanning and direct external entry (October 2026)
+
+The task is to open an existing labeled asset, not configure a scanner. Mobile
+uses one bounded camera task with a native Close/Cancel action, a large flexible
+preview, a short aiming instruction, and compact native header actions for flashlight and
+manual entry. Do not stack command buttons in the scanner content. Paste is
+an explicit alternative mode; its labeled URL field and single Open label action
+must not compete with the live camera. Permission or camera failure exposes the
+paste form and a Settings header action. Content has at most one primary
+action: submit the link or recover the lookup. Less frequent recovery commands
+use contextual header actions. No automatic clipboard reads are allowed.
+The preview uses the existing Expo camera adapter; a decorative framing guide
+must not claim to constrain recognition. Controls stay outside the preview and
+within safe-area/keyboard-aware scrolling content.
+
+A valid external link has already expressed intent to open its asset. On Home,
+Browse, or a cold launch, navigate to the bounded resolving task and resolve once
+without an additional Open label confirmation or camera permission request. On
+other routes, retain the pending link and offer navigation without replacing a
+possibly unsaved task. Offer each incoming revision once, not on every route
+change. In-task scans/paste retain identity before lookup so automatic sign-in expiry
+cannot lose the target. Their revision is marked attempted by the current scanner
+to prevent duplicate automatic lookups. A newer incoming link cancels the old lookup. Cancellation, blur and
+backgrounding must prevent late navigation; explicit Retry remains available.
+
+Loading has one progress indicator and accessible status. Invalid codes offer
+scan again or paste; wrong-instance errors offer Change server; unresolved labels
+offer Retry and Switch account. Do not offer account/server changes for camera
+or syntax errors. Never infer or automatically connect to a scanned origin.
+Existing local parsing, connected-instance checks, authorization, and atomic scope
+selection remain unchanged. Success replaces the scanner with normal asset detail.
+
+Pattern grounding and the scoped source audit are in
+`docs/reports/qr-scan-interaction-audit.md`. Physical decoding and OS universal-link
+association require device follow-up and must not be inferred from simulator tests.
+UPC product lookup is a separate feature and is not added by this QR workflow.

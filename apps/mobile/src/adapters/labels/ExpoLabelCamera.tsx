@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
 /** Retain OS permission decisions while backgrounded; capture only in the foreground. */
-export function ExpoLabelCamera({ active, onCode, onUnavailable }: { readonly active: boolean; readonly onCode: (value: string) => void; readonly onUnavailable: () => void }) {
+export function ExpoLabelCamera({ active, torch = false, onCode, onUnavailable }: { readonly active: boolean; readonly torch?: boolean; readonly onCode: (value: string) => void; readonly onUnavailable: () => void }) {
   const [permission, requestPermission] = useCameraPermissions();
   const current = useRef({ onCode, onUnavailable });
   const mounted = useRef(false);
@@ -14,6 +14,6 @@ export function ExpoLabelCamera({ active, onCode, onUnavailable }: { readonly ac
     return () => { active = false; };
   }, []);
   if (!active || !permission?.granted) return null;
-  return <CameraView style={{ flex: 1 }} barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+  return <CameraView enableTorch={torch} style={{ flex: 1 }} barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
     onBarcodeScanned={result => { if (mounted.current) current.current.onCode(result.data); }} onMountError={() => { if (mounted.current) current.current.onUnavailable(); }} />;
 }

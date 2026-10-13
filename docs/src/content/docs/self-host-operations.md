@@ -250,8 +250,11 @@ system print controls. Saving a file or opening printing does not confirm that a
 physical label printed. For direct printing, register the Brother QL-800 USB
 printer on its Linux computer with 29 × 90 mm labels. See [printer setup](../printing/setup/).
 
-Use **Browse → Scan label** to open a label with the camera, or paste its link if
-camera access is unavailable. Labels require sign-in and current inventory access;
+Use **Browse → Scan label** to aim the camera at a label. Choose **Enter label
+link** to paste instead, or use the flashlight in dim light. If camera access is
+unavailable, the link field appears automatically. External labels open directly
+from Home or Browse; while you are in another task, an offer lets you open the
+label without interrupting your work. Labels require sign-in and current inventory access;
 they do not make items public. An ordinary camera opens the web sign-in page,
 which also offers **Open in Stuff Stash** for self-hosted domains without app links.
 
