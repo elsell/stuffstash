@@ -110,6 +110,12 @@ jobs:
       - name: Build portable CLI archives
         run: scripts/build-cli-release.sh "${{ needs.validate.outputs.next_tag }}" "$GITHUB_SHA" release-dist
 
+      - name: Setup ARM64 emulation
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392
+        with:
+          platforms: arm64
+          image: tonistiigi/binfmt:qemu-v9.2.2@sha256:1b804311fe87047a4c96d38b4b3ef6f62fca8cd125265917a9e3dc3c996c39e6
+
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
 
@@ -126,6 +132,7 @@ jobs:
           sha_tag="sha-${GITHUB_SHA}"
 
           docker buildx build \
+            --platform linux/amd64,linux/arm64 \
             --push \
             --provenance=mode=max \
             --sbom=true \
@@ -160,6 +167,7 @@ jobs:
           sha_tag="sha-${GITHUB_SHA}"
 
           docker buildx build \
+            --platform linux/amd64,linux/arm64 \
             --file Dockerfile.web \
             --push \
             --provenance=mode=max \
