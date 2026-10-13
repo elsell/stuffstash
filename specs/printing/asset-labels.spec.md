@@ -715,3 +715,14 @@ Pattern grounding and the scoped source audit are in
 `docs/reports/qr-scan-interaction-audit.md`. Physical decoding and OS universal-link
 association require device follow-up and must not be inferred from simulator tests.
 UPC product lookup is a separate feature and is not added by this QR workflow.
+
+### Return to Home after opening a label
+
+Successful scanning or external-label resolution must dismiss the root scanner
+into the existing Home tab stack, with Home anchored below the asset detail.
+Do not replace the root scanner with a second tab shell: that can leave the asset
+as the Home stack's first screen, making Home reselection ineffective. Use an
+explicit Home-group destination and preserve the anchor even on cold entry.
+Home reselection returns to Home; Browse remains available. Cancelling scanning
+continues to return to the prior screen. Verify warm and cold handoff state and
+track a real-device scan → Home → Browse check separately from source tests.
