@@ -43,6 +43,9 @@ func projectAssetActivityChanges(record audit.Record) []audit.AssetActivityChang
 			changes = append(changes, audit.AssetActivityChange{Field: field, PreviousValue: previous, CurrentValue: current})
 		}
 	}
+	if _, changed := metadata["previous_kind"]; changed {
+		appendValues(audit.AssetActivityFieldKind, "previous_kind", "asset_kind")
+	}
 	appendValues(audit.AssetActivityFieldTitle, "previous_title", "updated_title")
 	if metadata["description_changed"] == "true" {
 		changes = append(changes, audit.AssetActivityChange{Field: audit.AssetActivityFieldDescription})

@@ -14,6 +14,7 @@ const (
 type AssetActivityField string
 
 const (
+	AssetActivityFieldKind           AssetActivityField = "kind"
 	AssetActivityFieldTitle          AssetActivityField = "title"
 	AssetActivityFieldDescription    AssetActivityField = "description"
 	AssetActivityFieldTags           AssetActivityField = "tags"

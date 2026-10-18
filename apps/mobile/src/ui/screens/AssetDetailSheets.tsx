@@ -111,9 +111,12 @@ export function EditAssetSheet({
         {readOnly ? <ActionEligibilityNotice /> : null}
         {metadataRecovery}
         {isSaving ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>{t('mobile.AssetDetailSheets.savingChanges')}</Text> : null}
-        <Text style={styles.sheetSubtitle}>
-          {editContext.customTypeLabel ? `${editContext.kindLabel} · ${editContext.customTypeLabel}` : editContext.kindLabel}
-        </Text>
+        <NativeChoicePicker label={t('mobile.AssetDetailSheets.kind')} accessibilityLabel={t('mobile.AssetDetailSheets.assetKind')} value={draft?.kind ?? asset.kind}
+          options={[{ value: 'item', label: t('mobile.AssetDetailSheets.item') }, { value: 'container', label: t('mobile.AssetDetailSheets.container') }, { value: 'location', label: t('mobile.AssetDetailSheets.location') }]}
+          disabled={disabled} onChange={(kind) => {
+            if (kind === 'item' || kind === 'container' || kind === 'location') onChange({ ...draft, title: draft?.title ?? asset.title, description: draft?.description ?? asset.description, kind });
+          }} />
+        {editContext.customTypeLabel ? <Text style={styles.sheetSubtitle}>{editContext.customTypeLabel}</Text> : null}
         <Text style={styles.inputLabel}>{t('mobile.AssetDetailSheets.name')}</Text>
         <AppTextInput
           accessibilityLabel={t('mobile.AssetDetailSheets.assetName')}

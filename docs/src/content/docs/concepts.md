@@ -42,8 +42,7 @@ Examples:
 
 ## Location
 
-A location is a place-like record: garage, shelf, closet, cabinet, room, or bin
-area.
+A location is a fixed place, such as a garage, closet, room, or storage area.
 
 Locations are backed by the same containment model as other assets, so they can
 hold items, containers, and other locations.
@@ -61,6 +60,17 @@ Examples:
 
 This matters because a toolbox can move from the garage to the car without
 losing the items inside it.
+
+Items and containers can be checked out. Locations cannot.
+
+### Correct an asset's kind
+
+On mobile, open the asset, choose **Edit**, change **Kind**, and save. For
+example, change a storage bin from Location to Container to check it out.
+Its photos, tags, history, and contents stay with it.
+
+An asset must be empty before you change it to Item, including any archived
+contents. Return a checked-out asset before changing it to Location.
 
 ## Photos And Files
 

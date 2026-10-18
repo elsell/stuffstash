@@ -16,3 +16,6 @@ var (
 
 	ErrInvalidInput = ErrValidation
 )
+
+var ErrAssetKindHasContents = ports.ErrAssetKindHasContents
+var ErrAssetKindHasCheckout = ports.ErrAssetKindHasCheckout

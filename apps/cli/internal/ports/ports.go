@@ -40,6 +40,7 @@ type AssetInput struct {
 	PrintLabel          *LabelPrintSelection
 }
 type AssetChange struct {
+	Kind        *string
 	RequestBody []byte
 	Title       *string
 	Parent      *string

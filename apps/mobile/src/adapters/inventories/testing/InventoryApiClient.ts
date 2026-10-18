@@ -139,6 +139,7 @@ export class FakeInventoryApiClient {
     | undefined;
   updatedAssetInput:
     | {
+        readonly kind?: Asset['kind'];
         readonly tenantId: string;
         readonly inventoryId: string;
         readonly assetId: string;
@@ -458,6 +459,7 @@ export class FakeInventoryApiClient {
     input: UpdateAssetInput
   ): Promise<Asset> {
     this.updatedAssetInput = {
+      ...(input.kind !== undefined ? { kind: input.kind } : {}),
       tenantId,
       inventoryId,
       assetId: assetIdValue,
@@ -474,6 +476,7 @@ export class FakeInventoryApiClient {
     }
     const updated: Asset = {
       ...current,
+      kind: input.kind ?? current.kind,
       expiration: input.expiration === undefined ? current.expiration : input.expiration ?? undefined,
       customAssetTypeId: input.customAssetTypeId ?? current.customAssetTypeId,
       title: input.title ?? current.title,

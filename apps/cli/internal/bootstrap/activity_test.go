@@ -27,7 +27,7 @@ func TestActivityCommandRespectsScopeAndPreservesTimeline(t *testing.T) {
 		if r.Method != "GET" || r.URL.Query().Get("limit") != "2" || r.URL.Query().Get("view") != "all" || r.URL.Query().Get("cursor") != "next" {
 			t.Error("wrong query")
 		}
-		io.WriteString(w, `{"data":[{"id":"event","action":"asset.updated","category":"change","changes":[{"field":"title","previousValue":"Old","currentValue":"New"}],"occurredAt":"2026-10-05T12:00:00Z","principalId":"owner","principal":{"id":"owner","email":"owner@example.test"},"requestId":"original","source":"api","technicalMetadata":{"changed":"title"},"undo":{"operationId":"undo-id","status":"available"}}],"meta":{"pagination":{"limit":2,"hasMore":true,"nextCursor":"more"}}}`)
+		io.WriteString(w, `{"data":[{"id":"event","action":"asset.updated","category":"change","changes":[{"field":"kind","previousValue":"location","currentValue":"container"},{"field":"title","previousValue":"Old","currentValue":"New"}],"occurredAt":"2026-10-05T12:00:00Z","principalId":"owner","principal":{"id":"owner","email":"owner@example.test"},"requestId":"original","source":"api","technicalMetadata":{"changed":"title"},"undo":{"operationId":"undo-id","status":"available"}}],"meta":{"pagination":{"limit":2,"hasMore":true,"nextCursor":"more"}}}`)
 	}))
 	defer server.Close()
 	dir := t.TempDir()
@@ -55,7 +55,7 @@ func TestActivityCommandRespectsScopeAndPreservesTimeline(t *testing.T) {
 	if code := Run(context.Background(), command, getenv, &out, &diagnostic); code != 0 || calls != 1 {
 		t.Fatalf("activity: %d %d %s", code, calls, &diagnostic)
 	}
-	for _, field := range []string{`"email":"owner@example.test"`, `"requestId":"original"`, `"changed":"title"`, `"previousValue":"Old"`, `"operationId":"undo-id"`, `"nextCursor":"more"`} {
+	for _, field := range []string{`"field":"kind"`, `"previousValue":"location"`, `"currentValue":"container"`, `"email":"owner@example.test"`, `"requestId":"original"`, `"changed":"title"`, `"previousValue":"Old"`, `"operationId":"undo-id"`, `"nextCursor":"more"`} {
 		if !strings.Contains(out.String(), field) {
 			t.Fatalf("activity field lost: %s", &out)
 		}

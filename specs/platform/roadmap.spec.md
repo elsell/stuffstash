@@ -1,5 +1,14 @@
 # Roadmap Spec
 
+## Asset kind correction — release batch
+
+Asset kind correction belongs in normal mobile Edit, with atomic save and current
+containment/checkout constraints (see `../assets/asset-model.spec.md`). Device and
+live-model checks remain queued: Location → Container then checkout; nonempty
+Container → Item rejection with retained edits; checked-out Container → Location
+rejection; voice creates a missing Bin 60 as a container, a room as a location,
+and reuses an existing destination. These checks are not yet runtime verified.
+
 ## Current focus — QR scan workflow, October 13, 2026
 
 Deliver the camera-first mobile scanner and direct external label entry specified

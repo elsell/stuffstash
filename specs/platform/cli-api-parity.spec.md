@@ -1090,3 +1090,10 @@ measures all intervening CLI features, not the picker or x/term alone. The pinne
 x/term dependency uses BSD-3-Clause; x/sys retains its existing pin. The release
 script includes THIRD_PARTY_LICENSES.txt. These measurements and packaging
 checks do not claim that a new release is complete.
+
+### Asset kind correction
+
+`assets update ID --kind item|container|location` changes kind without requiring
+or overwriting the title. It may be combined with `--title`; `--input FILE|-`
+also accepts `kind` and remains exclusive with field flags. Server containment
+and checkout rules apply. Activity output preserves `kind` changes and values.

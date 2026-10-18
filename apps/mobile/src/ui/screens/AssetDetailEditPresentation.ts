@@ -3,6 +3,7 @@ import type { AssetDetailViewModel } from '../../application/assets/AssetViewMod
 import type { CreateAssetTagDraft } from '../../application/assets/AssetTagDraftResolution';
 
 export type EditDraft = {
+  readonly kind?: AssetDetailViewModel['kind'];
   readonly inlineTag?: { readonly name: string; readonly color: string };
   readonly expiration?: AssetDetailViewModel['expiration'] | null;
   readonly expirationValid?: boolean;
@@ -20,6 +21,7 @@ export type AssetEditContext = {
 };
 
 export type NormalizedEditDraft = {
+  readonly kind?: AssetDetailViewModel['kind'];
   readonly expiration?: AssetDetailViewModel['expiration'] | null;
   readonly customAssetTypeId?: string;
   readonly title: string;
@@ -29,14 +31,14 @@ export type NormalizedEditDraft = {
 };
 
 export function canSaveEditAsset(
-  asset: Pick<AssetDetailViewModel, 'title' | 'description' | 'tags' | 'expiration' | 'customAssetTypeId'>,
+  asset: Pick<AssetDetailViewModel, 'title' | 'description' | 'tags' | 'expiration' | 'customAssetTypeId'> & Partial<Pick<AssetDetailViewModel, 'kind'>>,
   draft: EditDraft | undefined
 ): boolean {
   return editDraftState(asset, draft).canSave;
 }
 
 export function hasDirtyEditAssetDraft(
-  asset: Pick<AssetDetailViewModel, 'title' | 'description' | 'tags' | 'expiration' | 'customAssetTypeId'>,
+  asset: Pick<AssetDetailViewModel, 'title' | 'description' | 'tags' | 'expiration' | 'customAssetTypeId'> & Partial<Pick<AssetDetailViewModel, 'kind'>>,
   draft: EditDraft | undefined
 ): boolean {
   return editDraftState(asset, draft).isDirty;
@@ -44,6 +46,7 @@ export function hasDirtyEditAssetDraft(
 
 export function normalizedEditDraft(draft: EditDraft): NormalizedEditDraft {
   return {
+    kind: draft.kind,
     expiration: draft.expiration,
     customAssetTypeId: draft.customAssetTypeId,
     title: draft.title.trim(),
@@ -58,7 +61,7 @@ export function hasUnstagedEditTag(entry: EditDraft['inlineTag']): boolean {
 }
 
 function editDraftState(
-  asset: Pick<AssetDetailViewModel, 'title' | 'description' | 'tags' | 'expiration' | 'customAssetTypeId'>,
+  asset: Pick<AssetDetailViewModel, 'title' | 'description' | 'tags' | 'expiration' | 'customAssetTypeId'> & Partial<Pick<AssetDetailViewModel, 'kind'>>,
   draft: EditDraft | undefined
 ): {
   readonly canSave: boolean;
@@ -74,6 +77,7 @@ function editDraftState(
     || nextExpiration?.date !== asset.expiration?.date
     || nextExpiration?.precision !== asset.expiration?.precision
     || (normalized.customAssetTypeId !== undefined && normalized.customAssetTypeId !== asset.customAssetTypeId)
+    || (normalized.kind !== undefined && normalized.kind !== asset.kind)
     || normalized.title !== asset.title
     || normalized.description !== asset.description
     || !sameTagAssignments(normalized.tagIds ?? [], asset.tags?.map((tag) => tag.id) ?? [])
@@ -113,6 +117,6 @@ export function assetEditContext(
   return {
     kindLabel: asset.kindLabel,
     customTypeLabel: asset.customTypeLabel,
-    helperText: asset.customTypeLabel ? t('mobile.AssetDetailEditPresentation.kindAndTypeAreFixedAfterCreation') : t('mobile.AssetDetailEditPresentation.kindIsFixedYouCanAssignACustomType')
+    helperText: asset.customTypeLabel ? t('mobile.AssetDetailEditPresentation.customTypeIsFixed') : t('mobile.AssetDetailEditPresentation.assignCustomType')
   };
 }

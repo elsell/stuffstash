@@ -974,7 +974,7 @@ describe('asset edit presentation helpers', () => {
     })).toEqual({
       kindLabel: 'Container',
       customTypeLabel: 'Documents',
-      helperText: 'Kind and type are fixed after creation.'
+      helperText: 'Custom type is fixed after creation.'
     });
   });
 });

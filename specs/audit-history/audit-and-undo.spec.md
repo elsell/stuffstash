@@ -188,7 +188,7 @@ The first slice does not support undo or redo for:
 Undo behavior:
 
 - Undoing `asset.created` must archive the created asset if it still exists, is active, and has no active children.
-- Undoing `asset.updated` must restore the prior title, description, custom fields, and custom asset type-compatible field values.
+- Undoing `asset.updated` must restore the prior title, description, kind, custom fields, and custom asset type-compatible field values. Kind restoration must pass current containment and checkout constraints. Activity exposes kind corrections as a typed `kind` change with previous/current values, and clients label them as kind changes rather than generic updates.
 - Undoing `asset.moved` must restore the prior parent asset.
 - Undoing `asset.archived` must restore the asset.
 - Undoing `asset.restored` must archive the asset.
@@ -198,7 +198,7 @@ Undo behavior:
 Redo behavior:
 
 - Redoing an undone `asset.created` must restore the archived asset if normal restore validation passes.
-- Redoing an undone `asset.updated` must reapply the original updated title, description, custom fields, and compatible custom asset type values.
+- Redoing an undone `asset.updated` must reapply the original updated title, description, kind, custom fields, and compatible custom asset type values. Kind restoration must pass current containment and checkout constraints.
 - Redoing an undone `asset.moved` must reapply the original parent asset.
 - Redoing an undone `asset.archived` must archive the asset.
 - Redoing an undone `asset.restored` must restore the asset.

@@ -6,6 +6,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/archivejob"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -78,6 +79,10 @@ func ToHumaError(err error) error {
 		return huma.Error400BadRequest("Invalid request.", err)
 	case errors.Is(err, app.ErrValidation), errors.Is(err, app.ErrInvalidInput):
 		return huma.Error400BadRequest("Invalid request.")
+	case errors.Is(err, apperrors.ErrAssetKindHasContents):
+		return newCodedErrorEnvelope(http.StatusConflict, "asset_kind_has_contents", apperrors.ErrAssetKindHasContents.Error())
+	case errors.Is(err, apperrors.ErrAssetKindHasCheckout):
+		return newCodedErrorEnvelope(http.StatusConflict, "asset_kind_has_checkout", apperrors.ErrAssetKindHasCheckout.Error())
 	case errors.Is(err, app.ErrConflict):
 		return huma.Error409Conflict("Conflict.")
 	case errors.As(err, &importSourceChanged):

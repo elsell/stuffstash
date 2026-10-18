@@ -9,7 +9,10 @@ func isAssetWrite(o Options) bool {
 	return len(o.Command) > 1 && o.Command[0] == "assets" && (o.Command[1] == "create" || o.Command[1] == "update")
 }
 func (r Runner) prepareAssetInput(ctx context.Context, o Options) (Options, error) {
-	if o.Title == "" {
+	if o.Kind != "" && o.Kind != "item" && o.Kind != "container" && o.Kind != "location" {
+		return o, ports.Failure("usage", "Use --kind item, container, or location.")
+	}
+	if o.Title == "" && !(o.Command[1] == "update" && o.Kind != "") {
 		if r.TextInput == nil || o.JSON || o.NoInput {
 			return o, ports.Failure("usage", "Supply --title TITLE or --input FILE for this command.")
 		}

@@ -84,10 +84,17 @@ export class ApiInventoryAssetCommands {
     const asset = await this.client.updateAsset(inventory.tenantId, inventory.id, input.assetId, {
       ...(input.expiration !== undefined ? { expiration: input.expiration } : {}),
       ...(input.customAssetTypeId !== undefined ? { customAssetTypeId: input.customAssetTypeId } : {}),
+      ...(input.kind !== undefined ? { kind: input.kind } : {}),
       ...(input.title !== undefined ? { title: input.title } : {}),
       ...(input.description !== undefined ? { description: input.description } : {}),
       ...(input.parentAssetId !== undefined ? { parentAssetId: input.parentAssetId } : {}),
       ...(input.tagIds !== undefined ? { tagIds: [...input.tagIds] } : {})
+    }).catch((error: unknown) => {
+      if (error instanceof StuffStashAPIError && error.status === 409) {
+        if (error.code === 'asset_kind_has_contents') throw new CatalogRecoveryError('recovery.assetKindHasContents');
+        if (error.code === 'asset_kind_has_checkout') throw new CatalogRecoveryError('recovery.assetKindHasCheckout');
+      }
+      throw error;
     });
     this.observeMutation(
       'asset_updated',

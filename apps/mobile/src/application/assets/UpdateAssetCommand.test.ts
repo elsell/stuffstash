@@ -103,3 +103,9 @@ describe('UpdateAssetCommand', () => {
     expect(repository.updateInput?.tagIds).toEqual([]);
   });
 });
+
+it('submits kind and ordinary edits together', async () => {
+  const repository = new FakeAssetUpdateRepository();
+  await new UpdateAssetCommand(repository).execute({ assetId: 'bin', kind: 'container', title: 'Bin 60', description: 'Portable bin' });
+  expect(repository.updateInput).toMatchObject({ kind: 'container', title: 'Bin 60', description: 'Portable bin' });
+});

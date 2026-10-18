@@ -1,5 +1,8 @@
 import { catalogRecoveryMessage } from '../../application/shared/CatalogRecoveryError';
 import { t } from '../../presentation/localization';
+import type { AssetCheckoutHistoryQuery } from '../../application/assets/AssetCheckoutHistoryQuery';
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { shouldShowContainedContentsSearch } from '../components/AssetContainedWorkspace';
@@ -76,6 +79,7 @@ import { useProgressiveAssetDetail } from '../serverState/useProgressiveAssetDet
 import { mergeProgressiveAssetDetail } from './AssetDetailProgressivePresentation';
 
 type AssetDetailRouteScreenProps = {
+  readonly assetCheckoutHistoryQuery?: Pick<AssetCheckoutHistoryQuery, 'execute'>;
   readonly addAssetPhotosCommand: Pick<AddAssetPhotosCommand, 'execute'>;
   readonly assetCoreQuery: Pick<AssetCoreQuery, 'execute'>;
   readonly assetContentsQuery: Pick<AssetContentsQuery, 'execute'>;
@@ -99,6 +103,7 @@ type PhotoUploadRow = AssetPhotoUploadProgressViewModel;
 
 export function AssetDetailRouteScreen({
   addAssetPhotosCommand,
+  assetCheckoutHistoryQuery,
   assetCheckoutCommand,
   assetContentsQuery,
   assetCoreQuery,
@@ -114,6 +119,11 @@ export function AssetDetailRouteScreen({
   const feedback = useAppFeedback();
   const progressive = useProgressiveAssetDetail(assetId, { assetCoreQuery, assetContentsQuery, assetPhotosQuery });
   const { coreAsset, assetContents, assetPhotos } = progressive;
+  const checkoutHistory = useMobileInventoryServerQuery({
+    key: (scope, tenant, inventory) => [...mobileQueryKeys.assetCheckouts(scope, tenant, inventory, assetId), 'presence'],
+    query: (signal) => assetCheckoutHistoryQuery!.execute({ assetId, signal, limit: 1 }),
+    enabled: Boolean(assetCheckoutHistoryQuery && coreAsset.data?.view.kind === 'location')
+  });
   const captureCommandVisit = useTaskPresentation(undefined, JSON.stringify(coreAsset.resourceKey));
   const screenState: ScreenState = coreAsset.data
     ? {
@@ -458,7 +468,8 @@ export function AssetDetailRouteScreen({
 
   const presentedWorkspaceStatus = visibleAssetWorkspaceStatus(pendingAction, workspaceStatus);
   const headerOverflow = screenState.status === 'ready' ? {
-    asset: screenState.asset,
+    asset: { ...screenState.asset, canViewCheckoutHistory: screenState.asset.kind !== 'location'
+      || screenState.asset.isCheckedOut || !assetCheckoutHistoryQuery || checkoutHistory.isError || Boolean(checkoutHistory.data?.records.length) },
     disabled: pendingAction !== undefined,
     onPrintLabel: screenState.asset.canEdit ? () => router.push(`/assets/${screenState.asset.id}/print`) : undefined,
     onLabel: () => router.push(`/assets/${screenState.asset.id}/label`),

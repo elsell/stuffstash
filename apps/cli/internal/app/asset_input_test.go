@@ -6,7 +6,7 @@ import (
 )
 
 func TestAssetInputPreservesFullRequestAndRejectsMixedFields(t *testing.T) {
-	body := `{"expiration":null,"parentAssetId":null,"tagIds":[],"customFields":{"serial":9007199254740993}}`
+	body := `{"kind":"container","expiration":null,"parentAssetId":null,"tagIds":[],"customFields":{"serial":9007199254740993}}`
 	r := Runner{InputFiles: requestInput(body)}
 	o := Options{Command: []string{"assets", "update", "asset"}, InputPath: "-"}
 	got, err := r.prepareInput(context.Background(), o)
@@ -34,5 +34,16 @@ func TestAssetTitlesPromptButUpdateRetryKeysAreRejected(t *testing.T) {
 	_, err = runner.prepareInput(context.Background(), Options{Command: []string{"assets", "update", "asset"}, Title: "New", IdempotencyKey: "retry"})
 	if err == nil {
 		t.Fatal("unsupported update retry key accepted")
+	}
+}
+
+func TestKindOnlyUpdateNeedsNoTitle(t *testing.T) {
+	r := Runner{}
+	got, err := r.prepareInput(context.Background(), Options{Command: []string{"assets", "update", "bin"}, Kind: "container", NoInput: true})
+	if err != nil || got.Title != "" || got.Kind != "container" {
+		t.Fatalf("kind-only update: %+v %v", got, err)
+	}
+	if _, err := r.prepareInput(context.Background(), Options{Command: []string{"assets", "update", "bin"}, Kind: "invalid", NoInput: true}); err == nil {
+		t.Fatal("invalid kind accepted")
 	}
 }

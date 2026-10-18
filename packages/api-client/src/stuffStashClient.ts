@@ -86,7 +86,7 @@ export type AssetActivityView = 'changes' | 'all';
 export type AssetActivityCategory = 'change' | 'read';
 
 export interface AssetActivityChange {
-  field: 'title' | 'description' | 'tags' | 'parent' | 'lifecycle_state' | 'checkout_state';
+  field: 'kind' | 'title' | 'description' | 'tags' | 'parent' | 'lifecycle_state' | 'checkout_state';
   previousValue?: string;
   currentValue?: string;
 }
@@ -267,6 +267,7 @@ export interface CreateAssetInput {
 }
 
 export interface UpdateAssetInput {
+  kind?: AssetKind;
   expiration?: AssetExpiration | null;
   customAssetTypeId?: string;
   title?: string;

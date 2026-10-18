@@ -1,3 +1,4 @@
+import { CatalogRecoveryError } from '../../application/shared/CatalogRecoveryError';
 import { AssetTagSelectionTaskProvider, useAssetTagSelectionTask } from '../navigation/AssetTagSelectionTask';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import { consumeAssetActionCompletion } from './AssetActionCompletion';
@@ -709,3 +710,25 @@ it('keeps tag creation secondary and cancels only the unstaged tag', async () =>
 });
 
 function SelectionContent() { const task = useAssetTagSelectionTask(); return <>{task?.content}</>; }
+
+it('keeps a rejected kind conversion and other edits in the existing Edit form', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
+  const asset = { id: assetId('asset'), title: 'Bin 60', description: '', kind: 'location' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
+        updateAssetCommand={{ execute: async input => { saved.push(input); throw new CatalogRecoveryError('recovery.assetKindHasContents'); } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.press(h.byLabel('Asset kind')); await h.press(h.byLabel('Item'));
+    await h.changeText(h.byLabel('Asset name'), 'Renamed bin');
+    await h.press(h.byLabel('Save')); await settle(h);
+    expect(saved).toEqual([expect.objectContaining({ kind: 'item', title: 'Renamed bin' })]);
+    expect(latestAlert()?.message).toBe('Move all contents, including archived assets, before changing this asset to an item.');
+    expect(h.byLabel('Asset name')?.props.value).toBe('Renamed bin');
+    await h.press(h.byLabel('Asset kind'));
+    expect(h.byLabel('Item')?.props.accessibilityState.checked).toBe(true);
+    expect(h.byLabel('Save')?.props.disabled).toBe(false);
+  } finally { await h.unmount(); }
+});

@@ -13,7 +13,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-type liveInteractionInventory struct{ garage, office, kitchen, drill, officeScrewdriver, kitchenScrewdriver, coffeeCounter string }
+type liveInteractionInventory struct{ garage, office, kitchen, drill, officeScrewdriver, kitchenScrewdriver, coffeeCounter, bin string }
 
 func seedLiveInteractionInventory(t *testing.T, ctx context.Context, application app.App) liveInteractionInventory {
 	t.Helper()
@@ -35,6 +35,10 @@ func checkLiveInteractionProposal(t *testing.T, scenario string, plan ports.Acti
 	t.Helper()
 	if plan.State != actionplan.StateProposed {
 		t.Fatalf("unapproved plan is not proposed: %s", plan.State)
+	}
+	if scenario == "missing-bin" || scenario == "missing-room" || scenario == "existing-bin-location" {
+		checkLiveDestinationKindProposal(t, scenario, plan, fixture)
+		return
 	}
 	expectedCount := 1
 	if strings.HasPrefix(scenario, "coffee-counter") {

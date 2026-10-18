@@ -24,6 +24,7 @@ func RegisterUpdate(api huma.API, application app.App) {
 
 		result, err := application.UpdateAssetWithOperation(ctx, app.UpdateAssetInput{
 			CustomAssetTypeID: input.Body.CustomAssetTypeID,
+			Kind:              input.Body.Kind,
 			Expiration:        assets.ExpirationUpdate{Present: input.Body.Expiration.Present(), Value: expirationInput(input.Body.Expiration.Value())},
 			Principal:         principal,
 			Source:            audit.SourceAPI,

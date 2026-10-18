@@ -39,11 +39,11 @@ func TestGoogleLiveRealtimeInteractionCorpus(t *testing.T) {
 		{"ambiguous-move", []string{"ambiguous-move", "resolve-ambiguity"}},
 		{"followup-color", []string{"find-drill", "followup-color"}},
 	} {
-		t.Run(scenario.name, func(t *testing.T) { runLiveInteraction(t, scenario.name, scenario.audio) })
+		t.Run(scenario.name, func(t *testing.T) { runLiveInteraction(t, scenario.name, scenario.audio, "") })
 	}
 }
 
-func runLiveInteraction(t *testing.T, name string, audioNames []string) {
+func runLiveInteraction(t *testing.T, name string, audioNames []string, text string) {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
 	defer cancel()
@@ -55,6 +55,13 @@ func runLiveInteraction(t *testing.T, name string, audioNames []string) {
 	if name == "coffee-counter" {
 		seedLiveCoffeeCounter(t, ctx, application, fixture.garage)
 		fixture.coffeeCounter = seedLiveCoffeeCounter(t, ctx, application, fixture.kitchen)
+	}
+	if name == "existing-bin-location" {
+		result, err := application.CreateAssetWithOperation(ctx, app.CreateAssetInput{Principal: identity.Principal{ID: "user-1"}, TenantID: "tenant-home", InventoryID: "inventory-home", Kind: "location", Title: "Bin 60"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		fixture.bin = result.Asset.ID.String()
 	}
 	list := app.ListAssetsInput{Principal: identity.Principal{ID: "user-1"}, TenantID: "tenant-home", InventoryID: "inventory-home", Source: audit.SourceAPI, Limit: 100}
 	before, err := application.ListAssets(ctx, list)
@@ -86,6 +93,11 @@ func runLiveInteraction(t *testing.T, name string, audioNames []string) {
 	}
 	sessionID, _ := started["sessionId"].(string)
 	var turns []liveInteractionTurn
+	if text != "" {
+		began := time.Now()
+		writeRealtimeMessage(t, ctx, connection, map[string]any{"type": "text.input", "seq": 2, "sessionId": sessionID, "text": text})
+		turns = append(turns, readLiveInteractionTurn(t, ctx, connection, began, name, 0))
+	}
 	for index, audioName := range audioNames {
 		raw, err := os.ReadFile(filepath.Join(liveVoiceRequired(t, "STUFF_STASH_VOICE_INTERACTION_AUDIO_DIR"), audioName+".m4a"))
 		if err != nil || len(raw) == 0 {

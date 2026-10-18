@@ -29,6 +29,10 @@ func (c *Client) UpdateAsset(ctx context.Context, s ports.Scope, id string, in p
 		return assetResult(read[generated.SuccessEnvelopeAssetResponse](c.sdk.PatchTenantsByTenantIdInventoriesByInventoryIdAssetsByAssetIdWithBody(ctx, s.Tenant, s.Inventory, id, nil, "application/json", bytes.NewReader(in.RequestBody))))
 	}
 	body := generated.UpdateAssetBody{Title: in.Title}
+	if in.Kind != nil {
+		kind := generated.UpdateAssetBodyKind(*in.Kind)
+		body.Kind = &kind
+	}
 	if in.MoveToRoot {
 		body.ParentAssetId = nullable.NewNullNullable[string]()
 	} else if in.Parent != nil {

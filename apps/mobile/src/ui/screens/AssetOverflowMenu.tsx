@@ -11,7 +11,7 @@ export type AssetOverflowMenuProps = {
   readonly asset: Pick<
     AssetDetailViewModel,
     'title' | 'canArchive' | 'canRestore' | 'canDeletePermanently'
-  >;
+  > & { readonly canViewCheckoutHistory?: boolean };
   readonly disabled?: boolean;
   readonly onLabel?: () => void;
   readonly onPrintLabel?: () => void;

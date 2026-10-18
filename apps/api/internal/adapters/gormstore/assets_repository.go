@@ -72,7 +72,7 @@ func createAssetInTx(tx *gorm.DB, item asset.Asset, auditRecord audit.Record, un
 
 	if item.ParentAssetID.String() != "" {
 		var parent assetModel
-		err = tx.Where(&assetModel{
+		err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetModel{
 			ID:          item.ParentAssetID.String(),
 			TenantID:    item.TenantID.String(),
 			InventoryID: item.InventoryID.String(),
@@ -157,7 +157,7 @@ func (s Store) UpdateAssetAndTags(ctx context.Context, item asset.Asset, tagIDs 
 
 func updateAssetInTx(tx *gorm.DB, expectedCurrent asset.Asset, item asset.Asset, auditRecords []audit.Record, undoableOperation *ports.UndoableOperation) error {
 	var existing assetModel
-	err := tx.Where(&assetModel{
+	err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetModel{
 		ID:          item.ID.String(),
 		TenantID:    item.TenantID.String(),
 		InventoryID: item.InventoryID.String(),
@@ -177,8 +177,16 @@ func updateAssetInTx(tx *gorm.DB, expectedCurrent asset.Asset, item asset.Asset,
 			return ports.ErrConflict
 		}
 	}
-	if existing.Kind != item.Kind.String() || existing.LifecycleState != item.LifecycleState.String() || existing.LifecycleState != asset.LifecycleStateActive.String() {
+	if undoableOperation != nil && undoableOperation.BeforeAsset != nil && existing.Kind != undoableOperation.BeforeAsset.Kind.String() {
+		return ports.ErrConflict
+	}
+	if existing.LifecycleState != item.LifecycleState.String() || existing.LifecycleState != asset.LifecycleStateActive.String() {
 		return ports.ErrForbidden
+	}
+	if existing.Kind != item.Kind.String() {
+		if err := validateAssetKindInTx(tx, item); err != nil {
+			return err
+		}
 	}
 	if stringFromPtr(existing.CustomAssetTypeID) != item.CustomAssetTypeID.String() {
 		if existing.CustomAssetTypeID != nil || item.CustomAssetTypeID == "" {
@@ -196,7 +204,7 @@ func updateAssetInTx(tx *gorm.DB, expectedCurrent asset.Asset, item asset.Asset,
 
 	if item.ParentAssetID.String() != "" {
 		var parent assetModel
-		err = tx.Where(&assetModel{
+		err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetModel{
 			ID:          item.ParentAssetID.String(),
 			TenantID:    item.TenantID.String(),
 			InventoryID: item.InventoryID.String(),
@@ -221,6 +229,7 @@ func updateAssetInTx(tx *gorm.DB, expectedCurrent asset.Asset, item asset.Asset,
 		return err
 	}
 	updates := map[string]any{
+		"kind":                 item.Kind.String(),
 		"parent_asset_id":      stringPtrFromAssetID(item.ParentAssetID),
 		"custom_asset_type_id": stringPtrFromCustomAssetTypeID(item.CustomAssetTypeID),
 		"title":                item.Title.String(),
@@ -273,7 +282,7 @@ func (s Store) UpdateAssetLifecycle(ctx context.Context, item asset.Asset, audit
 
 func updateAssetLifecycleInTx(tx *gorm.DB, expectedCurrent asset.Asset, item asset.Asset, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	var existing assetModel
-	err := tx.Where(&assetModel{
+	err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetModel{
 		ID:          item.ID.String(),
 		TenantID:    item.TenantID.String(),
 		InventoryID: item.InventoryID.String(),
@@ -293,7 +302,7 @@ func updateAssetLifecycleInTx(tx *gorm.DB, expectedCurrent asset.Asset, item ass
 			return ports.ErrConflict
 		}
 	}
-	if existing.ExpirationDate != item.Expiration.Value() || existing.ExpirationPrecision != string(item.Expiration.Precision()) || existing.Kind != item.Kind.String() || existing.Title != item.Title.String() || existing.Description != item.Description.String() || stringFromPtr(existing.ParentAssetID) != item.ParentAssetID.String() || stringFromPtr(existing.CustomAssetTypeID) != item.CustomAssetTypeID.String() {
+	if existing.Kind != item.Kind.String() || existing.ExpirationDate != item.Expiration.Value() || existing.ExpirationPrecision != string(item.Expiration.Precision()) || existing.Title != item.Title.String() || existing.Description != item.Description.String() || stringFromPtr(existing.ParentAssetID) != item.ParentAssetID.String() || stringFromPtr(existing.CustomAssetTypeID) != item.CustomAssetTypeID.String() {
 		return ports.ErrForbidden
 	}
 	var existingCustomFields map[string]any
@@ -315,7 +324,7 @@ func updateAssetLifecycleInTx(tx *gorm.DB, expectedCurrent asset.Asset, item ass
 	} else if existing.LifecycleState == asset.LifecycleStateArchived.String() && item.LifecycleState == asset.LifecycleStateActive {
 		if item.ParentAssetID.String() != "" {
 			var parent assetModel
-			err := tx.Where(&assetModel{
+			err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetModel{
 				ID:          item.ParentAssetID.String(),
 				TenantID:    item.TenantID.String(),
 				InventoryID: item.InventoryID.String(),

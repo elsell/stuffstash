@@ -53,6 +53,11 @@ func (s *Store) ApplyAssetUndoableOperation(_ context.Context, operationID strin
 	if _, exists := s.auditRecords[auditRecord.ID]; exists {
 		return ports.UndoableOperation{}, asset.Asset{}, ports.ErrConflict
 	}
+	if current.Kind != resulting.Kind {
+		if err := s.validateAssetKindLocked(resulting); err != nil {
+			return ports.UndoableOperation{}, asset.Asset{}, err
+		}
+	}
 	if resulting.LifecycleState == asset.LifecycleStateArchived {
 		for _, child := range s.assets {
 			if child.TenantID == resulting.TenantID && child.InventoryID == resulting.InventoryID && child.ParentAssetID == resulting.ID && child.LifecycleState == asset.LifecycleStateActive {
@@ -151,6 +156,12 @@ func (s *Store) ApplyAssetCheckoutUndoableOperation(_ context.Context, operation
 	}
 	if operation.TenantID != tenant.ID(expectedCurrent.TenantID.String()) || operation.InventoryID != inventory.InventoryID(expectedCurrent.InventoryID.String()) || operation.TargetID != expectedCurrent.AssetID.String() {
 		return ports.UndoableOperation{}, asset.Checkout{}, ports.ErrForbidden
+	}
+	if resulting.State == asset.CheckoutStateOpen {
+		item, found := s.assets[resulting.AssetID]
+		if !found || item.TenantID != resulting.TenantID || item.InventoryID != resulting.InventoryID || !item.Kind.IsPortable() {
+			return ports.UndoableOperation{}, asset.Checkout{}, ports.ErrConflict
+		}
 	}
 	current, ok := s.checkouts[expectedCurrent.ID]
 	if !ok || !asset.CheckoutsEquivalentForStaleCheck(current, expectedCurrent) {
