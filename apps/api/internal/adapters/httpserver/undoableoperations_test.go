@@ -173,7 +173,7 @@ func TestUndoReturnEndpointRejectsReopeningHistoricalLocationCheckout(t *testing
 		inventories: []seedInventory{{id: inventoryID, tenantID: tenantID, name: "House", owner: "owner"}},
 		ids:         []string{"audit-rejected-undo"},
 	}, store, authorizer)
-	location, open, _ := seedHistoricalLocationCheckout(t, store, tenantID, inventoryID, "garage", "")
+	location, open, _ := seedPortableCheckoutForLocationConversion(t, store, tenantID, inventoryID, "garage", "")
 	returned := open
 	returned.State = asset.CheckoutStateReturned
 	returned.ReturnedAt = open.CheckedOutAt.Add(time.Hour)
@@ -183,6 +183,7 @@ func TestUndoReturnEndpointRejectsReopeningHistoricalLocationCheckout(t *testing
 	if err := store.ReturnAsset(context.Background(), open, returned, checkoutHTTPTestAudit("audit-return", tenantID, inventoryID, location.ID, audit.ActionAssetReturned), &operation); err != nil {
 		t.Fatalf("seed historical location return: %v", err)
 	}
+	convertCheckoutFixtureToLocation(t, store, location, tenantID, inventoryID)
 	server := NewServer(":0", application)
 
 	undo := performRequest(server, http.MethodPost, "/tenants/"+tenantID+"/inventories/"+inventoryID+"/undoable-operations/"+operation.ID+"/undo", "Bearer dev:owner", nil)
@@ -206,12 +207,13 @@ func TestRedoCheckoutEndpointRejectsReopeningHistoricalLocationCheckout(t *testi
 		inventories: []seedInventory{{id: inventoryID, tenantID: tenantID, name: "House", owner: "owner"}},
 		ids:         []string{"audit-undo", "audit-rejected-redo"},
 	}, store, authorizer)
-	location, _, operation := seedHistoricalLocationCheckout(t, store, tenantID, inventoryID, "garage", "checkout-operation")
+	location, _, operation := seedPortableCheckoutForLocationConversion(t, store, tenantID, inventoryID, "garage", "checkout-operation")
 	server := NewServer(":0", application)
 	operationPath := "/tenants/" + tenantID + "/inventories/" + inventoryID + "/undoable-operations/" + operation.ID
 
 	undo := performRequest(server, http.MethodPost, operationPath+"/undo", "Bearer dev:owner", nil)
 	requireStatus(t, undo, http.StatusOK)
+	convertCheckoutFixtureToLocation(t, store, location, tenantID, inventoryID)
 	redo := performRequest(server, http.MethodPost, operationPath+"/redo", "Bearer dev:owner", nil)
 	requireStatus(t, redo, http.StatusBadRequest)
 	assertSafeError(t, redo, "invalid_request", "Invalid request.")
@@ -223,14 +225,14 @@ func TestRedoCheckoutEndpointRejectsReopeningHistoricalLocationCheckout(t *testi
 	}
 }
 
-func seedHistoricalLocationCheckout(t *testing.T, store *memory.Store, tenantID string, inventoryID string, assetID string, checkoutOperationID string) (asset.Asset, asset.Checkout, ports.UndoableOperation) {
+func seedPortableCheckoutForLocationConversion(t *testing.T, store *memory.Store, tenantID string, inventoryID string, assetID string, checkoutOperationID string) (asset.Asset, asset.Checkout, ports.UndoableOperation) {
 	t.Helper()
 	now := time.Date(2026, 7, 7, 12, 0, 0, 0, time.UTC)
 	location := asset.Asset{
 		ID:             asset.ID(assetID),
 		TenantID:       asset.TenantID(tenantID),
 		InventoryID:    asset.InventoryID(inventoryID),
-		Kind:           asset.KindLocation,
+		Kind:           asset.KindContainer,
 		Title:          asset.Title("Garage"),
 		LifecycleState: asset.LifecycleStateActive,
 		CreatedAt:      now,
@@ -304,4 +306,14 @@ func operationIDForTarget(t *testing.T, records []auditRecordResponse, targetID 
 	}
 	t.Fatalf("expected asset.created audit record for %s to include operation_id, got %+v", targetID, records)
 	return ""
+}
+
+// A former container can legally become a location only after its checkout closes.
+// Retain that history to exercise reopening protection through the real endpoint.
+func convertCheckoutFixtureToLocation(t *testing.T, store *memory.Store, item asset.Asset, tenantID, inventoryID string) {
+	t.Helper()
+	item.Kind = asset.KindLocation
+	if err := store.UpdateAsset(context.Background(), item, []audit.Record{checkoutHTTPTestAudit("audit-kind-conversion", tenantID, inventoryID, item.ID, audit.ActionAssetUpdated)}, nil); err != nil {
+		t.Fatalf("convert fixture after closing checkout: %v", err)
+	}
 }
