@@ -140,7 +140,9 @@ External secret managers may be added later behind the same credential-sealing o
 The conversational flow must eventually support at least these actions:
 
 - Create an asset when the user refers to an item that does not exist.
-- Create a location when the user refers to a location that does not exist.
+- Propose a missing destination with the appropriate asset kind: portable bins, boxes, bags and toolboxes are containers; rooms and fixed places are locations. An instruction such as “place it in Bin 60” does not make the bin a location. Honor an explicit kind requested by the user; clarify genuinely uncertain kinds or conflicting evidence.
+- Search for existing destinations first and preserve their recorded kind and identity, even when their names suggest another kind. Do not silently convert or duplicate an existing asset to correct its classification. Kind corrections are separate explicit user requests.
+- Create a location when the user refers to a fixed place that does not exist.
 - Move an asset from one location to another.
 - Check out an asset when it is temporarily removed from its normal place.
 - Return a checked-out asset.

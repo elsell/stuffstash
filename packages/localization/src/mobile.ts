@@ -1,5 +1,14 @@
 /** mobile presentation messages. */
 export const mobileMessages = {
+  "recovery.assetKindHasContents": "Move all contents, including archived assets, before changing this asset to an item.",
+  "recovery.assetKindHasCheckout": "Return this asset before changing it to a location.",
+  "history.activity.changedKind": "Changed kind",
+  "history.activity.kindChanged": "Kind changed",
+  "history.activity.kind": "Kind",
+  "mobile.AssetDetailEditPresentation.customTypeIsFixed": "Custom type is fixed after creation.",
+  "mobile.AssetDetailEditPresentation.assignCustomType": "You can assign a custom type below.",
+  "mobile.AssetDetailSheets.assetKind": "Asset kind",
+  "mobile.AssetDetailSheets.item": "Item",
   "audit.action.print_job.reprinted": "Label reprint requested",
   "audit.action.print_job.idle_confirmed": "Printer idle confirmed",
   "audit.action.print_job.resolved": "Uncertain print job resolved",

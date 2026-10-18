@@ -69,6 +69,14 @@ export function historyRevertFailure(error: unknown): { readonly title: string; 
       isTerminal: true
     };
   }
+  const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined;
+  if (status === 409 && (code === 'asset_kind_has_contents' || code === 'asset_kind_has_checkout')) {
+    return {
+      title: t('mobile.AssetHistoryPresentation.changeCanTBeReverted'),
+      message: t(code === 'asset_kind_has_contents' ? 'recovery.assetKindHasContents' : 'recovery.assetKindHasCheckout'),
+      isTerminal: false
+    };
+  }
   if (status === 409) {
     return {
       title: t('mobile.AssetHistoryPresentation.changeCanTBeReverted'),
@@ -86,6 +94,7 @@ export function historyRevertFailure(error: unknown): { readonly title: string; 
 function userFieldLabel(field: AssetActivityEntry['changes'][number]['field']): string {
   switch (field) {
     case 'title': return 'name';
+    case 'kind': return 'kind';
     case 'description': return 'description';
     case 'tags': return 'tag';
     case 'parent': return 'location';

@@ -41,7 +41,7 @@ This spec does not define the full lifecycle model, consumable model, search beh
 - Asset update may replace title, description, parent asset reference, and custom field values.
 - Asset update may replace the asset's complete tag assignment set when the asset-tag specification permits it.
 - Asset update must validate custom field values against the same effective custom field definitions used by asset create.
-- Asset update must not change asset ID, tenant ID, inventory ID, kind, custom asset type, or lifecycle state.
+- Asset update must not change asset ID, tenant ID, inventory ID, custom asset type, or lifecycle state.
 - A direct asset edit must compare normalized field values and normalized tag assignments with current state before persistence. A no-op edit must not advance `updatedAt`, rewrite tag assignments, create audit history, or create an undoable operation.
 - Changed editable fields and tag assignments from one direct request must commit atomically with one coherent `asset.updated` audit record and one undoable operation. Movement may remain a separate audit record when the same request also changes `parentAssetId`.
 - Asset movement is represented by updating an asset's parent asset reference.
@@ -95,7 +95,7 @@ Persistence rules:
 - Custom asset type must not change the base containment rules. A `medicine` custom asset type can still be an `item`, `container`, or `location` depending on its base asset kind.
 - `custom_fields` must default to an empty object, not null.
 - Domain and application code must not manipulate raw JSONB.
-- Generic asset update persistence must preserve the same tenant, inventory, kind, and lifecycle state for the target asset.
+- Generic asset update persistence must preserve the same tenant, inventory, and lifecycle state for the target asset.
 - Archive/restore persistence may change only lifecycle state.
 - Create, update, archive, and restore persistence must preserve domain timestamps and expose them back through repository reads.
 - Update persistence must defensively reject cross-tenant and cross-inventory parent references.
@@ -147,7 +147,7 @@ Asset listing:
 
 - Assets may be nested or bundled through the shared containment model.
 - Container and location assets may contain other assets.
-- Item assets must not contain other assets unless their kind is changed through an explicit future operation.
+- Item assets must not contain other assets unless their kind is changed to container or location.
 - The system must support hierarchical place-like assets inside an inventory.
 - The system must support moving assets and location-like containers without excessive friction.
 - Moving a container or location must move the node with its existing descendants; children must not be rewritten one by one.
@@ -181,7 +181,6 @@ The system must eventually support things that can be used up, such as medicine,
 - How should consumables be modeled?
 - Can assets move between inventories, or should cross-inventory movement remain an export/import-style workflow?
 - What asset fields should be first-class rather than custom fields?
-- Can users convert an existing asset from one kind to another?
 - Can users change an existing asset's custom asset type, and how should values for no-longer-applicable custom fields be handled?
 
 ## Expiration Extension
@@ -195,3 +194,11 @@ label identities and an explicit print-after-create command option. Printing is
 application orchestration, not an asset entity's USB or transport responsibility.
 Asset plus requested label/job/audit commit atomically with scoped idempotency;
 printing failures after commit never undo asset creation. Not yet implemented.
+
+## Kind correction
+
+- The normal asset edit PATCH accepts optional `kind` (`item`, `container`, `location`) and saves it atomically with other edited fields and tags. Inventory edit permission is required.
+- Only active assets can be edited. Conversion preserves identity, placement, attachments, tags, custom fields, contents, and history.
+- Converting to item requires no children, including archived children. Converting to location requires no open checkout. Conflicts reject the entire edit without partial changes.
+- Persistence enforces these conditions under the same asset lock used by child creation/movement and checkout. Undo and redo recheck these constraints against current state.
+- Changed kind is recorded as previous_kind and asset_kind in the normal asset.updated audit event. An unchanged kind is a no-op.

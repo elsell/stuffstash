@@ -208,8 +208,8 @@ This spec defines camera behavior only for attaching still photos during the Add
   - Edit sheets must not allow gesture dismissal to silently discard dirty edits. Until native prevent-remove confirmation is wired for form-sheet gestures, edit sheets may disable gesture dismissal and require the visible cancel action so the discard confirmation remains authoritative.
   - If a platform cannot render a native sheet, the fallback must be the closest platform-native modal screen, not a custom bottom card inside a dimmed overlay.
   - Users may edit title and description.
-  - Kind changes remain unavailable until the API exposes a safe conversion/promotion command; the UI may display kind as read-only helper context.
-  - The edit surface must show the current kind and custom type, when present, as read-only context so users understand why the editable fields are limited.
+  - Kind is an editable native flat choice (Item, Container, Location) in the existing Edit form. Selection changes only the draft; the existing Save commits kind and other edits atomically. No separate conversion screen or command button is needed.
+  - The kind picker shows the current or draft value. Custom type remains read-only when already assigned. Item conversion requires no contents, including archived contents; Location conversion requires no open checkout. Server rejection retains the whole draft and explains how to resolve the conflict. Kind-only changes enable Save and participate in discard confirmation. Checkout history is hidden for locations with no history, while converted locations retain access to their previous checkout records.
   - Save must remain unavailable until the title is non-empty and at least one editable field differs from the loaded asset.
   - Save and discard handling must use the same normalized edit-state rules. Leading and trailing whitespace in editable fields is not meaningful and must not trigger dirty-state warnings or be submitted to the update command.
   - Save must call the API update asset endpoint through a mobile application command and generated API-client adapter.

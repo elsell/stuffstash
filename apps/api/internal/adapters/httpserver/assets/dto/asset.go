@@ -38,6 +38,7 @@ type UpdateAssetInput struct {
 }
 
 type UpdateAssetBody struct {
+	Kind              *string               `json:"kind,omitempty" enum:"item,container,location" doc:"Asset kind; items must be empty and locations cannot have an open checkout"`
 	CustomAssetTypeID *string               `json:"customAssetTypeId,omitempty" doc:"Initial type assignment for an untyped asset"`
 	Expiration        ExpirationUpdate      `json:"expiration,omitempty"`
 	Title             *string               `json:"title,omitempty" maxLength:"160" doc:"Asset title"`

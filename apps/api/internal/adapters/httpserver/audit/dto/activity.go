@@ -35,7 +35,7 @@ type AssetActivityResponse struct {
 }
 
 type AssetActivityChangeResponse struct {
-	Field         AssetActivityField `json:"field" enum:"title,description,tags,parent,lifecycle_state,checkout_state"`
+	Field         AssetActivityField `json:"field" enum:"kind,title,description,tags,parent,lifecycle_state,checkout_state"`
 	PreviousValue string             `json:"previousValue,omitempty"`
 	CurrentValue  string             `json:"currentValue,omitempty"`
 }

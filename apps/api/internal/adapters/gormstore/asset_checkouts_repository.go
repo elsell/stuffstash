@@ -23,7 +23,7 @@ func (s Store) CheckOutAsset(ctx context.Context, checkout asset.Checkout, audit
 
 func checkOutAssetInTx(tx *gorm.DB, checkout asset.Checkout, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	var item assetModel
-	err := tx.Where(&assetModel{
+	err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetModel{
 		ID:             checkout.AssetID.String(),
 		TenantID:       checkout.TenantID.String(),
 		InventoryID:    checkout.InventoryID.String(),
@@ -35,7 +35,8 @@ func checkOutAssetInTx(tx *gorm.DB, checkout asset.Checkout, auditRecord audit.R
 	if err != nil {
 		return err
 	}
-	if checkout.State != asset.CheckoutStateOpen {
+	kind, validKind := asset.NewKind(item.Kind)
+	if !validKind || !kind.IsPortable() || checkout.State != asset.CheckoutStateOpen {
 		return ports.ErrForbidden
 	}
 	model := newAssetCheckoutModel(checkout)

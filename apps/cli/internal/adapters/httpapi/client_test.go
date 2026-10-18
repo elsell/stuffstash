@@ -31,11 +31,11 @@ func TestGeneratedTransportPreservesScopeNullMoveAndDenial(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	result, err := client.UpdateAsset(context.Background(), ports.Scope{Tenant: "tenant", Inventory: "inventory"}, "asset", ports.AssetChange{MoveToRoot: true}, "")
+	result, err := client.UpdateAsset(context.Background(), ports.Scope{Tenant: "tenant", Inventory: "inventory"}, "asset", ports.AssetChange{MoveToRoot: true, Kind: ptrKind("container")}, "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.Data.ID != "asset" || gotPath != "/tenants/tenant/inventories/inventory/assets/asset" || !strings.Contains(gotBody, `"parentAssetId":null`) || gotKey != "" {
+	if result.Data.ID != "asset" || gotPath != "/tenants/tenant/inventories/inventory/assets/asset" || !strings.Contains(gotBody, `"parentAssetId":null`) || gotKey != "" || !strings.Contains(gotBody, `"kind":"container"`) || strings.Contains(gotBody, `"title"`) {
 		t.Fatalf("incorrect wire behavior: %#v %s %s %s", result, gotPath, gotBody, gotKey)
 	}
 	denied, _ := New(server.URL, "denied", server.Client())
@@ -44,3 +44,5 @@ func TestGeneratedTransportPreservesScopeNullMoveAndDenial(t *testing.T) {
 		t.Fatalf("unsafe denial: %v", err)
 	}
 }
+
+func ptrKind(value string) *string { return &value }

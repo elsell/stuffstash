@@ -1,3 +1,5 @@
+import { StuffStashAPIError } from '@stuff-stash/api-client';
+import { CatalogRecoveryError } from '../../application/shared/CatalogRecoveryError';
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
 import { inventoryId } from '../../domain/inventories/InventorySummary';
 import { expect, it } from 'vitest';
@@ -320,4 +322,19 @@ it('fences every pending tag write when inventory changes during print preparati
   await expect(pending).rejects.toThrow();
   expect(persisted).toEqual([{ tenantId: 'tenant-home', inventoryId: 'inventory-home', displayName: 'Office' }]);
   expect(client.createdAssetInput).toBeUndefined();
+});
+
+it('sends kind and title in one update and maps the converted kind', async () => {
+  const client = new FakeInventoryApiClient();
+  const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+  const result = await repository.updateAsset({ assetId: assetId('asset-filters'), kind: 'container', title: 'Filter box' });
+  expect(client.updatedAssetInput).toMatchObject({ kind: 'container', title: 'Filter box' });
+  expect(result.kind).toBe('container');
+});
+
+it.each([['asset_kind_has_contents', 'recovery.assetKindHasContents'], ['asset_kind_has_checkout', 'recovery.assetKindHasCheckout']] as const)('maps %s to local recovery copy', async (code, key) => {
+  const client = new FakeInventoryApiClient();
+  client.updateAsset = async () => { throw new StuffStashAPIError(409, code, 'Untrusted transport text'); };
+  const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+  await expect(repository.updateAsset({ assetId: assetId('asset-filters'), kind: 'container' })).rejects.toEqual(new CatalogRecoveryError(key));
 });

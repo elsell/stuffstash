@@ -20,12 +20,13 @@ export function useAssetHeaderOverflowOptions(props: AssetHeaderOverflowProps | 
   const hasPhotos = Boolean(props?.onAddPhotos);
   const hasCheckout = Boolean(props?.onCheckout);
   const photosDisabled = props?.photosDisabled ?? false;
+  const canViewCheckoutHistory = props?.asset.canViewCheckoutHistory;
   const disabled = props?.disabled ?? false;
   return useMemo(() => {
     if (title === undefined) return { headerRight: undefined, unstable_headerRightItems: undefined };
     const owner = () => current.current && !current.current.disabled ? current.current : undefined;
     return assetHeaderOverflowScreenOptions({
-      asset: { title, canArchive: !!canArchive, canRestore: !!canRestore, canDeletePermanently: !!canDeletePermanently },
+      asset: { title, canViewCheckoutHistory, canArchive: !!canArchive, canRestore: !!canRestore, canDeletePermanently: !!canDeletePermanently },
       disabled, photosDisabled,
       onLabel: hasLabel ? () => owner()?.onLabel?.() : undefined,
       onMove: hasMove ? () => owner()?.onMove?.() : undefined,
@@ -33,7 +34,10 @@ export function useAssetHeaderOverflowOptions(props: AssetHeaderOverflowProps | 
       onCheckout: hasCheckout ? () => owner()?.onCheckout?.() : undefined,
       onEdit: hasEdit ? () => owner()?.onEdit?.() : undefined,
       onHistory: () => owner()?.onHistory(),
-      onCheckoutHistory: () => owner()?.onCheckoutHistory(),
+      onCheckoutHistory: () => {
+        const value = owner();
+        if (value?.asset.canViewCheckoutHistory !== false) value?.onCheckoutHistory();
+      },
       onLifecycleAction: action => {
         const value = owner();
         if (!value) return;
@@ -42,5 +46,5 @@ export function useAssetHeaderOverflowOptions(props: AssetHeaderOverflowProps | 
         if (permitted) value.onLifecycleAction(action);
       }
     });
-  }, [title, canArchive, canRestore, canDeletePermanently, disabled, hasLabel, hasEdit, hasMove, hasPhotos, hasCheckout, photosDisabled, current]);
+  }, [title, canViewCheckoutHistory, canArchive, canRestore, canDeletePermanently, disabled, hasLabel, hasEdit, hasMove, hasPhotos, hasCheckout, photosDisabled, current]);
 }

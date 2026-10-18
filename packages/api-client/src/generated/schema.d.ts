@@ -2609,7 +2609,7 @@ export interface components {
         AssetActivityChangeResponse: {
             currentValue?: string;
             /** @enum {string} */
-            field: "title" | "description" | "tags" | "parent" | "lifecycle_state" | "checkout_state";
+            field: "kind" | "title" | "description" | "tags" | "parent" | "lifecycle_state" | "checkout_state";
             previousValue?: string;
         };
         AssetActivityResponse: {
@@ -5169,6 +5169,11 @@ export interface components {
                 /** @enum {string} */
                 precision: "day" | "month";
             } | null;
+            /**
+             * @description Asset kind; items must be empty and locations cannot have an open checkout
+             * @enum {string}
+             */
+            kind?: "item" | "container" | "location";
             /** @description Parent asset ID, or null to move to inventory root */
             parentAssetId?: string | null;
             /** @description Complete assigned tag ID list */

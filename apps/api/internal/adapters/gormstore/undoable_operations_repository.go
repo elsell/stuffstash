@@ -101,6 +101,11 @@ func (s Store) ApplyAssetUndoableOperation(ctx context.Context, operationID stri
 		if !gormAssetsSameIdentity(current, resulting) {
 			return ports.ErrForbidden
 		}
+		if current.Kind != resulting.Kind {
+			if err := validateAssetKindInTx(tx, resulting); err != nil {
+				return err
+			}
+		}
 		if err := validateUndoableAssetResult(tx, resulting); err != nil {
 			return err
 		}
@@ -196,6 +201,17 @@ func (s Store) ApplyAssetCheckoutUndoableOperation(ctx context.Context, operatio
 		if operation.TenantID.String() != expectedCurrent.TenantID.String() || operation.InventoryID.String() != expectedCurrent.InventoryID.String() || operation.TargetID != expectedCurrent.AssetID.String() {
 			return ports.ErrForbidden
 		}
+
+		if resulting.State == asset.CheckoutStateOpen {
+			var parent assetModel
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetModel{ID: resulting.AssetID.String(), TenantID: resulting.TenantID.String(), InventoryID: resulting.InventoryID.String()}).First(&parent).Error; err != nil {
+				return err
+			}
+			kind, ok := asset.NewKind(parent.Kind)
+			if !ok || !kind.IsPortable() {
+				return ports.ErrConflict
+			}
+		}
 		var currentModel assetCheckoutModel
 		err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetCheckoutModel{
 			ID:          expectedCurrent.ID.String(),
@@ -260,7 +276,7 @@ func (s Store) ApplyAssetCheckoutUndoableOperation(ctx context.Context, operatio
 func validateUndoableAssetResult(tx *gorm.DB, item asset.Asset) error {
 	if item.ParentAssetID.String() != "" {
 		var parent assetModel
-		err := tx.Where(&assetModel{
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(&assetModel{
 			ID:          item.ParentAssetID.String(),
 			TenantID:    item.TenantID.String(),
 			InventoryID: item.InventoryID.String(),
@@ -297,6 +313,7 @@ func updateAssetModelForUndoableOperation(tx *gorm.DB, model assetModel, item as
 		return err
 	}
 	return tx.Model(&model).Updates(map[string]any{
+		"kind":                 item.Kind.String(),
 		"parent_asset_id":      stringPtrFromAssetID(item.ParentAssetID),
 		"custom_asset_type_id": stringPtrFromCustomAssetTypeID(item.CustomAssetTypeID),
 		"title":                item.Title.String(),
@@ -309,11 +326,11 @@ func updateAssetModelForUndoableOperation(tx *gorm.DB, model assetModel, item as
 }
 
 func gormAssetsSameIdentity(left asset.Asset, right asset.Asset) bool {
-	return left.ID == right.ID && left.TenantID == right.TenantID && left.InventoryID == right.InventoryID && left.Kind == right.Kind
+	return left.ID == right.ID && left.TenantID == right.TenantID && left.InventoryID == right.InventoryID
 }
 
 func gormAssetsEqual(left asset.Asset, right asset.Asset) bool {
-	return gormAssetsSameIdentity(left, right) &&
+	return gormAssetsSameIdentity(left, right) && left.Kind == right.Kind &&
 		left.CustomAssetTypeID == right.CustomAssetTypeID &&
 		left.ParentAssetID == right.ParentAssetID &&
 		left.Title == right.Title &&

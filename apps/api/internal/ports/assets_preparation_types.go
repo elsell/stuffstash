@@ -55,6 +55,7 @@ type AssetParentUpdate struct {
 	Value   string
 }
 type UpdateAssetInput struct {
+	Kind              *string
 	CustomAssetTypeID *string
 	Expiration        ExpirationUpdate
 	Principal         identity.Principal

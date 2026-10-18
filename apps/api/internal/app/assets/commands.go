@@ -327,6 +327,17 @@ func (s Service) prepareUpdateAsset(ctx context.Context, input UpdateAssetInput,
 		return PreparedUpdateAsset{}, err
 	}
 
+	if input.Kind != nil {
+		kind, ok := asset.NewKind(*input.Kind)
+		if !ok {
+			return PreparedUpdateAsset{}, apperrors.ErrInvalidInput
+		}
+		updated.Kind = kind
+		if kind != current.Kind {
+			fieldsChanged = true
+		}
+	}
+
 	if input.Title != nil {
 		title, ok := asset.NewTitle(*input.Title)
 		if !ok {
@@ -476,6 +487,9 @@ func (s Service) persistPreparedUpdateAsset(ctx context.Context, prepared Prepar
 
 func (s Service) coalesceDirectAssetEdit(input UpdateAssetInput, prepared PreparedUpdateAsset, tagsChanged bool) (PreparedUpdateAsset, error) {
 	metadata := map[string]string{"asset_kind": prepared.Asset.Kind.String()}
+	if prepared.Asset.Kind != prepared.PreviousAsset.Kind {
+		metadata["previous_kind"] = prepared.PreviousAsset.Kind.String()
+	}
 	if prepared.Asset.Title != prepared.PreviousAsset.Title {
 		metadata["previous_title"] = prepared.PreviousAsset.Title.String()
 		metadata["updated_title"] = prepared.Asset.Title.String()

@@ -481,7 +481,7 @@ func validateCommandOptions(o Options, requireScope bool) error {
 			return nil
 		}
 	case "update":
-		if len(o.Command) == 3 && (!requireScope || len(o.RequestBody) > 0 || o.Title != "") {
+		if len(o.Command) == 3 && (!requireScope || len(o.RequestBody) > 0 || o.Title != "" || o.Kind != "") {
 			return nil
 		}
 	case "return-details":
@@ -539,7 +539,14 @@ func execute(ctx context.Context, api ports.API, o Options) (any, error) {
 	case "create":
 		return api.CreateAsset(ctx, o.Scope, ports.AssetInput{Kind: o.Kind, Title: o.Title, Parent: o.Parent, RequestBody: o.RequestBody}, key)
 	case "update":
-		return api.UpdateAsset(ctx, o.Scope, id, ports.AssetChange{Title: &o.Title, RequestBody: o.RequestBody}, "")
+		change := ports.AssetChange{RequestBody: o.RequestBody}
+		if o.Title != "" {
+			change.Title = &o.Title
+		}
+		if o.Kind != "" {
+			change.Kind = &o.Kind
+		}
+		return api.UpdateAsset(ctx, o.Scope, id, change, "")
 	case "move":
 		change := ports.AssetChange{Parent: &o.Parent}
 		if o.Parent == "root" {

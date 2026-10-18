@@ -6,6 +6,7 @@ export default function LocationAssetDetailRoute() {
   const {
     addAssetPhotosCommand,
     assetCheckoutCommand,
+    assetCheckoutHistoryQuery,
     assetContentsQuery,
     assetCoreQuery,
     assetPhotosQuery,
@@ -20,6 +21,7 @@ export default function LocationAssetDetailRoute() {
     <AssetDetailRouteScreen
       addAssetPhotosCommand={addAssetPhotosCommand}
       assetCheckoutCommand={assetCheckoutCommand}
+      assetCheckoutHistoryQuery={assetCheckoutHistoryQuery}
       assetContentsQuery={assetContentsQuery}
       assetCoreQuery={assetCoreQuery}
       assetPhotosQuery={assetPhotosQuery}

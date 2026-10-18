@@ -712,7 +712,7 @@
         "method": "GET",
         "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/activity",
         "domain": "audit records",
-        "contractSha256": "a3b5db09b2dea13abc2126b0a70371a7da5ea02d0472ed7b7dd773f6d6be8230"
+        "contractSha256": "fbb0bb3f53a8e06967eb20902e08d5c612ba76deac11bd1d7d9356f8bcbf8905"
       },
       "commands": [
         "assets activity"
@@ -1375,7 +1375,7 @@
         "method": "PATCH",
         "path": "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}",
         "domain": "assets",
-        "contractSha256": "ba117330a02f0feab7289cb3d1a848ea4221b1fc9a6a1a51779850c3f8938c4b"
+        "contractSha256": "908f59a904a5fbf3a4d1fbe54d1648ac7b6e6470a73a8bfe95791856bb221492"
       },
       "commands": [
         "assets update",

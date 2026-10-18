@@ -94,3 +94,12 @@ describe('AssetHistoryRouteScreen presentation', () => {
 function record(id: string, occurredAt: string): AssetActivityRecordViewModel {
   return { id, occurredAt, occurredAtLabel: occurredAt, title: 'Updated item', summary: 'Changed', actorLabel: 'Alex', sourceLabel: 'App' };
 }
+
+it('keeps kind revert conflicts recoverable with specific local guidance', () => {
+  expect(historyRevertFailure({ status: 409, code: 'asset_kind_has_contents', message: 'Untrusted transport text' })).toMatchObject({
+    message: 'Move all contents, including archived assets, before changing this asset to an item.', isTerminal: false
+  });
+  expect(historyRevertFailure({ status: 409, code: 'asset_kind_has_checkout' })).toMatchObject({
+    message: 'Return this asset before changing it to a location.', isTerminal: false
+  });
+});

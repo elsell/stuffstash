@@ -138,8 +138,16 @@ func (s *Store) updateAssetLocked(expectedCurrent asset.Asset, item asset.Asset,
 	if expectedCurrent.ID.String() != "" && !assetsEquivalentForStaleCheck(existing, expectedCurrent) {
 		return ports.ErrConflict
 	}
-	if existing.Kind != item.Kind || existing.LifecycleState != item.LifecycleState {
+	if undoableOperation != nil && undoableOperation.BeforeAsset != nil && existing.Kind != undoableOperation.BeforeAsset.Kind {
+		return ports.ErrConflict
+	}
+	if existing.LifecycleState != item.LifecycleState {
 		return ports.ErrForbidden
+	}
+	if existing.Kind != item.Kind {
+		if err := s.validateAssetKindLocked(item); err != nil {
+			return err
+		}
 	}
 	if existing.CustomAssetTypeID != item.CustomAssetTypeID {
 		if existing.CustomAssetTypeID != "" || item.CustomAssetTypeID == "" {
@@ -334,7 +342,7 @@ func (s *Store) CheckOutAsset(_ context.Context, checkout asset.Checkout, auditR
 
 func (s *Store) checkOutAssetLocked(checkout asset.Checkout, auditRecord audit.Record, undoableOperation *ports.UndoableOperation) error {
 	item, ok := s.assets[checkout.AssetID]
-	if !ok || item.TenantID != checkout.TenantID || item.InventoryID != checkout.InventoryID || item.LifecycleState != asset.LifecycleStateActive || checkout.State != asset.CheckoutStateOpen {
+	if !ok || !item.Kind.IsPortable() || item.TenantID != checkout.TenantID || item.InventoryID != checkout.InventoryID || item.LifecycleState != asset.LifecycleStateActive || checkout.State != asset.CheckoutStateOpen {
 		return ports.ErrForbidden
 	}
 	for _, existing := range s.checkouts {
@@ -501,7 +509,7 @@ func (s *Store) ListCheckedOutAssets(_ context.Context, tenantID tenant.ID, inve
 			continue
 		}
 		item, ok := s.assets[checkout.AssetID]
-		if !ok || item.TenantID != checkout.TenantID || item.InventoryID != checkout.InventoryID {
+		if !ok || !item.Kind.IsPortable() || item.TenantID != checkout.TenantID || item.InventoryID != checkout.InventoryID {
 			continue
 		}
 		items = append(items, ports.CheckedOutAsset{Asset: item, Checkout: checkout})

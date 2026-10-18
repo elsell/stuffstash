@@ -752,3 +752,21 @@ async function detailCommand(h: MobileRenderHarness, label: string) {
   }
   return h.byText(label)?.parent ?? undefined;
 }
+
+it.each([false, true])('keeps checkout history for a location only when records exist (%s)', async hasHistory => {
+  const current = snapshot();
+  const location = { ...current, asset: { ...current.asset, kind: 'location' as const } };
+  const requests: unknown[] = [];
+  const test = setup({
+    assetCoreQuery: new AssetCoreQuery({ getAssetCore: async () => location }),
+    assetCheckoutHistoryQuery: { execute: async input => { requests.push(input); return {
+      assetId: input.assetId, records: hasHistory ? [{ id: 'checkout', isOpen: false, title: 'Returned', subtitle: '', statusLabel: 'Returned', checkedOutLabel: 'Yesterday' }] : [], hasMore: false, emptyTitle: '', emptyMessage: ''
+    }; } }
+  });
+  try {
+    await test.render(); await settle(test.harness); await settle(test.harness); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('More actions for Family tent'));
+    expect(Boolean(test.harness.byText('Checkout history'))).toBe(hasHistory);
+    expect(requests).toEqual([expect.objectContaining({ assetId: 'tent', limit: 1 })]);
+  } finally { await test.harness.unmount(); test.client.clear(); }
+});

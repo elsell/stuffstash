@@ -113,6 +113,7 @@ export type CreateInventoryAssetInput = {
 };
 
 export type UpdateInventoryAssetInput = {
+  readonly kind?: AssetKind;
   readonly expiration?: AssetExpiration | null;
   readonly customAssetTypeId?: string;
   readonly assetId: AssetId;

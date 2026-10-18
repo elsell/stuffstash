@@ -23,6 +23,7 @@ import (
 const (
 	CheckoutState  AssetActivityChangeResponseField = "checkout_state"
 	Description    AssetActivityChangeResponseField = "description"
+	Kind           AssetActivityChangeResponseField = "kind"
 	LifecycleState AssetActivityChangeResponseField = "lifecycle_state"
 	Parent         AssetActivityChangeResponseField = "parent"
 	Tags           AssetActivityChangeResponseField = "tags"
@@ -35,6 +36,8 @@ func (e AssetActivityChangeResponseField) Valid() bool {
 	case CheckoutState:
 		return true
 	case Description:
+		return true
+	case Kind:
 		return true
 	case LifecycleState:
 		return true
@@ -934,6 +937,27 @@ func (e UpdateAssetBodyExpirationPrecision) Valid() bool {
 	case UpdateAssetBodyExpirationPrecisionDay:
 		return true
 	case UpdateAssetBodyExpirationPrecisionMonth:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UpdateAssetBodyKind.
+const (
+	UpdateAssetBodyKindContainer UpdateAssetBodyKind = "container"
+	UpdateAssetBodyKindItem      UpdateAssetBodyKind = "item"
+	UpdateAssetBodyKindLocation  UpdateAssetBodyKind = "location"
+)
+
+// Valid indicates whether the value is a known member of the UpdateAssetBodyKind enum.
+func (e UpdateAssetBodyKind) Valid() bool {
+	switch e {
+	case UpdateAssetBodyKindContainer:
+		return true
+	case UpdateAssetBodyKindItem:
+		return true
+	case UpdateAssetBodyKindLocation:
 		return true
 	default:
 		return false
@@ -4288,6 +4312,9 @@ type UpdateAssetBody struct {
 		Precision UpdateAssetBodyExpirationPrecision `json:"precision"`
 	}] `json:"expiration,omitempty"`
 
+	// Kind Asset kind; items must be empty and locations cannot have an open checkout
+	Kind *UpdateAssetBodyKind `json:"kind,omitempty"`
+
 	// ParentAssetId Parent asset ID, or null to move to inventory root
 	ParentAssetId nullable.Nullable[string] `json:"parentAssetId,omitempty"`
 
@@ -4300,6 +4327,9 @@ type UpdateAssetBody struct {
 
 // UpdateAssetBodyExpirationPrecision defines model for UpdateAssetBody.Expiration.Precision.
 type UpdateAssetBodyExpirationPrecision string
+
+// UpdateAssetBodyKind Asset kind; items must be empty and locations cannot have an open checkout
+type UpdateAssetBodyKind string
 
 // UpdateAssetTagBody defines model for UpdateAssetTagBody.
 type UpdateAssetTagBody struct {

@@ -20,6 +20,15 @@ class FakeActivityRepository implements AssetActivityRepository {
 }
 
 describe('AssetActivityQuery', () => {
+  it('identifies kind corrections in history', async () => {
+    const repository: AssetActivityRepository = {
+      async listAssetActivity() {
+        return { entries: [{ ...activityEntry(), changes: [{ field: 'kind', previousValue: 'location', currentValue: 'container' }] }], hasMore: false };
+      }
+    };
+    const result = await new AssetActivityQuery(repository).execute({ tenantId: 'tenant', inventoryId: 'inventory', assetId: 'bin-60' });
+    expect(result.records[0]).toMatchObject({ title: 'Changed kind', summary: 'Location → Container' });
+  });
   it('uses explicit scope and presents typed changes in homeowner language', async () => {
     const repository = new FakeActivityRepository();
     const query = new AssetActivityQuery(repository);

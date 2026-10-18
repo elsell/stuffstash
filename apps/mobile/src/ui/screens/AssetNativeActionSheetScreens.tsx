@@ -99,7 +99,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
   const assetId = asset.id;
   const types = useMobileInventoryServerQuery({ key: (scope, tenant, inventory) => mobileQueryKeys.customization(scope, tenant, inventory, 'inventory', 'asset-type-choices', 'active'), query: (signal) => inventoryAssetTypesQuery.execute(asset.tenantId ?? '', asset.inventoryId ?? '', { signal }) });
   const tags = useMobileInventoryServerQuery({ key: mobileQueryKeys.assetTags, query: (signal) => inventoryAssetTagsQuery.execute({ signal }) });
-  const [draft, setDraft] = useState<EditDraft | undefined>(() => ({ title: asset.title, description: asset.description, tagIds: asset.tags?.map((tag) => tag.id) ?? [], newTags: [] }));
+  const [draft, setDraft] = useState<EditDraft | undefined>(() => ({ kind: asset.kind, title: asset.title, description: asset.description, tagIds: asset.tags?.map((tag) => tag.id) ?? [], newTags: [] }));
   const operation = useAssetSheetOperation(asset.canEdit, leave => close(leave));
   const isSaving = operation.busy;
   const captureDiscard = useTaskPresentation(undefined, JSON.stringify([assetId, draft, isSaving]));
@@ -134,6 +134,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
       if (!operation.canMutate()) return;
       const result = await updateAssetCommand.execute({
         assetId,
+        kind: normalized.kind,
         expiration: normalized.expiration,
         customAssetTypeId: asset.customAssetTypeId ? undefined : normalized.customAssetTypeId,
         title: normalized.title,

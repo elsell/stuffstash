@@ -3,7 +3,7 @@ import { formatHistoryTimestamp } from './AssetHistoryTimestamp';
 import { assertReadActive } from '../shared/ReadRequest';
 export type AssetActivityView = 'changes' | 'all';
 export type AssetActivityCategory = 'change' | 'read';
-export type AssetActivityField = 'title' | 'description' | 'tags' | 'parent' | 'lifecycle_state' | 'checkout_state';
+export type AssetActivityField = 'title' | 'description' | 'kind' | 'tags' | 'parent' | 'lifecycle_state' | 'checkout_state';
 export type AssetActivityEntry = {
   readonly id: string;
   readonly principalId: string;
@@ -140,6 +140,7 @@ function activityTitle(entry: AssetActivityEntry): string {
   if (fields.size === 1 && fields.has('description')) return t('history.activity.updatedDescription');
   if (fields.size === 1 && fields.has('tags')) return t('history.activity.changedTags');
   if (fields.size === 1 && fields.has('parent')) return t('history.activity.movedItem');
+  if (fields.size === 1 && fields.has('kind')) return t('history.activity.changedKind');
   switch (entry.action) {
     case 'label.provisioned': return t('audit.action.label.provisioned');
     case 'label.viewed': return t('audit.action.label.viewed');
@@ -168,7 +169,8 @@ function activitySummary(entry: AssetActivityEntry): string {
   if (fields.length > 1) return fields.map(activityFieldLabel).join(' · ');
   return entry.changes.map((change) => {
     if (change.previousValue !== undefined || change.currentValue !== undefined) {
-      return `${displayValue(change.previousValue)} → ${displayValue(change.currentValue)}`;
+      const display = change.field === 'kind' ? displayKind : displayValue;
+      return `${display(change.previousValue)} → ${display(change.currentValue)}`;
     }
     return change.field === 'description' ? t('history.activity.descriptionChanged') : labelField(change.field);
   }).join(' · ');
@@ -176,6 +178,15 @@ function activitySummary(entry: AssetActivityEntry): string {
 
 function displayValue(value: string | undefined): string {
   return value?.trim() || t('history.activity.none');
+}
+
+function displayKind(value: string | undefined): string {
+  switch (value) {
+    case 'item': return t('mobile.AssetDetailSheets.item');
+    case 'container': return t('mobile.AssetDetailSheets.container');
+    case 'location': return t('mobile.AssetDetailSheets.location');
+    default: return displayValue(value);
+  }
 }
 
 function labelField(field: AssetActivityEntry['changes'][number]['field']): string {
@@ -186,6 +197,7 @@ function labelField(field: AssetActivityEntry['changes'][number]['field']): stri
     case 'tags': return t('history.activity.tagsChanged');
     case 'title': return t('history.activity.nameChanged');
     case 'description': return t('history.activity.descriptionChanged');
+    case 'kind': return t('history.activity.kindChanged');
   }
 }
 
@@ -201,6 +213,7 @@ function sourceLabel(source: string): string {
 
 export function activityFieldLabel(field: AssetActivityField): string {
   switch (field) {
+    case 'kind': return t('history.activity.kind');
     case 'title': return t('history.activity.name');
     case 'description': return t('history.activity.description');
     case 'tags': return t('history.activity.tags');

@@ -111,16 +111,16 @@ export function assetLifecycleConfirmation(
 }
 
 export function assetOverflowMenuActions(
-  asset: Pick<AssetDetailViewModel, 'canArchive' | 'canRestore' | 'canDeletePermanently'>
+  asset: Pick<AssetDetailViewModel, 'canArchive' | 'canRestore' | 'canDeletePermanently'> & { readonly canViewCheckoutHistory?: boolean }
 ): readonly AssetOverflowMenuAction[] {
   return [
-    {
-      id: 'checkout-history',
+    ...(asset.canViewCheckoutHistory === false ? [] : [{
+      id: 'checkout-history' as const,
       label: t('mobile.AssetLifecyclePresentation.checkoutHistory'),
-      section: 'history',
-      systemImage: 'clock.arrow.circlepath',
+      section: 'history' as const,
+      systemImage: 'clock.arrow.circlepath' as const,
       isDestructive: false
-    },
+    }]),
     {
       id: 'history',
       label: t('mobile.AssetLifecyclePresentation.history'),
